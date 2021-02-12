@@ -1,9 +1,13 @@
 """Procedures used to work with the various bio-informatics cli
 commands"""
+from datetime import datetime
 from typing import Dict
 from typing import List
 from typing import Optional
+from uuid import uuid4
+from redis.client import Redis  # Used only in type hinting
 
+from gn3.exceptions import RedisConnectionError
 from gn3.file_utils import lookup_file
 from gn3.file_utils import jsonfile_to_dict
 
@@ -40,3 +44,28 @@ def compose_gemma_cmd(
         cmd += (" "
                 " ".join([f" {arg}" for arg in gemma_args]))
     return cmd
+
+
+def queue_cmd(cmd: str, conn: Redis) -> str:
+    """Given a command CMD, and a redis connection CONN, queue it in Redis
+with an initial status of 'queued'.  The following status codes are
+supported:
+
+    queued:  Unprocessed; Still in the queue
+    running: Still running
+    success: Successful completion
+    error:   Erroneous completion
+
+    """
+    if not conn.ping():
+        raise RedisConnectionError
+    unique_id = ("cmd::"
+                 f"{datetime.now().strftime('%Y-%m-%d%H-%M%S-%M%S-')}"
+                 f"{str(uuid4())}")
+    for key, value in {"cmd": cmd,
+                       "result": "",
+                       "status": "queued"}.items():
+        conn.hset(key, value, unique_id)
+        conn.rpush("GN2::job-queue",
+                   unique_id)
+    return unique_id
