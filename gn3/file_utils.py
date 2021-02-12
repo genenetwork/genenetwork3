@@ -18,3 +18,19 @@ def get_dir_hash(directory: str) -> str:
                     md5hash.update(bytearray(hashlib.md5(buf).hexdigest(),
                                              "utf-8"))
     return md5hash.hexdigest()
+
+
+def lookup_file(environ_var: str,
+                root_dir: str,
+                file_name: str) -> str:
+    """Look up FILE_NAME in the path defined by ENVIRON_VAR/ROOT_DIR/; If
+ENVIRON_VAR/ROOT_DIR/FILE_NAME does not exist, raise an exception.
+Otherwise return ENVIRON_VAR/ROOT_DIR/FILE_NAME.
+
+    """
+    _dir = os.environ.get(environ_var)
+    if _dir:
+        _file = os.path.join(_dir, root_dir, file_name)
+        if os.path.isfile(_file):
+            return _file
+    raise FileNotFoundError
