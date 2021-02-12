@@ -5,6 +5,7 @@ import os
 
 from functools import partial
 from typing import Dict
+from gn3.settings import APP_DEFAULTS
 
 
 def get_dir_hash(directory: str) -> str:
@@ -30,7 +31,8 @@ ENVIRON_VAR/ROOT_DIR/FILE_NAME does not exist, raise an exception.
 Otherwise return ENVIRON_VAR/ROOT_DIR/FILE_NAME.
 
     """
-    _dir = os.environ.get(environ_var)
+    _dir = APP_DEFAULTS.get(environ_var,
+                            os.environ.get(environ_var))
     if _dir:
         _file = os.path.join(_dir, root_dir, file_name)
         if os.path.isfile(_file):
