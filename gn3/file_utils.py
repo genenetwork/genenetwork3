@@ -1,8 +1,10 @@
 """Procedures that operate on files/ directories"""
 import hashlib
+import json
 import os
 
 from functools import partial
+from typing import Dict
 
 
 def get_dir_hash(directory: str) -> str:
@@ -33,4 +35,12 @@ Otherwise return ENVIRON_VAR/ROOT_DIR/FILE_NAME.
         _file = os.path.join(_dir, root_dir, file_name)
         if os.path.isfile(_file):
             return _file
+    raise FileNotFoundError
+
+
+def jsonfile_to_dict(json_file: str) -> Dict:
+    """Give a JSON_FILE, return a python dict"""
+    with open(json_file) as _file:
+        data = json.load(_file)
+        return data
     raise FileNotFoundError

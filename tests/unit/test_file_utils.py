@@ -3,6 +3,7 @@ import os
 import unittest
 
 from unittest import mock
+from gn3.file_utils import jsonfile_to_dict
 from gn3.file_utils import lookup_file
 from gn3.file_utils import get_dir_hash
 
@@ -48,3 +49,17 @@ class TestFileUtils(unittest.TestCase):
                           "GENENETWORK_FILES",
                           "genotype_files",
                           "genotype.txt")
+
+    def test_jsonfile_to_dict(self):
+        """Test that a json file is parsed correctly"""""
+        json_file = os.path.join(os.path.dirname(__file__),
+                                 "test_data", "metadata.json")
+        self.assertEqual("Longer description",
+                         jsonfile_to_dict(json_file).get("description"))
+
+    def test_jsonfile_to_dict_nonexistent_file(self):
+        """Test that a ValueError is raised when the json file is
+non-existent"""
+        self.assertRaises(FileNotFoundError,
+                          jsonfile_to_dict,
+                          "/non-existent-dir")
