@@ -23,6 +23,7 @@
  (ice-9 match)
  (ice-9 popen)
  (ice-9 rdelim)
+ (gn packages gemma)
  (gnu packages base)
  (gnu packages check)
  (gnu packages databases)
@@ -64,6 +65,7 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
+                       ("gemma-wrapper" ,gemma-wrapper)
                        ("python-bcrypt" ,python-bcrypt)
                        ("python" ,python-wrapper)
                        ("python-flask" ,python-flask)

@@ -27,6 +27,8 @@ Simply load up the environment (for development purposes):
 guix environment --load=guix.scm
 ```
 
+Also, make sure you have the *guix-bioinformatics* channel set up.
+
 #### Running Tests
 
 (assuming you are in a guix container; otherwise use venv!)
