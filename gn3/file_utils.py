@@ -2,9 +2,12 @@
 import hashlib
 import json
 import os
+import shutil
+import tarfile
 
 from functools import partial
 from typing import Dict
+from werkzeug.utils import secure_filename
 from gn3.settings import APP_DEFAULTS
 
 
@@ -46,3 +49,29 @@ def jsonfile_to_dict(json_file: str) -> Dict:
         data = json.load(_file)
         return data
     raise FileNotFoundError
+
+
+def extract_uploaded_file(gzipped_file, target_dir: str) -> Dict:
+    """Get the (directory) hash of extracted contents of GZIPPED_FILE; and move
+contents to TARGET_DIR/<dir-hash>.
+
+    """
+    tar_target_loc = os.path.join(target_dir,
+                                  secure_filename(gzipped_file.filename))
+    gzipped_file.save(tar_target_loc)
+    try:
+        # Extract to "tar_target_loc/tempdir"
+        tar = tarfile.open(tar_target_loc)
+        tar.extractall(
+            path=os.path.join(target_dir, "tempdir"))
+        tar.close()
+    # pylint: disable=W0703
+    except Exception:
+        return {"status": 128, "error": "gzip failed to unpack file"}
+    dir_hash = get_dir_hash(tar_target_loc)
+    if os.path.exists(os.path.join(target_dir, dir_hash)):
+        shutil.rmtree(os.path.join(target_dir, 'tempdir'))
+    else:
+        os.rename(os.path.join(target_dir, "tempdir"),
+                  os.path.join(target_dir, dir_hash))
+    return {"status": 0, "token": dir_hash}
