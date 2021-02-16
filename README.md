@@ -48,3 +48,11 @@ Running mypy(type-checker):
 ```bash
 mypy .
 ```
+
+#### Running the flask app
+
+To spin up the server:
+
+```bash
+env FLASK_DEBUG=1 FLASK_APP="main.py" flask run --port=8080
+```
