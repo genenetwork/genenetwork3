@@ -8,6 +8,7 @@ from typing import Callable
 from unittest import mock
 from gn3.commands import compose_gemma_cmd
 from gn3.commands import queue_cmd
+from gn3.commands import run_cmd
 from gn3.exceptions import RedisConnectionError
 
 
@@ -70,3 +71,13 @@ class TestCommands(unittest.TestCase):
              mock.call("status", "queued", actual_unique_id)])
         mock_redis_conn.rpush.assert_has_calls(
             [mock.call("GN2::job-queue", actual_unique_id)])
+
+    def test_run_cmd_correct_input(self):
+        """Test that a correct cmd is processed correctly"""
+        self.assertEqual(run_cmd("echo test"),
+                         {"code": 0, "output": "test\n"})
+
+    def test_run_cmd_incorrect_input(self):
+        """Test that an incorrect cmd is processed correctly"""
+        result = run_cmd("echoo test")
+        self.assertEqual(127, result.get("code"))
