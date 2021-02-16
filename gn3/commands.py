@@ -1,5 +1,7 @@
 """Procedures used to work with the various bio-informatics cli
 commands"""
+import subprocess
+
 from datetime import datetime
 from typing import Dict
 from typing import List
@@ -69,3 +71,14 @@ supported:
         conn.rpush("GN2::job-queue",
                    unique_id)
     return unique_id
+
+
+def run_cmd(cmd: str) -> Dict:
+    """Run CMD and return the CMD's status code and output as a dict"""
+    results = subprocess.run(cmd, capture_output=True,
+                             shell=True, check=False)
+    out = str(results.stdout, 'utf-8')
+    if results.returncode > 0:  # Error!
+        out = str(results.stderr, 'utf-8')
+    return {"code": results.returncode,
+            "output": out}
