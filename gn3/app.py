@@ -5,6 +5,7 @@ from typing import Dict
 from typing import Union
 from flask import Flask
 
+from gn3.api.gemma import gemma
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
     """Create a new flask object"""
@@ -22,4 +23,5 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
             app.config.update(config)
         elif config.endswith(".py"):
             app.config.from_pyfile(config)
+    app.register_blueprint(gemma, url_prefix="/gemma")
     return app
