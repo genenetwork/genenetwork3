@@ -28,6 +28,7 @@
  (gnu packages databases)
  (gnu packages python)
  (gnu packages python-check)
+ (gnu packages python-crypto)
  (gnu packages python-web)
  (gnu packages python-xyz)
  ((guix build utils) #:select (with-directory-excursion))
@@ -63,6 +64,7 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
+                       ("python-bcrypt" ,python-bcrypt)
                        ("python" ,python-wrapper)
                        ("python-flask" ,python-flask)
                        ("python-pylint" python-pylint)
