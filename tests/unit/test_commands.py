@@ -46,15 +46,15 @@ class TestCommands(unittest.TestCase):
         """Test that the correct error is raised when Redis is unavailable"""
         self.assertRaises(RedisConnectionError,
                           queue_cmd,
-                          "ls",
-                          MockRedis(ping=lambda: False,
-                                    hset=mock.MagicMock(),
-                                    rpush=mock.MagicMock()))
+                          cmd="ls",
+                          conn=MockRedis(ping=lambda: False,
+                                         hset=mock.MagicMock(),
+                                         rpush=mock.MagicMock()))
 
     @mock.patch("gn3.commands.datetime")
     @mock.patch("gn3.commands.uuid4")
-    def test_queue_cmd_right_correct_calls_to_redis(self, mock_uuid4,
-                                                    mock_datetime):
+    def test_queue_cmd_correct_calls_to_redis(self, mock_uuid4,
+                                              mock_datetime):
         """Test that the cmd is queued properly"""
         mock_uuid4.return_value = 1234
         mock_datetime.now.return_value = datetime.fromisoformat('2021-02-12 '
@@ -64,11 +64,39 @@ class TestCommands(unittest.TestCase):
                                     hset=mock.MagicMock(),
                                     rpush=mock.MagicMock())
         actual_unique_id = "cmd::2021-02-1217-3224-3224-1234"
-        self.assertEqual(queue_cmd("ls", mock_redis_conn), actual_unique_id)
+        self.assertEqual(queue_cmd(cmd="ls",
+                                   conn=mock_redis_conn),
+                         actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(
             [mock.call("cmd", "ls", actual_unique_id),
              mock.call("result", "", actual_unique_id),
              mock.call("status", "queued", actual_unique_id)])
+        mock_redis_conn.rpush.assert_has_calls(
+            [mock.call("GN2::job-queue", actual_unique_id)])
+
+    @mock.patch("gn3.commands.datetime")
+    @mock.patch("gn3.commands.uuid4")
+    def test_queue_cmd_right_calls_to_redis_with_email(self,
+                                                       mock_uuid4,
+                                                       mock_datetime):
+        """Test that the cmd is queued properly when given the email"""
+        mock_uuid4.return_value = 1234
+        mock_datetime.now.return_value = datetime.fromisoformat('2021-02-12 '
+                                                                '17:32:24.'
+                                                                '859097')
+        mock_redis_conn = MockRedis(ping=lambda: True,
+                                    hset=mock.MagicMock(),
+                                    rpush=mock.MagicMock())
+        actual_unique_id = "cmd::2021-02-1217-3224-3224-1234"
+        self.assertEqual(queue_cmd(cmd="ls",
+                                   conn=mock_redis_conn,
+                                   email="me@me.com"),
+                         actual_unique_id)
+        mock_redis_conn.hset.assert_has_calls(
+            [mock.call("cmd", "ls", actual_unique_id),
+             mock.call("result", "", actual_unique_id),
+             mock.call("status", "queued", actual_unique_id),
+             mock.call("email", "me@me.com", actual_unique_id)])
         mock_redis_conn.rpush.assert_has_calls(
             [mock.call("GN2::job-queue", actual_unique_id)])
 

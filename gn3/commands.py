@@ -48,10 +48,10 @@ def compose_gemma_cmd(
     return cmd
 
 
-def queue_cmd(cmd: str, conn: Redis) -> str:
-    """Given a command CMD, and a redis connection CONN, queue it in Redis
-with an initial status of 'queued'.  The following status codes are
-supported:
+def queue_cmd(conn: Redis, cmd: str, email: Optional[str] = None) -> str:
+    """Given a command CMD; (optional) EMAIL; and a redis connection CONN, queue
+it in Redis with an initial status of 'queued'.  The following status codes
+are supported:
 
     queued:  Unprocessed; Still in the queue
     running: Still running
@@ -70,6 +70,10 @@ supported:
         conn.hset(key, value, unique_id)
         conn.rpush("GN2::job-queue",
                    unique_id)
+    if email:
+        conn.hset("email",
+                  email,
+                  unique_id)
     return unique_id
 
 
