@@ -15,18 +15,9 @@ def get_version():
     return jsonify(
         run_cmd(f"{gemma_cmd} -v | head -n 1"))
 
-@gemma.route("/k-compute/<token>", methods=["POST"])
-def run_k_compute(token) -> str:
-    pass
 
 
-@gemma.route("/lmm/gwa/<token>/<k_file_name>", methods=["POST"])
-def run_gwa(token, k_file_name) -> str:
-    pass
 
 
-@gemma.route("/pheno-permutation/<token>", methods=["POST"])
-def run_pheno_permutation(token) -> str:
-    pass
 
 
