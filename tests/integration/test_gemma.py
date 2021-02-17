@@ -1,6 +1,7 @@
 """Integration tests for gemma API endpoints"""
 import unittest
 
+from unittest import mock
 from gn3.app import create_app
 
 
@@ -9,7 +10,11 @@ class GemmaAPITest(unittest.TestCase):
     def setUp(self):
         self.app = create_app().test_client()
 
-    def test_gemma_index(self):
+    @mock.patch("gn3.api.gemma.run_cmd")
+    def test_get_version(self, mock_run_cmd):
         """Test that the correct response is returned"""
-        response = self.app.get("/gemma", follow_redirects=True)
-        self.assertEqual(response.get_json().get("result"), "hello world")
+        mock_run_cmd.return_value = {"status": 0, "output": "v1.9"}
+        response = self.app.get("/gemma/version", follow_redirects=True)
+        self.assertEqual(response.get_json(),
+                         {"status": 0, "output": "v1.9"})
+        self.assertEqual(response.status_code, 200)
