@@ -3,14 +3,9 @@ from flask import Blueprint
 from flask import current_app
 from flask import jsonify
 
-gemma = Blueprint("gemma", __name__)
-
 from gn3.commands import run_cmd
 
-@gemma.route("/")
-def index() -> str:
-    """Test endpoint"""
-    return jsonify(result="hello world")
+gemma = Blueprint("gemma", __name__)
 
 
 @gemma.route("/version")
