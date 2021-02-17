@@ -10,14 +10,9 @@ from uuid import uuid4
 from redis.client import Redis  # Used only in type hinting
 
 from gn3.exceptions import RedisConnectionError
-from gn3.file_utils import lookup_file
-from gn3.file_utils import jsonfile_to_dict
 
 
-# pylint: disable=locally-disabled, too-many-arguments
 def compose_gemma_cmd(
-        token: str,
-        metadata_filename: str,
         gemma_wrapper_cmd: str = "gemma-wrapper",
         gemma_wrapper_kwargs: Optional[Dict] = None,
         gemma_kwargs: Optional[Dict] = None,
@@ -26,25 +21,15 @@ def compose_gemma_cmd(
     cmd = f"{gemma_wrapper_cmd} --json"
     if gemma_wrapper_kwargs:
         cmd += (" "  # Add extra space between commands
-                " ".join([f" --{key} {val}" for key, val
+                " ".join([f"--{key} {val}" for key, val
                           in gemma_wrapper_kwargs.items()]))
-    data = jsonfile_to_dict(lookup_file("TMPDIR",
-                                        token,
-                                        metadata_filename))
-    geno_file = lookup_file(environ_var="TMPDIR",
-                            root_dir="genotype",
-                            file_name=data.get("geno", ""))
-    pheno_file = lookup_file(environ_var="TMPDIR",
-                             root_dir=token,
-                             file_name=data.get("geno", ""))
-    cmd += f" -- -g {geno_file} -p {pheno_file}"
+    cmd += " -- "
     if gemma_kwargs:
-        cmd += (" "
-                " ".join([f" -{key} {val}"
-                          for key, val in gemma_kwargs.items()]))
+        cmd += " ".join([f"-{key} {val}"
+                         for key, val in gemma_kwargs.items()])
     if gemma_args:
-        cmd += (" "
-                " ".join([f" {arg}" for arg in gemma_args]))
+        cmd += " "
+        cmd += " ".join([f"{arg}" for arg in gemma_args])
     return cmd
 
 
