@@ -3,8 +3,29 @@
 import json
 
 
+class AttributeSetter:
+    def __init__(self, trait_obj):
+        for key, value in trait_obj.items():
+            setattr(self, key, value)
 
-def get_loading_page_data(initial_start_vars, create_dataset, get_genofile_samplelist):
+
+def create_dataset(dataset):
+
+    dataset = AttributeSetter({
+        "group": AttributeSetter({
+            "genofile": ""
+        })
+    })
+
+    return dataset
+
+
+def get_genofile_samplelist(dataset):
+    # should mock call to db
+    return ["C57BL/6J"]
+
+
+def get_loading_page_data(initial_start_vars, create_dataset=create_dataset, get_genofile_samplelist=get_genofile_samplelist):
     if initial_start_vars is None:
         # added this just to enable testing
         return "no items"
