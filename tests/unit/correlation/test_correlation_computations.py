@@ -51,10 +51,9 @@ class TestCorrelationUtility(unittest.TestCase):
         sample_vals = """{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}"""
 
         initial_start_vars = {
-            "wanted_inputs": "sample_vals,corr_type,primary_samples,trait_id",
 
             "n_samples": "71",
-            "wanted": "n_samples",
+            "wanted_inputs": "n_samples",
 
             "sample_vals": sample_vals,
             "primary_samples": "C57BL/6J,DBA/2J,B6D2F1"
@@ -66,7 +65,7 @@ class TestCorrelationUtility(unittest.TestCase):
 
         expected_starts_vars = {
             "n_samples": 71,
-            "wanted_inputs": "sample_vals,corr_type,primary_samples,trait_id",
+            "wanted_inputs": "n_samples",
 
         }
 
@@ -83,9 +82,7 @@ class TestCorrelationUtility(unittest.TestCase):
         sample_vals = """{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}"""
 
         initial_start_vars = {
-            "wanted_inputs": "sample_vals,corr_type,primary_samples,trait_id",
-
-            "wanted": "sample_vals,dataset,genofile,primary_samples",
+            "wanted_inputs": "sample_vals,dataset,genofile,primary_samples",
             "genofile": "SAMPLE:X",
             "dataset": "HC_M2_0606_P",
 
@@ -99,6 +96,6 @@ class TestCorrelationUtility(unittest.TestCase):
 
         expected_results = {'start_vars': {'genofile': 'SAMPLE:X', 'dataset': 'HC_M2_0606_P', 'sample_vals': '{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}',
                                            'primary_samples': 'C57BL/6J,DBA/2J,B6D2F1',
-                                           'n_samples': 3, 'wanted_inputs': 'sample_vals,corr_type,primary_samples,trait_id'}}
+                                           'n_samples': 3, 'wanted_inputs':"sample_vals,dataset,genofile,primary_samples"}}
 
         self.assertEqual(results, expected_results)
