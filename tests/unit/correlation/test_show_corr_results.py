@@ -9,4 +9,7 @@ class TestCorrelationResults(unittest.TestCase):
 		with self.assertRaises(AssertionError):
 			corr_results_object = CorrelationResults(start_vars={})
 
+
+		# no assertionError
+
 		
