@@ -4,6 +4,9 @@ import unittest
 from gn3.correlation.show_corr_results import CorrelationResults
 
 
+
+
+
 class TestCorrelationResults(unittest.TestCase):
     def test_for_assertion(self):
         with self.assertRaises(AssertionError):
@@ -42,7 +45,8 @@ class TestCorrelationResults(unittest.TestCase):
         }
 
         corr_object = CorrelationResults(start_vars=start_vars)
-        results = corr_object.do_correlation()
+        results = corr_object.do_correlation(start_vars=start_vars)
+
 
 
 
