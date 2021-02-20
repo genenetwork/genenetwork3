@@ -5,28 +5,47 @@ from gn3.correlation.show_corr_results import CorrelationResults
 
 
 class TestCorrelationResults(unittest.TestCase):
-	def test_for_assertion(self):
-		with self.assertRaises(AssertionError):
-			corr_results_object = CorrelationResults(start_vars={})
+    def test_for_assertion(self):
+        with self.assertRaises(AssertionError):
+            corr_results_object = CorrelationResults(start_vars={})
+
+    def test_for_do_correlation(self):
+        """add  dummy test for doing correlation"""
+
+        start_vars = {
+          "corr_type": "sample",
+          "corr_sample_method": "pearson",
+          "corr_dataset": "HC_M2_0606_P",
+          "corr_return_results": 100
+        }
+
+        corr_results_object = CorrelationResults(start_vars=start_vars)
+
+        # results = corr_results_object.do_correlation()
+        # self.assertEqual(results,{
+  #      "success":"data"
+  #     })
 
 
-	def test_for_do_correlation(self):
+    def test_for_creating_traits_and_dataset(self):
 
-		start_vars = {
-		  "corr_type":"sample",
-		  "corr_sample_method":"pearson",
-		  "corr_dataset":"HC_M2_0606_P",
-		  "corr_return_results":100
-		}
+        """and dummy tests for creating trait and dataset with dataset=Temp"""
 
-		corr_results_object = CorrelationResults(start_vars=start_vars)
+        start_vars = {
+          "corr_type":"sample",
+          "corr_sample_method":"pearson",
+          "corr_dataset":"HC_M2_0606_P",
+          "corr_return_results":100,
+          "dataset":"Temp",
+          "trait_id": "1444666_at",
+          "group":"G1"
+        }
 
-		results = corr_results_object.do_correlation()
-		self.assertEqual(results,{
-    	 "success":"data"
-    	})
+        corr_object = CorrelationResults(start_vars=start_vars)
+        results = corr_object.do_correlation()
 
 
-		# no assertionError
 
-		
+        # no assertionError
+
+        
