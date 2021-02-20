@@ -20,7 +20,6 @@ def corr_compute_page():
     start_vars_container = get_loading_page_data(
         initial_start_vars=initial_start_vars)
 
-    return start_vars_container
 
     start_vars = start_vars_container["start_vars"]
 
