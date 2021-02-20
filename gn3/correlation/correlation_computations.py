@@ -6,14 +6,14 @@ import json
 
 def get_loading_page_data(initial_start_vars, create_dataset, get_genofile_samplelist):
     if initial_start_vars is None:
-        # added this just testing
+        # added this just to enable testing
         return "no items"
 
     """ function to create dataset and load page data """
     start_vars_container = {}
     n_samples = 0
     if "wanted_inputs" in initial_start_vars:
-        wanted = initial_start_vars["wanted"].split(",")
+        wanted = initial_start_vars["wanted_inputs"].split(",")
         start_vars = {}
 
         for key, value in initial_start_vars.items():
