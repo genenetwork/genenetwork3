@@ -46,7 +46,7 @@ class CorrelationResults:
     @staticmethod
     def assertion_for_start_vars(start_vars):
 
-        #should better ways to assert the variables
+        # should better ways to assert the variables
         # example includes sample
         assert("corr_type" in start_vars)
         assert(isinstance(start_vars['corr_type'], str))
@@ -59,6 +59,22 @@ class CorrelationResults:
         if "loc_chr" in start_vars:
             assert('min_loc_mb' in start_vars)
             assert('max_loc_mb' in start_vars)
+
+    def get_formatted_corr_type(self):
+        self.formatted_corr_type = ""
+        if self.corr_type == "lit":
+            self.formatted_corr_type += "Literature Correlation "
+        elif self.corr_type == "tissue":
+            self.formatted_corr_type += "Tissue Correlation "
+        elif self.corr_type == "sample":
+            self.formatted_corr_type += "Genetic Correlation "
+
+        if self.corr_method == "pearson":
+            self.formatted_corr_type += "(Pearson's r)"
+        elif self.corr_method == "spearman":
+            self.formatted_corr_type += "(Spearman's rho)"
+        elif self.corr_method == "bicor":
+            self.formatted_corr_type += "(Biweight r)"
 
     def do_correlation(self, start_vars):
 
@@ -77,6 +93,36 @@ class CorrelationResults:
 
             get_species_dataset_trait(self, start_vars)
 
+        corr_samples_group = start_vars['corr_samples_group']
+
+        self.sample_data = {}
+
+        self.corr_type = start_vars["corr_type"]
+
+        self.corr_method = start_vars['corr_sample_method']
+
+        # try to use a function to check for types to cannot be coerced to specified types
+
+        self.min_expr = float(
+            start_vars["min_expr"]) if start_vars["min_expr"] != "" else None
+
+        self.p_range_lower = float(
+            start_vars["p_range_lower"]) if start_vars["p_range_lower"] != "" else None
+
+        self.p_range_upper = float(
+            start_vars["p_range_upper"]) if start_vars["p_range_upper"] != "" else None
+
+        if ("loc_chr" in start_vars and "min_loc_mb" in start_vars and "max_loc_mb" in start_vars):
+            self.location_type = string(start_vars, 'location_type')
+            self.location_chr = string(start_vars, 'loc_chr')
+            self.min_location_mb = int(start_vars, 'min_loc_mb')
+            self.max_location_mb = int(start_vars, 'max_loc_mb')
+
+        else:
+            self.location_type = self.location_chr = self.min_location_mb = self.max_location_mb = None
+
+        self.get_formatted_corr_type()
+
+        self.return_number = int(start_vars['corr_return_results'])
 
         return self.__dict__
-
