@@ -2,12 +2,40 @@
 
 import unittest
 from gn3.api.correlation import get_loading_page_data
+from gn3.correlation.correlation_computations import compute_correlation
 
 
 class AttributeSetter:
     def __init__(self, trait_obj):
         for key, value in trait_obj.items():
             setattr(self, key, value)
+
+
+# mock for calculating correlation function
+
+def mock_get_loading_page_data(initial_start_vars):
+    results = {'start_vars':
+               {'genofile': 'SAMPLE:X', 'dataset': 'HC_M2_0606_P',
+                'sample_vals': '{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}',
+                'primary_samples': 'C57BL/6J,DBA/2J,B6D2F1',
+                'n_samples': 3,
+                'wanted_inputs': "sample_vals,dataset,genofile,primary_samples"}}
+
+    return results
+
+
+class MockCorrelationResults:
+
+    def __init__(self, start_vars):
+        for key, value in start_vars.items():
+            self.key = value
+
+    def do_correlation(self, start_vars):
+        corr_results = start_vars
+
+        return {
+            "success": "correlation results"
+        }
 
 
 class TestCorrelationUtility(unittest.TestCase):
@@ -34,7 +62,6 @@ class TestCorrelationUtility(unittest.TestCase):
 
     def test_fails(self):
         """add test that fails"""
-        print(get_loading_page_data)
 
         self.assertEqual(4, 4)
 
@@ -96,6 +123,27 @@ class TestCorrelationUtility(unittest.TestCase):
 
         expected_results = {'start_vars': {'genofile': 'SAMPLE:X', 'dataset': 'HC_M2_0606_P', 'sample_vals': '{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}',
                                            'primary_samples': 'C57BL/6J,DBA/2J,B6D2F1',
-                                           'n_samples': 3, 'wanted_inputs':"sample_vals,dataset,genofile,primary_samples"}}
+                                           'n_samples': 3, 'wanted_inputs': "sample_vals,dataset,genofile,primary_samples"}}
 
         self.assertEqual(results, expected_results)
+
+    def test_compute_correlation(self):
+        """test function for doing correlation"""
+
+        sample_vals = """{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}"""
+
+        initial_start_vars = {
+            "wanted_inputs": "sample_vals,dataset,genofile,primary_samples",
+            "genofile": "SAMPLE:X",
+            "dataset": "HC_M2_0606_P",
+
+            "sample_vals": sample_vals,
+            "primary_samples": "C57BL/6J,DBA/2J,B6D2F1"
+
+        }
+        correlation_object = compute_correlation(
+            init_start_vars=initial_start_vars, get_loading_page_data=mock_get_loading_page_data, CorrelationResults=MockCorrelationResults)
+
+        self.assertEqual({
+            "success": "correlation results"
+        }, correlation_object)
