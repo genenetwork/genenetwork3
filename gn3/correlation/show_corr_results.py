@@ -2,15 +2,16 @@
 
 import json
 
+
 def create_dataset(dataset_name, dataset_type, group_name):
     """mock function for creating dataset"""
 
     dataset = AttributeSetter({
         "group": AttributeSetter({
             "genofile": "",
-            "samplelist":"S1",
-            "parlist":"",
-            "f1list":""
+            "samplelist": "S1",
+            "parlist": "",
+            "f1list": ""
 
 
         })
@@ -82,14 +83,12 @@ class CorrelationResults:
         elif self.corr_method == "bicor":
             self.formatted_corr_type += "(Biweight r)"
 
-
-
     def process_samples(self, start_vars, sample_names, excluded_samples=None):
+        print(start_vars["sample_vals"])
         if not excluded_samples:
             excluded_samples = ()
 
-
-        return;
+        # return
 
         # currently the below code fails as sample_vals is not passed
 
@@ -97,10 +96,17 @@ class CorrelationResults:
         for sample in sample_names:
             if sample not in excluded_samples:
                 value = sample_val_dict[sample]
-                if not value.strip().lower() == 'x':
-                    self.sample_data[str(sample)] = float(value)
+                if not value.strip().lower() == "x":
+                    self.sample_data[str(sample)] ==float(value)
+        # for sample in sample_names:
+        #     if sample not in excluded_samples:
+        #         value = sample_val_dict[sample]
+        #         if not value.strip().lower() == 'x':
+        #             self.sample_data[str(sample)] = float(value)
 
     def do_correlation(self, start_vars):
+
+        # print(start_vars)
 
         # should probably rename this method cause all that happens is variabe assignment and
 
@@ -111,11 +117,15 @@ class CorrelationResults:
 
             self.trait_id = start_vars['trait_id']
 
+            # should pass as argument
+
             self.this_trait = create_trait(dataset=self.dataset,
                                            name=self.trait_id,
                                            cellid=None)
 
         else:
+
+            # should the function as an argument
 
             get_species_dataset_trait(self, start_vars)
 
@@ -161,7 +171,9 @@ class CorrelationResults:
         if self.dataset.group.f1list != None:
             primary_samples += self.dataset.group.f1list
 
-        #If either BXD/whatever Only or All Samples, append all of that group's samplelist
+        # If either BXD/whatever Only or All Samples, append all of that group's samplelist
+
+    
 
         if corr_samples_group != 'samples_other':
             self.process_samples(start_vars, primary_samples)
