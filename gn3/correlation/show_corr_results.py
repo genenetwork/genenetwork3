@@ -1,12 +1,18 @@
 """module contains code for doing correlation"""
 
+import json
 
 def create_dataset(dataset_name, dataset_type, group_name):
     """mock function for creating dataset"""
 
     dataset = AttributeSetter({
         "group": AttributeSetter({
-            "genofile": ""
+            "genofile": "",
+            "samplelist":"S1",
+            "parlist":"",
+            "f1list":""
+
+
         })
     })
 
@@ -76,7 +82,27 @@ class CorrelationResults:
         elif self.corr_method == "bicor":
             self.formatted_corr_type += "(Biweight r)"
 
+
+
+    def process_samples(self, start_vars, sample_names, excluded_samples=None):
+        if not excluded_samples:
+            excluded_samples = ()
+
+
+        return;
+
+        # currently the below code fails as sample_vals is not passed
+
+        sample_val_dict = json.loads(start_vars['sample_vals'])
+        for sample in sample_names:
+            if sample not in excluded_samples:
+                value = sample_val_dict[sample]
+                if not value.strip().lower() == 'x':
+                    self.sample_data[str(sample)] = float(value)
+
     def do_correlation(self, start_vars):
+
+        # should probably rename this method cause all that happens is variabe assignment and
 
         # start_vars = self.start_vars
         if start_vars["dataset"] == "Temp":
@@ -113,10 +139,10 @@ class CorrelationResults:
             start_vars["p_range_upper"]) if start_vars["p_range_upper"] != "" else None
 
         if ("loc_chr" in start_vars and "min_loc_mb" in start_vars and "max_loc_mb" in start_vars):
-            self.location_type = string(start_vars, 'location_type')
-            self.location_chr = string(start_vars, 'loc_chr')
-            self.min_location_mb = int(start_vars, 'min_loc_mb')
-            self.max_location_mb = int(start_vars, 'max_loc_mb')
+            self.location_type = string(start_vars['location_type'])
+            self.location_chr = string(start_vars['loc_chr'])
+            self.min_location_mb = int(start_vars['min_loc_mb'])
+            self.max_location_mb = int(start_vars['max_loc_mb'])
 
         else:
             self.location_type = self.location_chr = self.min_location_mb = self.max_location_mb = None
@@ -124,5 +150,20 @@ class CorrelationResults:
         self.get_formatted_corr_type()
 
         self.return_number = int(start_vars['corr_return_results'])
+        primary_samples = self.dataset.group.samplelist
+
+        # The two if statements below append samples to the sample list based upon whether the user
+        # rselected Primary Samples Only, Other Samples Only, or All Samples
+
+        if self.dataset.group.parlist != None:
+            primary_samples += self.dataset.group.parlist
+
+        if self.dataset.group.f1list != None:
+            primary_samples += self.dataset.group.f1list
+
+        #If either BXD/whatever Only or All Samples, append all of that group's samplelist
+
+        if corr_samples_group != 'samples_other':
+            self.process_samples(start_vars, primary_samples)
 
         return self.__dict__
