@@ -41,3 +41,7 @@ def get_species_dataset_trait(self_obj, start_vars):
     """function should somehow mutate the passed object"""
 
     return ""
+
+
+def get_genofile_samplelist(dataset):
+    return ["C57BL/6J"]
