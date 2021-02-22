@@ -6,7 +6,7 @@ from flask import request
 
 from gn3.correlation.correlation_computations import get_loading_page_data
 from gn3.correlation.correlation_computations import compute_correlation
-from gn3.correlation.show_corr_results import CorrelationResults
+
 
 correlation = Blueprint("correlation", __name__)
 
