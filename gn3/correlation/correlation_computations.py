@@ -1,6 +1,11 @@
 """module contains code for any computation in correlation"""
 
 import json
+from .correlation_utility import AttributeSetter
+from .correlation_utility import get_genofile_samplelist
+
+
+from .show_corr_results import CorrelationResults
 
 
 class AttributeSetter:
@@ -20,14 +25,14 @@ def create_dataset(dataset):
     return dataset
 
 
-def get_genofile_samplelist(dataset):
-    # should mock call to db
-    return ["C57BL/6J"]
+def filter_wanted_inputs():
+    """split the get loading page data function"""
+    pass
 
 
 def get_loading_page_data(initial_start_vars, create_dataset=create_dataset, get_genofile_samplelist=get_genofile_samplelist):
     if initial_start_vars is None:
-        # added this just to enable testing
+        # added this just to enable testing of this function
         return "no items"
 
     """ function to create dataset and load page data """
@@ -76,3 +81,20 @@ def get_loading_page_data(initial_start_vars, create_dataset=create_dataset, get
         start_vars_container['start_vars'] = initial_start_vars
 
     return start_vars_container
+
+
+def compute_correlation(init_start_vars, get_loading_page_data=get_loading_page_data, CorrelationResults=CorrelationResults):
+    """function that does correlation .creates Correlation results instance"""
+
+    start_vars_container = get_loading_page_data(
+        initial_start_vars=init_start_vars)
+
+    start_vars = start_vars_container["start_vars"]
+
+    corr_object = CorrelationResults(
+        start_vars=start_vars)
+
+    corr_results = corr_object.do_correlation(start_vars=start_vars)
+    # possibility of file being so large cause of the not sure whether to return a file
+
+    return corr_results
