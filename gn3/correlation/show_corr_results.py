@@ -1,48 +1,9 @@
 """module contains code for doing correlation"""
 
 import json
-
-
-def create_dataset(dataset_name, dataset_type, group_name):
-    """mock function for creating dataset"""
-
-    dataset = AttributeSetter({
-        "group": AttributeSetter({
-            "genofile": "",
-            "samplelist": "S1",
-            "parlist": "",
-            "f1list": ""
-
-
-        })
-    })
-
-    return dataset
-
-
-def create_trait(dataset, name, cellid):
-    """mock function for creating dataset"""
-
-    trait = AttributeSetter({
-        "group": AttributeSetter({
-            "genofile": ""
-        })
-    })
-
-    return trait
-
-
-def get_species_dataset(self_obj, start_vars):
-    # do somethig return
-    """function should somehow mutate the passed object"""
-
-    return ""
-
-
-class AttributeSetter:
-    def __init__(self, trait_obj):
-        for key, value in trait_obj.items():
-            setattr(self, key, value)
+from .correlation_utility import create_dataset
+from .correlation_utility import create_trait
+from .correlation_utility import get_species_dataset_trait
 
 
 class CorrelationResults:
@@ -84,25 +45,16 @@ class CorrelationResults:
             self.formatted_corr_type += "(Biweight r)"
 
     def process_samples(self, start_vars, sample_names, excluded_samples=None):
-        print(start_vars["sample_vals"])
         if not excluded_samples:
             excluded_samples = ()
 
-        # return
+        return
 
         # currently the below code fails as sample_vals is not passed
 
         sample_val_dict = json.loads(start_vars['sample_vals'])
         for sample in sample_names:
-            if sample not in excluded_samples:
-                value = sample_val_dict[sample]
-                if not value.strip().lower() == "x":
-                    self.sample_data[str(sample)] ==float(value)
-        # for sample in sample_names:
-        #     if sample not in excluded_samples:
-        #         value = sample_val_dict[sample]
-        #         if not value.strip().lower() == 'x':
-        #             self.sample_data[str(sample)] = float(value)
+            pass
 
     def do_correlation(self, start_vars):
 
@@ -173,9 +125,19 @@ class CorrelationResults:
 
         # If either BXD/whatever Only or All Samples, append all of that group's samplelist
 
-    
-
         if corr_samples_group != 'samples_other':
+            # currently doing nothing
             self.process_samples(start_vars, primary_samples)
+
+        if corr_samples_group != 'samples_primary':
+            if corr_samples_group == 'samples_other':
+                primary_samples = [x for x in primary_samples if x not in (
+                    self.dataset.group.parlist + self.dataset.group.f1list)]
+
+             # currently doing nothing
+            self.process_samples(start_vars, list(
+                self.this_trait.data.keys()), primary_samples)
+
+        # should return json data after computing correlation
 
         return self.__dict__
