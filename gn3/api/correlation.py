@@ -20,7 +20,6 @@ def corr_compute_page():
     start_vars_container = get_loading_page_data(
         initial_start_vars=initial_start_vars)
 
-
     start_vars = start_vars_container["start_vars"]
 
     corr_object = CorrelationResults(
@@ -32,7 +31,8 @@ def corr_compute_page():
     # possibility of file being so large cause of the not sure whether to return a file
 
     try:
-        corr_results =json.loads(json.dumps(corr_results, default=lambda o: o.__dict__))
+        corr_results = json.loads(json.dumps(
+            corr_results, default=lambda o: o.__dict__))
 
         return corr_results
     except Exception as e:
