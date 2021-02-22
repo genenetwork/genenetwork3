@@ -41,7 +41,12 @@ class TestCorrelationResults(unittest.TestCase):
           "corr_return_results":100,
           "dataset":"Temp",
           "trait_id": "1444666_at",
-          "group":"G1"
+          "group":"G1",
+          "corr_samples_group": "samples_primary",
+          "min_expr": "",
+          "p_range_lower": "-1.00", 
+          "p_range_upper": "1.00"
+
         }
 
         corr_object = CorrelationResults(start_vars=start_vars)
