@@ -3,7 +3,7 @@ import random
 import string
 
 
-def generate_random_n_string(n_length):
+def generate_random_n_string(n_length: int) -> str:
     """Generate a random string that is N chars long"""
     return ''.join(random.choice(string.ascii_uppercase + string.digits)
                    for _ in range(n_length))
