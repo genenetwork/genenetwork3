@@ -9,8 +9,9 @@ from gn3.app import create_app
 
 @dataclass
 class MockRedis:
-    """Mock File object returned by request.files"""
+    """Mock the Redis Module"""
     redis: Callable
+    hget: Callable
 
 
 class GemmaAPITest(unittest.TestCase):
@@ -33,7 +34,7 @@ class GemmaAPITest(unittest.TestCase):
     def test_run_gemma(self, mock_gemma_computation_cmd,
                        mock_queue_cmd, mock_redis):
         """Test that gemma composes the command correctly"""
-        _redis_conn = MockRedis(redis=mock.MagicMock())
+        _redis_conn = MockRedis(redis=mock.MagicMock(), hget=mock.MagicMock())
         mock_redis.return_value = _redis_conn
         mock_gemma_computation_cmd.side_effect = [
             ("gemma-wrapper --json -- "
@@ -78,3 +79,19 @@ class GemmaAPITest(unittest.TestCase):
             {"unique_id": 'my-unique-id',
              "status": "queued",
              "output_file": "BXD_GWA_9lo8zwOOXbfB73EcyXxAYQ.txt"})
+
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    def test_check_cmd_status(self, mock_redis):
+        """Test that you can check the status of a given command"""
+        mock_hget = mock.MagicMock()
+        mock_hget.return_value = b"test"
+        _redis_conn = MockRedis(redis=mock.MagicMock(), hget=mock_hget)
+        mock_redis.return_value = _redis_conn
+        response = self.app.get(("/gemma/status/"
+                                 "cmd%3A%3A2021-02-1217-3224-3224-1234"),
+                                follow_redirects=True)
+        mock_hget.assert_called_once_with(
+            name="cmd::2021-02-1217-3224-3224-1234",
+            key="status")
+        self.assertEqual(response.get_json(),
+                         {"status": "test"})
