@@ -26,7 +26,7 @@ def get_version():
 
 # This is basically extracted from genenetwork2
 # wqflask/wqflask/marker_regression/gemma_ampping.py
-@gemma.route("/run", methods=["POST"])
+@gemma.route("/k-gwa-computation", methods=["POST"])
 def run_gemma():
     """Generates a command for generating K-Values and then later, generate a GWA
 command that contains markers. These commands are queued; and the expected
