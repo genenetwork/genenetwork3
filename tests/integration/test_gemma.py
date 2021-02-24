@@ -48,7 +48,7 @@ class GemmaAPITest(unittest.TestCase):
              "bxd_GWA_gUFhGu4rLG7k+CXLPk1OUg.txt")
         ]
         mock_queue_cmd.return_value = "my-unique-id"
-        response = self.app.post("/gemma/run", json={
+        response = self.app.post("/gemma/k-gwa-computation", json={
             "trait_filename": "BXD.txt",
             "geno_filename": "BXD_geno",
             "values": ["X", "N/A", "X"],
