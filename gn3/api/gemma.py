@@ -73,3 +73,17 @@ file output is returned.
         status="queued",
         output_file=(f"{data.get('dataset_name')}_GWA_"
                      f"{__hash}.txt"))
+
+
+@gemma.route("/status/<unique_id>", methods=["GET"])
+def check_cmd_status(unique_id):
+    """Given a (url-encoded) UNIQUE-ID which is returned when hitting any of the
+gemma endpoints, return the status of the command
+
+    """
+    status = redis.Redis().hget(name=unique_id,
+                                key="status")
+    if not status:
+        return jsonify(status=128,
+                       error="The unique id you used does not exist!"), 500
+    return jsonify(status=status.decode("utf-8"))
