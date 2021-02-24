@@ -5,8 +5,11 @@ import string
 
 from base64 import b64encode
 from hashlib import md5
+from typing import Dict
 from typing import List
+from typing import Optional
 from typing import ValuesView
+from gn3.commands import compose_gemma_cmd
 
 def generate_random_n_string(n_length: int) -> str:
     """Generate a random string that is N chars long"""
@@ -50,3 +53,26 @@ def do_paths_exist(paths: ValuesView) -> bool:
         if not os.path.isfile(path):
             return False
     return True
+
+
+def generate_gemma_computation_cmd(gemma_cmd: str,
+                                   gemma_kwargs: Dict[str, str],
+                                   output_file: str) -> Optional[str]:
+    """Create a higher order function that generates a command"""
+    geno_filename = gemma_kwargs.get("geno_filename", "")
+    trait_filename = gemma_kwargs.get("trait_filename")
+    ext, snps_filename = geno_filename.partition(".")[-1], ""
+    if geno_filename:
+        snps_filename = geno_filename.replace(f".{ext}", "")
+        snps_filename += f"_snps.{ext}"
+    _kwargs = {"g": geno_filename, "p": trait_filename}
+    if gemma_kwargs.get("covar_filename"):
+        _kwargs["a"] = gemma_kwargs.get("covar_filename")
+    if not do_paths_exist(_kwargs.values()):  # Prevents injection!
+        return None
+    if _kwargs.get("lmm"):
+        _kwargs["lmm"] = gemma_kwargs.get("lmm")
+    return compose_gemma_cmd(gemma_wrapper_cmd=gemma_cmd,
+                             gemma_kwargs=_kwargs,
+                             gemma_args=["-gk", ">",
+                                         output_file])

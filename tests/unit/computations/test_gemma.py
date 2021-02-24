@@ -4,6 +4,7 @@ import unittest
 from unittest import mock
 from gn3.computations.gemma import generate_hash_of_string
 from gn3.computations.gemma import generate_pheno_txt_file
+from gn3.computations.gemma import generate_gemma_computation_cmd
 
 
 class TestGemma(unittest.TestCase):
@@ -29,3 +30,22 @@ class TestGemma(unittest.TestCase):
         """Test that a string is hashed correctly"""
         self.assertEqual(generate_hash_of_string("I^iQP&TlSR^z"),
                          "hMVRw8kbEp49rOmoIkhMjA")
+
+    @mock.patch("gn3.computations.gemma.do_paths_exist")
+    def test_compose_k_computation_cmd(self, mock_pathsp):
+        """Test that a K computation cmd is constructed properly"""
+        mock_pathsp.return_value = True
+        self.assertEqual(
+            generate_gemma_computation_cmd(
+                gemma_cmd="gemma-wrapper",
+                gemma_kwargs={
+                    "geno_filename": "genofile.txt",
+                    "trait_filename": "test.txt",
+                    "covar_filename": "genofile_snps.txt"},
+                output_file="/tmp/gn2/k_output_gUFhGu4rLG7k+CXLPk1OUg.txt",
+            ),
+            ("gemma-wrapper --json -- "
+             "-g genofile.txt -p "
+             "test.txt -a genofile_snps.txt "
+             "-gk > /tmp/gn2/"
+             "k_output_gUFhGu4rLG7k+CXLPk1OUg.txt"))
