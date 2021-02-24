@@ -66,6 +66,7 @@
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
                        ("gemma-wrapper" ,gemma-wrapper)
+                       ("jupyter" ,jupyter)
                        ("python-bcrypt" ,python-bcrypt)
                        ("python" ,python-wrapper)
                        ("python-flask" ,python-flask)
