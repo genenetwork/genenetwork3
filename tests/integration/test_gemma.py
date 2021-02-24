@@ -60,6 +60,7 @@ class GemmaAPITest(unittest.TestCase):
         mock_queue_cmd.assert_has_calls(
             [mock.call(conn=_redis_conn,
                        email="me@me.com",
+                       job_queue="GN3::job-queue",
                        cmd=("gemma-wrapper --json -- -g "
                             "genofile.txt -p test.txt "
                             "-a genofile_snps.txt -gk > "

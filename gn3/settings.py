@@ -8,5 +8,6 @@ APP_DEFAULTS = {
     "GEMMA_WRAPPER_CMD": os.environ.get("GEMMA_WRAPPER", "gemma-wrapper"),
     "TMPDIR": os.environ.get("TMPDIR", tempfile.gettempdir()),
     "GENODIR": "",
-    "REDIS_URI": "redis://localhost:6379/0"
+    "REDIS_URI": "redis://localhost:6379/0",
+    "REDIS_JOB_QUEUE": "GN3::job-queue"
 }
