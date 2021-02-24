@@ -6,6 +6,7 @@ import string
 from base64 import b64encode
 from hashlib import md5
 from typing import List
+from typing import ValuesView
 
 def generate_random_n_string(n_length: int) -> str:
     """Generate a random string that is N chars long"""
@@ -41,3 +42,11 @@ def generate_pheno_txt_file(trait_filename: str,
             else:
                 _file.write(f"{value}\n")
     return f"{tmpdir}/gn2/{trait_filename}"
+
+
+def do_paths_exist(paths: ValuesView) -> bool:
+    """Given a list of PATHS, return False if any of them do not exist."""
+    for path in paths:
+        if not os.path.isfile(path):
+            return False
+    return True
