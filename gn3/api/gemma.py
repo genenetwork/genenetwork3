@@ -7,10 +7,11 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.commands import compose_gemma_cmd
 from gn3.commands import queue_cmd
 from gn3.commands import run_cmd
-from gn3.file_utils import jsonfile_to_dict
+from gn3.computations.gemma import generate_hash_of_string
+from gn3.computations.gemma import generate_pheno_txt_file
+from gn3.computations.gemma import generate_gemma_computation_cmd
 
 gemma = Blueprint("gemma", __name__)
 
@@ -33,47 +34,41 @@ file output is returned.
 
     """
     data = request.get_json()
-    if not data.get("token"):
-        return jsonify(status=128, error="Please provide a token"), 400
     app_defaults = current_app.config.get('APP_DEFAULTS')
-    metadata = os.path.join(app_defaults.get("TMPDIR"),
-                            data.get("token"),
-                            data.get("metadata", "metadata.json"))
-    if not os.path.isfile(metadata):
-        return jsonify(status=128,
-                       error=f"{metadata}: file does not exist"), 500
-    metadata = jsonfile_to_dict(metadata)
+    __hash = generate_hash_of_string("".join(data.get("values")))
     gemma_kwargs = {
-        "g": os.path.join(app_defaults.get("GENODIR"), "bimbam",
-                          metadata.get("genotype_file")),
-        "p": os.path.join(app_defaults.get("GENODIR"), "bimbam",
-                          metadata.get("phenotype_file")),
-        "a": os.path.join(app_defaults.get("GENODIR"), "bimbam",
-                          metadata.get("snp_file"))}
-    generate_k_cmd = compose_gemma_cmd(
-        gemma_wrapper_cmd=app_defaults.get("GEMMA_WRAPPER_CMD"),
+        "geno_filename": os.path.join(app_defaults.get("GENODIR"), "bimbam",
+                                      f"{data.get('genofile_name')}.txt"),
+        "trait_filename": generate_pheno_txt_file(
+            tmpdir=app_defaults.get("TMPDIR"),
+            values=data.get("values"),
+            # Generate this file on the fly!
+            trait_filename=(f"{data.get('dataset_groupname')}_"
+                            f"{data.get('trait_name')}_"
+                            f"{__hash}.txt"))}
+    k_computation_cmd = generate_gemma_computation_cmd(
+        gemma_cmd=app_defaults.get("GEMMA_WRAPPER_CMD"),
         gemma_kwargs=gemma_kwargs,
-        gemma_args=["-gk", ">",
-                    os.path.join(app_defaults.get("TMPDIR"), "gn2",
-                                 f"k_output_{data.get('token')}.txt")])
-    if metadata.get("covariates"):
+        output_file=(f"{app_defaults.get('TMPDIR')}/gn2/"
+                     f"{data.get('dataset_name')}_K_"
+                     f"{__hash}.json"))
+    if data.get("covariates"):
         gemma_kwargs["c"] = os.path.join(app_defaults.get("GENODIR"),
                                          "bimbam",
-                                         metadata.get("covariates"))
-    # Prevents command injection!
-    for _, value in gemma_kwargs.items():
-        if not os.path.isfile(value):
-            return jsonify(status=128, error=f"{value}: Does not exist!"), 500
-
-    gemma_kwargs["lmm"] = 9
-    gwa_cmd = compose_gemma_cmd(
-        gemma_wrapper_cmd=app_defaults.get("GEMMA_WRAPPER_CMD"),
+                                         data.get("covariates"))
+    gemma_kwargs["lmm"] = data.get("lmm", 9)
+    gwa_cmd = generate_gemma_computation_cmd(
+        gemma_cmd=app_defaults.get("GEMMA_WRAPPER_CMD"),
         gemma_kwargs=gemma_kwargs,
-        gemma_args=[">",
-                    os.path.join(app_defaults.get("TMPDIR"),
-                                 "gn2",
-                                 f"gemma_output_{data.get('token')}.txt")])
-    unique_id = queue_cmd(conn=redis.Redis(), email=metadata.get("email"),
-                          cmd=f"{generate_k_cmd} && {gwa_cmd}")
-    return jsonify(unique_id=unique_id, status="queued",
-                   output_file=f"gemma_output_{data.get('token')}.txt")
+        output_file=(f"{data.get('dataset_name')}_GWA_"
+                     f"{__hash}.txt"))
+    if not all([k_computation_cmd, gwa_cmd]):
+        return jsonify(status=128,
+                       error="Unable to generate cmds for computation!"), 500
+    return jsonify(
+        unique_id=queue_cmd(conn=redis.Redis(),
+                            email=data.get("email"),
+                            cmd=f"{k_computation_cmd} && {gwa_cmd}"),
+        status="queued",
+        output_file=(f"{data.get('dataset_name')}_GWA_"
+                     f"{__hash}.txt"))
