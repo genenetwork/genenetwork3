@@ -68,6 +68,7 @@ file output is returned.
     return jsonify(
         unique_id=queue_cmd(conn=redis.Redis(),
                             email=data.get("email"),
+                            job_queue=app_defaults.get("REDIS_JOB_QUEUE"),
                             cmd=f"{k_computation_cmd} && {gwa_cmd}"),
         status="queued",
         output_file=(f"{data.get('dataset_name')}_GWA_"

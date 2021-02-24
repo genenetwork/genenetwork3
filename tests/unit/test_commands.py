@@ -41,6 +41,7 @@ class TestCommands(unittest.TestCase):
         self.assertRaises(RedisConnectionError,
                           queue_cmd,
                           cmd="ls",
+                          job_queue="GN2::job-queue",
                           conn=MockRedis(ping=lambda: False,
                                          hset=mock.MagicMock(),
                                          rpush=mock.MagicMock()))
@@ -59,7 +60,8 @@ class TestCommands(unittest.TestCase):
                                     rpush=mock.MagicMock())
         actual_unique_id = "cmd::2021-02-1217-3224-3224-1234"
         self.assertEqual(queue_cmd(cmd="ls",
-                                   conn=mock_redis_conn),
+                                   conn=mock_redis_conn,
+                                   job_queue="GN2::job-queue"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(
             [mock.call("cmd", "ls", actual_unique_id),
@@ -84,6 +86,7 @@ class TestCommands(unittest.TestCase):
         actual_unique_id = "cmd::2021-02-1217-3224-3224-1234"
         self.assertEqual(queue_cmd(cmd="ls",
                                    conn=mock_redis_conn,
+                                   job_queue="GN2::job-queue",
                                    email="me@me.com"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(

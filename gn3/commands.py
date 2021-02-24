@@ -33,7 +33,8 @@ def compose_gemma_cmd(
     return cmd
 
 
-def queue_cmd(conn: Redis, cmd: str, email: Optional[str] = None) -> str:
+def queue_cmd(conn: Redis, job_queue: str,
+              cmd: str, email: Optional[str] = None) -> str:
     """Given a command CMD; (optional) EMAIL; and a redis connection CONN, queue
 it in Redis with an initial status of 'queued'.  The following status codes
 are supported:
@@ -53,7 +54,7 @@ are supported:
                        "result": "",
                        "status": "queued"}.items():
         conn.hset(key, value, unique_id)
-        conn.rpush("GN2::job-queue",
+        conn.rpush(job_queue,
                    unique_id)
     if email:
         conn.hset("email",
