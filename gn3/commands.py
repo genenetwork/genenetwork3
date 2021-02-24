@@ -44,6 +44,8 @@ are supported:
     success: Successful completion
     error:   Erroneous completion
 
+Returns the name of the specific redis hash for the specific task.
+
     """
     if not conn.ping():
         raise RedisConnectionError
