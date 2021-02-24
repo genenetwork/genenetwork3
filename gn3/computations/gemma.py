@@ -2,6 +2,8 @@
 import random
 import string
 
+from base64 import b64encode
+from hashlib import md5
 
 def generate_random_n_string(n_length: int) -> str:
     """Generate a random string that is N chars long"""
@@ -9,6 +11,11 @@ def generate_random_n_string(n_length: int) -> str:
                    for _ in range(n_length))
 
 
+def generate_hash_of_string(unhashed_str: str) -> str:
+    """Given an UNHASHED_STRING, generate it's md5 hash while removing the '==' at
+the end"""
+    hashed_str = md5(unhashed_str.encode("utf-8")).digest()
+    return b64encode(hashed_str).decode("utf-8").replace("==", "")
 def generate_pheno_txt_file(trait_filename: str,
                             values: str,
                             tmpdir: str = "/tmp") -> str:
