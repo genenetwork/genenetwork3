@@ -22,8 +22,6 @@ class DatasetType:
 
         data = self.redis_instance.get("dataset_structure")
 
-        data = None
-
         if data:
             self.datasets = json.loads(data)
 
@@ -58,15 +56,66 @@ class DatasetType:
             self.redis_instance.set(
                 "dataset_structure", json.dumps(self.datasets))
 
+        def set_dataset_key(self, t, name):
+            """If name is not in the object's dataset dictionary, set it, and update
+        dataset_structure in Redis
+
+        args:
+          t: Type of dataset structure which can be: 'mrna_expr', 'pheno',
+             'other_pheno', 'geno'
+          name: The name of the key to inserted in the datasets dictionary
+
+        """
+
+        sql_query_mapping = {
+            'mrna_expr': ("""SELECT ProbeSetFreeze.Id FROM """ +
+                          """ProbeSetFreeze WHERE ProbeSetFreeze.Name = "{}" """),
+            'pheno': ("""SELECT InfoFiles.GN_AccesionId """ +
+                      """FROM InfoFiles, PublishFreeze, InbredSet """ +
+                      """WHERE InbredSet.Name = '{}' AND """ +
+                      """PublishFreeze.InbredSetId = InbredSet.Id AND """ +
+                      """InfoFiles.InfoPageName = PublishFreeze.Name"""),
+            'other_pheno': ("""SELECT PublishFreeze.Name """ +
+                            """FROM PublishFreeze, InbredSet """ +
+                            """WHERE InbredSet.Name = '{}' AND """ +
+                            """PublishFreeze.InbredSetId = InbredSet.Id"""),
+            'geno':  ("""SELECT GenoFreeze.Id FROM GenoFreeze WHERE """ +
+                      """GenoFreeze.Name = "{}" """)
+        }
+
+        dataset_name_mapping = {
+            "mrna_expr": "ProbeSet",
+            "pheno": "Publish",
+            "other_pheno": "Publish",
+            "geno": "Geno",
+        }
+
+        group_name = name
+
+        if t in ['pheno', 'other_pheno']:
+            group_name = name.replace("Publish", "")
+
+        results = g.db.execute(
+            sql_query_mapping[t].format(group_name)).fetchone()
+        if results:
+            self.datasets[name] = dataset_name_mapping[t]
+            self.redis_instance.set(
+                "dataset_structure", json.dumps(self.datasets))
+
+            return True
+
+        return None
+
         def __call__(self, name):
             if name not in self.datasets:
-                for val in ["mrna_expr", "pheno", "other_pheno", "geno"]:
+                for t in ["mrna_expr", "pheno", "other_pheno", "geno"]:
 
                     if(self.set_dataset_key(t, name)):
                         # This has side-effects, with the end result being a truth-y value
                         break
 
             return self.datasets.get(name, None)
+
 
             # Do the intensive work at  startup one time only
 Dataset_Getter = DatasetType(r)
