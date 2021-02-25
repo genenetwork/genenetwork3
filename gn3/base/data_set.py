@@ -4,6 +4,9 @@ import requests
 from redis import Redis
 from flask import g
 from gn3.correlation.correlation_utility import AttributeSetter
+from gn3.utility.db_tools import escape
+from gn3.db.calls import fetch1
+from gn3.db.calls import fetchone
 r = Redis()
 
 # move  this to configuration file
@@ -166,7 +169,53 @@ class DatasetType:
 Dataset_Getter = DatasetType(r)
 
 
-class DataSet(object):
+class DatasetGroup:
+    """
+    Each group has multiple datasets; each species has multiple groups.
+
+    For example, Mouse has multiple groups (BXD, BXA, etc), and each group
+    has multiple datasets associated with it.
+
+    """
+
+    def __init__(self, dataset, name=None):
+        """This sets self.group and self.group_id"""
+        if name == None:
+            self.name, self.id, self.genetic_type = fetchone(
+                dataset.query_for_group)
+
+        else:
+            self.name, self.id, self.genetic_type = fetchone(
+                "SELECT InbredSet.Name, InbredSet.Id, InbredSet.GeneticType FROM InbredSet where Name='%s'" % name)
+
+        if self.name == 'BXD300':
+            self.name = "BXD"
+
+        self.f1list = None
+
+        self.parlist = None
+
+        self.get_f1_parent_strains()
+
+        self.mapping_id, self.mapping_names = self.get_mapping_methods()
+
+    def get_f1_parent_strains(self):
+        try:
+            # should import ParInfo
+            raise e
+            # NL, 07/27/2010. ParInfo has been moved from webqtlForm.py to webqtlUtil.py;
+            f1, f12, maternal, paternal = webqtlUtil.ParInfo[self.name]
+        except Exception as e:
+            f1 = f12 = maternal = paternal = None
+
+        if f1 and f12:
+            self.f1list = [f1, f12]
+
+        if maternal and paternal:
+            self.parlist = [maternal, paternal]
+
+
+class DataSet:
     """
     DataSet class defines a dataset in webqtl, can be either Microarray,
     Published phenotype, genotype, or user input dataset(temp)
@@ -275,7 +324,7 @@ class DataSet(object):
                         WHERE (Name = '%s' OR FullName = '%s' OR ShortName = '%s')
                     """ % (query_args))
 
-        except TypeError:
+        except TypeError as e:
             logger.debug(
                 "Dataset {} is not yet available in GeneNetwork.".format(self.name))
             pass
@@ -527,7 +576,7 @@ class MrnaAssayDataSet(DataSet):
                     Order BY
                             Strain.Name
                     """ % (escape(trait), escape(self.name))
-        logger.sql(query)
+        # logger.sql(query)
         results = g.db.execute(query).fetchall()
         #logger.debug("RETRIEVED RESULTS HERE:", results)
         return results
@@ -539,7 +588,26 @@ class MrnaAssayDataSet(DataSet):
                     where ProbeSetXRef.ProbeSetFreezeId = %s and
                     ProbeSetXRef.ProbeSetId=ProbeSet.Id;
                 """ % (column_name, escape(str(self.id)))
-        logger.sql(query)
+        # logger.sql(query)
         results = g.db.execute(query).fetchall()
 
         return dict(results)
+
+
+def geno_mrna_confidentiality(ob):
+    dataset_table = ob.type + "Freeze"
+    #logger.debug("dataset_table [%s]: %s" % (type(dataset_table), dataset_table))
+
+    query = '''SELECT Id, Name, FullName, confidentiality,
+                        AuthorisedUsers FROM %s WHERE Name = "%s"''' % (dataset_table, ob.name)
+    # logger.sql(query)
+    result = g.db.execute(query)
+
+    (dataset_id,
+     name,
+     full_name,
+     confidential,
+     authorized_users) = result.fetchall()[0]
+
+    if confidential:
+        return True
