@@ -31,7 +31,6 @@ class DatasetType:
 
             try:
 
-
                 data = json.loads(requests.get(
                     GN2_BASE_URL + "/api/v_pre1/gen_dropdown", timeout=5).content)
 
@@ -53,12 +52,21 @@ class DatasetType:
 
                                 self.datasets[short_dataset_name] = new_type
 
-
             except Exception as e:
                 raise e
 
-            self.redis_instance.set("dataset_structure", json.dumps(self.datasets))
+            self.redis_instance.set(
+                "dataset_structure", json.dumps(self.datasets))
 
+        def __call__(self, name):
+            if name not in self.datasets:
+                for val in ["mrna_expr", "pheno", "other_pheno", "geno"]:
 
-                # Do the intensive work at  startup one time only
+                    if(self.set_dataset_key(t, name)):
+                        # This has side-effects, with the end result being a truth-y value
+                        break
+
+            return self.datasets.get(name, None)
+
+            # Do the intensive work at  startup one time only
 Dataset_Getter = DatasetType(r)
