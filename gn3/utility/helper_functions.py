@@ -1,6 +1,11 @@
 
+import logging
+
 from gn3.base.data_set import create_dataset
 from gn3.base.species import TheSpecies
+
+logger = logging.getLogger(__name__ )
+
 
 def get_species_dataset_trait(self, start_vars):
     print("CALLING THIS FUNCTION HERE ")
@@ -14,6 +19,8 @@ def get_species_dataset_trait(self, start_vars):
 
     else:
         self.dataset = create_dataset(start_vars['dataset'])
+
+    print("set dataset is ",self.dataset.group.samplelist)
 
     # logger.debug("After creating dataset")
     # self.species = TheSpecies(dataset=self.dataset)
