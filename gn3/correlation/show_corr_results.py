@@ -1,9 +1,13 @@
 """module contains code for doing correlation"""
 
 import json
-from .correlation_utility import create_dataset
-from .correlation_utility import create_trait
-from .correlation_utility import get_species_dataset_trait
+
+from gn3.base.data_set  import create_dataset
+from gn3.utility.helper_functions import get_species_dataset_trait
+# from .correlation_utility import create_dataset
+# from .correlation_utility import create_trait
+from gn3.base.trait import create_trait
+# from .correlation_utility import get_species_dataset_trait
 
 
 class CorrelationResults:
@@ -81,7 +85,10 @@ class CorrelationResults:
 
             get_species_dataset_trait(self, start_vars)
 
+        print("UUUUUUUUUUUUUUUUUUUUUu",self.dataset.group.name)
+
         corr_samples_group = start_vars['corr_samples_group']
+        # corr_samples_group = 
 
         self.sample_data = {}
 
@@ -140,4 +147,6 @@ class CorrelationResults:
 
         # should return json data after computing correlation
 
-        return self.__dict__
+        return {
+          "hello":"hey"
+        }
