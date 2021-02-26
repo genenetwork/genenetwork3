@@ -2,7 +2,7 @@
 
 import json
 
-from gn3.base.data_set  import create_dataset
+from gn3.base.data_set import create_dataset
 from gn3.utility.helper_functions import get_species_dataset_trait
 # from .correlation_utility import create_dataset
 # from .correlation_utility import create_trait
@@ -52,13 +52,18 @@ class CorrelationResults:
         if not excluded_samples:
             excluded_samples = ()
 
-        return
+        sample_val_dict = json.loads(start_vars["sample_vals"])
 
-        # currently the below code fails as sample_vals is not passed
 
-        sample_val_dict = json.loads(start_vars['sample_vals'])
+
         for sample in sample_names:
-            pass
+            if sample not in excluded_samples:
+                value = sample_val_dict[sample]
+
+                if not value.strip().lower() == "x":
+                    self.sample_data[str(sample)] = float(value)
+
+
 
     def do_correlation(self, start_vars):
 
@@ -71,9 +76,14 @@ class CorrelationResults:
             self.dataset = create_dataset(
                 dataset_name="Temp", dataset_type="Temp", group_name=start_vars['group'])
 
+
+
+
             self.trait_id = start_vars['trait_id']
 
             # should pass as argument
+
+            # current issue is that self.dataset.group.sampelist returns None
 
             self.this_trait = create_trait(dataset=self.dataset,
                                            name=self.trait_id,
@@ -85,10 +95,8 @@ class CorrelationResults:
 
             get_species_dataset_trait(self, start_vars)
 
-        print("UUUUUUUUUUUUUUUUUUUUUu",self.dataset.group.name)
-
         corr_samples_group = start_vars['corr_samples_group']
-        # corr_samples_group = 
+        # corr_samples_group =
 
         self.sample_data = {}
 
@@ -108,10 +116,15 @@ class CorrelationResults:
             start_vars["p_range_upper"]) if start_vars["p_range_upper"] != "" else None
 
         if ("loc_chr" in start_vars and "min_loc_mb" in start_vars and "max_loc_mb" in start_vars):
-            self.location_type = string(start_vars['location_type'])
-            self.location_chr = string(start_vars['loc_chr'])
-            self.min_location_mb = int(start_vars['min_loc_mb'])
-            self.max_location_mb = int(start_vars['max_loc_mb'])
+            self.location_type = str(start_vars['location_type'])
+            self.location_chr = str(start_vars['loc_chr'])
+
+            try:
+                self.min_location_mb = int(start_vars['min_loc_mb'])
+                self.max_location_mb = int(start_vars['max_loc_mb'])
+            except Exception as e:
+                self.min_location_mb = None
+                self.max_location_mb = None
 
         else:
             self.location_type = self.location_chr = self.min_location_mb = self.max_location_mb = None
@@ -119,7 +132,10 @@ class CorrelationResults:
         self.get_formatted_corr_type()
 
         self.return_number = int(start_vars['corr_return_results'])
+
+        print("EEEEEEEEEEEEEEEEE",self.dataset.group.samplelist)
         primary_samples = self.dataset.group.samplelist
+
 
         # The two if statements below append samples to the sample list based upon whether the user
         # rselected Primary Samples Only, Other Samples Only, or All Samples
@@ -147,6 +163,8 @@ class CorrelationResults:
 
         # should return json data after computing correlation
 
+        # return self
+
         return {
-          "hello":"hey"
+            "group": self.dataset.group
         }
