@@ -7,8 +7,11 @@ from gn3.correlation.correlation_utility import AttributeSetter
 from gn3.utility.db_tools import escape
 from gn3.db.calls import fetch1
 from gn3.db.calls import fetchone
+from gn3.db.webqtlDatabaseFunction import retrieve_species
+from gn3.base.species import TheSpecies
 r = Redis()
 
+USE_REDIS =True
 # move  this to configuration file
 GN2_BASE_URL = "https://genenetwork.org/"
 
@@ -39,6 +42,7 @@ def create_dataset(dataset_name, dataset_type=None, get_samplelist=True, group_n
     dataset_class = globals()[dataset_ob]
 
     print(f"the class being waiting for is {dataset_class}")
+    # results = None
 
     if dataset_type == "Temp":
         results = dataset_class(dataset_name, get_samplelist, group_name)
@@ -57,7 +61,10 @@ def create_dataset(dataset_name, dataset_type=None, get_samplelist=True, group_n
         })
     })
 
-    return dataset
+    print("5555555555555555555555555555",results.group.name)
+
+    # return dataset
+    return results
 
     # return "hello"
 
@@ -197,7 +204,11 @@ class DatasetGroup:
 
         self.get_f1_parent_strains()
 
+        # not sure whether is used in correlation
+
         self.mapping_id, self.mapping_names = self.get_mapping_methods()
+
+        self.species = retrieve_species(self.name)
 
     def get_f1_parent_strains(self):
         try:
@@ -213,6 +224,61 @@ class DatasetGroup:
 
         if maternal and paternal:
             self.parlist = [maternal, paternal]
+
+    def get_mapping_methods(self):
+        mapping_id = g.db.execute(
+            "select MappingMethodId from InbredSet where Name= '%s'" % self.name).fetchone()[0]
+
+        if mapping_id == "1":
+            mapping_names = ["GEMMA", "QTLReaper", "R/qtl"]
+        elif mapping_id == "2":
+            mapping_names = ["GEMMA"]
+
+        elif mapping_id == "3":
+            mapping_names = ["R/qtl"]
+
+        elif mapping_id == "4":
+            mapping_names = ["GEMMA", "PLINK"]
+
+        else:
+            mapping_names = []
+
+        return mapping_id, mapping_names
+
+    def get_samplelist(self):
+        result = None
+        key = "samplelist:v3:" + self.name
+        if USE_REDIS:
+            result = r.get(key)
+
+        if result is not None:
+
+            self.samplelist = json.loads(result)
+
+        else:
+            # logger.debug("Cache not hit")
+            # should enable logger
+
+            def locate_ignore_error(name, subdir=None):
+                # work on this
+                return None
+            genotype_fn = locate_ignore_error(self.name+".geno", 'genotype')
+            if genotype_fn:
+                self.samplelist = get_group_samplelists.get_samplelist(
+                    "geno", genotype_fn)
+
+            else:
+                self.samplelist = None
+
+
+            if USE_REDIS:
+                r.set(key, json.dumps(self.samplelist))
+                r.expire(key, 60*5)
+
+
+
+
+
 
 
 class DataSet:
@@ -245,7 +311,7 @@ class DataSet:
             self.accession_id = self.get_accession_id()
         if get_samplelist == True:
             self.group.get_samplelist()
-        self.species = species.TheSpecies(self)
+        self.species = TheSpecies(self)
 
     def get_desc(self):
         """Gets overridden later, at least for Temp...used by trait's get_given_name"""
