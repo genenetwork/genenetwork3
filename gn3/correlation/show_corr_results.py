@@ -104,6 +104,10 @@ class CorrelationResults:
                 self.correlation_data[trait] = [
                     sample_r, sample_p, num_overlap]
 
+
+
+    
+
     def do_correlation(self, start_vars):
 
         # print(start_vars)
@@ -236,7 +240,72 @@ class CorrelationResults:
                 if chr_info.name == self.location_chr:
                     range_chr_as_int = order_id
 
-            print(chr_info,order_id)
+        # not sure what happens in this forloop
+        for _trait_counter, trait in enumerate(list(self.correlation_data.keys())[:self.return_number]):
+            trait_object = create_trait(dataset=self.target_dataset, name=trait, get_qtl_info=True, get_sample_info=False)
+            if not trait_object:
+                print("trait object is empty")
+                continue
+
+            chr_as_int = 0
+            # also not sure why we have the same loop 
+            for order_id, chr_info in list(self.dataset.species.chromosomes.chromosomes.items()):
+                if self.location_type == "highest_lod":
+                    if chr_info.name == trait_object.locus_chr:
+                        chr_as_int = order_id
+
+                else:
+                    if chr_info.name == trait_object.chr:
+                        chr_as_int = order_id
+
+            if (float(self.correlation_data[trait][0]) >= self.p_range_lower and
+                    float(self.correlation_data[trait][0]) <= self.p_range_upper):
+                    print("working on this")
+
+                    if (self.target_dataset.type == "ProbeSet" or self.target_dataset.type == "Publish") and bool(trait_object.mean):
+                        if (self.min_expr != None) and (float(trait_object.mean) < self.min_expr):
+                            continue
+
+                    if range_chr_as_int != None and (chr_as_int != range_chr_as_int):
+                        continue
+                    if self.location_type == "highest_lod":
+                        if (self.min_location_mb != None) and (float(trait_object.locus_mb) < float(self.min_location_mb)):
+                            continue
+                        if (self.max_location_mb != None) and (float(trait_object.locus_mb) > float(self.max_location_mb)):
+                            continue
+                    else:
+                        if (self.min_location_mb != None) and (float(trait_object.mb) < float(self.min_location_mb)):
+                            continue
+                        if (self.max_location_mb != None) and (float(trait_object.mb) > float(self.max_location_mb)):
+                            continue
+
+                    (trait_object.sample_r,
+                    trait_object.sample_p,
+                    trait_object.num_overlap) = self.correlation_data[trait]
+
+                    # Set some sane defaults
+                    trait_object.tissue_corr = 0
+                    trait_object.tissue_pvalue = 0
+                    trait_object.lit_corr = 0
+                    if self.corr_type == "tissue" and tissue_corr_data != None:
+                        trait_object.tissue_corr = tissue_corr_data[trait][1]
+                        trait_object.tissue_pvalue = tissue_corr_data[trait][2]
+                    elif self.corr_type == "lit":
+                        trait_object.lit_corr = lit_corr_data[trait][1]
+
+                    self.correlation_results.append(trait_object)
+
+
+            if self.corr_type != "lit" and self.dataset.type == "ProbeSet" and self.target_dataset.type == "ProbeSet":
+                self.do_lit_correlation_for_trait_list()
+
+            if self.corr_type != "tissue" and self.dataset.type == "ProbeSet" and self.target_dataset.type == "ProbeSet":
+                self.do_tissue_correlation_for_trait_list()
+
+        self.json_results = generate_corr_json(self.correlation_results, self.this_trait, self.dataset, self.target_dataset)
+
+
+
 
 
         # should return json data after computing correlation
@@ -337,3 +406,96 @@ def get_header_fields(data_type, corr_method):
                              'Sample p(r)']
 
     return header_fields
+
+
+
+
+def generate_corr_json(corr_results, this_trait, dataset, target_dataset, for_api = False):
+    results_list = []
+    for i, trait in enumerate(corr_results):
+        if trait.view == False:
+            continue
+        results_dict = {}
+        results_dict['index'] = i + 1
+        results_dict['trait_id'] = trait.name
+        results_dict['dataset'] = trait.dataset.name
+        results_dict['hmac'] = hmac.data_hmac('{}:{}'.format(trait.name, trait.dataset.name))
+        if target_dataset.type == "ProbeSet":
+            results_dict['symbol'] = trait.symbol
+            results_dict['description'] = "N/A"
+            results_dict['location'] = trait.location_repr
+            results_dict['mean'] = "N/A"
+            results_dict['additive'] = "N/A"
+            if bool(trait.description_display):
+                results_dict['description'] = trait.description_display
+            if bool(trait.mean):
+                results_dict['mean'] = f"{float(trait.mean):.3f}"
+            try:
+                results_dict['lod_score'] = f"{float(trait.LRS_score_repr) / 4.61:.1f}"
+            except:
+                results_dict['lod_score'] = "N/A"
+            results_dict['lrs_location'] = trait.LRS_location_repr
+            if bool(trait.additive):
+                results_dict['additive'] = f"{float(trait.additive):.3f}"
+            results_dict['sample_r'] = f"{float(trait.sample_r):.3f}"
+            results_dict['num_overlap'] = trait.num_overlap
+            results_dict['sample_p'] = f"{float(trait.sample_p):.3e}"
+            results_dict['lit_corr'] = "--"
+            results_dict['tissue_corr'] = "--"
+            results_dict['tissue_pvalue'] = "--"
+            if bool(trait.lit_corr):
+                results_dict['lit_corr'] = f"{float(trait.lit_corr):.3f}"
+            if bool(trait.tissue_corr):
+                results_dict['tissue_corr'] = f"{float(trait.tissue_corr):.3f}"
+                results_dict['tissue_pvalue'] = f"{float(trait.tissue_pvalue):.3e}"
+        elif target_dataset.type == "Publish":
+            results_dict['abbreviation_display'] = "N/A"
+            results_dict['description'] = "N/A"
+            results_dict['mean'] = "N/A"
+            results_dict['authors_display'] = "N/A"
+            results_dict['additive'] = "N/A"
+            if for_api:
+                results_dict['pubmed_id'] = "N/A"
+                results_dict['year'] = "N/A"
+            else:
+                results_dict['pubmed_link'] = "N/A"
+                results_dict['pubmed_text'] = "N/A"
+
+            if bool(trait.abbreviation):
+                results_dict['abbreviation_display'] = trait.abbreviation
+            if bool(trait.description_display):
+                results_dict['description'] = trait.description_display
+            if bool(trait.mean):
+                results_dict['mean'] = f"{float(trait.mean):.3f}"
+            if bool(trait.authors):
+                authors_list = trait.authors.split(',')
+                if len(authors_list) > 6:
+                    results_dict['authors_display'] = ", ".join(authors_list[:6]) + ", et al."
+                else:
+                    results_dict['authors_display'] = trait.authors
+            if bool(trait.pubmed_id):
+                if for_api:
+                    results_dict['pubmed_id'] = trait.pubmed_id
+                    results_dict['year'] = trait.pubmed_text
+                else:
+                    results_dict['pubmed_link'] = trait.pubmed_link
+                    results_dict['pubmed_text'] = trait.pubmed_text
+            try:
+                results_dict['lod_score'] = f"{float(trait.LRS_score_repr) / 4.61:.1f}"
+            except:
+                results_dict['lod_score'] = "N/A"
+            results_dict['lrs_location'] = trait.LRS_location_repr
+            if bool(trait.additive):
+                results_dict['additive'] = f"{float(trait.additive):.3f}"
+            results_dict['sample_r'] = f"{float(trait.sample_r):.3f}"
+            results_dict['num_overlap'] = trait.num_overlap
+            results_dict['sample_p'] = f"{float(trait.sample_p):.3e}"
+        else:
+            results_dict['location'] = trait.location_repr
+            results_dict['sample_r'] = f"{float(trait.sample_r):.3f}"
+            results_dict['num_overlap'] = trait.num_overlap
+            results_dict['sample_p'] = f"{float(trait.sample_p):.3e}"
+
+        results_list.append(results_dict)
+
+    return json.dumps(results_list)
