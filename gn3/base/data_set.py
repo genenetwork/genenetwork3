@@ -1,48 +1,42 @@
 
 import json
 import requests
+import math
+import collections
 from redis import Redis
 from flask import g
 from gn3.correlation.correlation_utility import AttributeSetter
 from gn3.utility.db_tools import escape
+from gn3.utility.db_tools import mescape
+from gn3.utility.db_tools import create_in_clause
 from gn3.db.calls import fetch1
 from gn3.db.calls import fetchone
 from gn3.db.webqtlDatabaseFunction import retrieve_species
+from gn3.utility import chunks
+
+from gn3.utility import get_group_samplelists
 from gn3.base.species import TheSpecies
 r = Redis()
 
-USE_REDIS =True
-# move  this to configuration file
+# should probably move this to its own configuration files
+
+USE_REDIS = True
 GN2_BASE_URL = "https://genenetwork.org/"
 
 DS_NAME_MAP = {}
 
 
 def create_dataset(dataset_name, dataset_type=None, get_samplelist=True, group_name=None):
-    print("DS_NAME_MAP is >>>>>>>>>>>", DS_NAME_MAP)
-    # DATASET NAME IS HC_M2_0606_P the dataset_type is None and group_name is None
-
-    # add this valid data for testing
-
-    dataset_type = None
-
-    group_name = None
-
-    # end
 
     if dataset_name == "Temp":
         dataset_type = "Temp"
-
-    dataset_name = "HC_M2_0606_P"
-    dataset_type = None
 
     if dataset_type is None:
         dataset_type = Dataset_Getter(dataset_name)
     dataset_ob = DS_NAME_MAP[dataset_type]
     dataset_class = globals()[dataset_ob]
 
-    print(f"the class being waiting for is {dataset_class}")
-    # results = None
+    # could use comprehension list for this
 
     if dataset_type == "Temp":
         results = dataset_class(dataset_name, get_samplelist, group_name)
@@ -50,23 +44,7 @@ def create_dataset(dataset_name, dataset_type=None, get_samplelist=True, group_n
     else:
         results = dataset_class(dataset_name, get_samplelist)
 
-    dataset = AttributeSetter({
-        "group": AttributeSetter({
-            "genofile": "",
-            "samplelist": "S1",
-            "parlist": "",
-            "f1list": ""
-
-
-        })
-    })
-
-    print("5555555555555555555555555555",results.group.name)
-
-    # return dataset
     return results
-
-    # return "hello"
 
 
 class DatasetType:
@@ -167,12 +145,11 @@ class DatasetType:
                     # This has side-effects, with the end result being a truth-y value
                     break
 
-        print(f"return values is &&&&&&&&&&&&&&&&& {self.datasets.get(name, None)}")
-
         return self.datasets.get(name, None)
 
 
-        # Do the intensive work at  startup one time only
+# Do the intensive work at  startup one time only
+# could replace the code below
 Dataset_Getter = DatasetType(r)
 
 
@@ -204,7 +181,7 @@ class DatasetGroup:
 
         self.get_f1_parent_strains()
 
-        # not sure whether is used in correlation
+        # not sure whether this is used in correlation
 
         self.mapping_id, self.mapping_names = self.get_mapping_methods()
 
@@ -259,9 +236,13 @@ class DatasetGroup:
             # logger.debug("Cache not hit")
             # should enable logger
 
+            # move code  to own module also replace the link
+
             def locate_ignore_error(name, subdir=None):
-                # work on this
-                return None
+
+                # currently assume that all paths all valid
+                # should work on this
+                return f"/home/kabui/data/genotype_files/genotype/BXD.geno"
             genotype_fn = locate_ignore_error(self.name+".geno", 'genotype')
             if genotype_fn:
                 self.samplelist = get_group_samplelists.get_samplelist(
@@ -270,15 +251,9 @@ class DatasetGroup:
             else:
                 self.samplelist = None
 
-
             if USE_REDIS:
                 r.set(key, json.dumps(self.samplelist))
                 r.expire(key, 60*5)
-
-
-
-
-
 
 
 class DataSet:
@@ -411,7 +386,7 @@ class DataSet:
             and Strain.SpeciesId=Species.Id
             and Species.name = '{}'
             """.format(create_in_clause(self.samplelist), *mescape(self.group.species))
-        logger.sql(query)
+        # logger.sql(query)
         results = dict(g.db.execute(query).fetchall())
         sample_ids = [results[item] for item in self.samplelist]
 
