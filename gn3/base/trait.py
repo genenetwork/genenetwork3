@@ -1,7 +1,11 @@
 
 from flask import g
+
+from gn3.utility.db_tools import escape
+
+
 def check_resource_availability(dataset, name=None):
-    # should probably work on this
+    # should probably work on this has to do with authentication
     return {'data': ['no-access', 'view'], 'metadata': ['no-access', 'view'], 'admin': ['not-admin']}
 
 
@@ -84,8 +88,6 @@ class GeneralTrait:
             elif len(name2) == 3:
                 self.dataset, self.name, self.cellid = name2
 
-
-
         # Todo: These two lines are necessary most of the time, but
         # perhaps not all of the time So we could add a simple if
         # statement to short-circuit this if necessary
@@ -93,26 +95,17 @@ class GeneralTrait:
         #     self = retrieve_sample_data(self, self.dataset)
 
 
+def get_resource_id(dataset, trait_name):
+    return 1
 
-def get_resource_id(dataset,trait_name):
-    return None
 
 def retrieve_trait_info(trait, dataset, get_qtl_info=False):
-    print("CALLING retrieve_trait_info^^^^^^^^^^^^^^^&&&&&&&&&&&&&&&&&&&")
     assert dataset, "Dataset doesn't exist"
 
-    resource_id = get_resource_id(dataset, trait.name)
-    if dataset.type == 'Publish':
-        the_url = "http://localhost:8080/run-action?resource={}&user={}&branch=data&action=view".format(
-            resource_id, g.user_session.user_id)
-    else:
-        the_url = "http://localhost:8080/run-action?resource={}&user={}&branch=data&action=view&trait={}".format(
-            resource_id, g.user_session.user_id, trait.name)
-
-    print("the url is>>>>>>>>>>>>>>>>>>>>>>>>>>>>>##########",the_url)
+    the_url = None
+    # some code should be added  added here
 
     try:
-        print("THIS WAS CALLED $$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         response = requests.get(the_url).content
         trait_info = json.loads(response)
     except:  # ZS: I'm assuming the trait is viewable if the try fails for some reason; it should never reach this point unless the user has privileges, since that's dealt with in create_trait
@@ -141,7 +134,6 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                             PublishFreeze.Id = %s
                     """ % (trait.name, dataset.id)
 
-            logger.sql(query)
             trait_info = g.db.execute(query).fetchone()
 
         # XZ, 05/08/2009: Xiaodong add this block to use ProbeSet.Id to find the probeset instead of just using ProbeSet.Name
@@ -160,7 +152,7 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                     """ % (escape(display_fields_string),
                            escape(dataset.name),
                            escape(str(trait.name)))
-            logger.sql(query)
+
             trait_info = g.db.execute(query).fetchone()
         # XZ, 05/08/2009: We also should use Geno.Id to find marker instead of just using Geno.Name
         # to avoid the problem of same marker name from different species.
@@ -178,11 +170,11 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                     """ % (escape(display_fields_string),
                            escape(dataset.name),
                            escape(trait.name))
-            logger.sql(query)
+
             trait_info = g.db.execute(query).fetchone()
         else:  # Temp type
             query = """SELECT %s FROM %s WHERE Name = %s"""
-            logger.sql(query)
+
             trait_info = g.db.execute(query,
                                       ','.join(dataset.display_fields),
                                       dataset.type, trait.name).fetchone()
@@ -270,7 +262,7 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                                 ProbeSet.Name = "{}" AND
                                 ProbeSetXRef.ProbeSetFreezeId ={}
                         """.format(trait.name, dataset.id)
-                logger.sql(query)
+
                 trait_qtl = g.db.execute(query).fetchone()
                 if trait_qtl:
                     trait.locus, trait.lrs, trait.pvalue, trait.mean, trait.additive = trait_qtl
@@ -281,7 +273,7 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                             Geno.Name = '{}' and
                             Geno.SpeciesId = Species.Id
                             """.format(dataset.group.species, trait.locus)
-                        logger.sql(query)
+
                         result = g.db.execute(query).fetchone()
                         if result:
                             trait.locus_chr = result[0]
@@ -302,7 +294,7 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                                 PublishXRef.InbredSetId = PublishFreeze.InbredSetId AND
                                 PublishFreeze.Id =%s
                 """ % (trait.name, dataset.id)
-                logger.sql(query)
+
                 trait_qtl = g.db.execute(query).fetchone()
                 if trait_qtl:
                     trait.locus, trait.lrs, trait.additive = trait_qtl
@@ -313,7 +305,7 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
                             Geno.Name = '{}' and
                             Geno.SpeciesId = Species.Id
                             """.format(dataset.group.species, trait.locus)
-                        logger.sql(query)
+
                         result = g.db.execute(query).fetchone()
                         if result:
                             trait.locus_chr = result[0]
