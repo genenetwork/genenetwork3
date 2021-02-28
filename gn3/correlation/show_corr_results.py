@@ -5,16 +5,12 @@ import collections
 from gn3.base.data_set import create_dataset
 from gn3.utility.helper_functions import get_species_dataset_trait
 from gn3.utility.corr_result_helpers import normalize_values
-# from .correlation_utility import create_dataset
-# from .correlation_utility import create_trait
 from gn3.base.trait import create_trait
-# from .correlation_utility import get_species_dataset_trait
 
 
 class CorrelationResults:
     def __init__(self, start_vars):
         self.assertion_for_start_vars(start_vars)
-        # if no assertion error is raised do
 
     @staticmethod
     def assertion_for_start_vars(start_vars):
@@ -104,10 +100,6 @@ class CorrelationResults:
                 self.correlation_data[trait] = [
                     sample_r, sample_p, num_overlap]
 
-
-
-    
-
     def do_correlation(self, start_vars):
 
         # print(start_vars)
@@ -123,8 +115,6 @@ class CorrelationResults:
 
             # should pass as argument
 
-            # current issue is that self.dataset.group.sampelist returns None
-
             self.this_trait = create_trait(dataset=self.dataset,
                                            name=self.trait_id,
                                            cellid=None)
@@ -136,8 +126,6 @@ class CorrelationResults:
             get_species_dataset_trait(self, start_vars)
 
         corr_samples_group = start_vars['corr_samples_group']
-        # corr_samples_group =
-
         self.sample_data = {}
 
         self.corr_type = start_vars["corr_type"]
@@ -160,6 +148,8 @@ class CorrelationResults:
             self.location_chr = str(start_vars['loc_chr'])
 
             try:
+
+                # the code is below is basically a temporary fix
                 self.min_location_mb = int(start_vars['min_loc_mb'])
                 self.max_location_mb = int(start_vars['max_loc_mb'])
             except Exception as e:
@@ -173,7 +163,6 @@ class CorrelationResults:
 
         self.return_number = int(start_vars['corr_return_results'])
 
-        print("EEEEEEEEEEEEEEEEE", self.dataset.group.samplelist)
         primary_samples = self.dataset.group.samplelist
 
         # The two if statements below append samples to the sample list based upon whether the user
@@ -202,7 +191,7 @@ class CorrelationResults:
 
         self.target_dataset = create_dataset(start_vars['corr_dataset'])
 
-        # whe the code below self.target_dataset was added things get very slow should fix this
+        # whe the code below ie getting trait data was added things get very slow should fix this
 
         self.target_dataset.get_trait_data(list(self.sample_data.keys()))
 
@@ -222,7 +211,7 @@ class CorrelationResults:
 
         self.correlation_data = {}
 
-        # furst try sample type
+        # first try sample type
         if self.corr_type == "sample":
             for trait, values in list(self.target_dataset.trait_data.items()):
                 # print(trait,values)
@@ -231,8 +220,7 @@ class CorrelationResults:
         self.correlation_data = collections.OrderedDict(sorted(list(self.correlation_data.items()),
                                                                key=lambda t: -abs(t[1][0])))
 
-
-        #ZS: Convert min/max chromosome to an int for the location range option
+        # ZS: Convert min/max chromosome to an int for the location range option
 
         range_chr_as_int = None
         for order_id, chr_info in list(self.dataset.species.chromosomes.chromosomes.items()):
@@ -240,15 +228,16 @@ class CorrelationResults:
                 if chr_info.name == self.location_chr:
                     range_chr_as_int = order_id
 
-        # not sure what happens in this forloop
+        # not sure what happens in this for loop
         for _trait_counter, trait in enumerate(list(self.correlation_data.keys())[:self.return_number]):
-            trait_object = create_trait(dataset=self.target_dataset, name=trait, get_qtl_info=True, get_sample_info=False)
+            trait_object = create_trait(
+                dataset=self.target_dataset, name=trait, get_qtl_info=True, get_sample_info=False)
             if not trait_object:
                 print("trait object is empty")
                 continue
 
             chr_as_int = 0
-            # also not sure why we have the same loop 
+            # also not sure why we have the same loop
             for order_id, chr_info in list(self.dataset.species.chromosomes.chromosomes.items()):
                 if self.location_type == "highest_lod":
                     if chr_info.name == trait_object.locus_chr:
@@ -260,41 +249,40 @@ class CorrelationResults:
 
             if (float(self.correlation_data[trait][0]) >= self.p_range_lower and
                     float(self.correlation_data[trait][0]) <= self.p_range_upper):
-                    print("working on this")
+                print("working on this")
 
-                    if (self.target_dataset.type == "ProbeSet" or self.target_dataset.type == "Publish") and bool(trait_object.mean):
-                        if (self.min_expr != None) and (float(trait_object.mean) < self.min_expr):
-                            continue
-
-                    if range_chr_as_int != None and (chr_as_int != range_chr_as_int):
+                if (self.target_dataset.type == "ProbeSet" or self.target_dataset.type == "Publish") and bool(trait_object.mean):
+                    if (self.min_expr != None) and (float(trait_object.mean) < self.min_expr):
                         continue
-                    if self.location_type == "highest_lod":
-                        if (self.min_location_mb != None) and (float(trait_object.locus_mb) < float(self.min_location_mb)):
-                            continue
-                        if (self.max_location_mb != None) and (float(trait_object.locus_mb) > float(self.max_location_mb)):
-                            continue
-                    else:
-                        if (self.min_location_mb != None) and (float(trait_object.mb) < float(self.min_location_mb)):
-                            continue
-                        if (self.max_location_mb != None) and (float(trait_object.mb) > float(self.max_location_mb)):
-                            continue
 
-                    (trait_object.sample_r,
-                    trait_object.sample_p,
-                    trait_object.num_overlap) = self.correlation_data[trait]
+                if range_chr_as_int != None and (chr_as_int != range_chr_as_int):
+                    continue
+                if self.location_type == "highest_lod":
+                    if (self.min_location_mb != None) and (float(trait_object.locus_mb) < float(self.min_location_mb)):
+                        continue
+                    if (self.max_location_mb != None) and (float(trait_object.locus_mb) > float(self.max_location_mb)):
+                        continue
+                else:
+                    if (self.min_location_mb != None) and (float(trait_object.mb) < float(self.min_location_mb)):
+                        continue
+                    if (self.max_location_mb != None) and (float(trait_object.mb) > float(self.max_location_mb)):
+                        continue
 
-                    # Set some sane defaults
-                    trait_object.tissue_corr = 0
-                    trait_object.tissue_pvalue = 0
-                    trait_object.lit_corr = 0
-                    if self.corr_type == "tissue" and tissue_corr_data != None:
-                        trait_object.tissue_corr = tissue_corr_data[trait][1]
-                        trait_object.tissue_pvalue = tissue_corr_data[trait][2]
-                    elif self.corr_type == "lit":
-                        trait_object.lit_corr = lit_corr_data[trait][1]
+                (trait_object.sample_r,
+                 trait_object.sample_p,
+                 trait_object.num_overlap) = self.correlation_data[trait]
 
-                    self.correlation_results.append(trait_object)
+                # Set some sane defaults
+                trait_object.tissue_corr = 0
+                trait_object.tissue_pvalue = 0
+                trait_object.lit_corr = 0
+                if self.corr_type == "tissue" and tissue_corr_data != None:
+                    trait_object.tissue_corr = tissue_corr_data[trait][1]
+                    trait_object.tissue_pvalue = tissue_corr_data[trait][2]
+                elif self.corr_type == "lit":
+                    trait_object.lit_corr = lit_corr_data[trait][1]
 
+                self.correlation_results.append(trait_object)
 
             if self.corr_type != "lit" and self.dataset.type == "ProbeSet" and self.target_dataset.type == "ProbeSet":
                 self.do_lit_correlation_for_trait_list()
@@ -302,22 +290,16 @@ class CorrelationResults:
             if self.corr_type != "tissue" and self.dataset.type == "ProbeSet" and self.target_dataset.type == "ProbeSet":
                 self.do_tissue_correlation_for_trait_list()
 
-        self.json_results = generate_corr_json(self.correlation_results, self.this_trait, self.dataset, self.target_dataset)
-
-
-
-
-
-        # should return json data after computing correlation
-
-        # return self
+        self.json_results = generate_corr_json(
+            self.correlation_results, self.this_trait, self.dataset, self.target_dataset)
 
         return {
             "group": self.dataset.group,
             "target_dataset": self.target_dataset.group,
             "header_fields": self.header_fields,
             "correlation_data": self.correlation_data,
-            "trait_values": self.this_trait_vals
+            "trait_values": self.this_trait_vals,
+            "json_results": self.json_results
         }
 
 
@@ -408,9 +390,7 @@ def get_header_fields(data_type, corr_method):
     return header_fields
 
 
-
-
-def generate_corr_json(corr_results, this_trait, dataset, target_dataset, for_api = False):
+def generate_corr_json(corr_results, this_trait, dataset, target_dataset, for_api=False):
     results_list = []
     for i, trait in enumerate(corr_results):
         if trait.view == False:
@@ -419,7 +399,8 @@ def generate_corr_json(corr_results, this_trait, dataset, target_dataset, for_ap
         results_dict['index'] = i + 1
         results_dict['trait_id'] = trait.name
         results_dict['dataset'] = trait.dataset.name
-        results_dict['hmac'] = hmac.data_hmac('{}:{}'.format(trait.name, trait.dataset.name))
+        results_dict['hmac'] = hmac.data_hmac(
+            '{}:{}'.format(trait.name, trait.dataset.name))
         if target_dataset.type == "ProbeSet":
             results_dict['symbol'] = trait.symbol
             results_dict['description'] = "N/A"
@@ -470,7 +451,8 @@ def generate_corr_json(corr_results, this_trait, dataset, target_dataset, for_ap
             if bool(trait.authors):
                 authors_list = trait.authors.split(',')
                 if len(authors_list) > 6:
-                    results_dict['authors_display'] = ", ".join(authors_list[:6]) + ", et al."
+                    results_dict['authors_display'] = ", ".join(
+                        authors_list[:6]) + ", et al."
                 else:
                     results_dict['authors_display'] = trait.authors
             if bool(trait.pubmed_id):
