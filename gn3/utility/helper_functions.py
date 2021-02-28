@@ -1,10 +1,7 @@
 
-import logging
-
 from gn3.base.data_set import create_dataset
+from gn3.base.trait import create_trait
 from gn3.base.species import TheSpecies
-
-logger = logging.getLogger(__name__ )
 
 
 def get_species_dataset_trait(self, start_vars):
@@ -19,16 +16,9 @@ def get_species_dataset_trait(self, start_vars):
 
     else:
         self.dataset = create_dataset(start_vars['dataset'])
+    self.species = TheSpecies(dataset=self.dataset)
 
-    print("set dataset is ",self.dataset.group.samplelist)
-
-    # logger.debug("After creating dataset")
-    # self.species = TheSpecies(dataset=self.dataset)
-    # # logger.debug("After creating species")
-
-    # self.this_trait = create_trait(dataset=self.dataset,
-    #                                name=start_vars['trait_id'],
-    #                                cellid=None,
-    #                                get_qtl_info=True)
-
-    # logger.debug("After creating trait")
+    self.this_trait = create_trait(dataset=self.dataset,
+                                   name=start_vars['trait_id'],
+                                   cellid=None,
+                                   get_qtl_info=True)
