@@ -2,7 +2,6 @@
 import hashlib
 import json
 import os
-import shutil
 import random
 import string
 import tarfile
@@ -59,27 +58,27 @@ def generate_random_n_string(n_length: int) -> str:
                    for _ in range(n_length))
 
 
-def extract_uploaded_file(gzipped_file, target_dir: str) -> Dict:
+def extract_uploaded_file(gzipped_file, target_dir: str, token="") -> Dict:
     """Get the (directory) hash of extracted contents of GZIPPED_FILE; and move
 contents to TARGET_DIR/<dir-hash>.
 
     """
-    tar_target_loc = os.path.join(target_dir,
-                                  secure_filename(gzipped_file.filename))
-    gzipped_file.save(tar_target_loc)
+    if not token:
+        token = (f"{generate_random_n_string(6)}-"
+                 f"{generate_random_n_string(6)}")
+    tar_target_loc = os.path.join(
+        target_dir,
+        token,
+        secure_filename(gzipped_file.filename))
     try:
-        # Extract to "tar_target_loc/tempdir"
+        if not os.path.exists(os.path.join(target_dir, token)):
+            os.mkdir(os.path.join(target_dir, token))
+        gzipped_file.save(tar_target_loc)
+        # Extract to "tar_target_loc/token"
         tar = tarfile.open(tar_target_loc)
-        tar.extractall(
-            path=os.path.join(target_dir, "tempdir"))
+        tar.extractall(path=tar_target_loc)
         tar.close()
     # pylint: disable=W0703
     except Exception:
         return {"status": 128, "error": "gzip failed to unpack file"}
-    dir_hash = get_dir_hash(tar_target_loc)
-    if os.path.exists(os.path.join(target_dir, dir_hash)):
-        shutil.rmtree(os.path.join(target_dir, 'tempdir'))
-    else:
-        os.rename(os.path.join(target_dir, "tempdir"),
-                  os.path.join(target_dir, dir_hash))
-    return {"status": 0, "token": dir_hash}
+    return {"status": 0, "token": token}

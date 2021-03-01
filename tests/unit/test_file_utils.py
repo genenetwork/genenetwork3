@@ -1,6 +1,5 @@
 """Test cases for procedures defined in file_utils.py"""
 import os
-import shutil
 import unittest
 
 from dataclasses import dataclass
@@ -75,33 +74,30 @@ non-existent"""
                           jsonfile_to_dict,
                           "/non-existent-dir")
 
+    @mock.patch("gn3.file_utils.tarfile")
     @mock.patch("gn3.file_utils.secure_filename")
-    def test_extract_uploaded_file(self, mock_file):
+    def test_extract_uploaded_file(self, mock_file, mock_tarfile):
         """Test that the gzip file is extracted to the right location"""
-        file_loc = os.path.join(
-            os.path.dirname(__file__),
-            "upload-data.tar.gz")
-        mock_file.return_value = file_loc
+        mock_file.return_value = "upload-data.tar.gz"
         mock_fileobj = MockFile(save=mock.MagicMock(),
                                 filename="upload-data.tar.gz")
-        result = extract_uploaded_file(mock_fileobj, "/tmp")
-        mock_fileobj.save.assert_called_once_with(file_loc)
+        mock_tarfile.return_value = mock.Mock()
+        result = extract_uploaded_file(mock_fileobj, "/tmp",
+                                       token="abcdef-abcdef")
+        mock_fileobj.save.assert_called_once_with("/tmp/abcdef-abcdef/"
+                                                  "upload-data.tar.gz")
         mock_file.assert_called_once_with("upload-data.tar.gz")
-        # Clean up!
-        shutil.rmtree(os.path.join("/tmp",
-                                   "d41d8cd98f00b204e9800998ecf8427e"))
         self.assertEqual(result,
                          {"status": 0,
-                          "token": "d41d8cd98f00b204e9800998ecf8427e"})
+                          "token": "abcdef-abcdef"})
 
     @mock.patch("gn3.file_utils.secure_filename")
     def test_extract_uploaded_file_non_existent_gzip(self, mock_file):
         """Test that the right error message is returned when there is a problem
 extracting the file"""
-        file_loc = os.path.join(
+        mock_file.return_value = os.path.join(
             os.path.dirname(__file__),
             "CTtyodSTh5")  # Does not exist!
-        mock_file.return_value = file_loc
         mock_fileobj = MockFile(save=mock.MagicMock(),
                                 filename="")
         result = extract_uploaded_file(mock_fileobj, "/tmp")
