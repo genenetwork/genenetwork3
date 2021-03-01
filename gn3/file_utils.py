@@ -3,6 +3,8 @@ import hashlib
 import json
 import os
 import shutil
+import random
+import string
 import tarfile
 
 from functools import partial
@@ -49,6 +51,12 @@ def jsonfile_to_dict(json_file: str) -> Dict:
         data = json.load(_file)
         return data
     raise FileNotFoundError
+
+
+def generate_random_n_string(n_length: int) -> str:
+    """Generate a random string that is N chars long"""
+    return ''.join(random.choice(string.ascii_uppercase + string.digits)
+                   for _ in range(n_length))
 
 
 def extract_uploaded_file(gzipped_file, target_dir: str) -> Dict:

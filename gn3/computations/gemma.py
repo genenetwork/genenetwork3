@@ -1,7 +1,5 @@
 """Procedures related gemma computations"""
 import os
-import random
-import string
 
 from base64 import b64encode
 from hashlib import md5
@@ -10,11 +8,6 @@ from typing import List
 from typing import Optional
 from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
-
-def generate_random_n_string(n_length: int) -> str:
-    """Generate a random string that is N chars long"""
-    return ''.join(random.choice(string.ascii_uppercase + string.digits)
-                   for _ in range(n_length))
 
 
 def generate_hash_of_string(unhashed_str: str) -> str:
