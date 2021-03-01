@@ -38,6 +38,7 @@ class TestGemma(unittest.TestCase):
         self.assertEqual(
             generate_gemma_computation_cmd(
                 gemma_cmd="gemma-wrapper",
+                gemma_wrapper_kwargs=None,
                 gemma_kwargs={
                     "geno_filename": "genofile.txt",
                     "trait_filename": "test.txt",

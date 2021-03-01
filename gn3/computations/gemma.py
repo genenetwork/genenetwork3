@@ -55,10 +55,12 @@ def do_paths_exist(paths: ValuesView) -> bool:
     return True
 
 
-def generate_gemma_computation_cmd(gemma_cmd: str,
-                                   gemma_kwargs: Dict[str, str],
-                                   output_file: str) -> Optional[str]:
-    """Create a higher order function that generates a command"""
+def generate_gemma_computation_cmd(
+        gemma_cmd: str,
+        gemma_kwargs: Dict[str, str],
+        output_file: str,
+        gemma_wrapper_kwargs: Dict[str, str]) -> Optional[str]:
+    """Create a computation cmd"""
     geno_filename = gemma_kwargs.get("geno_filename", "")
     trait_filename = gemma_kwargs.get("trait_filename")
     ext, snps_filename = geno_filename.partition(".")[-1], ""
@@ -66,13 +68,13 @@ def generate_gemma_computation_cmd(gemma_cmd: str,
         snps_filename = geno_filename.replace(f".{ext}", "")
         snps_filename += f"_snps.{ext}"
     _kwargs = {"g": geno_filename, "p": trait_filename}
-    if gemma_kwargs.get("covar_filename"):
-        _kwargs["a"] = gemma_kwargs.get("covar_filename")
+    _kwargs["a"] = snps_filename
     if not do_paths_exist(_kwargs.values()):  # Prevents injection!
         return None
     if _kwargs.get("lmm"):
         _kwargs["lmm"] = gemma_kwargs.get("lmm")
     return compose_gemma_cmd(gemma_wrapper_cmd=gemma_cmd,
+                             gemma_wrapper_kwargs=gemma_wrapper_kwargs,
                              gemma_kwargs=_kwargs,
                              gemma_args=["-gk", ">",
                                          output_file])

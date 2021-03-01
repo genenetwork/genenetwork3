@@ -35,10 +35,12 @@ file output is returned.
     """
     data = request.get_json()
     app_defaults = current_app.config.get('APP_DEFAULTS')
-    __hash = generate_hash_of_string("".join(data.get("values")))
+    __hash = generate_hash_of_string(
+        f"{data.get('genofile_name')}_"
+        ''.join(data.get("values", "")))
     gemma_kwargs = {
         "geno_filename": os.path.join(app_defaults.get("GENODIR"), "bimbam",
-                                      f"{data.get('genofile_name')}.txt"),
+                                      f"{data.get('geno_filename')}"),
         "trait_filename": generate_pheno_txt_file(
             tmpdir=app_defaults.get("TMPDIR"),
             values=data.get("values"),
@@ -46,18 +48,21 @@ file output is returned.
             trait_filename=(f"{data.get('dataset_groupname')}_"
                             f"{data.get('trait_name')}_"
                             f"{__hash}.txt"))}
+    gemma_wrapper_kwargs = {}
+    if data.get("loco"):
+        gemma_wrapper_kwargs["loco"] = f"--input {data.get('loco')}"
     k_computation_cmd = generate_gemma_computation_cmd(
-        gemma_cmd=app_defaults.get("GEMMA_WRAPPER_CMD"),
+        gemma_cmd=app_defaults.get("GEMMA_WRAPPER_CMD") + "_haha",
+        gemma_wrapper_kwargs={"loco": f"--input {data.get('loco')}"},
         gemma_kwargs=gemma_kwargs,
         output_file=(f"{app_defaults.get('TMPDIR')}/gn2/"
                      f"{data.get('dataset_name')}_K_"
                      f"{__hash}.json"))
-    if data.get("covariates"):
-        gemma_kwargs["c"] = os.path.join(app_defaults.get("GENODIR"),
-                                         "bimbam",
-                                         data.get("covariates"))
     gemma_kwargs["lmm"] = data.get("lmm", 9)
+    gemma_wrapper_kwargs["input"] = (f"{data.get('dataset_name')}_K_"
+                                     f"{__hash}.json")
     gwa_cmd = generate_gemma_computation_cmd(
+        gemma_wrapper_kwargs=gemma_wrapper_kwargs,
         gemma_cmd=app_defaults.get("GEMMA_WRAPPER_CMD"),
         gemma_kwargs=gemma_kwargs,
         output_file=(f"{data.get('dataset_name')}_GWA_"

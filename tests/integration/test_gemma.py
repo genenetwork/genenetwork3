@@ -1,4 +1,5 @@
 """Integration tests for gemma API endpoints"""
+import os
 import unittest
 
 from dataclasses import dataclass
@@ -17,7 +18,14 @@ class MockRedis:
 class GemmaAPITest(unittest.TestCase):
     """Test cases for the Gemma API"""
     def setUp(self):
-        self.app = create_app().test_client()
+        self.app = create_app({
+            "APP_DEFAULTS": {
+                "GENODIR": os.path.abspath(
+                    os.path.join(os.path.dirname(__file__),
+                                 "test_data/")),
+                "TMPDIR": "/tmp",
+                "REDIS_JOB_QUEUE": "GN3::job-queue",
+                "GEMMA_WRAPPER_CMD": "gemma-wrapper"}}).test_client()
 
     @mock.patch("gn3.api.gemma.run_cmd")
     def test_get_version(self, mock_run_cmd):
@@ -31,9 +39,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.api.gemma.generate_gemma_computation_cmd")
-    def test_run_gemma(self, mock_gemma_computation_cmd,
-                       mock_queue_cmd, mock_redis):
-        """Test that gemma composes the command correctly"""
+    def test_run_gemma_no_loco(self, mock_gemma_computation_cmd,
+                               mock_queue_cmd, mock_redis):
+        """Test that gemma composes the command correctly without loco"""
         _redis_conn = MockRedis(redis=mock.MagicMock(), hget=mock.MagicMock())
         mock_redis.return_value = _redis_conn
         mock_gemma_computation_cmd.side_effect = [
@@ -42,7 +50,9 @@ class GemmaAPITest(unittest.TestCase):
              "test.txt -a genofile_snps.txt "
              "-gk > /tmp/gn2/"
              "bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt"),
-            ("gemma-wrapper --json -- "
+            ("gemma-wrapper --json --input /tmp/gn2/"
+             "bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt -- "
+             "-a genofile_snps.txt -lmm 9 "
              "-g genofile.txt -p "
              "test.txt -a genofile_snps.txt "
              "-gk > /tmp/gn2/"
@@ -66,7 +76,9 @@ class GemmaAPITest(unittest.TestCase):
                             "genofile.txt -p test.txt "
                             "-a genofile_snps.txt -gk > "
                             "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt "
-                            "&& gemma-wrapper --json -- -g "
+                            "&& gemma-wrapper --json --input "
+                            "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt"
+                            " -- -a genofile_snps.txt -lmm 9 -g "
                             "genofile.txt -p test.txt "
                             "-a genofile_snps.txt "
                             "-gk > "
@@ -78,7 +90,50 @@ class GemmaAPITest(unittest.TestCase):
             response.get_json(),
             {"unique_id": 'my-unique-id',
              "status": "queued",
-             "output_file": "BXD_GWA_9lo8zwOOXbfB73EcyXxAYQ.txt"})
+             "output_file": "BXD_GWA_WzxVcfhKAn4fJnSWpsBq0g.txt"})
+
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    @mock.patch("gn3.api.gemma.queue_cmd")
+    def test_run_gemma_with_loco(self,
+                                 mock_queue_cmd, mock_redis):
+        """Test that gemma composes the command correctly with loco"""
+        _redis_conn = MockRedis(redis=mock.MagicMock(), hget=mock.MagicMock())
+        mock_redis.return_value = _redis_conn
+        mock_queue_cmd.return_value = "my-unique-id"
+        response = self.app.post("/gemma/k-gwa-computation", json={
+            "trait_filename": os.path.abspath(os.path.join(
+                os.path.dirname(__file__),
+                "test_data/"
+            )),
+            "geno_filename": "BXD_geno.txt.gz",
+            "values": ["X", "N/A", "X"],
+            "dataset_groupname": "BXD",
+            "trait_name": "Height",
+            "email": "me@me.com",
+            "dataset_name": "BXD",
+            "loco": "1,2,3,4,5,6"
+        })
+        mock_queue_cmd.called_with(
+            conn=_redis_conn,
+            email="me@me.com",
+            job_queue="GN3::job-queue",
+            cmd=("gemma-wrapper --json -- -g "
+                 "genofile.txt -p test.txt "
+                 "-a genofile_snps.txt -gk > "
+                 "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt "
+                 "&& gemma-wrapper --json --input "
+                 "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt"
+                 " -- -a genofile_snps.txt -lmm 9 -g "
+                 "genofile.txt -p test.txt "
+                 "-a genofile_snps.txt "
+                 "-gk > "
+                 "/tmp/gn2/"
+                 "bxd_GWA_gUFhGu4rLG7k+CXLPk1OUg.txt"))
+        self.assertEqual(
+            response.get_json(),
+            {"unique_id": 'my-unique-id',
+             "status": "queued",
+             "output_file": "BXD_GWA_WzxVcfhKAn4fJnSWpsBq0g.txt"})
 
     @mock.patch("gn3.api.gemma.redis.Redis")
     def test_check_cmd_status(self, mock_redis):
