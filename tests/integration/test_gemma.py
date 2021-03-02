@@ -5,6 +5,7 @@ import unittest
 from dataclasses import dataclass
 from typing import Callable
 from unittest import mock
+
 from gn3.app import create_app
 
 

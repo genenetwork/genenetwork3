@@ -2,6 +2,7 @@
 import os
 import unittest
 
+from unittest import mock
 from gn3.app import create_app
 
 
@@ -12,28 +13,33 @@ class GeneralAPITest(unittest.TestCase):
 
     def test_metadata_endpoint_exists(self):
         """Test that /metadata/upload exists"""
-        response = self.app.post("/metadata/upload")
+        response = self.app.post("/metadata/upload/d41d86-e4ceEo")
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json(),
                          {"status": 128,
                           "error": "Please provide a file!"})
 
-    def test_metadata_file_upload(self):
+    @mock.patch("gn3.api.general.extract_uploaded_file")
+    def test_metadata_file_upload(self, mock_extract_upload):
         """Test correct upload of file"""
+        mock_extract_upload.return_value = {
+            "status": 0,
+            "token": "d41d86-e4ceEo",
+        }
         gzip_file = os.path.abspath(os.path.join(
             os.path.dirname(__file__),
             "../unit/upload-data.tar.gz"))
-        response = self.app.post("/metadata/upload",
+        response = self.app.post("/metadata/upload/d41d86-e4ceEo",
                                  data={"file": (gzip_file,
                                                 "upload-data.tar.gz")})
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.get_json(),
                          {"status": 0,
-                          "token": "d41d8cd98f00b204e9800998ecf8427e"})
+                          "token": "d41d86-e4ceEo"})
 
     def test_metadata_file_wrong_upload(self):
         """Test that incorrect upload return correct status code"""
-        response = self.app.post("/metadata/upload",
+        response = self.app.post("/metadata/upload/d41d86-e4ceEo",
                                  data={"file": (__file__,
                                                 "my_file")})
         self.assertEqual(response.status_code, 500)
