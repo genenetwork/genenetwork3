@@ -9,7 +9,6 @@ import tarfile
 from functools import partial
 from typing import Dict
 from werkzeug.utils import secure_filename
-from gn3.settings import APP_DEFAULTS
 
 
 def get_dir_hash(directory: str) -> str:

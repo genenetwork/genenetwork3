@@ -19,7 +19,7 @@ gemma = Blueprint("gemma", __name__)
 @gemma.route("/version")
 def get_version():
     """Display the installed version of gemma-wrapper"""
-    gemma_cmd = current_app.config['APP_DEFAULTS'].get('GEMMA_WRAPPER_CMD')
+    gemma_cmd = current_app.config["GEMMA_WRAPPER_CMD"]
     return jsonify(
         run_cmd(f"{gemma_cmd} -v | head -n 1"))
 
@@ -34,7 +34,7 @@ file output is returned.
 
     """
     data = request.get_json()
-    app_defaults = current_app.config.get('APP_DEFAULTS')
+    app_defaults = current_app.config
     __hash = generate_hash_of_string(
         f"{data.get('genofile_name')}_"
         ''.join(data.get("values", "")))
@@ -52,7 +52,7 @@ file output is returned.
     if data.get("loco"):
         gemma_wrapper_kwargs["loco"] = f"--input {data.get('loco')}"
     k_computation_cmd = generate_gemma_computation_cmd(
-        gemma_cmd=app_defaults.get("GEMMA_WRAPPER_CMD") + "_haha",
+        gemma_cmd=app_defaults.get("GEMMA_WRAPPER_CMD"),
         gemma_wrapper_kwargs={"loco": f"--input {data.get('loco')}"},
         gemma_kwargs=gemma_kwargs,
         output_file=(f"{app_defaults.get('TMPDIR')}/gn2/"
