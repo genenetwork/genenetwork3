@@ -1,6 +1,6 @@
 
 from flask import g
-
+from redis import Redis
 from gn3.utility.db_tools import escape
 
 
@@ -30,6 +30,7 @@ def create_trait(**kw):
 
     if "view" in permissions['data']:
         the_trait = GeneralTrait(**kw)
+        print(f"the general trait is {the_trait}")
         if the_trait.dataset.type != "Temp":
             the_trait = retrieve_trait_info(
                 the_trait,
@@ -91,8 +92,45 @@ class GeneralTrait:
         # Todo: These two lines are necessary most of the time, but
         # perhaps not all of the time So we could add a simple if
         # statement to short-circuit this if necessary
-        # if get_sample_info is not False:
-        #     self = retrieve_sample_data(self, self.dataset)
+        if get_sample_info is not False:
+            self = retrieve_sample_data(self, self.dataset)
+
+
+def retrieve_sample_data(trait, dataset, samplelist=None):
+    if samplelist is None:
+        samplelist = []
+
+    if dataset.type == "Temp":
+        results = Redis.get(trait.name).split()
+
+    else:
+        results = dataset.retrieve_sample_data(trait.name)
+
+    # Todo: is this necessary? If not remove
+    trait.data.clear()
+
+    if results:
+        if dataset.type == "Temp":
+            all_samples_ordered = dataset.group.all_samples_ordered()
+            for i, item in enumerate(results):
+                try:
+                    trait.data[all_samples_ordered[i]] = webqtlCaseData(
+                        all_samples_ordered[i], float(item))
+
+                except Exception as e:
+                    # should pass (added to enable testing)
+                    raise e
+
+
+        else:
+            for item in results:
+                name, value, variance, num_cases, name2 = item
+                if not samplelist or (samplelist and name in samplelist):
+                    trait.data[name] = webqtlCaseData(*item)
+
+    return trait
+
+        # raise NotImplementedError()
 
 
 def get_resource_id(dataset, trait_name):
