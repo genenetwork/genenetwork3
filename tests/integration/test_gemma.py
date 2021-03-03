@@ -30,7 +30,7 @@ class GemmaAPITest(unittest.TestCase):
     def test_get_version(self, mock_run_cmd):
         """Test that the correct response is returned"""
         mock_run_cmd.return_value = {"status": 0, "output": "v1.9"}
-        response = self.app.get("/gemma/version", follow_redirects=True)
+        response = self.app.get("/api/gemma/version", follow_redirects=True)
         self.assertEqual(response.get_json(),
                          {"status": 0, "output": "v1.9"})
         self.assertEqual(response.status_code, 200)
@@ -58,7 +58,7 @@ class GemmaAPITest(unittest.TestCase):
              "bxd_GWA_gUFhGu4rLG7k+CXLPk1OUg.txt")
         ]
         mock_queue_cmd.return_value = "my-unique-id"
-        response = self.app.post("/gemma/k-gwa-computation", json={
+        response = self.app.post("/api/gemma/k-gwa-computation", json={
             "trait_filename": "BXD.txt",
             "geno_filename": "BXD_geno",
             "values": ["X", "N/A", "X"],
@@ -99,7 +99,7 @@ class GemmaAPITest(unittest.TestCase):
         _redis_conn = MockRedis(redis=mock.MagicMock(), hget=mock.MagicMock())
         mock_redis.return_value = _redis_conn
         mock_queue_cmd.return_value = "my-unique-id"
-        response = self.app.post("/gemma/k-gwa-computation", json={
+        response = self.app.post("/api/gemma/k-gwa-computation", json={
             "trait_filename": os.path.abspath(os.path.join(
                 os.path.dirname(__file__),
                 "test_data/"
@@ -141,7 +141,7 @@ class GemmaAPITest(unittest.TestCase):
         mock_hget.return_value = b"test"
         _redis_conn = MockRedis(redis=mock.MagicMock(), hget=mock_hget)
         mock_redis.return_value = _redis_conn
-        response = self.app.get(("/gemma/status/"
+        response = self.app.get(("/api/gemma/status/"
                                  "cmd%3A%3A2021-02-1217-3224-3224-1234"),
                                 follow_redirects=True)
         mock_hget.assert_called_once_with(
@@ -170,7 +170,7 @@ class GemmaAPITest(unittest.TestCase):
                                  "-p traitfilename.txt "
                                  "-a genotype_snps.txt "
                                  "-gk > k_output_filename.json")
-        response = self.app.post("/gemma/k-compute/test-data")
+        response = self.app.post("/api/gemma/k-compute/test-data")
         self.assertEqual(response.get_json(), {
             "output_file": "hash-k-output.json",
             "status": "queued",

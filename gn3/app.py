@@ -25,6 +25,6 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
             app.config.update(config)
         elif config.endswith(".py"):
             app.config.from_pyfile(config)
-    app.register_blueprint(general, url_prefix="/")
-    app.register_blueprint(gemma, url_prefix="/gemma")
+    app.register_blueprint(general, url_prefix="/api/")
+    app.register_blueprint(gemma, url_prefix="/api/gemma")
     return app
