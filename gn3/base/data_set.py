@@ -635,6 +635,32 @@ class MrnaAssayDataSet(DataSet):
         return dict(results)
 
 
+
+class TempDataSet(DataSet):
+    '''Temporary user-generated data set'''
+
+    DS_NAME_MAP['Temp'] = 'TempDataSet'
+
+    def setup(self):
+        self.search_fields = ['name',
+                              'description']
+
+        self.display_fields = ['name',
+                               'description']
+
+        self.header_fields = ['Name',
+                              'Description']
+
+        self.type = 'Temp'
+
+        # Need to double check later how these are used
+        self.id = 1
+        self.fullname = 'Temporary Storage'
+        self.shortname = 'Temp'
+
+
+
+
 def geno_mrna_confidentiality(ob):
     dataset_table = ob.type + "Freeze"
     #logger.debug("dataset_table [%s]: %s" % (type(dataset_table), dataset_table))
