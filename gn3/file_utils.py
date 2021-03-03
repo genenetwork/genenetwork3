@@ -27,21 +27,14 @@ def get_dir_hash(directory: str) -> str:
     return md5hash.hexdigest()
 
 
-def lookup_file(environ_var: str,
-                root_dir: str,
-                file_name: str) -> str:
-    """Look up FILE_NAME in the path defined by ENVIRON_VAR/ROOT_DIR/; If
-ENVIRON_VAR/ROOT_DIR/FILE_NAME does not exist, raise an exception.
-Otherwise return ENVIRON_VAR/ROOT_DIR/FILE_NAME.
-
-    """
-    _dir = APP_DEFAULTS.get(environ_var,
-                            os.environ.get(environ_var))
-    if _dir:
-        _file = os.path.join(_dir, root_dir, file_name)
-        if os.path.isfile(_file):
-            return _file
-    raise FileNotFoundError
+def get_dir_hash(directory: str) -> str:
+    """Return the hash of a DIRECTORY"""
+    if not os.path.exists(directory):
+        raise FileNotFoundError
+    all_files = [os.path.join(root, names)
+                 for root, _, files in os.walk(directory)
+                 for names in sorted(files)]
+    return get_hash_of_files(all_files)
 
 
 def jsonfile_to_dict(json_file: str) -> Dict:
