@@ -25,7 +25,7 @@ week. If a TOKEN is not provided, generate a token for the new user.
     status = 201
     results = extract_uploaded_file(
         gzipped_file=file_,
-        target_dir=current_app.config["APP_DEFAULTS"].get("TMPDIR"),
+        target_dir=current_app.config["TMPDIR"],
         token=token)
     if results.get("status") > 0:
         status = 500

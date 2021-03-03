@@ -20,13 +20,11 @@ class GemmaAPITest(unittest.TestCase):
     """Test cases for the Gemma API"""
     def setUp(self):
         self.app = create_app({
-            "APP_DEFAULTS": {
-                "GENODIR": os.path.abspath(
-                    os.path.join(os.path.dirname(__file__),
-                                 "test_data/")),
-                "TMPDIR": "/tmp",
-                "REDIS_JOB_QUEUE": "GN3::job-queue",
-                "GEMMA_WRAPPER_CMD": "gemma-wrapper"}}).test_client()
+            "GENODIR": os.path.abspath(
+                os.path.join(os.path.dirname(__file__),
+                             "test_data/")),
+            "REDIS_JOB_QUEUE": "GN3::job-queue",
+            "GEMMA_WRAPPER_CMD": "gemma-wrapper"}).test_client()
 
     @mock.patch("gn3.api.gemma.run_cmd")
     def test_get_version(self, mock_run_cmd):
