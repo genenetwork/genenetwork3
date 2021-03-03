@@ -8,21 +8,20 @@ import tarfile
 
 from functools import partial
 from typing import Dict
+from typing import List
 from werkzeug.utils import secure_filename
 
 
-def get_dir_hash(directory: str) -> str:
-    """Return the hash of a DIRECTORY"""
+def get_hash_of_files(files: List[str]) -> str:
+    """Given a list of valid of FILES, return their hash as a string"""
     md5hash = hashlib.md5()
-    if not os.path.exists(directory):
-        raise FileNotFoundError
-    for root, _, files in os.walk(directory):
-        for names in sorted(files):
-            file_path = os.path.join(root, names)
-            with open(file_path, "rb") as file_:
-                for buf in iter(partial(file_.read, 4096), b''):
-                    md5hash.update(bytearray(hashlib.md5(buf).hexdigest(),
-                                             "utf-8"))
+    for file_path in sorted(files):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError
+        with open(file_path, "rb") as file_:
+            for buf in iter(partial(file_.read, 4096), b''):
+                md5hash.update(bytearray(hashlib.md5(buf).hexdigest(),
+                                         "utf-8"))
     return md5hash.hexdigest()
 
 
