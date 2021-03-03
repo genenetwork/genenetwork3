@@ -804,6 +804,75 @@ class PhenotypeDataSet(DataSet):
         return results
 
 
+class GenotypeDataSet(DataSet):
+    DS_NAME_MAP['Geno'] = 'GenotypeDataSet'
+
+    def setup(self):
+        # Fields in the database table
+        self.search_fields = ['Name',
+                              'Chr']
+
+        # Find out what display_fields is
+        self.display_fields = ['name',
+                               'chr',
+                               'mb',
+                               'source2',
+                               'sequence']
+
+        # Fields displayed in the search results table header
+        self.header_fields = ['Index',
+                              'ID',
+                              'Location']
+
+        # Todo: Obsolete or rename this field
+        self.type = 'Geno'
+
+        self.query_for_group = '''
+                SELECT
+                        InbredSet.Name, InbredSet.Id, InbredSet.GeneticType
+                FROM
+                        InbredSet, GenoFreeze
+                WHERE
+                        GenoFreeze.InbredSetId = InbredSet.Id AND
+                        GenoFreeze.Name = "%s"
+                ''' % escape(self.name)
+
+    def check_confidentiality(self):
+        return geno_mrna_confidentiality(self)
+
+    def get_trait_info(self, trait_list, species=None):
+        for this_trait in trait_list:
+            if not this_trait.haveinfo:
+                this_trait.retrieveInfo()
+
+            if this_trait.chr and this_trait.mb:
+                this_trait.location_repr = 'Chr%s: %.6f' % (
+                    this_trait.chr, float(this_trait.mb))
+
+    def retrieve_sample_data(self, trait):
+        query = """
+                    SELECT
+                            Strain.Name, GenoData.value, GenoSE.error, "N/A", Strain.Name2
+                    FROM
+                            (GenoData, GenoFreeze, Strain, Geno, GenoXRef)
+                    left join GenoSE on
+                            (GenoSE.DataId = GenoData.Id AND GenoSE.StrainId = GenoData.StrainId)
+                    WHERE
+                            Geno.SpeciesId = %s AND Geno.Name = %s AND GenoXRef.GenoId = Geno.Id AND
+                            GenoXRef.GenoFreezeId = GenoFreeze.Id AND
+                            GenoFreeze.Name = %s AND
+                            GenoXRef.DataId = GenoData.Id AND
+                            GenoData.StrainId = Strain.Id
+                    Order BY
+                            Strain.Name
+                    """
+        results = g.db.execute(query,
+                               (webqtlDatabaseFunction.retrieve_species_id(self.group.name),
+                                trait, self.name)).fetchall()
+        return results
+
+
+
 
 def geno_mrna_confidentiality(ob):
     dataset_table = ob.type + "Freeze"
