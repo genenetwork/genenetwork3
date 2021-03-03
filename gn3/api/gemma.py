@@ -133,3 +133,41 @@ traitfile, and snpsfile are extracted from a metadata.json file.
         return jsonify(status=128,
                        # use better message
                        message="Metadata file non-existent!")
+
+
+@gemma.route("/k-compute/loco/<chromosomes>/<token>", methods=["POST"])
+def compute_k_loco(chromosomes, token):
+    """Similar to 'compute_k' with the extra option of using loco given chromosome
+values.
+
+    """
+    working_dir = os.path.join(current_app.config.get("TMPDIR"),
+                               token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir,
+                                          "metadata.json"))
+    try:
+        genofile, phenofile, snpsfile = [os.path.join(working_dir,
+                                                      _dict.get(x))
+                                         for x in ["geno", "pheno", "snps"]]
+        gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
+        _hash = get_hash_of_files([genofile, phenofile, snpsfile])
+        k_output_filename = f"{_hash}-k-output.json"
+        k_computation_cmd = generate_gemma_computation_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_WRAPPER_CMD"),
+            gemma_wrapper_kwargs={"loco": f"--input {chromosomes}"},
+            gemma_kwargs=gemma_kwargs,
+            output_file=(f"{current_app.config.get('TMPDIR')}/"
+                         f"{token}/{k_output_filename}"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=f"{k_computation_cmd}"),
+            status="queued",
+            output_file=k_output_filename)
+    # pylint: disable=W0703
+    except Exception:
+        return jsonify(status=128,
+                       # use better message
+                       message="Metadata file non-existent!")
