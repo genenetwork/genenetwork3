@@ -1,0 +1,12 @@
+{
+    "title": "This is my dataset for testing the REST API",
+    "description": "Longer description",
+    "date": "20210127",
+    "authors": [
+        "R. W. Williams"
+    ],
+    "cross": "BXD"
+    "geno": "BXD_geno.txt.gz",
+    "pheno": "BXD_pheno.txt",
+    "snps": "BXD_snps.txt"
+}
