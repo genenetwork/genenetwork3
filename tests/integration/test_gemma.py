@@ -149,3 +149,30 @@ class GemmaAPITest(unittest.TestCase):
             key="status")
         self.assertEqual(response.get_json(),
                          {"status": "test"})
+
+    @mock.patch("gn3.api.gemma.queue_cmd")
+    @mock.patch("gn3.api.gemma.generate_gemma_computation_cmd")
+    @mock.patch("gn3.api.gemma.get_hash_of_files")
+    @mock.patch("gn3.api.gemma.jsonfile_to_dict")
+    def test_k_compute(self, mock_json, mock_hash, mock_cmd,
+                       mock_queue_cmd):
+        """Test /gemma/k-compute/<token>"""
+        mock_queue_cmd.return_value = "my-unique-id"
+        mock_json.return_value = {
+            "geno": "genofile.txt",
+            "pheno": "phenofile.txt",
+            "snps": "snpfile.txt",
+        }
+        mock_hash.return_value = "hash"
+        mock_cmd.return_value = ("gemma-wrapper --json -- "
+                                 "-debug -g "
+                                 "genotype_name.txt "
+                                 "-p traitfilename.txt "
+                                 "-a genotype_snps.txt "
+                                 "-gk > k_output_filename.json")
+        response = self.app.post("/gemma/k-compute/test-data")
+        self.assertEqual(response.get_json(), {
+            "output_file": "hash-k-output.json",
+            "status": "queued",
+            "unique_id": "my-unique-id"
+        })

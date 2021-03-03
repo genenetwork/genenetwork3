@@ -9,6 +9,8 @@ from flask import request
 
 from gn3.commands import queue_cmd
 from gn3.commands import run_cmd
+from gn3.file_utils import get_hash_of_files
+from gn3.file_utils import jsonfile_to_dict
 from gn3.computations.gemma import generate_hash_of_string
 from gn3.computations.gemma import generate_pheno_txt_file
 from gn3.computations.gemma import generate_gemma_computation_cmd
@@ -92,3 +94,42 @@ gemma endpoints, return the status of the command
         return jsonify(status=128,
                        error="The unique id you used does not exist!"), 500
     return jsonify(status=status.decode("utf-8"))
+
+
+@gemma.route("/k-compute/<token>", methods=["POST"])
+def compute_k(token):
+    """Given a genofile, traitfile, snpsfile, and the token, compute the k-valuen
+and return <hash-of-inputs>.json with a UNIQUE-ID of the job. The genofile,
+traitfile, and snpsfile are extracted from a metadata.json file.
+
+    """
+    working_dir = os.path.join(current_app.config.get("TMPDIR"),
+                               token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir,
+                                          "metadata.json"))
+    try:
+        genofile, phenofile, snpsfile = [os.path.join(working_dir,
+                                                      _dict.get(x))
+                                         for x in ["geno", "pheno", "snps"]]
+        gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
+        _hash = get_hash_of_files([genofile, phenofile, snpsfile])
+        k_output_filename = f"{_hash}-k-output.json"
+        k_computation_cmd = generate_gemma_computation_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_WRAPPER_CMD"),
+            gemma_wrapper_kwargs=None,
+            gemma_kwargs=gemma_kwargs,
+            output_file=(f"{current_app.config.get('TMPDIR')}/"
+                         f"{token}/{k_output_filename}"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=f"{k_computation_cmd}"),
+            status="queued",
+            output_file=k_output_filename)
+    # pylint: disable=W0703
+    except Exception:
+        return jsonify(status=128,
+                       # use better message
+                       message="Metadata file non-existent!")
