@@ -659,6 +659,150 @@ class TempDataSet(DataSet):
         self.shortname = 'Temp'
 
 
+class PhenotypeDataSet(DataSet):
+    DS_NAME_MAP['Publish'] = 'PhenotypeDataSet'
+
+    def setup(self):
+
+        #logger.debug("IS A PHENOTYPEDATASET")
+
+        # Fields in the database table
+        self.search_fields = ['Phenotype.Post_publication_description',
+                              'Phenotype.Pre_publication_description',
+                              'Phenotype.Pre_publication_abbreviation',
+                              'Phenotype.Post_publication_abbreviation',
+                              'PublishXRef.mean',
+                              'Phenotype.Lab_code',
+                              'Publication.PubMed_ID',
+                              'Publication.Abstract',
+                              'Publication.Title',
+                              'Publication.Authors',
+                              'PublishXRef.Id']
+
+        # Figure out what display_fields is
+        self.display_fields = ['name', 'group_code',
+                               'pubmed_id',
+                               'pre_publication_description',
+                               'post_publication_description',
+                               'original_description',
+                               'pre_publication_abbreviation',
+                               'post_publication_abbreviation',
+                               'mean',
+                               'lab_code',
+                               'submitter', 'owner',
+                               'authorized_users',
+                               'authors', 'title',
+                               'abstract', 'journal',
+                               'volume', 'pages',
+                               'month', 'year',
+                               'sequence', 'units', 'comments']
+
+        # Fields displayed in the search results table header
+        self.header_fields = ['Index',
+                              'Record',
+                              'Description',
+                              'Authors',
+                              'Year',
+                              'Max LRS',
+                              'Max LRS Location',
+                              'Additive Effect']
+
+        self.type = 'Publish'
+
+        self.query_for_group = '''
+                            SELECT
+                                    InbredSet.Name, InbredSet.Id, InbredSet.GeneticType
+                            FROM
+                                    InbredSet, PublishFreeze
+                            WHERE
+                                    PublishFreeze.InbredSetId = InbredSet.Id AND
+                                    PublishFreeze.Name = "%s"
+                    ''' % escape(self.name)
+
+    def check_confidentiality(self):
+        # (Urgently?) Need to write this
+        pass
+
+    def get_trait_info(self, trait_list, species=''):
+        for this_trait in trait_list:
+
+            if not this_trait.haveinfo:
+                this_trait.retrieve_info(get_qtl_info=True)
+
+            description = this_trait.post_publication_description
+
+            # If the dataset is confidential and the user has access to confidential
+            # phenotype traits, then display the pre-publication description instead
+            # of the post-publication description
+            if this_trait.confidential:
+                this_trait.description_display = ""
+                continue   # for now, because no authorization features
+
+                if not webqtlUtil.hasAccessToConfidentialPhenotypeTrait(
+                        privilege=self.privilege,
+                        userName=self.userName,
+                        authorized_users=this_trait.authorized_users):
+
+                    description = this_trait.pre_publication_description
+
+            if len(description) > 0:
+                this_trait.description_display = description.strip()
+            else:
+                this_trait.description_display = ""
+
+            if not this_trait.year.isdigit():
+                this_trait.pubmed_text = "N/A"
+            else:
+                this_trait.pubmed_text = this_trait.year
+
+            if this_trait.pubmed_id:
+                this_trait.pubmed_link = webqtlConfig.PUBMEDLINK_URL % this_trait.pubmed_id
+
+            # LRS and its location
+            this_trait.LRS_score_repr = "N/A"
+            this_trait.LRS_location_repr = "N/A"
+
+            if this_trait.lrs:
+                query = """
+                    select Geno.Chr, Geno.Mb from Geno, Species
+                    where Species.Name = '%s' and
+                        Geno.Name = '%s' and
+                        Geno.SpeciesId = Species.Id
+                """ % (species, this_trait.locus)
+               
+                result = g.db.execute(query).fetchone()
+
+                if result:
+                    if result[0] and result[1]:
+                        LRS_Chr = result[0]
+                        LRS_Mb = result[1]
+
+                        this_trait.LRS_score_repr = LRS_score_repr = '%3.1f' % this_trait.lrs
+                        this_trait.LRS_location_repr = LRS_location_repr = 'Chr%s: %.6f' % (
+                            LRS_Chr, float(LRS_Mb))
+
+    def retrieve_sample_data(self, trait):
+        query = """
+                    SELECT
+                            Strain.Name, PublishData.value, PublishSE.error, NStrain.count, Strain.Name2
+                    FROM
+                            (PublishData, Strain, PublishXRef, PublishFreeze)
+                    left join PublishSE on
+                            (PublishSE.DataId = PublishData.Id AND PublishSE.StrainId = PublishData.StrainId)
+                    left join NStrain on
+                            (NStrain.DataId = PublishData.Id AND
+                            NStrain.StrainId = PublishData.StrainId)
+                    WHERE
+                            PublishXRef.InbredSetId = PublishFreeze.InbredSetId AND
+                            PublishData.Id = PublishXRef.DataId AND PublishXRef.Id = %s AND
+                            PublishFreeze.Id = %s AND PublishData.StrainId = Strain.Id
+                    Order BY
+                            Strain.Name
+                    """
+       
+        results = g.db.execute(query, (trait, self.id)).fetchall()
+        return results
+
 
 
 def geno_mrna_confidentiality(ob):
@@ -667,7 +811,7 @@ def geno_mrna_confidentiality(ob):
 
     query = '''SELECT Id, Name, FullName, confidentiality,
                         AuthorisedUsers FROM %s WHERE Name = "%s"''' % (dataset_table, ob.name)
-    # logger.sql(query)
+    #
     result = g.db.execute(query)
 
     (dataset_id,
