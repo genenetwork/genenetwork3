@@ -1,3 +1,4 @@
+# pylint: disable=R0913
 """Integration tests for gemma API endpoints"""
 import os
 import unittest
@@ -151,12 +152,16 @@ class GemmaAPITest(unittest.TestCase):
                          {"status": "test"})
 
     @mock.patch("gn3.api.gemma.queue_cmd")
-    @mock.patch("gn3.api.gemma.generate_gemma_computation_cmd")
     @mock.patch("gn3.api.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    def test_k_compute(self, mock_json, mock_hash, mock_cmd,
+    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    def test_k_compute(self, mock_redis, mock_path_exist,
+                       mock_json, mock_hash,
                        mock_queue_cmd):
         """Test /gemma/k-compute/<token>"""
+        mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
+        mock_redis.return_value = _redis_conn
         mock_queue_cmd.return_value = "my-unique-id"
         mock_json.return_value = {
             "geno": "genofile.txt",
@@ -164,13 +169,16 @@ class GemmaAPITest(unittest.TestCase):
             "snps": "snpfile.txt",
         }
         mock_hash.return_value = "hash"
-        mock_cmd.return_value = ("gemma-wrapper --json -- "
-                                 "-debug -g "
-                                 "genotype_name.txt "
-                                 "-p traitfilename.txt "
-                                 "-a genotype_snps.txt "
-                                 "-gk > k_output_filename.json")
         response = self.app.post("/api/gemma/k-compute/test-data")
+        mock_queue_cmd.assert_called_once_with(
+            conn=_redis_conn,
+            email=None,
+            job_queue='GN3::job-queue',
+            cmd=("gemma-wrapper --json -- "
+                 "-g /tmp/test-data/genofile.txt "
+                 "-p /tmp/test-data/phenofile.txt "
+                 "-a /tmp/test-data/snpfile.txt "
+                 "-gk > /tmp/test-data/hash-k-output.json"))
         self.assertEqual(response.get_json(), {
             "output_file": "hash-k-output.json",
             "status": "queued",
@@ -178,12 +186,16 @@ class GemmaAPITest(unittest.TestCase):
         })
 
     @mock.patch("gn3.api.gemma.queue_cmd")
-    @mock.patch("gn3.api.gemma.generate_gemma_computation_cmd")
     @mock.patch("gn3.api.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    def test_k_compute_loco(self, mock_json, mock_hash, mock_cmd,
+    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    def test_k_compute_loco(self, mock_redis, mock_path_exist,
+                            mock_json, mock_hash,
                             mock_queue_cmd):
         """Test /gemma/k-compute/loco/<chromosomes>/<token>"""
+        mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
+        mock_redis.return_value = _redis_conn
         mock_queue_cmd.return_value = "my-unique-id"
         mock_json.return_value = {
             "geno": "genofile.txt",
@@ -191,14 +203,18 @@ class GemmaAPITest(unittest.TestCase):
             "snps": "snpfile.txt",
         }
         mock_hash.return_value = "hash"
-        mock_cmd.return_value = ("gemma-wrapper --json -- "
-                                 "-debug -g "
-                                 "genotype_name.txt "
-                                 "-p traitfilename.txt "
-                                 "-a genotype_snps.txt "
-                                 "-gk > k_output_filename.json")
         response = self.app.post(("/api/gemma/k-compute/loco/"
                                   "1%2C2%2C3%2C4%2C5%2C6/test-data"))
+        mock_queue_cmd.assert_called_once_with(
+            conn=_redis_conn,
+            email=None,
+            job_queue='GN3::job-queue',
+            cmd=("gemma-wrapper --json --loco "
+                 "--input 1,2,3,4,5,6 -- "
+                 "-g /tmp/test-data/genofile.txt "
+                 "-p /tmp/test-data/phenofile.txt "
+                 "-a /tmp/test-data/snpfile.txt "
+                 "-gk > /tmp/test-data/hash-k-output.json"))
         self.assertEqual(response.get_json(), {
             "output_file": "hash-k-output.json",
             "status": "queued",
@@ -206,12 +222,16 @@ class GemmaAPITest(unittest.TestCase):
         })
 
     @mock.patch("gn3.api.gemma.queue_cmd")
-    @mock.patch("gn3.api.gemma.generate_gemma_computation_cmd")
     @mock.patch("gn3.api.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    def test_gwa_compute(self, mock_json, mock_hash, mock_cmd,
+    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    def test_gwa_compute(self, mock_redis, mock_path_exist,
+                         mock_json, mock_hash,
                          mock_queue_cmd):
         """Test /gemma/gwa-compute/<k-inputfile>/<token>"""
+        mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
+        mock_redis.return_value = _redis_conn
         mock_queue_cmd.return_value = "my-unique-id"
         mock_json.return_value = {
             "geno": "genofile.txt",
@@ -219,27 +239,21 @@ class GemmaAPITest(unittest.TestCase):
             "snps": "snpfile.txt",
         }
         mock_hash.return_value = "hash"
-        mock_cmd.return_value = ("gemma-wrapper --json -- "
-                                 "-debug -g "
-                                 "genotype_name.txt "
-                                 "-p traitfilename.txt "
-                                 "-a genotype_snps.txt "
-                                 "-gk > k_output_filename.json")
         response = self.app.post(("/api/gemma/gwa-compute/hash-k-output.json/"
                                   "my-token"))
         mock_hash.assert_called_once_with(['/tmp/my-token/genofile.txt',
                                            '/tmp/my-token/phenofile.txt',
                                            '/tmp/my-token/snpfile.txt'])
-        mock_cmd.assert_called_once_with(
-            gemma_cmd='gemma-wrapper',
-            gemma_wrapper_kwargs={
-                'input': '/tmp/my-token/hash-k-output.json'
-            },
-            gemma_kwargs={'g': '/tmp/my-token/genofile.txt',
-                          'p': '/tmp/my-token/phenofile.txt',
-                          'a': '/tmp/my-token/snpfile.txt',
-                          'lmm': 9},
-            output_file='/tmp/my-token/hash-gwa-output.json')
+        mock_queue_cmd.assert_called_once_with(
+            conn=_redis_conn,
+            email=None,
+            job_queue='GN3::job-queue',
+            cmd=("gemma-wrapper --json "
+                 "--input /tmp/my-token/hash-k-output.json"
+                 " -- -g /tmp/my-token/genofile.txt "
+                 "-p /tmp/my-token/phenofile.txt "
+                 "-a /tmp/my-token/snpfile.txt "
+                 "-lmm 9 gk > /tmp/my-token/hash-gwa-output.json"))
         self.assertEqual(response.get_json(), {
             "unique_id": "my-unique-id",
             "status": "queued",
@@ -247,13 +261,19 @@ class GemmaAPITest(unittest.TestCase):
         })
 
     @mock.patch("gn3.api.gemma.queue_cmd")
-    @mock.patch("gn3.api.gemma.generate_gemma_computation_cmd")
     @mock.patch("gn3.api.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    def test_gwa_compute_with_covars(self, mock_json, mock_hash, mock_cmd,
+    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    def test_gwa_compute_with_covars(self, mock_redis,
+                                     mock_path_exist,
+                                     mock_json, mock_hash,
                                      mock_queue_cmd):
         """Test /gemma/gwa-compute/covars/<k-inputfile>/<token>"""
+        mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
+        mock_redis.return_value = _redis_conn
         mock_queue_cmd.return_value = "my-unique-id"
+        mock_path_exist.return_value = True
         mock_json.return_value = {
             "geno": "genofile.txt",
             "pheno": "phenofile.txt",
@@ -261,12 +281,6 @@ class GemmaAPITest(unittest.TestCase):
             "covar": "covarfile.txt",
         }
         mock_hash.return_value = "hash"
-        mock_cmd.return_value = ("gemma-wrapper --json -- "
-                                 "-debug -g "
-                                 "genotype_name.txt "
-                                 "-p traitfilename.txt "
-                                 "-a genotype_snps.txt "
-                                 "-gk > k_output_filename.json")
         response = self.app.post(("/api/gemma/gwa-compute/"
                                   "covars/hash-k-output.json/"
                                   "my-token"))
@@ -274,37 +288,37 @@ class GemmaAPITest(unittest.TestCase):
                                            '/tmp/my-token/phenofile.txt',
                                            '/tmp/my-token/snpfile.txt',
                                            '/tmp/my-token/covarfile.txt'])
-        mock_cmd.assert_called_once_with(
-            gemma_cmd='gemma-wrapper',
-            gemma_wrapper_kwargs={
-                'input': '/tmp/my-token/hash-k-output.json'
-            },
-            gemma_kwargs={'g': '/tmp/my-token/genofile.txt',
-                          'p': '/tmp/my-token/phenofile.txt',
-                          'a': '/tmp/my-token/snpfile.txt',
-                          'c': '/tmp/my-token/covarfile.txt',
-                          'lmm': 9},
-            output_file='/tmp/my-token/hash-gwa-output.json')
+        mock_queue_cmd.assert_called_once_with(
+            conn=_redis_conn,
+            email=None,
+            job_queue="GN3::job-queue",
+            cmd=("gemma-wrapper --json --input "
+                 "/tmp/my-token/hash-k-output.json -- "
+                 "-g /tmp/my-token/genofile.txt "
+                 "-p /tmp/my-token/phenofile.txt "
+                 "-a /tmp/my-token/snpfile.txt "
+                 "-c /tmp/my-token/covarfile.txt -lmm 9 "
+                 "-gk > /tmp/my-token/hash-gwa-output.json"))
         self.assertEqual(response.get_json(), {
             "unique_id": "my-unique-id",
             "status": "queued",
             "output_file": "hash-gwa-output.json"
         })
 
-    # pylint: disable=R0913
     @mock.patch("gn3.api.gemma.queue_cmd")
-    @mock.patch("gn3.api.gemma.compose_gemma_cmd")
     @mock.patch("gn3.api.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
     @mock.patch("gn3.api.gemma.do_paths_exist")
-    def test_gwa_compute_with_loco_only(self, mock_path_exist,
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    def test_gwa_compute_with_loco_only(self, mock_redis,
+                                        mock_path_exist,
                                         mock_json, mock_hash,
-                                        mock_cmd,
                                         mock_queue_cmd):
         """Test /gemma/gwa-compute/<k-inputfile>/loco/maf/<maf>/<token>
 
         """
-        mock_path_exist.return_value = True
+        mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
+        mock_redis.return_value = _redis_conn
         mock_queue_cmd.return_value = "my-unique-id"
         mock_json.return_value = {
             "geno": "genofile.txt",
@@ -313,30 +327,23 @@ class GemmaAPITest(unittest.TestCase):
             "covar": "covarfile.txt",
         }
         mock_hash.return_value = "hash"
-        mock_cmd.return_value = ("gemma-wrapper --json -- "
-                                 "-debug -g "
-                                 "genotype_name.txt "
-                                 "-p traitfilename.txt "
-                                 "-a genotype_snps.txt "
-                                 "-gk > k_output_filename.json")
         response = self.app.post(("/api/gemma/gwa-compute/"
                                   "hash-k-output.json/loco/"
                                   "maf/21/my-token"))
         mock_hash.assert_called_once_with(['/tmp/my-token/genofile.txt',
                                            '/tmp/my-token/phenofile.txt',
                                            '/tmp/my-token/snpfile.txt'])
-        mock_cmd.assert_called_once_with(
-            gemma_wrapper_cmd='gemma-wrapper',
-            gemma_wrapper_kwargs={
-                'loco': '--input /tmp/my-token/hash-k-output.json'
-            },
-            gemma_kwargs={'g': '/tmp/my-token/genofile.txt',
-                          'p': '/tmp/my-token/phenofile.txt',
-                          'a': '/tmp/my-token/snpfile.txt',
-                          'lmm': 9,
-                          'maf': 21},
-            gemma_args=["-gk", ">",
-                        '/tmp/my-token/hash-gwa-output.json'])
+        mock_queue_cmd.assert_called_once_with(
+            conn=_redis_conn,
+            email=None,
+            job_queue='GN3::job-queue',
+            cmd=("gemma-wrapper --json --loco --input "
+                 "/tmp/my-token/hash-k-output.json -- "
+                 "-g /tmp/my-token/genofile.txt "
+                 "-p /tmp/my-token/phenofile.txt "
+                 "-a /tmp/my-token/snpfile.txt "
+                 "-lmm 9 -maf 21.0 "
+                 "-gk > /tmp/my-token/hash-gwa-output.json"))
         self.assertEqual(response.get_json(), {
             "unique_id": "my-unique-id",
             "status": "queued",
