@@ -7,10 +7,12 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
+from gn3.commands import compose_gemma_cmd
 from gn3.commands import queue_cmd
 from gn3.commands import run_cmd
 from gn3.file_utils import get_hash_of_files
 from gn3.file_utils import jsonfile_to_dict
+from gn3.computations.gemma import do_paths_exist
 from gn3.computations.gemma import generate_hash_of_string
 from gn3.computations.gemma import generate_pheno_txt_file
 from gn3.computations.gemma import generate_gemma_computation_cmd
@@ -245,6 +247,53 @@ def compute_gwa_with_covar(k_filename, token):
                     gemma_kwargs=gemma_kwargs,
                     output_file=(f"{current_app.config.get('TMPDIR')}/"
                                  f"{token}/{_output_filename}"))),
+            status="queued",
+            output_file=_output_filename)
+    # pylint: disable=W0703
+    except Exception:
+        return jsonify(status=128,
+                       # use better message
+                       message="Metadata file non-existent!")
+
+
+@gemma.route("/gwa-compute/<k_filename>/loco/maf/<maf>/<token>",
+             methods=["POST"])
+def compute_gwa_with_loco_maf(k_filename, maf, token):
+    """Compute GWA values. No Covariates provided. Only loco and maf vals given.
+
+    """
+    working_dir = os.path.join(current_app.config.get("TMPDIR"),
+                               token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir,
+                                          "metadata.json"))
+    try:
+        genofile, phenofile, snpsfile = [
+            os.path.join(working_dir,
+                         _dict.get(x))
+            for x in ["geno", "pheno", "snps"]]
+        if not do_paths_exist([genofile, phenofile, snpsfile]):
+            raise FileNotFoundError
+        gemma_kwargs = {"g": genofile, "p": phenofile,
+                        "a": snpsfile, "lmm": _dict.get("lmm", 9),
+                        'maf': float(maf)}
+        _hash = get_hash_of_files([genofile, phenofile, snpsfile])
+        _output_filename = f"{_hash}-gwa-output.json"
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=compose_gemma_cmd(
+                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                             "WRAPPER_CMD"),
+                    gemma_wrapper_kwargs={
+                        "loco": ("--input "
+                                 f"{os.path.join(working_dir, k_filename)}")
+                    },
+                    gemma_kwargs=gemma_kwargs,
+                    gemma_args=["-gk", ">",
+                                (f"{current_app.config.get('TMPDIR')}/"
+                                 f"{token}/{_output_filename}")])),
             status="queued",
             output_file=_output_filename)
     # pylint: disable=W0703
