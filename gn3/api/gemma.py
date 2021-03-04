@@ -211,3 +211,44 @@ def compute_gwa(k_filename, token):
         return jsonify(status=128,
                        # use better message
                        message="Metadata file non-existent!")
+
+
+@gemma.route("/gwa-compute/covars/<k_filename>/<token>", methods=["POST"])
+def compute_gwa_with_covar(k_filename, token):
+    """Compute GWA values. Covariates provided.
+
+    """
+    working_dir = os.path.join(current_app.config.get("TMPDIR"),
+                               token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir,
+                                          "metadata.json"))
+    try:
+        genofile, phenofile, snpsfile, covarfile = [
+            os.path.join(working_dir,
+                         _dict.get(x))
+            for x in ["geno", "pheno", "snps", "covar"]]
+        gemma_kwargs = {"g": genofile, "p": phenofile,
+                        "a": snpsfile, "c": covarfile,
+                        "lmm": _dict.get("lmm", 9)}
+        _hash = get_hash_of_files([genofile, phenofile, snpsfile, covarfile])
+        _output_filename = f"{_hash}-gwa-output.json"
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=generate_gemma_computation_cmd(
+                    gemma_cmd=current_app.config.get("GEMMA_WRAPPER_CMD"),
+                    gemma_wrapper_kwargs={
+                        "input": os.path.join(working_dir, k_filename)
+                    },
+                    gemma_kwargs=gemma_kwargs,
+                    output_file=(f"{current_app.config.get('TMPDIR')}/"
+                                 f"{token}/{_output_filename}"))),
+            status="queued",
+            output_file=_output_filename)
+    # pylint: disable=W0703
+    except Exception:
+        return jsonify(status=128,
+                       # use better message
+                       message="Metadata file non-existent!")
