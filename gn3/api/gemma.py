@@ -154,6 +154,8 @@ values.
         genofile, phenofile, snpsfile = [os.path.join(working_dir,
                                                       _dict.get(x))
                                          for x in ["geno", "pheno", "snps"]]
+        if not do_paths_exist([genofile, phenofile, snpsfile]):
+            raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
         k_output_filename = f"{_hash}-k-output.json"
@@ -285,6 +287,54 @@ def compute_gwa_with_loco_maf(k_filename, maf, token):
                         "a": snpsfile, "lmm": _dict.get("lmm", 9),
                         'maf': float(maf)}
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
+        _output_filename = f"{_hash}-gwa-output.json"
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=compose_gemma_cmd(
+                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                             "WRAPPER_CMD"),
+                    gemma_wrapper_kwargs={
+                        "loco": ("--input "
+                                 f"{os.path.join(working_dir, k_filename)}")
+                    },
+                    gemma_kwargs=gemma_kwargs,
+                    gemma_args=["-gk", ">",
+                                (f"{current_app.config.get('TMPDIR')}/"
+                                 f"{token}/{_output_filename}")])),
+            status="queued",
+            output_file=_output_filename)
+    # pylint: disable=W0703
+    except Exception:
+        return jsonify(status=128,
+                       # use better message
+                       message="Metadata file non-existent!")
+
+
+@gemma.route("/gwa-compute/<k_filename>/loco/covariates/maf/<maf>/<token>",
+             methods=["POST"])
+def compute_gwa_with_loco_covar(k_filename, maf, token):
+    """Compute GWA values. No Covariates provided. Only loco and maf vals given.
+
+    """
+    working_dir = os.path.join(current_app.config.get("TMPDIR"),
+                               token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir,
+                                          "metadata.json"))
+    try:
+        genofile, phenofile, snpsfile, covarfile = [
+            os.path.join(working_dir,
+                         _dict.get(x))
+            for x in ["geno", "pheno", "snps", "covar"]]
+        if not do_paths_exist([genofile, phenofile, snpsfile, covarfile]):
+            raise FileNotFoundError
+        gemma_kwargs = {"g": genofile, "p": phenofile,
+                        "a": snpsfile, "c": covarfile,
+                        "lmm": _dict.get("lmm", 9),
+                        "maf": float(maf)}
+        _hash = get_hash_of_files([genofile, phenofile, snpsfile, covarfile])
         _output_filename = f"{_hash}-gwa-output.json"
         return jsonify(
             unique_id=queue_cmd(
