@@ -183,7 +183,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
     def test_k_compute_loco(self, mock_json, mock_hash, mock_cmd,
                             mock_queue_cmd):
-        """Test /gemma/k-compute/<token>"""
+        """Test /gemma/k-compute/loco/<chromosomes>/<token>"""
         mock_queue_cmd.return_value = "my-unique-id"
         mock_json.return_value = {
             "geno": "genofile.txt",
@@ -203,4 +203,45 @@ class GemmaAPITest(unittest.TestCase):
             "output_file": "hash-k-output.json",
             "status": "queued",
             "unique_id": "my-unique-id"
+        })
+
+    @mock.patch("gn3.api.gemma.queue_cmd")
+    @mock.patch("gn3.api.gemma.generate_gemma_computation_cmd")
+    @mock.patch("gn3.api.gemma.get_hash_of_files")
+    @mock.patch("gn3.api.gemma.jsonfile_to_dict")
+    def test_gwa_compute(self, mock_json, mock_hash, mock_cmd,
+                         mock_queue_cmd):
+        """Test /gemma/gwa-compute/<k-inputfile>/<token>"""
+        mock_queue_cmd.return_value = "my-unique-id"
+        mock_json.return_value = {
+            "geno": "genofile.txt",
+            "pheno": "phenofile.txt",
+            "snps": "snpfile.txt",
+        }
+        mock_hash.return_value = "hash"
+        mock_cmd.return_value = ("gemma-wrapper --json -- "
+                                 "-debug -g "
+                                 "genotype_name.txt "
+                                 "-p traitfilename.txt "
+                                 "-a genotype_snps.txt "
+                                 "-gk > k_output_filename.json")
+        response = self.app.post(("/api/gemma/gwa-compute/hash-k-output.json/"
+                                  "my-token"))
+        mock_hash.assert_called_once_with(['/tmp/my-token/genofile.txt',
+                                           '/tmp/my-token/phenofile.txt',
+                                           '/tmp/my-token/snpfile.txt'])
+        mock_cmd.assert_called_once_with(
+            gemma_cmd='gemma-wrapper',
+            gemma_wrapper_kwargs={
+                'input': '/tmp/my-token/hash-k-output.json'
+            },
+            gemma_kwargs={'g': '/tmp/my-token/genofile.txt',
+                          'p': '/tmp/my-token/phenofile.txt',
+                          'a': '/tmp/my-token/snpfile.txt',
+                          'lmm': 9},
+            output_file='/tmp/my-token/hash-gwa-output.json')
+        self.assertEqual(response.get_json(), {
+            "unique_id": "my-unique-id",
+            "status": "queued",
+            "output_file": "hash-gwa-output.json"
         })
