@@ -2,6 +2,7 @@
 from flask import g
 from redis import Redis
 from gn3.utility.db_tools import escape
+from gn3.base.webqtlCaseData import webqtlCaseData
 
 
 def check_resource_availability(dataset, name=None):
@@ -36,6 +37,9 @@ def create_trait(**kw):
                 the_trait,
                 the_trait.dataset,
                 get_qtl_info=kw.get('get_qtl_info'))
+
+
+            return the_trait
 
     return None
 
