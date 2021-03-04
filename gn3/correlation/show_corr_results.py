@@ -100,6 +100,47 @@ class CorrelationResults:
                 self.correlation_data[trait] = [
                     sample_r, sample_p, num_overlap]
 
+    def do_lit_correlation_for_all_traits(self):
+        print("(((((((((((((((((((**************",self.this_trait.geneid)
+        input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(
+            self.dataset.group.species.lower(), self.this_trait.geneid)
+
+        print(">>>>>>>>>>>>>>$$$$$$$$$$$$$$$",input_trait_mouse_gene_id)
+
+    def convert_to_mouse_gene_id(self, species=None, gene_id=None):
+        """If the species is rat or human, translate the gene_id to the mouse geneid
+
+        If there is no input gene_id or there's no corresponding mouse gene_id, return None
+
+        """
+        if not gene_id:
+            return None
+
+        mouse_gene_id = None
+        if "species" == "mouse":
+            mouse_gene_id = gene_id
+
+        elif species == 'rat':
+            query = """SELECT mouse
+                   FROM GeneIDXRef
+                   WHERE rat='%s'""" % escape(gene_id)
+
+            result = g.db.execute(query).fetchone()
+            if result != None:
+                mouse_gene_id = result.mouse
+
+        elif species == "human":
+
+            query = """SELECT mouse
+                   FROM GeneIDXRef
+                   WHERE human='%s'""" % escape(gene_id)
+
+            result = g.db.execute(query).fetchone()
+            if result !=None:
+                mouse_gene_id =result.mouse
+
+        return mouse_gene_id
+
     def do_correlation(self, start_vars):
 
         # print(start_vars)
@@ -211,8 +252,29 @@ class CorrelationResults:
 
         self.correlation_data = {}
 
+        if self.corr_type == "tissue":
+            self.trait_symbol_dict = self.dataset.retrieve_genes("Symbol")
+            tissue_corr_data = self.do_tissue_correlation_for_all_traits()
+            if tissue_corr_data != None:
+                for trait in list(tissue_corr_data.keys())[:self.return_number]:
+                    self.get_sample_r_and_p_values(
+                        trait, self.target_dataset.trait_data[trait])
+
+            else:
+                for trait, values in list(self.target_dataset.trait_data.items()):
+                    self.get_sample_r_and_p_values(trait, values)
+
+        elif self.corr_type == "lit":
+            self.trait_geneid_dict = self.dataset.retrieve_genes("GeneId")
+            lit_corr_data = self.do_lit_correlation_for_all_traits()
+            print("the lit_corr_data is^^^^^^^^",lit_corr_data)
+
+            for trait in list(lit_corr_data.keys())[:self.return_number]:
+                self.get_sample_r_and_p_values(
+                    trait, self.target_dataset.trait_data[trait])
+
         # first try sample type
-        if self.corr_type == "sample":
+        elif self.corr_type == "sample":
             for trait, values in list(self.target_dataset.trait_data.items()):
                 # print(trait,values)
                 self.get_sample_r_and_p_values(trait, values)
