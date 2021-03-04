@@ -113,21 +113,24 @@ traitfile, and snpsfile are extracted from a metadata.json file.
         genofile, phenofile, snpsfile = [os.path.join(working_dir,
                                                       _dict.get(x))
                                          for x in ["geno", "pheno", "snps"]]
+        if not do_paths_exist([genofile, phenofile, snpsfile]):
+            raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
         k_output_filename = f"{_hash}-k-output.json"
-        k_computation_cmd = generate_gemma_computation_cmd(
-            gemma_cmd=current_app.config.get("GEMMA_WRAPPER_CMD"),
-            gemma_wrapper_kwargs=None,
-            gemma_kwargs=gemma_kwargs,
-            output_file=(f"{current_app.config.get('TMPDIR')}/"
-                         f"{token}/{k_output_filename}"))
         return jsonify(
             unique_id=queue_cmd(
                 conn=redis.Redis(),
                 email=(request.get_json() or {}).get('email'),
                 job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=f"{k_computation_cmd}"),
+                cmd=compose_gemma_cmd(
+                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                             "WRAPPER_CMD"),
+                    gemma_wrapper_kwargs=None,
+                    gemma_kwargs=gemma_kwargs,
+                    gemma_args=["-gk", ">",
+                                (f"{current_app.config.get('TMPDIR')}/"
+                                 f"{token}/{k_output_filename}")])),
             status="queued",
             output_file=k_output_filename)
     # pylint: disable=W0703
@@ -154,18 +157,19 @@ values.
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
         k_output_filename = f"{_hash}-k-output.json"
-        k_computation_cmd = generate_gemma_computation_cmd(
-            gemma_cmd=current_app.config.get("GEMMA_WRAPPER_CMD"),
-            gemma_wrapper_kwargs={"loco": f"--input {chromosomes}"},
-            gemma_kwargs=gemma_kwargs,
-            output_file=(f"{current_app.config.get('TMPDIR')}/"
-                         f"{token}/{k_output_filename}"))
         return jsonify(
             unique_id=queue_cmd(
                 conn=redis.Redis(),
                 email=(request.get_json() or {}).get('email'),
                 job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=f"{k_computation_cmd}"),
+                cmd=compose_gemma_cmd(
+                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                             "WRAPPER_CMD"),
+                    gemma_wrapper_kwargs={"loco": f"--input {chromosomes}"},
+                    gemma_kwargs=gemma_kwargs,
+                    gemma_args=["-gk", ">",
+                                (f"{current_app.config.get('TMPDIR')}/"
+                                 f"{token}/{k_output_filename}")])),
             status="queued",
             output_file=k_output_filename)
     # pylint: disable=W0703
@@ -198,14 +202,16 @@ def compute_gwa(k_filename, token):
                 conn=redis.Redis(),
                 email=(request.get_json() or {}).get('email'),
                 job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=generate_gemma_computation_cmd(
-                    gemma_cmd=current_app.config.get("GEMMA_WRAPPER_CMD"),
+                cmd=compose_gemma_cmd(
+                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                             "WRAPPER_CMD"),
                     gemma_wrapper_kwargs={
                         "input": os.path.join(working_dir, k_filename)
                     },
                     gemma_kwargs=gemma_kwargs,
-                    output_file=(f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{_output_filename}"))),
+                    gemma_args=["gk", ">",
+                                (f"{current_app.config.get('TMPDIR')}/"
+                                 f"{token}/{_output_filename}")])),
             status="queued",
             output_file=_output_filename)
     # pylint: disable=W0703
@@ -239,14 +245,16 @@ def compute_gwa_with_covar(k_filename, token):
                 conn=redis.Redis(),
                 email=(request.get_json() or {}).get('email'),
                 job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=generate_gemma_computation_cmd(
-                    gemma_cmd=current_app.config.get("GEMMA_WRAPPER_CMD"),
+                cmd=compose_gemma_cmd(
+                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                             "WRAPPER_CMD"),
                     gemma_wrapper_kwargs={
                         "input": os.path.join(working_dir, k_filename)
                     },
                     gemma_kwargs=gemma_kwargs,
-                    output_file=(f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{_output_filename}"))),
+                    gemma_args=["-gk", ">",
+                                (f"{current_app.config.get('TMPDIR')}/"
+                                 f"{token}/{_output_filename}")])),
             status="queued",
             output_file=_output_filename)
     # pylint: disable=W0703
