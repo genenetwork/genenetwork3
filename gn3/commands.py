@@ -20,9 +20,9 @@ def compose_gemma_cmd(
     """Compose a valid GEMMA command given the correct values"""
     cmd = f"{gemma_wrapper_cmd} --json"
     if gemma_wrapper_kwargs:
-        cmd += (" "  # Add extra space between commands
-                " ".join([f"--{key} {val}" for key, val
-                          in gemma_wrapper_kwargs.items()]))
+        cmd += " "  # Add extra space between commands
+        cmd += " ".join([f"--{key} {val}" for key, val
+                         in gemma_wrapper_kwargs.items()])
     cmd += " -- "
     if gemma_kwargs:
         cmd += " ".join([f"-{key} {val}"

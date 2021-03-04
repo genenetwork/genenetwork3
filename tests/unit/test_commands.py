@@ -36,6 +36,23 @@ class TestCommands(unittest.TestCase):
              "-p /tmp/gf13Ad0tRX/phenofile.txt"
              " -gk"))
 
+    def test_compose_gemma_cmd_extra_args(self):
+        """Test that the gemma cmd is composed correctly"""
+        self.assertEqual(
+            compose_gemma_cmd(gemma_wrapper_cmd="gemma-wrapper",
+                              gemma_wrapper_kwargs={
+                                  "loco": "1,2,3,4"
+                              },
+                              gemma_kwargs={
+                                  "g": "/tmp/genofile.txt",
+                                  "p": "/tmp/gf13Ad0tRX/phenofile.txt"
+                              },
+                              gemma_args=["-gk"]),
+            ("gemma-wrapper --json --loco 1,2,3,4 -- "
+             "-g /tmp/genofile.txt "
+             "-p /tmp/gf13Ad0tRX/phenofile.txt"
+             " -gk"))
+
     def test_queue_cmd_exception_raised_when_redis_is_down(self):
         """Test that the correct error is raised when Redis is unavailable"""
         self.assertRaises(RedisConnectionError,
