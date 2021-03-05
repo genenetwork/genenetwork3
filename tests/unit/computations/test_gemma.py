@@ -2,7 +2,7 @@
 import unittest
 
 from unittest import mock
-from gn3.computations.gemma import compute_k_values
+from gn3.computations.gemma import generate_gemma_cmd
 from gn3.computations.gemma import generate_hash_of_string
 from gn3.computations.gemma import generate_pheno_txt_file
 from gn3.computations.gemma import generate_gemma_computation_cmd
@@ -57,42 +57,42 @@ class TestGemma(unittest.TestCase):
         """Test computing k valuse without loco"""
         mock_get_hash.return_value = "my-hash"
         self.assertEqual(
-            compute_k_values(gemma_cmd="gemma-wrapper",
-                             output_dir="/tmp",
-                             token="my-token",
-                             gemma_kwargs={
-                                 "g": "genofile",
-                                 "p": "phenofile",
-                                 "a": "snpsfile"
-                             }), {
-                                 "output_file":
-                                 "my-hash-k-output.json",
-                                 "gemma_cmd":
-                                 ("gemma-wrapper --json -- -g genofile "
-                                  "-p phenofile -a snpsfile "
-                                  "-gk > /tmp/my-token/my-hash-k-output.json")
-                             })
+            generate_gemma_cmd(gemma_cmd="gemma-wrapper",
+                               output_dir="/tmp",
+                               token="my-token",
+                               gemma_kwargs={
+                                   "g": "genofile",
+                                   "p": "phenofile",
+                                   "a": "snpsfile"
+                               }), {
+                                   "output_file":
+                                   "my-hash-output.json",
+                                   "gemma_cmd":
+                                   ("gemma-wrapper --json -- -g genofile "
+                                    "-p phenofile -a snpsfile "
+                                    "-gk > /tmp/my-token/my-hash-output.json")
+                               })
 
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
-    def test_compute_k_values_with_loco(self, mock_get_hash):
+    def test_generate_gemma_cmd_with_loco(self, mock_get_hash):
         """Test computing k valuse with loco"""
         mock_get_hash.return_value = "my-hash"
         self.assertEqual(
-            compute_k_values(gemma_cmd="gemma-wrapper",
-                             output_dir="/tmp",
-                             token="my-token",
-                             chromosomes="1,2,3,4,5",
-                             gemma_kwargs={
-                                 "g": "genofile",
-                                 "p": "phenofile",
-                                 "a": "snpsfile"
-                             }), {
-                                 "output_file":
-                                 "my-hash-r+gF5a-k-output.json",
-                                 "gemma_cmd": ("gemma-wrapper --json "
-                                               "--loco --input 1,2,3,4,5 "
-                                               "-- -g genofile "
-                                               "-p phenofile -a snpsfile "
-                                               "-gk > /tmp/my-token/"
-                                               "my-hash-r+gF5a-k-output.json")
-                             })
+            generate_gemma_cmd(gemma_cmd="gemma-wrapper",
+                               output_dir="/tmp",
+                               token="my-token",
+                               chromosomes="1,2,3,4,5",
+                               gemma_kwargs={
+                                   "g": "genofile",
+                                   "p": "phenofile",
+                                   "a": "snpsfile"
+                               }), {
+                                   "output_file":
+                                   "my-hash-r+gF5a-output.json",
+                                   "gemma_cmd": ("gemma-wrapper --json "
+                                                 "--loco --input 1,2,3,4,5 "
+                                                 "-- -g genofile "
+                                                 "-p phenofile -a snpsfile "
+                                                 "-gk > /tmp/my-token/"
+                                                 "my-hash-r+gF5a-output.json")
+                               })
