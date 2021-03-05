@@ -72,6 +72,8 @@ class TestCorrelationResults(unittest.TestCase):
         self.assertEqual(corr_results.species, "this species data")
         self.assertEqual(corr_results.dataset, "dataset results")
 
+
+
         # test using where type  is temp
 
         self.correlation_data["dataset"] = "Temp"
@@ -88,6 +90,7 @@ class TestCorrelationResults(unittest.TestCase):
         self.assertEqual(corr_results.this_trait, "trait results")
 
         self.assertEqual(corr_results.dataset,"dataset results")
+        self.assertEqual(corr_results.trait_id,"1449593_at")
 
     def test_for_creating_traits_and_dataset(self):
         """and dummy tests for creating trait and dataset with dataset=Temp"""
