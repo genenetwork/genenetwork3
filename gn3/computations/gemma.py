@@ -49,9 +49,7 @@ def do_paths_exist(paths: ValuesView) -> bool:
 
 
 def generate_gemma_computation_cmd(
-        gemma_cmd: str,
-        gemma_kwargs: Dict[str, str],
-        output_file: str,
+        gemma_cmd: str, gemma_kwargs: Dict[str, str], output_file: str,
         gemma_wrapper_kwargs: Dict[str, str]) -> Optional[str]:
     """Create a computation cmd"""
     geno_filename = gemma_kwargs.get("geno_filename", "")
@@ -69,5 +67,4 @@ def generate_gemma_computation_cmd(
     return compose_gemma_cmd(gemma_wrapper_cmd=gemma_cmd,
                              gemma_wrapper_kwargs=gemma_wrapper_kwargs,
                              gemma_kwargs=_kwargs,
-                             gemma_args=["-gk", ">",
-                                         output_file])
+                             gemma_args=["-gk", ">", output_file])

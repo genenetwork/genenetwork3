@@ -21,19 +21,21 @@ class GemmaAPITest(unittest.TestCase):
     """Test cases for the Gemma API"""
     def setUp(self):
         self.app = create_app({
-            "GENODIR": os.path.abspath(
-                os.path.join(os.path.dirname(__file__),
-                             "test_data/")),
-            "REDIS_JOB_QUEUE": "GN3::job-queue",
-            "GEMMA_WRAPPER_CMD": "gemma-wrapper"}).test_client()
+            "GENODIR":
+            os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "test_data/")),
+            "REDIS_JOB_QUEUE":
+            "GN3::job-queue",
+            "GEMMA_WRAPPER_CMD":
+            "gemma-wrapper"
+        }).test_client()
 
     @mock.patch("gn3.api.gemma.run_cmd")
     def test_get_version(self, mock_run_cmd):
         """Test that the correct response is returned"""
         mock_run_cmd.return_value = {"status": 0, "output": "v1.9"}
         response = self.app.get("/api/gemma/version", follow_redirects=True)
-        self.assertEqual(response.get_json(),
-                         {"status": 0, "output": "v1.9"})
+        self.assertEqual(response.get_json(), {"status": 0, "output": "v1.9"})
         self.assertEqual(response.status_code, 200)
 
     @mock.patch("gn3.api.gemma.redis.Redis")
@@ -59,60 +61,69 @@ class GemmaAPITest(unittest.TestCase):
              "bxd_GWA_gUFhGu4rLG7k+CXLPk1OUg.txt")
         ]
         mock_queue_cmd.return_value = "my-unique-id"
-        response = self.app.post("/api/gemma/k-gwa-computation", json={
-            "trait_filename": "BXD.txt",
-            "geno_filename": "BXD_geno",
-            "values": ["X", "N/A", "X"],
-            "dataset_groupname": "BXD",
-            "trait_name": "Height",
-            "email": "me@me.com",
-            "dataset_name": "BXD"
-        })
-        mock_queue_cmd.assert_has_calls(
-            [mock.call(conn=_redis_conn,
-                       email="me@me.com",
-                       job_queue="GN3::job-queue",
-                       cmd=("gemma-wrapper --json -- -g "
-                            "genofile.txt -p test.txt "
-                            "-a genofile_snps.txt -gk > "
-                            "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt "
-                            "&& gemma-wrapper --json --input "
-                            "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt"
-                            " -- -a genofile_snps.txt -lmm 9 -g "
-                            "genofile.txt -p test.txt "
-                            "-a genofile_snps.txt "
-                            "-gk > "
-                            "/tmp/gn2/"
-                            "bxd_GWA_gUFhGu4rLG7k+CXLPk1OUg.txt"))]
-        )
+        response = self.app.post("/api/gemma/k-gwa-computation",
+                                 json={
+                                     "trait_filename": "BXD.txt",
+                                     "geno_filename": "BXD_geno",
+                                     "values": ["X", "N/A", "X"],
+                                     "dataset_groupname": "BXD",
+                                     "trait_name": "Height",
+                                     "email": "me@me.com",
+                                     "dataset_name": "BXD"
+                                 })
+        mock_queue_cmd.assert_has_calls([
+            mock.call(conn=_redis_conn,
+                      email="me@me.com",
+                      job_queue="GN3::job-queue",
+                      cmd=("gemma-wrapper --json -- -g "
+                           "genofile.txt -p test.txt "
+                           "-a genofile_snps.txt -gk > "
+                           "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt "
+                           "&& gemma-wrapper --json --input "
+                           "/tmp/gn2/bxd_K_gUFhGu4rLG7k+CXLPk1OUg.txt"
+                           " -- -a genofile_snps.txt -lmm 9 -g "
+                           "genofile.txt -p test.txt "
+                           "-a genofile_snps.txt "
+                           "-gk > "
+                           "/tmp/gn2/"
+                           "bxd_GWA_gUFhGu4rLG7k+CXLPk1OUg.txt"))
+        ])
         # mock_pheno_txt_file.return_value = "/tmp/gn2/BXD_6OBEPW."
         self.assertEqual(
-            response.get_json(),
-            {"unique_id": 'my-unique-id',
-             "status": "queued",
-             "output_file": "BXD_GWA_WzxVcfhKAn4fJnSWpsBq0g.txt"})
+            response.get_json(), {
+                "unique_id": 'my-unique-id',
+                "status": "queued",
+                "output_file": "BXD_GWA_WzxVcfhKAn4fJnSWpsBq0g.txt"
+            })
 
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.queue_cmd")
-    def test_run_gemma_with_loco(self,
-                                 mock_queue_cmd, mock_redis):
+    def test_run_gemma_with_loco(self, mock_queue_cmd, mock_redis):
         """Test that gemma composes the command correctly with loco"""
         _redis_conn = MockRedis(redis=mock.MagicMock(), hget=mock.MagicMock())
         mock_redis.return_value = _redis_conn
         mock_queue_cmd.return_value = "my-unique-id"
-        response = self.app.post("/api/gemma/k-gwa-computation", json={
-            "trait_filename": os.path.abspath(os.path.join(
-                os.path.dirname(__file__),
-                "test_data/"
-            )),
-            "geno_filename": "BXD_geno.txt.gz",
-            "values": ["X", "N/A", "X"],
-            "dataset_groupname": "BXD",
-            "trait_name": "Height",
-            "email": "me@me.com",
-            "dataset_name": "BXD",
-            "loco": "1,2,3,4,5,6"
-        })
+        response = self.app.post("/api/gemma/k-gwa-computation",
+                                 json={
+                                     "trait_filename":
+                                     os.path.abspath(
+                                         os.path.join(
+                                             os.path.dirname(__file__),
+                                             "test_data/")),
+                                     "geno_filename":
+                                     "BXD_geno.txt.gz",
+                                     "values": ["X", "N/A", "X"],
+                                     "dataset_groupname":
+                                     "BXD",
+                                     "trait_name":
+                                     "Height",
+                                     "email":
+                                     "me@me.com",
+                                     "dataset_name":
+                                     "BXD",
+                                     "loco":
+                                     "1,2,3,4,5,6"
+                                 })
         mock_queue_cmd.called_with(
             conn=_redis_conn,
             email="me@me.com",
@@ -130,10 +141,11 @@ class GemmaAPITest(unittest.TestCase):
                  "/tmp/gn2/"
                  "bxd_GWA_gUFhGu4rLG7k+CXLPk1OUg.txt"))
         self.assertEqual(
-            response.get_json(),
-            {"unique_id": 'my-unique-id',
-             "status": "queued",
-             "output_file": "BXD_GWA_WzxVcfhKAn4fJnSWpsBq0g.txt"})
+            response.get_json(), {
+                "unique_id": 'my-unique-id',
+                "status": "queued",
+                "output_file": "BXD_GWA_WzxVcfhKAn4fJnSWpsBq0g.txt"
+            })
 
     @mock.patch("gn3.api.gemma.redis.Redis")
     def test_check_cmd_status(self, mock_redis):
@@ -146,18 +158,15 @@ class GemmaAPITest(unittest.TestCase):
                                  "cmd%3A%3A2021-02-1217-3224-3224-1234"),
                                 follow_redirects=True)
         mock_hget.assert_called_once_with(
-            name="cmd::2021-02-1217-3224-3224-1234",
-            key="status")
-        self.assertEqual(response.get_json(),
-                         {"status": "test"})
+            name="cmd::2021-02-1217-3224-3224-1234", key="status")
+        self.assertEqual(response.get_json(), {"status": "test"})
 
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.api.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
     @mock.patch("gn3.api.gemma.do_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
-    def test_k_compute(self, mock_redis, mock_path_exist,
-                       mock_json, mock_hash,
+    def test_k_compute(self, mock_redis, mock_path_exist, mock_json, mock_hash,
                        mock_queue_cmd):
         """Test /gemma/k-compute/<token>"""
         mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()

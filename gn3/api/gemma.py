@@ -24,8 +24,7 @@ gemma = Blueprint("gemma", __name__)
 def get_version():
     """Display the installed version of gemma-wrapper"""
     gemma_cmd = current_app.config["GEMMA_WRAPPER_CMD"]
-    return jsonify(
-        run_cmd(f"{gemma_cmd} -v | head -n 1"))
+    return jsonify(run_cmd(f"{gemma_cmd} -v | head -n 1"))
 
 
 # This is basically extracted from genenetwork2
@@ -39,19 +38,21 @@ file output is returned.
     """
     data = request.get_json()
     app_defaults = current_app.config
-    __hash = generate_hash_of_string(
-        f"{data.get('genofile_name')}_"
-        ''.join(data.get("values", "")))
+    __hash = generate_hash_of_string(f"{data.get('genofile_name')}_"
+                                     ''.join(data.get("values", "")))
     gemma_kwargs = {
-        "geno_filename": os.path.join(app_defaults.get("GENODIR"), "bimbam",
-                                      f"{data.get('geno_filename')}"),
-        "trait_filename": generate_pheno_txt_file(
+        "geno_filename":
+        os.path.join(app_defaults.get("GENODIR"), "bimbam",
+                     f"{data.get('geno_filename')}"),
+        "trait_filename":
+        generate_pheno_txt_file(
             tmpdir=app_defaults.get("TMPDIR"),
             values=data.get("values"),
             # Generate this file on the fly!
             trait_filename=(f"{data.get('dataset_groupname')}_"
                             f"{data.get('trait_name')}_"
-                            f"{__hash}.txt"))}
+                            f"{__hash}.txt"))
+    }
     gemma_wrapper_kwargs = {}
     if data.get("loco"):
         gemma_wrapper_kwargs["loco"] = f"--input {data.get('loco')}"
@@ -74,14 +75,14 @@ file output is returned.
     if not all([k_computation_cmd, gwa_cmd]):
         return jsonify(status=128,
                        error="Unable to generate cmds for computation!"), 500
-    return jsonify(
-        unique_id=queue_cmd(conn=redis.Redis(),
-                            email=data.get("email"),
-                            job_queue=app_defaults.get("REDIS_JOB_QUEUE"),
-                            cmd=f"{k_computation_cmd} && {gwa_cmd}"),
-        status="queued",
-        output_file=(f"{data.get('dataset_name')}_GWA_"
-                     f"{__hash}.txt"))
+    return jsonify(unique_id=queue_cmd(
+        conn=redis.Redis(),
+        email=data.get("email"),
+        job_queue=app_defaults.get("REDIS_JOB_QUEUE"),
+        cmd=f"{k_computation_cmd} && {gwa_cmd}"),
+                   status="queued",
+                   output_file=(f"{data.get('dataset_name')}_GWA_"
+                                f"{__hash}.txt"))
 
 
 @gemma.route("/status/<unique_id>", methods=["GET"])
@@ -90,8 +91,7 @@ def check_cmd_status(unique_id):
 gemma endpoints, return the status of the command
 
     """
-    status = redis.Redis().hget(name=unique_id,
-                                key="status")
+    status = redis.Redis().hget(name=unique_id, key="status")
     if not status:
         return jsonify(status=128,
                        error="The unique id you used does not exist!"), 500
@@ -105,39 +105,40 @@ and return <hash-of-inputs>.json with a UNIQUE-ID of the job. The genofile,
 traitfile, and snpsfile are extracted from a metadata.json file.
 
     """
-    working_dir = os.path.join(current_app.config.get("TMPDIR"),
-                               token)
-    _dict = jsonfile_to_dict(os.path.join(working_dir,
-                                          "metadata.json"))
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [os.path.join(working_dir,
-                                                      _dict.get(x))
-                                         for x in ["geno", "pheno", "snps"]]
+        genofile, phenofile, snpsfile = [
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps"]
+        ]
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
         k_output_filename = f"{_hash}-k-output.json"
-        return jsonify(
-            unique_id=queue_cmd(
-                conn=redis.Redis(),
-                email=(request.get_json() or {}).get('email'),
-                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=compose_gemma_cmd(
-                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                             "WRAPPER_CMD"),
-                    gemma_wrapper_kwargs=None,
-                    gemma_kwargs=gemma_kwargs,
-                    gemma_args=["-gk", ">",
-                                (f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{k_output_filename}")])),
-            status="queued",
-            output_file=k_output_filename)
+        return jsonify(unique_id=queue_cmd(
+            conn=redis.Redis(),
+            email=(request.get_json() or {}).get('email'),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            cmd=compose_gemma_cmd(gemma_wrapper_cmd=current_app.config.get(
+                "GEMMA_"
+                "WRAPPER_CMD"),
+                                  gemma_wrapper_kwargs=None,
+                                  gemma_kwargs=gemma_kwargs,
+                                  gemma_args=[
+                                      "-gk", ">",
+                                      (f"{current_app.config.get('TMPDIR')}/"
+                                       f"{token}/{k_output_filename}")
+                                  ])),
+                       status="queued",
+                       output_file=k_output_filename)
     # pylint: disable=W0703
     except Exception:
-        return jsonify(status=128,
-                       # use better message
-                       message="Metadata file non-existent!")
+        return jsonify(
+            status=128,
+            # use better message
+            message="Metadata file non-existent!")
 
 
 @gemma.route("/k-compute/loco/<chromosomes>/<token>", methods=["POST"])
@@ -146,39 +147,40 @@ def compute_k_loco(chromosomes, token):
 values.
 
     """
-    working_dir = os.path.join(current_app.config.get("TMPDIR"),
-                               token)
-    _dict = jsonfile_to_dict(os.path.join(working_dir,
-                                          "metadata.json"))
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [os.path.join(working_dir,
-                                                      _dict.get(x))
-                                         for x in ["geno", "pheno", "snps"]]
+        genofile, phenofile, snpsfile = [
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps"]
+        ]
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
         k_output_filename = f"{_hash}-k-output.json"
-        return jsonify(
-            unique_id=queue_cmd(
-                conn=redis.Redis(),
-                email=(request.get_json() or {}).get('email'),
-                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=compose_gemma_cmd(
-                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                             "WRAPPER_CMD"),
-                    gemma_wrapper_kwargs={"loco": f"--input {chromosomes}"},
-                    gemma_kwargs=gemma_kwargs,
-                    gemma_args=["-gk", ">",
-                                (f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{k_output_filename}")])),
-            status="queued",
-            output_file=k_output_filename)
+        return jsonify(unique_id=queue_cmd(
+            conn=redis.Redis(),
+            email=(request.get_json() or {}).get('email'),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            cmd=compose_gemma_cmd(
+                gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                         "WRAPPER_CMD"),
+                gemma_wrapper_kwargs={"loco": f"--input {chromosomes}"},
+                gemma_kwargs=gemma_kwargs,
+                gemma_args=[
+                    "-gk", ">",
+                    (f"{current_app.config.get('TMPDIR')}/"
+                     f"{token}/{k_output_filename}")
+                ])),
+                       status="queued",
+                       output_file=k_output_filename)
     # pylint: disable=W0703
     except Exception:
-        return jsonify(status=128,
-                       # use better message
-                       message="Metadata file non-existent!")
+        return jsonify(
+            status=128,
+            # use better message
+            message="Metadata file non-existent!")
 
 
 @gemma.route("/gwa-compute/<k_filename>/<token>", methods=["POST"])
@@ -186,41 +188,46 @@ def compute_gwa(k_filename, token):
     """Compute GWA values. No loco no covariates provided.
 
     """
-    working_dir = os.path.join(current_app.config.get("TMPDIR"),
-                               token)
-    _dict = jsonfile_to_dict(os.path.join(working_dir,
-                                          "metadata.json"))
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
         genofile, phenofile, snpsfile = [
-            os.path.join(working_dir,
-                         _dict.get(x))
-            for x in ["geno", "pheno", "snps"]]
-        gemma_kwargs = {"g": genofile, "p": phenofile,
-                        "a": snpsfile, "lmm": _dict.get("lmm", 9)}
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps"]
+        ]
+        gemma_kwargs = {
+            "g": genofile,
+            "p": phenofile,
+            "a": snpsfile,
+            "lmm": _dict.get("lmm", 9)
+        }
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
         _output_filename = f"{_hash}-gwa-output.json"
-        return jsonify(
-            unique_id=queue_cmd(
-                conn=redis.Redis(),
-                email=(request.get_json() or {}).get('email'),
-                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=compose_gemma_cmd(
-                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                             "WRAPPER_CMD"),
-                    gemma_wrapper_kwargs={
-                        "input": os.path.join(working_dir, k_filename)
-                    },
-                    gemma_kwargs=gemma_kwargs,
-                    gemma_args=["gk", ">",
-                                (f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{_output_filename}")])),
-            status="queued",
-            output_file=_output_filename)
+        return jsonify(unique_id=queue_cmd(
+            conn=redis.Redis(),
+            email=(request.get_json() or {}).get('email'),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            cmd=compose_gemma_cmd(gemma_wrapper_cmd=current_app.config.get(
+                "GEMMA_"
+                "WRAPPER_CMD"),
+                                  gemma_wrapper_kwargs={
+                                      "input":
+                                      os.path.join(working_dir, k_filename)
+                                  },
+                                  gemma_kwargs=gemma_kwargs,
+                                  gemma_args=[
+                                      "gk", ">",
+                                      (f"{current_app.config.get('TMPDIR')}/"
+                                       f"{token}/{_output_filename}")
+                                  ])),
+                       status="queued",
+                       output_file=_output_filename)
     # pylint: disable=W0703
     except Exception:
-        return jsonify(status=128,
-                       # use better message
-                       message="Metadata file non-existent!")
+        return jsonify(
+            status=128,
+            # use better message
+            message="Metadata file non-existent!")
 
 
 @gemma.route("/gwa-compute/covars/<k_filename>/<token>", methods=["POST"])
@@ -228,42 +235,47 @@ def compute_gwa_with_covar(k_filename, token):
     """Compute GWA values. Covariates provided.
 
     """
-    working_dir = os.path.join(current_app.config.get("TMPDIR"),
-                               token)
-    _dict = jsonfile_to_dict(os.path.join(working_dir,
-                                          "metadata.json"))
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
         genofile, phenofile, snpsfile, covarfile = [
-            os.path.join(working_dir,
-                         _dict.get(x))
-            for x in ["geno", "pheno", "snps", "covar"]]
-        gemma_kwargs = {"g": genofile, "p": phenofile,
-                        "a": snpsfile, "c": covarfile,
-                        "lmm": _dict.get("lmm", 9)}
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps", "covar"]
+        ]
+        gemma_kwargs = {
+            "g": genofile,
+            "p": phenofile,
+            "a": snpsfile,
+            "c": covarfile,
+            "lmm": _dict.get("lmm", 9)
+        }
         _hash = get_hash_of_files([genofile, phenofile, snpsfile, covarfile])
         _output_filename = f"{_hash}-gwa-output.json"
-        return jsonify(
-            unique_id=queue_cmd(
-                conn=redis.Redis(),
-                email=(request.get_json() or {}).get('email'),
-                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=compose_gemma_cmd(
-                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                             "WRAPPER_CMD"),
-                    gemma_wrapper_kwargs={
-                        "input": os.path.join(working_dir, k_filename)
-                    },
-                    gemma_kwargs=gemma_kwargs,
-                    gemma_args=["-gk", ">",
-                                (f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{_output_filename}")])),
-            status="queued",
-            output_file=_output_filename)
+        return jsonify(unique_id=queue_cmd(
+            conn=redis.Redis(),
+            email=(request.get_json() or {}).get('email'),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            cmd=compose_gemma_cmd(gemma_wrapper_cmd=current_app.config.get(
+                "GEMMA_"
+                "WRAPPER_CMD"),
+                                  gemma_wrapper_kwargs={
+                                      "input":
+                                      os.path.join(working_dir, k_filename)
+                                  },
+                                  gemma_kwargs=gemma_kwargs,
+                                  gemma_args=[
+                                      "-gk", ">",
+                                      (f"{current_app.config.get('TMPDIR')}/"
+                                       f"{token}/{_output_filename}")
+                                  ])),
+                       status="queued",
+                       output_file=_output_filename)
     # pylint: disable=W0703
     except Exception:
-        return jsonify(status=128,
-                       # use better message
-                       message="Metadata file non-existent!")
+        return jsonify(
+            status=128,
+            # use better message
+            message="Metadata file non-existent!")
 
 
 @gemma.route("/gwa-compute/<k_filename>/loco/maf/<maf>/<token>",
@@ -272,45 +284,49 @@ def compute_gwa_with_loco_maf(k_filename, maf, token):
     """Compute GWA values. No Covariates provided. Only loco and maf vals given.
 
     """
-    working_dir = os.path.join(current_app.config.get("TMPDIR"),
-                               token)
-    _dict = jsonfile_to_dict(os.path.join(working_dir,
-                                          "metadata.json"))
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
         genofile, phenofile, snpsfile = [
-            os.path.join(working_dir,
-                         _dict.get(x))
-            for x in ["geno", "pheno", "snps"]]
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps"]
+        ]
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
-        gemma_kwargs = {"g": genofile, "p": phenofile,
-                        "a": snpsfile, "lmm": _dict.get("lmm", 9),
-                        'maf': float(maf)}
+        gemma_kwargs = {
+            "g": genofile,
+            "p": phenofile,
+            "a": snpsfile,
+            "lmm": _dict.get("lmm", 9),
+            'maf': float(maf)
+        }
         _hash = get_hash_of_files([genofile, phenofile, snpsfile])
         _output_filename = f"{_hash}-gwa-output.json"
-        return jsonify(
-            unique_id=queue_cmd(
-                conn=redis.Redis(),
-                email=(request.get_json() or {}).get('email'),
-                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=compose_gemma_cmd(
-                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                             "WRAPPER_CMD"),
-                    gemma_wrapper_kwargs={
-                        "loco": ("--input "
-                                 f"{os.path.join(working_dir, k_filename)}")
-                    },
-                    gemma_kwargs=gemma_kwargs,
-                    gemma_args=["-gk", ">",
-                                (f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{_output_filename}")])),
-            status="queued",
-            output_file=_output_filename)
+        return jsonify(unique_id=queue_cmd(
+            conn=redis.Redis(),
+            email=(request.get_json() or {}).get('email'),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            cmd=compose_gemma_cmd(
+                gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                         "WRAPPER_CMD"),
+                gemma_wrapper_kwargs={
+                    "loco": ("--input "
+                             f"{os.path.join(working_dir, k_filename)}")
+                },
+                gemma_kwargs=gemma_kwargs,
+                gemma_args=[
+                    "-gk", ">",
+                    (f"{current_app.config.get('TMPDIR')}/"
+                     f"{token}/{_output_filename}")
+                ])),
+                       status="queued",
+                       output_file=_output_filename)
     # pylint: disable=W0703
     except Exception:
-        return jsonify(status=128,
-                       # use better message
-                       message="Metadata file non-existent!")
+        return jsonify(
+            status=128,
+            # use better message
+            message="Metadata file non-existent!")
 
 
 @gemma.route("/gwa-compute/<k_filename>/loco/covariates/maf/<maf>/<token>",
@@ -319,43 +335,47 @@ def compute_gwa_with_loco_covar(k_filename, maf, token):
     """Compute GWA values. No Covariates provided. Only loco and maf vals given.
 
     """
-    working_dir = os.path.join(current_app.config.get("TMPDIR"),
-                               token)
-    _dict = jsonfile_to_dict(os.path.join(working_dir,
-                                          "metadata.json"))
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
         genofile, phenofile, snpsfile, covarfile = [
-            os.path.join(working_dir,
-                         _dict.get(x))
-            for x in ["geno", "pheno", "snps", "covar"]]
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps", "covar"]
+        ]
         if not do_paths_exist([genofile, phenofile, snpsfile, covarfile]):
             raise FileNotFoundError
-        gemma_kwargs = {"g": genofile, "p": phenofile,
-                        "a": snpsfile, "c": covarfile,
-                        "lmm": _dict.get("lmm", 9),
-                        "maf": float(maf)}
+        gemma_kwargs = {
+            "g": genofile,
+            "p": phenofile,
+            "a": snpsfile,
+            "c": covarfile,
+            "lmm": _dict.get("lmm", 9),
+            "maf": float(maf)
+        }
         _hash = get_hash_of_files([genofile, phenofile, snpsfile, covarfile])
         _output_filename = f"{_hash}-gwa-output.json"
-        return jsonify(
-            unique_id=queue_cmd(
-                conn=redis.Redis(),
-                email=(request.get_json() or {}).get('email'),
-                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                cmd=compose_gemma_cmd(
-                    gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                             "WRAPPER_CMD"),
-                    gemma_wrapper_kwargs={
-                        "loco": ("--input "
-                                 f"{os.path.join(working_dir, k_filename)}")
-                    },
-                    gemma_kwargs=gemma_kwargs,
-                    gemma_args=["-gk", ">",
-                                (f"{current_app.config.get('TMPDIR')}/"
-                                 f"{token}/{_output_filename}")])),
-            status="queued",
-            output_file=_output_filename)
+        return jsonify(unique_id=queue_cmd(
+            conn=redis.Redis(),
+            email=(request.get_json() or {}).get('email'),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            cmd=compose_gemma_cmd(
+                gemma_wrapper_cmd=current_app.config.get("GEMMA_"
+                                                         "WRAPPER_CMD"),
+                gemma_wrapper_kwargs={
+                    "loco": ("--input "
+                             f"{os.path.join(working_dir, k_filename)}")
+                },
+                gemma_kwargs=gemma_kwargs,
+                gemma_args=[
+                    "-gk", ">",
+                    (f"{current_app.config.get('TMPDIR')}/"
+                     f"{token}/{_output_filename}")
+                ])),
+                       status="queued",
+                       output_file=_output_filename)
     # pylint: disable=W0703
     except Exception:
-        return jsonify(status=128,
-                       # use better message
-                       message="Metadata file non-existent!")
+        return jsonify(
+            status=128,
+            # use better message
+            message="Metadata file non-existent!")

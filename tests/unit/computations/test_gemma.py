@@ -12,8 +12,7 @@ class TestGemma(unittest.TestCase):
     def test_generate_pheno_txt_file(self):
         """Test that the pheno text file is generated correctly"""
         open_mock = mock.mock_open()
-        with mock.patch("gn3.computations.gemma.open",
-                        open_mock, create=True):
+        with mock.patch("gn3.computations.gemma.open", open_mock, create=True):
             _file = generate_pheno_txt_file(tmpdir="/tmp",
                                             trait_filename="phenotype.txt",
                                             values=["x", "x", "BXD07 438.700"])
@@ -24,7 +23,8 @@ class TestGemma(unittest.TestCase):
         open_mock.return_value.write.assert_has_calls([
             mock.call("NA\n"),
             mock.call("NA\n"),
-            mock.call("BXD07 438.700\n")])
+            mock.call("BXD07 438.700\n")
+        ])
 
     def test_generate_hash_of_string(self):
         """Test that a string is hashed correctly"""
@@ -42,11 +42,11 @@ class TestGemma(unittest.TestCase):
                 gemma_kwargs={
                     "geno_filename": "genofile.txt",
                     "trait_filename": "test.txt",
-                    "covar_filename": "genofile_snps.txt"},
+                    "covar_filename": "genofile_snps.txt"
+                },
                 output_file="/tmp/gn2/k_output_gUFhGu4rLG7k+CXLPk1OUg.txt",
-            ),
-            ("gemma-wrapper --json -- "
-             "-g genofile.txt -p "
-             "test.txt -a genofile_snps.txt "
-             "-gk > /tmp/gn2/"
-             "k_output_gUFhGu4rLG7k+CXLPk1OUg.txt"))
+            ), ("gemma-wrapper --json -- "
+                "-g genofile.txt -p "
+                "test.txt -a genofile_snps.txt "
+                "-gk > /tmp/gn2/"
+                "k_output_gUFhGu4rLG7k+CXLPk1OUg.txt"))
