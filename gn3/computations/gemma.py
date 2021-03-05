@@ -8,6 +8,7 @@ from typing import List
 from typing import Optional
 from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
+from gn3.file_utils import get_hash_of_files
 
 
 def generate_hash_of_string(unhashed_str: str) -> str:
@@ -68,3 +69,32 @@ def generate_gemma_computation_cmd(
                              gemma_wrapper_kwargs=gemma_wrapper_kwargs,
                              gemma_kwargs=_kwargs,
                              gemma_args=["-gk", ">", output_file])
+
+
+# pylint: disable=R0913
+def generate_gemma_cmd(gemma_cmd: str,
+                       output_dir: str,
+                       token: str,
+                       gemma_kwargs: Dict,
+                       gemma_wrapper_kwargs: Dict = None,
+                       chromosomes: str = None) -> Dict:
+    """Compute k values"""
+    _hash = get_hash_of_files(
+        [v for k, v in gemma_kwargs.items() if k in ["g", "p", "a", "c"]])
+    if chromosomes:  # Only reached when calculating k-values
+        gemma_wrapper_kwargs = {"loco": f"--input {chromosomes}"}
+        _hash += f"-{generate_hash_of_string(chromosomes)[:6]}"
+    _output_filename = f"{_hash}-output.json"
+    return {
+        "output_file":
+        _output_filename,
+        "gemma_cmd":
+        compose_gemma_cmd(gemma_wrapper_cmd=gemma_cmd,
+                          gemma_wrapper_kwargs=gemma_wrapper_kwargs,
+                          gemma_kwargs=gemma_kwargs,
+                          gemma_args=[
+                              "-gk", ">",
+                              (f"{output_dir}/"
+                               f"{token}/{_output_filename}")
+                          ])
+    }

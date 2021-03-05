@@ -162,7 +162,7 @@ class GemmaAPITest(unittest.TestCase):
         self.assertEqual(response.get_json(), {"status": "test"})
 
     @mock.patch("gn3.api.gemma.queue_cmd")
-    @mock.patch("gn3.api.gemma.get_hash_of_files")
+    @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
     @mock.patch("gn3.api.gemma.do_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
@@ -195,7 +195,7 @@ class GemmaAPITest(unittest.TestCase):
         })
 
     @mock.patch("gn3.api.gemma.queue_cmd")
-    @mock.patch("gn3.api.gemma.get_hash_of_files")
+    @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
     @mock.patch("gn3.api.gemma.do_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
@@ -223,9 +223,9 @@ class GemmaAPITest(unittest.TestCase):
                  "-g /tmp/test-data/genofile.txt "
                  "-p /tmp/test-data/phenofile.txt "
                  "-a /tmp/test-data/snpfile.txt "
-                 "-gk > /tmp/test-data/hash-k-output.json"))
+                 "-gk > /tmp/test-data/hash-3R77Mz-k-output.json"))
         self.assertEqual(response.get_json(), {
-            "output_file": "hash-k-output.json",
+            "output_file": "hash-3R77Mz-k-output.json",
             "status": "queued",
             "unique_id": "my-unique-id"
         })
