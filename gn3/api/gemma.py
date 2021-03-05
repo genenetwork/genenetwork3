@@ -7,12 +7,10 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.commands import compose_gemma_cmd
 from gn3.commands import queue_cmd
 from gn3.commands import run_cmd
-from gn3.file_utils import get_hash_of_files
 from gn3.file_utils import jsonfile_to_dict
-from gn3.computations.gemma import compute_k_values
+from gn3.computations.gemma import generate_gemma_cmd
 from gn3.computations.gemma import do_paths_exist
 from gn3.computations.gemma import generate_hash_of_string
 from gn3.computations.gemma import generate_pheno_txt_file
@@ -116,12 +114,12 @@ traitfile, and snpsfile are extracted from a metadata.json file.
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
-        results = compute_k_values(gemma_cmd=current_app.config.get(
-            "GEMMA_"
-            "WRAPPER_CMD"),
-                                   output_dir=current_app.config.get('TMPDIR'),
-                                   token=token,
-                                   gemma_kwargs=gemma_kwargs)
+        results = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs)
         return jsonify(unique_id=queue_cmd(
             conn=redis.Redis(),
             email=(request.get_json() or {}).get('email'),
@@ -153,13 +151,13 @@ values.
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
-        results = compute_k_values(gemma_cmd=current_app.config.get(
-            "GEMMA_"
-            "WRAPPER_CMD"),
-                                   output_dir=current_app.config.get('TMPDIR'),
-                                   token=token,
-                                   gemma_kwargs=gemma_kwargs,
-                                   chromosomes=chromosomes)
+        results = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            chromosomes=chromosomes)
         return jsonify(unique_id=queue_cmd(
             conn=redis.Redis(),
             email=(request.get_json() or {}).get('email'),
@@ -193,27 +191,22 @@ def compute_gwa(k_filename, token):
             "a": snpsfile,
             "lmm": _dict.get("lmm", 9)
         }
-        _hash = get_hash_of_files([genofile, phenofile, snpsfile])
-        _output_filename = f"{_hash}-gwa-output.json"
+        results = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            gemma_wrapper_kwargs={
+                "input": os.path.join(working_dir, k_filename)
+            })
         return jsonify(unique_id=queue_cmd(
             conn=redis.Redis(),
             email=(request.get_json() or {}).get('email'),
             job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=compose_gemma_cmd(gemma_wrapper_cmd=current_app.config.get(
-                "GEMMA_"
-                "WRAPPER_CMD"),
-                                  gemma_wrapper_kwargs={
-                                      "input":
-                                      os.path.join(working_dir, k_filename)
-                                  },
-                                  gemma_kwargs=gemma_kwargs,
-                                  gemma_args=[
-                                      "gk", ">",
-                                      (f"{current_app.config.get('TMPDIR')}/"
-                                       f"{token}/{_output_filename}")
-                                  ])),
+            cmd=results.get("gemma_cmd")),
                        status="queued",
-                       output_file=_output_filename)
+                       output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -224,7 +217,7 @@ def compute_gwa(k_filename, token):
 
 @gemma.route("/gwa-compute/covars/<k_filename>/<token>", methods=["POST"])
 def compute_gwa_with_covar(k_filename, token):
-    """Compute GWA values. Covariates provided.
+    """Compute GWA values. No Loco; Covariates provided.
 
     """
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
@@ -241,27 +234,22 @@ def compute_gwa_with_covar(k_filename, token):
             "c": covarfile,
             "lmm": _dict.get("lmm", 9)
         }
-        _hash = get_hash_of_files([genofile, phenofile, snpsfile, covarfile])
-        _output_filename = f"{_hash}-gwa-output.json"
+        results = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            gemma_wrapper_kwargs={
+                "input": os.path.join(working_dir, k_filename)
+            })
         return jsonify(unique_id=queue_cmd(
             conn=redis.Redis(),
             email=(request.get_json() or {}).get('email'),
             job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=compose_gemma_cmd(gemma_wrapper_cmd=current_app.config.get(
-                "GEMMA_"
-                "WRAPPER_CMD"),
-                                  gemma_wrapper_kwargs={
-                                      "input":
-                                      os.path.join(working_dir, k_filename)
-                                  },
-                                  gemma_kwargs=gemma_kwargs,
-                                  gemma_args=[
-                                      "-gk", ">",
-                                      (f"{current_app.config.get('TMPDIR')}/"
-                                       f"{token}/{_output_filename}")
-                                  ])),
+            cmd=results.get("gemma_cmd")),
                        status="queued",
-                       output_file=_output_filename)
+                       output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -292,27 +280,22 @@ def compute_gwa_with_loco_maf(k_filename, maf, token):
             "lmm": _dict.get("lmm", 9),
             'maf': float(maf)
         }
-        _hash = get_hash_of_files([genofile, phenofile, snpsfile])
-        _output_filename = f"{_hash}-gwa-output.json"
+        results = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            gemma_wrapper_kwargs={
+                "loco": f"--input {os.path.join(working_dir, k_filename)}"
+            })
         return jsonify(unique_id=queue_cmd(
             conn=redis.Redis(),
             email=(request.get_json() or {}).get('email'),
             job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=compose_gemma_cmd(
-                gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                         "WRAPPER_CMD"),
-                gemma_wrapper_kwargs={
-                    "loco": ("--input "
-                             f"{os.path.join(working_dir, k_filename)}")
-                },
-                gemma_kwargs=gemma_kwargs,
-                gemma_args=[
-                    "-gk", ">",
-                    (f"{current_app.config.get('TMPDIR')}/"
-                     f"{token}/{_output_filename}")
-                ])),
+            cmd=results.get("gemma_cmd")),
                        status="queued",
-                       output_file=_output_filename)
+                       output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -344,27 +327,22 @@ def compute_gwa_with_loco_covar(k_filename, maf, token):
             "lmm": _dict.get("lmm", 9),
             "maf": float(maf)
         }
-        _hash = get_hash_of_files([genofile, phenofile, snpsfile, covarfile])
-        _output_filename = f"{_hash}-gwa-output.json"
+        results = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            gemma_wrapper_kwargs={
+                "loco": f"--input {os.path.join(working_dir, k_filename)}"
+            })
         return jsonify(unique_id=queue_cmd(
             conn=redis.Redis(),
             email=(request.get_json() or {}).get('email'),
             job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=compose_gemma_cmd(
-                gemma_wrapper_cmd=current_app.config.get("GEMMA_"
-                                                         "WRAPPER_CMD"),
-                gemma_wrapper_kwargs={
-                    "loco": ("--input "
-                             f"{os.path.join(working_dir, k_filename)}")
-                },
-                gemma_kwargs=gemma_kwargs,
-                gemma_args=[
-                    "-gk", ">",
-                    (f"{current_app.config.get('TMPDIR')}/"
-                     f"{token}/{_output_filename}")
-                ])),
+            cmd=results.get("gemma_cmd")),
                        status="queued",
-                       output_file=_output_filename)
+                       output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
