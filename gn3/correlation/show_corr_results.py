@@ -308,8 +308,6 @@ class CorrelationResults:
             for trait, values in list(self.target_dataset.trait_data.items()):
                 self.get_sample_r_and_p_values(trait, values)
 
-        print(self.correlation_data)
-
         self.correlation_data = collections.OrderedDict(sorted(list(self.correlation_data.items()),
                                                                key=lambda t: -abs(t[1][0])))
 
@@ -397,6 +395,10 @@ class CorrelationResults:
                 self.do_lit_correlation_for_trait_list()
 
 
+        self.json_results = generate_corr_json(
+            self.correlation_results, self.this_trait, self.dataset, self.target_dataset)
+
+
 
 
 
@@ -422,12 +424,11 @@ class CorrelationResults:
             "return_number": self.return_number,
             "primary_samples": primary_samples,
             "time_taken": 12,
-            "correlation_data":self.correlation_data
+            "correlation_data":self.correlation_data,
+            "correlation_json":self.json_results
         }
 
     def do_correlation(self, start_vars):
-
-        # print(start_vars)
 
         # should probably rename this method cause all that happens is variabe assignment and
 
