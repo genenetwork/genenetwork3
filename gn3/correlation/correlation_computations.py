@@ -8,6 +8,7 @@ from .correlation_utility import get_genofile_samplelist
 from .show_corr_results import CorrelationResults
 
 
+
 class AttributeSetter:
     def __init__(self, trait_obj):
         for key, value in trait_obj.items():
@@ -94,7 +95,7 @@ def compute_correlation(init_start_vars, get_loading_page_data=get_loading_page_
     corr_object = CorrelationResults(
         start_vars=start_vars)
 
-    corr_results = corr_object.do_correlation(start_vars=start_vars)
+    corr_results = corr_object.refactored_do_correlation(start_vars=start_vars)
     # possibility of file being so large cause of the not sure whether to return a file
 
     return corr_results
