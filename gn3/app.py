@@ -4,7 +4,7 @@ import os
 from typing import Dict
 from typing import Union
 from flask import Flask
-
+from gn3.config import get_config
 from gn3.api.gemma import gemma
 from gn3.api.general import general
 from gn3.api.correlation import correlation
@@ -15,6 +15,10 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app = Flask(__name__)
     # Load default configuration
     app.config.from_object("gn3.settings")
+
+    my_config = get_config()
+
+    app.config.from_object(my_config["dev"])
 
     # Load environment configuration
     if "GN3_CONF" in os.environ:
