@@ -1,15 +1,17 @@
 import hmac
 import hashlib
 
-from flask import url_for
+# todo work on this file
 
-from wqflask import app
+# from main import app
 
 
 def hmac_creation(stringy):
     """Helper function to create the actual hmac"""
 
-    secret = app.config['SECRET_HMAC_CODE']
+    # secret = app.config['SECRET_HMAC_CODE']
+    # put in config
+    secret = "my secret"
     hmaced = hmac.new(bytearray(secret, "latin-1"),
                       bytearray(stringy, "utf-8"),
                       hashlib.sha1)
@@ -39,5 +41,7 @@ def url_for_hmac(endpoint, **values):
     return url + combiner + "hm=" + hm
 
 
-app.jinja_env.globals.update(url_for_hmac=url_for_hmac,
-                             data_hmac=data_hmac)
+
+# todo
+# app.jinja_env.globals.update(url_for_hmac=url_for_hmac,
+#                              data_hmac=data_hmac)
