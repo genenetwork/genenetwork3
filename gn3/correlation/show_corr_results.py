@@ -9,6 +9,7 @@ from gn3.utility.helper_functions import get_species_dataset_trait
 from gn3.utility.corr_result_helpers import normalize_values
 from gn3.base.trait import create_trait
 from gn3.utility import hmac
+from . import correlation_functions
 
 
 class CorrelationResults:
@@ -128,6 +129,7 @@ class CorrelationResults:
 
 
     def do_lit_correlation_for_all_traits(self):
+        print("calling lit correlation for all traits")
         input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), self.this_trait.geneid)
 
         lit_corr_data = {}
@@ -500,6 +502,22 @@ class CorrelationResults:
             "correlation_json": self.json_results
         }
 
+
+def do_bicor(this_trait_vals, target_trait_vals):
+    r_library = ro.r["library"]             # Map the library function
+    r_options = ro.r["options"]             # Map the options function
+
+    r_library("WGCNA")
+    r_bicor = ro.r["bicorAndPvalue"]        # Map the bicorAndPvalue function
+
+    r_options(stringsAsFactors = False)
+
+    this_vals = ro.Vector(this_trait_vals)
+    target_vals = ro.Vector(target_trait_vals)
+
+    the_r, the_p, _fisher_transform, _the_t, _n_obs = [numpy.asarray(x) for x in r_bicor(x = this_vals, y = target_vals)]
+
+    return the_r, the_p
 
 def get_header_fields(data_type, corr_method):
     if data_type == "ProbeSet":
