@@ -1,6 +1,7 @@
 """module contains code for any computation in correlation"""
 
 import json
+from gn3.base.data_set import create_dataset
 from .correlation_utility import get_genofile_samplelist
 from .show_corr_results import CorrelationResults
 
@@ -13,7 +14,7 @@ def filter_wanted_inputs():
 def get_loading_page_data(initial_start_vars, create_dataset=create_dataset, get_genofile_samplelist=get_genofile_samplelist):
     if initial_start_vars is None:
         # added this just to enable testing of this function
-        return "no items"
+        raise  NotImplementedError()
 
     """ function to create dataset and load page data """
     start_vars_container = {}
