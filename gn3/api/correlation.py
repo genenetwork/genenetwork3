@@ -36,9 +36,12 @@ def connect_db():
 def corr_compute_page():
     """api for doing  correlation"""
 
-    print(g.db)
+    # accepts both form and json data
 
-    initial_start_vars = request.json
+    try:
+        initial_start_vars = request.form
+    except Exception as e:
+        init_start_vars = request.json
 
     corr_results = compute_correlation(init_start_vars=initial_start_vars)
     try:

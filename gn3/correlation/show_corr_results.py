@@ -4,6 +4,7 @@ import json
 import collections
 import numpy
 import scipy.stats
+import rpy2.robjects as ro    
 from gn3.base.data_set import create_dataset
 from gn3.utility.helper_functions import get_species_dataset_trait
 from gn3.utility.corr_result_helpers import normalize_values
