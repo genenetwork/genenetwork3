@@ -97,7 +97,6 @@ class DatasetType:
       name: The name of the key to inserted in the datasets dictionary
 
     """
-        print("CALLING IN THIS FUNCTION HERE>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
         sql_query_mapping = {
             'mrna_expr': ("""SELECT ProbeSetFreeze.Id FROM """ +
@@ -181,7 +180,7 @@ class DatasetGroup:
 
         self.get_f1_parent_strains()
 
-        # not sure whether this is used in correlation
+        # remove below not used in correlation
 
         self.mapping_id, self.mapping_names = self.get_mapping_methods()
 
