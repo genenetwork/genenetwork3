@@ -7,7 +7,6 @@ import scipy.stats
 from gn3.base.data_set import create_dataset
 from gn3.utility.helper_functions import get_species_dataset_trait
 from gn3.utility.corr_result_helpers import normalize_values
-from gn3.correlation import correlation_functions
 from gn3.base.trait import create_trait
 from gn3.utility import hmac
 
@@ -89,33 +88,6 @@ class CorrelationResults:
                     trait.tissue_corr = result[0]
                     trait.tissue_pvalue = result[2]
 
-
-    def do_tissue_correlation_for_trait_list(self, tissue_dataset_id=1):
-        """Given a list of correlation results (self.correlation_results), gets the tissue correlation value for each"""
-
-        #Gets tissue expression values for the primary trait
-        primary_trait_tissue_vals_dict = correlation_functions.get_trait_symbol_and_tissue_values(
-            symbol_list = [self.this_trait.symbol])
-
-        if self.this_trait.symbol.lower() in primary_trait_tissue_vals_dict:
-            primary_trait_tissue_values = primary_trait_tissue_vals_dict[self.this_trait.symbol.lower()]
-            gene_symbol_list = [trait.symbol for trait in self.correlation_results if trait.symbol]
-
-            corr_result_tissue_vals_dict= correlation_functions.get_trait_symbol_and_tissue_values(
-                                                    symbol_list=gene_symbol_list)
-
-            for trait in self.correlation_results:
-                if trait.symbol and trait.symbol.lower() in corr_result_tissue_vals_dict:
-                    this_trait_tissue_values = corr_result_tissue_vals_dict[trait.symbol.lower()]
-
-                    result = correlation_functions.cal_zero_order_corr_for_tiss(primary_trait_tissue_values,
-                                                                          this_trait_tissue_values,
-                                                                          self.corr_method)
-
-                    trait.tissue_corr = result[0]
-                    trait.tissue_pvalue = result[2]
-
-
     def do_lit_correlation_for_trait_list(self):
 
         input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(
@@ -152,6 +124,45 @@ class CorrelationResults:
                     trait.lit_corr = 0
             else:
                 trait.lit_corr = 0
+
+
+    
+    def do_lit_correlation_for_all_traits(self):
+        input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), self.this_trait.geneid)
+
+        lit_corr_data = {}
+        for trait, gene_id in list(self.trait_geneid_dict.items()):
+            mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), gene_id)
+
+            if mouse_gene_id and str(mouse_gene_id).find(";") == -1:
+                #print("gene_symbols:", input_trait_mouse_gene_id + " / " + mouse_gene_id)
+                result = g.db.execute(
+                    """SELECT value
+                       FROM LCorrRamin3
+                       WHERE GeneId1='%s' and
+                             GeneId2='%s'
+                    """ % (escape(mouse_gene_id), escape(input_trait_mouse_gene_id))
+                ).fetchone()
+                if not result:
+                    result = g.db.execute("""SELECT value
+                       FROM LCorrRamin3
+                       WHERE GeneId2='%s' and
+                             GeneId1='%s'
+                    """ % (escape(mouse_gene_id), escape(input_trait_mouse_gene_id))
+                    ).fetchone()
+                if result:
+                    #print("result:", result)
+                    lit_corr = result.value
+                    lit_corr_data[trait] = [gene_id, lit_corr]
+                else:
+                    lit_corr_data[trait] = [gene_id, 0]
+            else:
+                lit_corr_data[trait] = [gene_id, 0]
+
+        lit_corr_data = collections.OrderedDict(sorted(list(lit_corr_data.items()),
+                                                           key=lambda t: -abs(t[1][1])))
+
+        return lit_corr_data
 
     def get_sample_r_and_p_values(self, trait, target_samples):
         """Calculates the sample r (or rho) and p-value
@@ -435,8 +446,8 @@ class CorrelationResults:
             self.do_lit_correlation_for_trait_list()
 
         if self.corr_type != "tissue" and self.dataset.type == "ProbeSet" and self.target_dataset.type == "ProbeSet":
-            self.do_tissue_correlation_for_trait_list()
-            # self.do_lit_correlation_for_trait_list()
+            # self.do_tissue_correlation_for_trait_list()
+            self.do_lit_correlation_for_trait_list()
 
         self.json_results = generate_corr_json(
             self.correlation_results, self.this_trait, self.dataset, self.target_dataset)
