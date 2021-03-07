@@ -126,7 +126,7 @@ class CorrelationResults:
                 trait.lit_corr = 0
 
 
-    
+
     def do_lit_correlation_for_all_traits(self):
         input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), self.this_trait.geneid)
 
@@ -163,6 +163,39 @@ class CorrelationResults:
                                                            key=lambda t: -abs(t[1][1])))
 
         return lit_corr_data
+
+
+    def do_tissue_correlation_for_all_traits(self, tissue_dataset_id=1):
+        #Gets tissue expression values for the primary trait
+        print("CALLING TISSUE Correlation for all traits")
+        print(self.trait_symbol_dict)
+        primary_trait_tissue_vals_dict = correlation_functions.get_trait_symbol_and_tissue_values(
+            symbol_list = [self.this_trait.symbol])
+
+        if self.this_trait.symbol.lower() in primary_trait_tissue_vals_dict:
+            primary_trait_tissue_values = primary_trait_tissue_vals_dict[self.this_trait.symbol.lower()]
+
+            #print("trait_gene_symbols: ", pf(trait_gene_symbols.values()))
+            corr_result_tissue_vals_dict= correlation_functions.get_trait_symbol_and_tissue_values(
+                                                    symbol_list=list(self.trait_symbol_dict.values()))
+
+            #print("corr_result_tissue_vals: ", pf(corr_result_tissue_vals_dict))
+
+            #print("trait_gene_symbols: ", pf(trait_gene_symbols))
+
+            tissue_corr_data = {}
+            for trait, symbol in list(self.trait_symbol_dict.items()):
+                if symbol and symbol.lower() in corr_result_tissue_vals_dict:
+                    this_trait_tissue_values = corr_result_tissue_vals_dict[symbol.lower()]
+
+                    result = correlation_functions.cal_zero_order_corr_for_tiss(primary_trait_tissue_values,
+                                                                          this_trait_tissue_values,
+                                                                          self.corr_method)
+
+                    tissue_corr_data[trait] = [symbol, result[0], result[2]]
+
+            tissue_corr_data = collections.OrderedDict(sorted(list(tissue_corr_data.items()),
+                                                           key=lambda t: -abs(t[1][1])))
 
     def get_sample_r_and_p_values(self, trait, target_samples):
         """Calculates the sample r (or rho) and p-value
@@ -446,8 +479,8 @@ class CorrelationResults:
             self.do_lit_correlation_for_trait_list()
 
         if self.corr_type != "tissue" and self.dataset.type == "ProbeSet" and self.target_dataset.type == "ProbeSet":
-            # self.do_tissue_correlation_for_trait_list()
-            self.do_lit_correlation_for_trait_list()
+            self.do_tissue_correlation_for_trait_list()
+            # self.do_lit_correlation_for_trait_list()
 
         self.json_results = generate_corr_json(
             self.correlation_results, self.this_trait, self.dataset, self.target_dataset)
