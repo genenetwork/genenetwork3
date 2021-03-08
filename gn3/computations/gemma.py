@@ -5,7 +5,6 @@ from base64 import b64encode
 from hashlib import md5
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
 from gn3.file_utils import get_hash_of_files

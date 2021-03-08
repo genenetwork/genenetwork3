@@ -12,9 +12,7 @@ from gn3.commands import run_cmd
 from gn3.file_utils import jsonfile_to_dict
 from gn3.computations.gemma import generate_gemma_cmd
 from gn3.computations.gemma import do_paths_exist
-from gn3.computations.gemma import generate_hash_of_string
-from gn3.computations.gemma import generate_pheno_txt_file
-from gn3.computations.gemma import generate_gemma_computation_cmd
+
 
 gemma = Blueprint("gemma", __name__)
 
