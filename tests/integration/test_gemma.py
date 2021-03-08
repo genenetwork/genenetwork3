@@ -452,3 +452,58 @@ class GemmaAPITest(unittest.TestCase):
                 "status": "queued",
                 "output_file": "hash-output.json"
             })
+
+    @mock.patch("gn3.api.gemma.queue_cmd")
+    @mock.patch("gn3.computations.gemma.get_hash_of_files")
+    @mock.patch("gn3.api.gemma.jsonfile_to_dict")
+    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.redis.Redis")
+    def test_k_gwa_compute_with_covars_only(self, mock_redis, mock_path_exist,
+                                            mock_json, mock_hash,
+                                            mock_queue_cmd):
+        """Test /gemma/k-gwa-compute/covars/<token>
+
+        """
+        mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
+        mock_redis.return_value = _redis_conn
+        mock_queue_cmd.return_value = "my-unique-id"
+        mock_json.return_value = {
+            "geno": "genofile.txt",
+            "pheno": "phenofile.txt",
+            "snps": "snpfile.txt",
+            "covar": "covarfile.txt",
+        }
+        mock_hash.return_value = "hash"
+        response = self.app.post("/api/gemma/k-gwa-compute/covars/my-token")
+        mock_hash.assert_has_calls([
+            mock.call([
+                '/tmp/my-token/genofile.txt', '/tmp/my-token/phenofile.txt',
+                '/tmp/my-token/snpfile.txt'
+            ]),
+            mock.call([
+                '/tmp/my-token/genofile.txt', '/tmp/my-token/phenofile.txt',
+                '/tmp/my-token/snpfile.txt', "/tmp/my-token/covarfile.txt"
+            ])
+        ])
+        mock_queue_cmd.assert_called_once_with(
+            conn=_redis_conn,
+            email=None,
+            job_queue='GN3::job-queue',
+            cmd=("gemma-wrapper --json -- "
+                 "-g /tmp/my-token/genofile.txt "
+                 "-p /tmp/my-token/phenofile.txt "
+                 "-a /tmp/my-token/snpfile.txt "
+                 "-gk > /tmp/my-token/hash-output.json "
+                 "&& gemma-wrapper --json "
+                 "--input /tmp/my-token/hash-output.json -- "
+                 "-g /tmp/my-token/genofile.txt "
+                 "-p /tmp/my-token/phenofile.txt "
+                 "-a /tmp/my-token/snpfile.txt "
+                 "-c /tmp/my-token/covarfile.txt -lmm 9 "
+                 "-gk > /tmp/my-token/hash-output.json"))
+        self.assertEqual(
+            response.get_json(), {
+                "unique_id": "my-unique-id",
+                "status": "queued",
+                "output_file": "hash-output.json"
+            })
