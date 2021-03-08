@@ -505,3 +505,57 @@ def compute_k_gwa_with_loco_only(chromosomes, maf, token):
             status=128,
             # use better message
             message="Metadata file non-existent!")
+
+
+@gemma.route("/k-gwa-compute/covars/loco/<chromosomes>/maf/<maf>/<token>",
+             methods=["POST"])
+def compute_k_gwa_with_loco_and_cavar(chromosomes, maf, token):
+    """k-gwa-compute; Loco with covars; lmm defaults to 9!
+
+    """
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
+    try:
+        genofile, phenofile, snpsfile, covarfile = [
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps", "covar"]
+        ]
+        if not do_paths_exist([genofile, phenofile, snpsfile]):
+            raise FileNotFoundError
+        gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
+        gemma_k_cmd = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            chromosomes=chromosomes)
+        gemma_kwargs["c"] = covarfile
+        gemma_kwargs["maf"] = float(maf)
+        gemma_kwargs["lmm"] = _dict.get("lmm", 9)
+        gemma_gwa_cmd = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            gemma_wrapper_kwargs={
+                "loco":
+                ("--input "
+                 f"{os.path.join(working_dir, gemma_k_cmd.get('output_file'))}"
+                 )
+            })
+        return jsonify(unique_id=queue_cmd(
+            conn=redis.Redis(),
+            email=(request.get_json() or {}).get('email'),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
+                 f"{gemma_gwa_cmd.get('gemma_cmd')}")),
+                       status="queued",
+                       output_file=gemma_gwa_cmd.get("output_file"))
+    # pylint: disable=W0703
+    except Exception:
+        return jsonify(
+            status=128,
+            # use better message
+            message="Metadata file non-existent!")
