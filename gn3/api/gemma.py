@@ -400,11 +400,44 @@ covars; lmm defaults to 9!
             status=128,
             # use better message
             message="Metadata file non-existent!")
+
+
+@gemma.route("/k-gwa-compute/covars/<token>", methods=["POST"])
+def compute_k_gwa_with_covars_only(token):
+    """Given a genofile, traitfile, snpsfile, and the token, compute the k-values
+and return <hash-of-inputs>.json with a UNIQUE-ID of the job. The genofile,
+traitfile, and snpsfile are extracted from a metadata.json file. No Loco no
+covars; lmm defaults to 9!
+
+    """
+    working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
+    _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
+    try:
+        genofile, phenofile, snpsfile, covarfile = [
+            os.path.join(working_dir, _dict.get(x))
+            for x in ["geno", "pheno", "snps", "covar"]
+        ]
+        if not do_paths_exist([genofile, phenofile, snpsfile]):
+            raise FileNotFoundError
+        gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
+        gemma_k_cmd = generate_gemma_cmd(
             gemma_cmd=current_app.config.get("GEMMA_"
                                              "WRAPPER_CMD"),
             output_dir=current_app.config.get('TMPDIR'),
             token=token,
             gemma_kwargs=gemma_kwargs)
+        gemma_kwargs["c"] = covarfile
+        gemma_kwargs["lmm"] = _dict.get("lmm", 9)
+        gemma_gwa_cmd = generate_gemma_cmd(
+            gemma_cmd=current_app.config.get("GEMMA_"
+                                             "WRAPPER_CMD"),
+            output_dir=current_app.config.get('TMPDIR'),
+            token=token,
+            gemma_kwargs=gemma_kwargs,
+            gemma_wrapper_kwargs={
+                "input": os.path.join(working_dir,
+                                      gemma_k_cmd.get("output_file"))
+            })
         return jsonify(unique_id=queue_cmd(
             conn=redis.Redis(),
             email=(request.get_json() or {}).get('email'),
