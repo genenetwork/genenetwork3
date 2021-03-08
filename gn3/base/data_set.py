@@ -9,6 +9,7 @@ from gn3.correlation.correlation_utility import AttributeSetter
 from gn3.utility.db_tools import escape
 from gn3.utility.db_tools import mescape
 from gn3.utility.db_tools import create_in_clause
+from gn3.utility.tools import locate_ignore_error
 from gn3.db.calls import fetch1
 from gn3.db.calls import fetchone
 from gn3.db.webqtlDatabaseFunction import retrieve_species
@@ -21,6 +22,8 @@ r = Redis()
 # should probably move this to its own configuration files
 
 USE_REDIS = True
+
+# todo move to config file
 GN2_BASE_URL = "https://genenetwork.org/"
 
 DS_NAME_MAP = {}
@@ -35,8 +38,6 @@ def create_dataset(dataset_name, dataset_type=None, get_samplelist=True, group_n
         dataset_type = Dataset_Getter(dataset_name)
     dataset_ob = DS_NAME_MAP[dataset_type]
     dataset_class = globals()[dataset_ob]
-
-    # could use comprehension list for this
 
     if dataset_type == "Temp":
         results = dataset_class(dataset_name, get_samplelist, group_name)
@@ -234,14 +235,6 @@ class DatasetGroup:
         else:
             # logger.debug("Cache not hit")
             # should enable logger
-
-            # move code  to own module also replace the link
-
-            def locate_ignore_error(name, subdir=None):
-
-                # currently assume that all paths all valid
-                # should work on this
-                return f"/home/kabui/data/genotype_files/genotype/BXD.geno"
             genotype_fn = locate_ignore_error(self.name+".geno", 'genotype')
             if genotype_fn:
                 self.samplelist = get_group_samplelists.get_samplelist(

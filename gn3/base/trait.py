@@ -6,6 +6,8 @@ from gn3.base.webqtlCaseData import webqtlCaseData
 
 
 def check_resource_availability(dataset, name=None):
+
+    # todo add code for this
     # should probably work on this has to do with authentication
     return {'data': ['no-access', 'view'], 'metadata': ['no-access', 'view'], 'admin': ['not-admin']}
 
@@ -122,8 +124,7 @@ def retrieve_sample_data(trait, dataset, samplelist=None):
                         all_samples_ordered[i], float(item))
 
                 except Exception as e:
-                    # should pass (added to enable testing)
-                    raise e
+                    pass
 
 
         else:
@@ -133,13 +134,6 @@ def retrieve_sample_data(trait, dataset, samplelist=None):
                     trait.data[name] = webqtlCaseData(*item)
 
     return trait
-
-        # raise NotImplementedError()
-
-
-def get_resource_id(dataset, trait_name):
-    return 1
-
 
 def retrieve_trait_info(trait, dataset, get_qtl_info=False):
     assert dataset, "Dataset doesn't exist"
@@ -256,8 +250,12 @@ def retrieve_trait_info(trait, dataset, get_qtl_info=False):
             else:
                 trait.pubmed_text = trait.year
 
+            # moved to config
+
+            PUBMEDLINK_URL = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=PubMed&list_uids=%s&dopt=Abstract"
+
             if trait.pubmed_id:
-                trait.pubmed_link = webqtlConfig.PUBMEDLINK_URL % trait.pubmed_id
+                trait.pubmed_link = PUBMEDLINK_URL % trait.pubmed_id
 
         if dataset.type == 'ProbeSet' and dataset.group:
             description_string = trait.description
