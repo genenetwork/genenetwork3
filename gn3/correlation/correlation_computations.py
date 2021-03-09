@@ -8,15 +8,15 @@ from .show_corr_results import CorrelationResults
 
 def filter_wanted_inputs():
     """split the get loading page data function"""
-    pass
+    raise NotImplementedError()
 
 
-def get_loading_page_data(initial_start_vars, create_dataset=create_dataset, get_genofile_samplelist=get_genofile_samplelist):
+def filter_input_data(initial_start_vars):
+    """functional to filter form/json data and create_dataset and trait"""
     if initial_start_vars is None:
         # added this just to enable testing of this function
-        raise  NotImplementedError()
+        raise NotImplementedError()
 
-    """ function to create dataset and load page data """
     start_vars_container = {}
     n_samples = 0
     if "wanted_inputs" in initial_start_vars:
@@ -32,20 +32,7 @@ def get_loading_page_data(initial_start_vars, create_dataset=create_dataset, get
 
         else:
             sample_vals_dict = json.loads(start_vars['sample_vals'])
-
-            dataset = create_dataset(start_vars['dataset'], group_name=start_vars['group']
-                                     ) if "group" in start_vars else create_dataset(start_vars['dataset'])
             samples = start_vars['primary_samples'].split(",")
-
-            if 'genofile' in start_vars:
-                genofile_string = start_vars['genofile']
-                dataset.group.genofile = genofile_string.split(":")[0]
-
-                genofile_samples = get_genofile_samplelist(
-                    dataset)
-
-                if len(genofile_samples) > 1:
-                    samples = genofile_samples
 
             for sample in samples:
                 if sample in sample_vals_dict:
@@ -64,15 +51,17 @@ def get_loading_page_data(initial_start_vars, create_dataset=create_dataset, get
     return start_vars_container
 
 
-def compute_correlation(init_start_vars, get_loading_page_data=get_loading_page_data, CorrelationResults=CorrelationResults):
+def compute_correlation(init_start_vars,
+                        get_loading_page_data=filter_input_data,
+                        correlation_results=CorrelationResults):
     """function that does correlation .creates Correlation results instance"""
 
-    start_vars_container = get_loading_page_data(
+    start_vars_container = filter_input_data(
         initial_start_vars=init_start_vars)
 
     start_vars = start_vars_container["start_vars"]
 
-    corr_object = CorrelationResults(
+    corr_object = correlation_results(
         start_vars=start_vars)
 
     corr_results = corr_object.do_correlation(start_vars=start_vars)
