@@ -1,5 +1,6 @@
+"""module for chunks functions"""
+
 import math
-import time
 
 
 def divide_into_chunks(the_list, number_chunks):

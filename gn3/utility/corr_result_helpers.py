@@ -1,3 +1,7 @@
+"""module contains helper function for corr results"""
+
+#pylint:disable=C0103
+#above disable snake_case for variable tod refactor
 def normalize_values(a_values, b_values):
     """
     Trim two lists of values to contain only the values they both share
@@ -10,12 +14,10 @@ def normalize_values(a_values, b_values):
     ([2.3, 4.1, 5], [3.4, 6.2, 4.1], 3)
 
     """
-
-    min_length = min(len(a_values), len(b_values))
     a_new = []
     b_new = []
     for a, b in zip(a_values, b_values):
-        if not (a == None or b == None):
+        if (a and b is not None):
             a_new.append(a)
             b_new.append(b)
     return a_new, b_new, len(a_new)
@@ -32,6 +34,7 @@ def common_keys(a_samples, b_samples):
 
 
 def normalize_values_with_samples(a_samples, b_samples):
+    """function to normalize values with samples"""
     common_samples = common_keys(a_samples, b_samples)
     a_new = {}
     b_new = {}
