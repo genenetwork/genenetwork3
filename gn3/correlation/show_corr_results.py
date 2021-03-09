@@ -494,6 +494,8 @@ class CorrelationResults:
         # klavaro for touch typing
         # archwiki for documentation
         # exwm for window manager ->13
+
+        # return self.__dict__
         return {
             "Results": "succeess",
             "return_number": self.return_number,
