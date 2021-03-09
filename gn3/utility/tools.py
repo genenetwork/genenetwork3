@@ -1,20 +1,22 @@
+"""module contains general tools forgenenetwork"""
 
-import os 
+import os
 
 from default_settings import GENENETWORK_FILES
 
 
-def valid_file(fn):
-    if os.path.isfile(fn):
-        return fn
+def valid_file(file_name):
+    """check if file is valid"""
+    if os.path.isfile(file_name):
+        return file_name
     return None
 
-def valid_path(dir):
-    if os.path.isdir(dir):
+
+def valid_path(dir_name):
+    """check if path is valid"""
+    if os.path.isdir(dir_name):
         return dir
     return None
-
-
 
 
 def locate_ignore_error(name, subdir=None):

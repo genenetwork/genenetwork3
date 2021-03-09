@@ -23,7 +23,7 @@
 # Created by GeneNetwork Core Team 2010/08/10
 #
 # Last updated by GeneNetwork Core Team 2010/10/20
-
+# pylint: disable-all
 import string
 import time
 import re

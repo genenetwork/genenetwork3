@@ -1,40 +1,47 @@
-import os
-import glob
-import gzip
 
+"""module for group samplelist"""
 
 def get_samplelist(file_type, geno_file):
+    """get samplelist function"""
     if file_type == "geno":
         return get_samplelist_from_geno(geno_file)
     elif file_type == "plink":
         return get_samplelist_from_plink(geno_file)
-
+    return None
 
 def get_samplelist_from_geno(genofilename):
-    if os.path.isfile(genofilename + '.gz'):
-        genofilename += '.gz'
-        genofile = gzip.open(genofilename)
-    else:
-        genofile = open(genofilename)
+    """get sampelist from geno """
+    #xtodo fix this function
 
-    for line in genofile:
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith(("#", "@")):
-            continue
-        break
+    raise NotImplementedError
 
-    headers = line.split("\t")
+    # if os.path.isfile(genofilename + '.gz'):
+    #     genofilename += '.gz'
+    #     genofile = gzip.open(genofilename)
+    # else:
+    #     genofile = open(genofilename)
 
-    if headers[3] == "Mb":
-        samplelist = headers[4:]
-    else:
-        samplelist = headers[3:]
-    return samplelist
+    # samplelist = []
+
+    # for line in genofile:
+    #     line = line.strip()
+    #     if not line:
+    #         continue
+    #     if line.startswith(("#", "@")):
+    #         continue
+    #     break
+
+    #     headers = line.split("\t")
+
+    #     if headers[3] == "Mb":
+    #         samplelist.append(headers[4:])
+    #     else:
+    #         samplelist.append(headers[3:])
+    # return samplelist
 
 
 def get_samplelist_from_plink(genofilename):
+    """get samplelist from plink"""
     genofile = open(genofilename)
 
     samplelist = []

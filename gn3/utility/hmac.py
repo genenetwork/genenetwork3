@@ -1,7 +1,10 @@
+"""module for hmac """
+
+# pylint: disable-all
 import hmac
 import hashlib
 
-# todo work on this file
+# xtodo work on this file
 
 # from main import app
 

@@ -1,3 +1,4 @@
+# pylint: disable-all
 import collections
 
 from flask import Flask, g

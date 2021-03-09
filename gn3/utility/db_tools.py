@@ -1,3 +1,4 @@
+"""module for db_tools"""
 from MySQLdb import escape_string as escape_
 
 
@@ -14,4 +15,5 @@ def mescape(*items):
 
 
 def escape(string_):
+    """escape function"""
     return escape_(string_).decode('utf8')

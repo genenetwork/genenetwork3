@@ -1,11 +1,12 @@
-
+"""module contains general helper functions """
 from gn3.base.data_set import create_dataset
 from gn3.base.trait import create_trait
 from gn3.base.species import TheSpecies
 
 
 def get_species_dataset_trait(self, start_vars):
-    print("CALLING THIS FUNCTION HERE ")
+    """function to get species dataset and trait"""
+    print("DEBUGSETTING dataset HERE ")
     if "temp_trait" in list(start_vars.keys()):
         if start_vars['temp_trait'] == "True":
             self.dataset = create_dataset(

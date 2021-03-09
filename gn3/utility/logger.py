@@ -25,6 +25,7 @@
 #   logger = utility.logger.getLogger(__name__,level=logging.DEBUG)
 #
 # We'll add more overrides soon.
+# pylint: disable-all
 
 import logging
 import string
