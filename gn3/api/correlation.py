@@ -42,3 +42,4 @@ def corr_compute_page():
         return pickle.dumps(corr_results)
     except Exception as error:  # pylint: disable=broad-except
         return jsonify({"error": str(error)})
+

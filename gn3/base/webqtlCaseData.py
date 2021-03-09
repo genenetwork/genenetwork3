@@ -29,6 +29,7 @@
 # import utility.tools
 
 # utility.tools.show_settings()
+# pylint: disable-all
 
 class webqtlCaseData:
     """one case data in one trait"""
