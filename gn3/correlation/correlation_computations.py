@@ -1,8 +1,6 @@
 """module contains code for any computation in correlation"""
 
 import json
-from gn3.base.data_set import create_dataset
-from .correlation_utility import get_genofile_samplelist
 from .show_corr_results import CorrelationResults
 
 
