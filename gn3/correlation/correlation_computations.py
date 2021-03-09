@@ -50,11 +50,11 @@ def filter_input_data(initial_start_vars):
 
 
 def compute_correlation(init_start_vars,
-                        get_loading_page_data=filter_input_data,
+                        get_input_data=filter_input_data,
                         correlation_results=CorrelationResults):
     """function that does correlation .creates Correlation results instance"""
 
-    start_vars_container = filter_input_data(
+    start_vars_container = get_input_data(
         initial_start_vars=init_start_vars)
 
     start_vars = start_vars_container["start_vars"]

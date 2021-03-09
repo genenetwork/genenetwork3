@@ -1,19 +1,30 @@
 """module for testing correlation/correlation_computations"""
 
 import unittest
-from gn3.api.correlation import get_loading_page_data
+from gn3.correlation.correlation_computations import filter_input_data
 from gn3.correlation.correlation_computations import compute_correlation
 
 
 class AttributeSetter:
+    """class for attribute setter"""
+
     def __init__(self, trait_obj):
         for key, value in trait_obj.items():
             setattr(self, key, value)
+
+    def __str__(self):
+        return self.__class__.__name__
+
+    def get_items(self):
+        """get object dict values"""
+        return self.__dict__
 
 
 # mock for calculating correlation function
 
 def mock_get_loading_page_data(initial_start_vars):
+    """function to mock  filtering input"""
+    print(initial_start_vars)
     results = {'start_vars':
                {'genofile': 'SAMPLE:X', 'dataset': 'HC_M2_0606_P',
                 'sample_vals': '{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}',
@@ -25,55 +36,43 @@ def mock_get_loading_page_data(initial_start_vars):
 
 
 class MockCorrelationResults:
+    """mock class for CorrelationResults"""
 
     def __init__(self, start_vars):
-        for key, value in start_vars.items():
-            self.key = value
+        for _key, value in start_vars.items():
+            self.value = value
+
+        self.assert_start_vars(start_vars)
+
+    @staticmethod
+    def assert_start_vars(start_vars):
+        """assert data required is supplied"""
+        assert "wanted_inputs" in start_vars
 
     def do_correlation(self, start_vars):
-        corr_results = start_vars
+        """mock method for doing correlation"""
+        print(self.__class__.__name__)
 
         return {
-            "success": "correlation results"
+            "success": start_vars
         }
 
 
 class TestCorrelationUtility(unittest.TestCase):
-
-    @staticmethod
-    def create_start_initial_vars():
-        return "item here"
-
-    @staticmethod
-    def mock_create_dataset(dataset):
-
-        dataset = AttributeSetter({
-            "group": AttributeSetter({
-                "genofile": ""
-            })
-        })
-
-        return dataset
-
-    @staticmethod
-    def mock_get_genofile_samplelist(dataset):
-        # should mock call to db
-        return ["C57BL/6J"]
+    """tests for correlation computations"""
 
     def test_fails(self):
         """add test that fails"""
 
         self.assertEqual(4, 4)
 
-    def test_get_loading_page_data_no_data(self):
+    def test_filter_input_no_data(self):
         """test loading page data function where initial start vars is None"""
+        with self.assertRaises(NotImplementedError):
+            results = filter_input_data(initial_start_vars=None)
+            self.assertEqual(results, None)
 
-        results = get_loading_page_data(
-            initial_start_vars=None, create_dataset=None, get_genofile_samplelist=None)
-
-        self.assertEqual(results, "no items")
-
-    def test_get_loading_page_data(self):
+    def test_filter_input_data(self):
         '''testing getting loading page data when n_samples key exists'''
         sample_vals = """{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}"""
 
@@ -87,8 +86,7 @@ class TestCorrelationUtility(unittest.TestCase):
 
         }
 
-        results = get_loading_page_data(initial_start_vars=initial_start_vars, create_dataset=self.mock_create_dataset,
-                                        get_genofile_samplelist=self.mock_get_genofile_samplelist)
+        results = filter_input_data(initial_start_vars=initial_start_vars)
 
         expected_starts_vars = {
             "n_samples": 71,
@@ -102,30 +100,6 @@ class TestCorrelationUtility(unittest.TestCase):
 
         self.assertEqual(expected_starts_vars, results["start_vars"])
         self.assertEqual(expected_starts_vars_container, results)
-
-    def test_get_loading_page_no_samples(self):
-        '''testing getting loading page data when n_samples key don't exists'''
-
-        sample_vals = """{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}"""
-
-        initial_start_vars = {
-            "wanted_inputs": "sample_vals,dataset,genofile,primary_samples",
-            "genofile": "SAMPLE:X",
-            "dataset": "HC_M2_0606_P",
-
-            "sample_vals": sample_vals,
-            "primary_samples": "C57BL/6J,DBA/2J,B6D2F1"
-
-        }
-
-        results = get_loading_page_data(initial_start_vars=initial_start_vars, create_dataset=self.mock_create_dataset,
-                                        get_genofile_samplelist=self.mock_get_genofile_samplelist)
-
-        expected_results = {'start_vars': {'genofile': 'SAMPLE:X', 'dataset': 'HC_M2_0606_P', 'sample_vals': '{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}',
-                                           'primary_samples': 'C57BL/6J,DBA/2J,B6D2F1',
-                                           'n_samples': 3, 'wanted_inputs': "sample_vals,dataset,genofile,primary_samples"}}
-
-        self.assertEqual(results, expected_results)
 
     def test_compute_correlation(self):
         """test function for doing correlation"""
@@ -142,8 +116,16 @@ class TestCorrelationUtility(unittest.TestCase):
 
         }
         correlation_object = compute_correlation(
-            init_start_vars=initial_start_vars, get_loading_page_data=mock_get_loading_page_data, CorrelationResults=MockCorrelationResults)
+            init_start_vars=initial_start_vars,
+            get_input_data=mock_get_loading_page_data,
+            correlation_results=MockCorrelationResults)
+
+        results = {'genofile': 'SAMPLE:X', 'dataset': 'HC_M2_0606_P',
+                   'sample_vals': '{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}',
+                   'primary_samples': 'C57BL/6J,DBA/2J,B6D2F1',
+                   'n_samples': 3,
+                   'wanted_inputs': "sample_vals,dataset,genofile,primary_samples"}
 
         self.assertEqual({
-            "success": "correlation results"
+            "success": results
         }, correlation_object)
