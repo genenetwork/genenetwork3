@@ -1,11 +1,10 @@
 
 import json
-import requests
 import math
 import collections
+import requests
 from redis import Redis
 from flask import g
-from gn3.correlation.correlation_utility import AttributeSetter
 from gn3.utility.db_tools import escape
 from gn3.utility.db_tools import mescape
 from gn3.utility.db_tools import create_in_clause
@@ -27,6 +26,11 @@ USE_REDIS = True
 GN2_BASE_URL = "https://genenetwork.org/"
 
 DS_NAME_MAP = {}
+
+# pylint: disable-all
+#todo file not linted
+# pylint: disable=C0103 
+
 
 
 def create_dataset(dataset_name, dataset_type=None, get_samplelist=True, group_name=None):
@@ -627,7 +631,6 @@ class MrnaAssayDataSet(DataSet):
         return dict(results)
 
 
-
 class TempDataSet(DataSet):
     '''Temporary user-generated data set'''
 
@@ -761,7 +764,7 @@ class PhenotypeDataSet(DataSet):
                         Geno.Name = '%s' and
                         Geno.SpeciesId = Species.Id
                 """ % (species, this_trait.locus)
-               
+
                 result = g.db.execute(query).fetchone()
 
                 if result:
@@ -791,7 +794,7 @@ class PhenotypeDataSet(DataSet):
                     Order BY
                             Strain.Name
                     """
-       
+
         results = g.db.execute(query, (trait, self.id)).fetchall()
         return results
 
@@ -864,8 +867,6 @@ class GenotypeDataSet(DataSet):
         return results
 
 
-
-
 def geno_mrna_confidentiality(ob):
     dataset_table = ob.type + "Freeze"
     #logger.debug("dataset_table [%s]: %s" % (type(dataset_table), dataset_table))
@@ -875,11 +876,11 @@ def geno_mrna_confidentiality(ob):
     #
     result = g.db.execute(query)
 
-    (dataset_id,
-     name,
-     full_name,
+    (_dataset_id,
+     _name,
+     _full_name,
      confidential,
-     authorized_users) = result.fetchall()[0]
+     _authorized_users) = result.fetchall()[0]
 
     if confidential:
         return True

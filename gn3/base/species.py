@@ -1,4 +1,5 @@
 
+# pylint: disable-all
 import collections
 from flask import g
 from dataclasses import dataclass

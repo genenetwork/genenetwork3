@@ -1,4 +1,5 @@
 
+# pylint: disable-all
 from flask import g
 from redis import Redis
 from gn3.utility.db_tools import escape
