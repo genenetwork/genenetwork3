@@ -12,29 +12,29 @@ from redis.client import Redis  # Used only in type hinting
 from gn3.exceptions import RedisConnectionError
 
 
-def compose_gemma_cmd(
-        gemma_wrapper_cmd: str = "gemma-wrapper",
-        gemma_wrapper_kwargs: Optional[Dict] = None,
-        gemma_kwargs: Optional[Dict] = None,
-        gemma_args: Optional[List] = None) -> str:
+def compose_gemma_cmd(gemma_wrapper_cmd: str = "gemma-wrapper",
+                      gemma_wrapper_kwargs: Optional[Dict] = None,
+                      gemma_kwargs: Optional[Dict] = None,
+                      gemma_args: Optional[List] = None) -> str:
     """Compose a valid GEMMA command given the correct values"""
     cmd = f"{gemma_wrapper_cmd} --json"
     if gemma_wrapper_kwargs:
         cmd += " "  # Add extra space between commands
-        cmd += " ".join([f"--{key} {val}" for key, val
-                         in gemma_wrapper_kwargs.items()])
+        cmd += " ".join(
+            [f"--{key} {val}" for key, val in gemma_wrapper_kwargs.items()])
     cmd += " -- "
     if gemma_kwargs:
-        cmd += " ".join([f"-{key} {val}"
-                         for key, val in gemma_kwargs.items()])
+        cmd += " ".join([f"-{key} {val}" for key, val in gemma_kwargs.items()])
     if gemma_args:
         cmd += " "
         cmd += " ".join([f"{arg}" for arg in gemma_args])
     return cmd
 
 
-def queue_cmd(conn: Redis, job_queue: str,
-              cmd: str, email: Optional[str] = None) -> str:
+def queue_cmd(conn: Redis,
+              job_queue: str,
+              cmd: str,
+              email: Optional[str] = None) -> str:
     """Given a command CMD; (optional) EMAIL; and a redis connection CONN, queue
 it in Redis with an initial status of 'queued'.  The following status codes
 are supported:
