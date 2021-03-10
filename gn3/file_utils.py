@@ -67,7 +67,7 @@ contents to TARGET_DIR/<dir-hash>.
         gzipped_file.save(tar_target_loc)
         # Extract to "tar_target_loc/token"
         tar = tarfile.open(tar_target_loc)
-        tar.extractall(path=tar_target_loc)
+        tar.extractall(path=os.path.join(target_dir, token))
         tar.close()
     # pylint: disable=W0703
     except Exception:
