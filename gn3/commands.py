@@ -52,9 +52,9 @@ Returns the name of the specific redis hash for the specific task.
     unique_id = ("cmd::"
                  f"{datetime.now().strftime('%Y-%m-%d%H-%M%S-%M%S-')}"
                  f"{str(uuid4())}")
+    conn.rpush(job_queue, unique_id)
     for key, value in {"cmd": cmd, "result": "", "status": "queued"}.items():
         conn.hset(name=unique_id, key=key, value=value)
-        conn.rpush(job_queue, unique_id)
     if email:
         conn.hset(name=unique_id, key="email", value=email)
     return unique_id
