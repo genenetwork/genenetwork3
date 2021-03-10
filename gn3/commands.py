@@ -52,25 +52,18 @@ Returns the name of the specific redis hash for the specific task.
     unique_id = ("cmd::"
                  f"{datetime.now().strftime('%Y-%m-%d%H-%M%S-%M%S-')}"
                  f"{str(uuid4())}")
-    for key, value in {"cmd": cmd,
-                       "result": "",
-                       "status": "queued"}.items():
-        conn.hset(key, value, unique_id)
-        conn.rpush(job_queue,
-                   unique_id)
+    for key, value in {"cmd": cmd, "result": "", "status": "queued"}.items():
+        conn.hset(name=unique_id, key=key, value=value)
+        conn.rpush(job_queue, unique_id)
     if email:
-        conn.hset("email",
-                  email,
-                  unique_id)
+        conn.hset(name=unique_id, key="email", value=email)
     return unique_id
 
 
 def run_cmd(cmd: str) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
-    results = subprocess.run(cmd, capture_output=True,
-                             shell=True, check=False)
+    results = subprocess.run(cmd, capture_output=True, shell=True, check=False)
     out = str(results.stdout, 'utf-8')
     if results.returncode > 0:  # Error!
         out = str(results.stderr, 'utf-8')
-    return {"code": results.returncode,
-            "output": out}
+    return {"code": results.returncode, "output": out}
