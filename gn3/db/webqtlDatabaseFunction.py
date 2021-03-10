@@ -1,3 +1,4 @@
+"""
 # Copyright (C) University of Tennessee Health Science Center, Memphis, TN.
 #
 # This program is free software: you can redistribute it and/or modify it
@@ -19,28 +20,33 @@
 #
 #
 # This module is used by GeneNetwork project (www.genenetwork.org)
+"""
 
 from gn3.db.calls import fetch1
 
 from gn3.utility.logger import getLogger
-logger = getLogger(__name__ )
+logger = getLogger(__name__)
 
 ###########################################################################
-#output: cursor instance
-#function: connect to database and return cursor instance
+# output: cursor instance
+# function: connect to database and return cursor instance
 ###########################################################################
+
 
 def retrieve_species(group):
     """Get the species of a group (e.g. returns string "mouse" on "BXD"
 
     """
-    result = fetch1("select Species.Name from Species, InbredSet where InbredSet.Name = '%s' and InbredSet.SpeciesId = Species.Id" % (group), "/cross/"+group+".json", lambda r: (r["species"],))[0]
+    result = fetch1("select Species.Name from Species, InbredSet where InbredSet.Name = '%s' and InbredSet.SpeciesId = Species.Id" % (
+        group), "/cross/"+group+".json", lambda r: (r["species"],))[0]
     # logger.debug("retrieve_species result:", result)
     return result
 
 
 def retrieve_species_id(group):
+    """retrieve species id method"""
 
-    result = fetch1("select SpeciesId from InbredSet where Name = '%s'" % (group), "/cross/"+group+".json", lambda r: (r["species_id"],))[0]
+    result = fetch1("select SpeciesId from InbredSet where Name = '%s'" % (
+        group), "/cross/"+group+".json", lambda r: (r["species_id"],))[0]
     logger.debug("retrieve_species_id result:", result)
     return result
