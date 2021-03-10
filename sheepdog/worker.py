@@ -18,15 +18,14 @@ def run_jobs(conn):
     from gn3.commands import run_cmd
     cmd_id = str(conn.lpop("GN3::job-queue"))
     if bool(cmd_id):
-        cmd = conn.hget("cmd", cmd_id)
-        if cmd and (str(conn.hget(cmd, "status")) not in ["success",
-                                                          "error"]):
+        cmd = conn.hget(name=cmd_id, key="cmd")
+        if cmd and (str(conn.hget(cmd, "status")) == "queued"):
             result = run_cmd(cmd)
-            cmd.hset("result", result.get("output"), cmd_id)
+            conn.hset(name=cmd_id, key="result", value=result.get("output"))
             if result.get("code") == 0:  # Success
-                cmd.hset("status", "success", cmd_id)
+                conn.hset(name=cmd_id, key="status", value="success")
             else:
-                cmd.hset("status", "error", cmd_id)
+                conn.hset(name=cmd_id, key="status", value="error")
 
 
 if __name__ == "__main__":
