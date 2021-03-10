@@ -56,6 +56,10 @@ non-existent"""
                                        token="abcdef-abcdef")
         mock_fileobj.save.assert_called_once_with("/tmp/abcdef-abcdef/"
                                                   "upload-data.tar.gz")
+        mock_tarfile.open.assert_called_once_with("/tmp/abcdef-abcdef/"
+                                                  "upload-data.tar.gz")
+        mock_tarfile.open.return_value.extractall.assert_called_once_with(
+            path='/tmp/abcdef-abcdef')
         mock_file.assert_called_once_with("upload-data.tar.gz")
         self.assertEqual(result, {"status": 0, "token": "abcdef-abcdef"})
 
