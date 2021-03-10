@@ -1,22 +1,31 @@
-# pylint: disable-all
+"""module contains species and chromosomes classes"""
 import collections
 
-from flask import Flask, g
+from flask import g
 
 
 from gn3.utility.logger import getLogger
-logger = getLogger(__name__ )
+logger = getLogger(__name__)
 
-class TheSpecies(object):
+ # pylint: disable=too-few-public-methods
+ # intentionally disabled check for few public methods
+
+class TheSpecies:
+    """class for Species"""
+
     def __init__(self, dataset=None, species_name=None):
-        if species_name != None:
+        if species_name is not None:
             self.name = species_name
             self.chromosomes = Chromosomes(species=self.name)
         else:
             self.dataset = dataset
             self.chromosomes = Chromosomes(dataset=self.dataset)
 
-class IndChromosome(object):
+
+
+class IndChromosome:
+    """class for IndChromosome"""
+
     def __init__(self, name, length):
         self.name = name
         self.length = length
@@ -26,10 +35,15 @@ class IndChromosome(object):
         """Chromosome length in megabases"""
         return self.length / 1000000
 
-class Chromosomes(object):
+
+
+
+class Chromosomes:
+    """class for Chromosomes"""
+
     def __init__(self, dataset=None, species=None):
         self.chromosomes = collections.OrderedDict()
-        if species != None:
+        if species is not None:
             query = """
                 Select
                         Chr_Length.Name, Chr_Length.OrderId, Length from Chr_Length, Species
@@ -53,4 +67,5 @@ class Chromosomes(object):
         results = g.db.execute(query).fetchall()
 
         for item in results:
-            self.chromosomes[item.OrderId] = IndChromosome(item.Name, item.Length)
+            self.chromosomes[item.OrderId] = IndChromosome(
+                item.Name, item.Length)
