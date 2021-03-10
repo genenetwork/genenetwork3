@@ -16,7 +16,7 @@ def run_jobs(conn):
     """Process the redis using a redis connection, CONN"""
     # pylint: disable=E0401, C0415
     from gn3.commands import run_cmd
-    cmd_id = str(conn.lpop("GN2::job-queue"))
+    cmd_id = str(conn.lpop("GN3::job-queue"))
     if bool(cmd_id):
         cmd = conn.hget("cmd", cmd_id)
         if cmd and (str(conn.hget(cmd, "status")) not in ["success",
