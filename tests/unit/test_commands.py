@@ -1,5 +1,4 @@
 """Test cases for procedures defined in commands.py"""
-import os
 import unittest
 
 from dataclasses import dataclass
@@ -23,30 +22,43 @@ class MockRedis:
 class TestCommands(unittest.TestCase):
     """Test cases for commands.py"""
 
-    @mock.patch("gn3.commands.lookup_file")
-    def test_compose_gemma_cmd_no_extra_args(self, mock_lookup_file):
-        """Test that thhe gemma cmd is composed correctly"""
-        metadata_file = os.path.join(os.path.dirname(__file__),
-                                     "test_data/metadata.json")
-        mock_lookup_file.side_effect = [metadata_file,
-                                        "/tmp/genofile.txt",
-                                        "/tmp/gf13Ad0tRX/phenofile.txt"]
-        self.assertEqual(compose_gemma_cmd("gf13Ad0t",
-                                           "metadata.json",
-                                           gemma_wrapper_cmd="gemma-wrapper",
-                                           gemma_wrapper_kwargs=None,
-                                           gemma_kwargs=None,
-                                           gemma_args=["-gk"]),
-                         ("gemma-wrapper --json -- "
-                          "-g /tmp/genofile.txt "
-                          "-p /tmp/gf13Ad0tRX/phenofile.txt"
-                          " -gk"))
+    def test_compose_gemma_cmd_no_extra_args(self):
+        """Test that the gemma cmd is composed correctly"""
+        self.assertEqual(
+            compose_gemma_cmd(gemma_wrapper_cmd="gemma-wrapper",
+                              gemma_kwargs={
+                                  "g": "/tmp/genofile.txt",
+                                  "p": "/tmp/gf13Ad0tRX/phenofile.txt"
+                              },
+                              gemma_args=["-gk"]),
+            ("gemma-wrapper --json -- "
+             "-g /tmp/genofile.txt "
+             "-p /tmp/gf13Ad0tRX/phenofile.txt"
+             " -gk"))
+
+    def test_compose_gemma_cmd_extra_args(self):
+        """Test that the gemma cmd is composed correctly"""
+        self.assertEqual(
+            compose_gemma_cmd(gemma_wrapper_cmd="gemma-wrapper",
+                              gemma_wrapper_kwargs={
+                                  "loco": "1,2,3,4"
+                              },
+                              gemma_kwargs={
+                                  "g": "/tmp/genofile.txt",
+                                  "p": "/tmp/gf13Ad0tRX/phenofile.txt"
+                              },
+                              gemma_args=["-gk"]),
+            ("gemma-wrapper --json --loco 1,2,3,4 -- "
+             "-g /tmp/genofile.txt "
+             "-p /tmp/gf13Ad0tRX/phenofile.txt"
+             " -gk"))
 
     def test_queue_cmd_exception_raised_when_redis_is_down(self):
         """Test that the correct error is raised when Redis is unavailable"""
         self.assertRaises(RedisConnectionError,
                           queue_cmd,
                           cmd="ls",
+                          job_queue="GN2::job-queue",
                           conn=MockRedis(ping=lambda: False,
                                          hset=mock.MagicMock(),
                                          rpush=mock.MagicMock()))
@@ -65,7 +77,8 @@ class TestCommands(unittest.TestCase):
                                     rpush=mock.MagicMock())
         actual_unique_id = "cmd::2021-02-1217-3224-3224-1234"
         self.assertEqual(queue_cmd(cmd="ls",
-                                   conn=mock_redis_conn),
+                                   conn=mock_redis_conn,
+                                   job_queue="GN2::job-queue"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(
             [mock.call("cmd", "ls", actual_unique_id),
@@ -90,6 +103,7 @@ class TestCommands(unittest.TestCase):
         actual_unique_id = "cmd::2021-02-1217-3224-3224-1234"
         self.assertEqual(queue_cmd(cmd="ls",
                                    conn=mock_redis_conn,
+                                   job_queue="GN2::job-queue",
                                    email="me@me.com"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(

@@ -33,4 +33,5 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(general, url_prefix="/api/")
     app.register_blueprint(gemma, url_prefix="/api/gemma")
     app.register_blueprint(correlation,url_prefix="/api/correlation")
+
     return app
