@@ -16,7 +16,7 @@ def run_jobs(conn):
     cmd_id = (conn.lpop("GN3::job-queue") or b'').decode("utf-8")
     if bool(cmd_id):
         cmd = conn.hget(name=cmd_id, key="cmd")
-        if cmd and (conn.hget(cmd, "status") == b"queued"):
+        if cmd and (conn.hget(cmd_id, "status") == b"queued"):
             result = run_cmd(cmd.decode("utf-8"))
             conn.hset(name=cmd_id, key="result", value=result.get("output"))
             if result.get("code") == 0:  # Success
