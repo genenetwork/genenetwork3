@@ -81,9 +81,9 @@ class TestCommands(unittest.TestCase):
                                    job_queue="GN2::job-queue"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(
-            [mock.call("cmd", "ls", actual_unique_id),
-             mock.call("result", "", actual_unique_id),
-             mock.call("status", "queued", actual_unique_id)])
+            [mock.call(name=actual_unique_id, key="cmd", value="ls"),
+             mock.call(name=actual_unique_id, key="result", value=""),
+             mock.call(name=actual_unique_id, key="status", value="queued")])
         mock_redis_conn.rpush.assert_has_calls(
             [mock.call("GN2::job-queue", actual_unique_id)])
 
@@ -107,10 +107,11 @@ class TestCommands(unittest.TestCase):
                                    email="me@me.com"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(
-            [mock.call("cmd", "ls", actual_unique_id),
-             mock.call("result", "", actual_unique_id),
-             mock.call("status", "queued", actual_unique_id),
-             mock.call("email", "me@me.com", actual_unique_id)])
+            [mock.call(name=actual_unique_id, key="cmd", value="ls"),
+             mock.call(name=actual_unique_id, key="result", value=""),
+             mock.call(name=actual_unique_id, key="status", value="queued"),
+             mock.call(name=actual_unique_id, key="email", value="me@me.com")
+             ])
         mock_redis_conn.rpush.assert_has_calls(
             [mock.call("GN2::job-queue", actual_unique_id)])
 
