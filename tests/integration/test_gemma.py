@@ -258,7 +258,7 @@ class GemmaAPITest(unittest.TestCase):
     def test_gwa_compute_with_loco_covars(self, mock_redis, mock_path_exist,
                                           mock_json, mock_hash,
                                           mock_queue_cmd):
-        """Test /gemma/gwa-compute/<k-inputfile>/loco/covariates/maf/<maf><token>
+        """Test /gemma/gwa-compute/<k-inputfile>/loco/covars/maf/<maf><token>
 
         """
         mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
@@ -273,7 +273,7 @@ class GemmaAPITest(unittest.TestCase):
         mock_hash.return_value = "hash"
         response = self.app.post(("/api/gemma/gwa-compute/"
                                   "hash-output.json/loco/"
-                                  "covariates/maf/21/my-token"))
+                                  "covars/maf/21/my-token"))
         mock_hash.assert_called_once_with([
             '/tmp/my-token/genofile.txt', '/tmp/my-token/phenofile.txt',
             '/tmp/my-token/snpfile.txt', "/tmp/my-token/covarfile.txt"

@@ -244,7 +244,7 @@ def compute_gwa_with_loco_maf(k_filename, maf, token):
             message="Metadata file non-existent!")
 
 
-@gemma.route("/gwa-compute/<k_filename>/loco/covariates/maf/<maf>/<token>",
+@gemma.route("/gwa-compute/<k_filename>/loco/covars/maf/<maf>/<token>",
              methods=["POST"])
 def compute_gwa_with_loco_covar(k_filename, maf, token):
     """Compute GWA values. No Covariates provided. Only loco and maf vals given.
