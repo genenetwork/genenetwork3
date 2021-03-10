@@ -110,7 +110,7 @@ class GemmaAPITest(unittest.TestCase):
             email=None,
             job_queue='GN3::job-queue',
             cmd=("gemma-wrapper --json --loco "
-                 "--input 1,2,3,4,5,6 -- "
+                 "1,2,3,4,5,6 -- "
                  "-g /tmp/test-data/genofile.txt "
                  "-p /tmp/test-data/phenofile.txt "
                  "-a /tmp/test-data/snpfile.txt "
@@ -435,7 +435,7 @@ class GemmaAPITest(unittest.TestCase):
             conn=_redis_conn,
             email=None,
             job_queue='GN3::job-queue',
-            cmd=("gemma-wrapper --json --loco --input 1,2,3,4 -- "
+            cmd=("gemma-wrapper --json --loco 1,2,3,4 -- "
                  "-g /tmp/my-token/genofile.txt "
                  "-p /tmp/my-token/phenofile.txt "
                  "-a /tmp/my-token/snpfile.txt "
@@ -490,7 +490,7 @@ class GemmaAPITest(unittest.TestCase):
             conn=_redis_conn,
             email=None,
             job_queue='GN3::job-queue',
-            cmd=("gemma-wrapper --json --loco --input 1,2,3,4 -- "
+            cmd=("gemma-wrapper --json --loco 1,2,3,4 -- "
                  "-g /tmp/my-token/genofile.txt "
                  "-p /tmp/my-token/phenofile.txt "
                  "-a /tmp/my-token/snpfile.txt "

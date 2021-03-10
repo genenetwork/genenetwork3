@@ -59,7 +59,7 @@ def generate_gemma_cmd(gemma_cmd: str,
     _hash = get_hash_of_files(
         [v for k, v in gemma_kwargs.items() if k in ["g", "p", "a", "c"]])
     if chromosomes:  # Only reached when calculating k-values
-        gemma_wrapper_kwargs = {"loco": f"--input {chromosomes}"}
+        gemma_wrapper_kwargs = {"loco": f"{chromosomes}"}
         _hash += f"-{generate_hash_of_string(chromosomes)[:6]}"
     _output_filename = f"{_hash}-output.json"
     return {

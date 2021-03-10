@@ -69,7 +69,7 @@ class TestGemma(unittest.TestCase):
                                    "output_file":
                                    "my-hash-r+gF5a-output.json",
                                    "gemma_cmd": ("gemma-wrapper --json "
-                                                 "--loco --input 1,2,3,4,5 "
+                                                 "--loco 1,2,3,4,5 "
                                                  "-- -g genofile "
                                                  "-p phenofile -a snpsfile "
                                                  "-gk > /tmp/my-token/"
