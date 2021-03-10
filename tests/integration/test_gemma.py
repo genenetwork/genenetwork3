@@ -258,7 +258,7 @@ class GemmaAPITest(unittest.TestCase):
     def test_gwa_compute_with_loco_covars(self, mock_redis, mock_path_exist,
                                           mock_json, mock_hash,
                                           mock_queue_cmd):
-        """Test /gemma/gwa-compute/<k-inputfile>/loco/covars/maf/<maf><token>
+        """Test /gemma/gwa-compute/<k-inputfile>/loco/covars/maf/<maf>/<token>
 
         """
         mock_path_exist.return_value, _redis_conn = True, mock.MagicMock()
