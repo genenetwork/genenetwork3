@@ -58,6 +58,6 @@ def corr_compute_page():
     corr_results = compute_correlation(init_start_vars=initial_start_vars)
     try:
 
-        return pickle.dumps(corr_results)
+        return corr_results.json_results
     except Exception as error:  # pylint: disable=broad-except
         return jsonify({"error": str(error)})

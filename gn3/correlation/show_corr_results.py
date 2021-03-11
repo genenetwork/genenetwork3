@@ -356,11 +356,6 @@ class CorrelationResults:
 
         primary_samples = self.dataset.group.samplelist
 
-        print("Required data is below here>>>>>>>>>>>>>>>")
-        print(self.dataset.group.samplelist)
-        print("SET  Primary SAMPLE IS ")
-        print(primary_samples)
-        # print("prim")
 
         # The two if statements below append samples to the sample list based upon whether the user
         # rselected Primary Samples Only, Other Samples Only, or All Samples

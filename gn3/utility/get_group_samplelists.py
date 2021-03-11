@@ -1,6 +1,8 @@
 
 """module for group samplelist"""
 import os
+
+#todo close the files after opening
 def get_samplelist(file_type, geno_file):
     """get samplelist function"""
     if file_type == "geno":
