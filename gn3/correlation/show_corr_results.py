@@ -61,10 +61,15 @@ class CorrelationResults:
     def process_samples(self, start_vars, sample_names, excluded_samples=None):
         """method to process samples"""
 
+        print("new here sample names are sample_names",sample_names)
+
         if not excluded_samples:
             excluded_samples = ()
 
         sample_val_dict = json.loads(start_vars["sample_vals"])
+        print(sample_val_dict)
+        if sample_names is None:
+            raise  NotImplementedError
 
         for sample in sample_names:
             if sample not in excluded_samples:
@@ -351,6 +356,12 @@ class CorrelationResults:
 
         primary_samples = self.dataset.group.samplelist
 
+        print("Required data is below here>>>>>>>>>>>>>>>")
+        print(self.dataset.group.samplelist)
+        print("SET  Primary SAMPLE IS ")
+        print(primary_samples)
+        # print("prim")
+
         # The two if statements below append samples to the sample list based upon whether the user
         # rselected Primary Samples Only, Other Samples Only, or All Samples
 
@@ -362,15 +373,23 @@ class CorrelationResults:
             primary_samples += self.dataset.group.f1list
 
         # If either BXD/whatever Only or All Samples, append all of that group's samplelist
+        print("NEW SET Primary^^^^^^^^^^^^^^")
+        print(primary_samples)
 
         if corr_samples_group != 'samples_other':
-            print("processing data", corr_samples_group)
+            print("INNER LOOP VALUES")
+            print(primary_samples)
+                
+            # print("primary samples are *****",primary_samples)
+
             self.process_samples(start_vars, primary_samples)
 
         if corr_samples_group != 'samples_primary':
             if corr_samples_group == 'samples_other':
                 primary_samples = [x for x in primary_samples if x not in (
                     self.dataset.group.parlist + self.dataset.group.f1list)]
+
+            self.process_samples(start_vars, list(self.this_trait.data.keys()), primary_samples)
 
         self.target_dataset = create_dataset(start_vars['corr_dataset'])
         # when you add code to retrieve the trait_data for target dataset got gets very slow
