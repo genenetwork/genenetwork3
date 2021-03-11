@@ -4,8 +4,10 @@ import json
 import collections
 import numpy
 import scipy.stats
-import rpy2.robjects as ro    
+import rpy2.robjects as ro
+from flask import g
 from gn3.base.data_set import create_dataset
+from gn3.utility.db_tools import escape
 from gn3.utility.helper_functions import get_species_dataset_trait
 from gn3.utility.corr_result_helpers import normalize_values
 from gn3.base.trait import create_trait
@@ -14,11 +16,16 @@ from . import correlation_functions
 
 
 class CorrelationResults:
+    """class for computing correlation"""
+    # pylint: disable=too-many-instance-attributes
+    # pylint:disable=attribute-defined-outside-init
+
     def __init__(self, start_vars):
         self.assertion_for_start_vars(start_vars)
 
     @staticmethod
     def assertion_for_start_vars(start_vars):
+        # pylint: disable = E, W, R, C
 
         # should better ways to assert the variables
         # example includes sample
@@ -35,6 +42,7 @@ class CorrelationResults:
             assert('max_loc_mb' in start_vars)
 
     def get_formatted_corr_type(self):
+        """method to formatt corr_types"""
         self.formatted_corr_type = ""
         if self.corr_type == "lit":
             self.formatted_corr_type += "Literature Correlation "
@@ -51,6 +59,8 @@ class CorrelationResults:
             self.formatted_corr_type += "(Biweight r)"
 
     def process_samples(self, start_vars, sample_names, excluded_samples=None):
+        """method to process samples"""
+
         if not excluded_samples:
             excluded_samples = ()
 
@@ -63,34 +73,38 @@ class CorrelationResults:
                 if not value.strip().lower() == "x":
                     self.sample_data[str(sample)] = float(value)
 
-
-
     def do_tissue_correlation_for_trait_list(self, tissue_dataset_id=1):
-        """Given a list of correlation results (self.correlation_results), gets the tissue correlation value for each"""
+        """Given a list of correlation results (self.correlation_results),\
+        gets the tissue correlation value for each"""
+        # pylint: disable = E, W, R, C
 
-        #Gets tissue expression values for the primary trait
+        # Gets tissue expression values for the primary trait
         primary_trait_tissue_vals_dict = correlation_functions.get_trait_symbol_and_tissue_values(
-            symbol_list = [self.this_trait.symbol])
+            symbol_list=[self.this_trait.symbol])
 
         if self.this_trait.symbol.lower() in primary_trait_tissue_vals_dict:
-            primary_trait_tissue_values = primary_trait_tissue_vals_dict[self.this_trait.symbol.lower()]
-            gene_symbol_list = [trait.symbol for trait in self.correlation_results if trait.symbol]
+            primary_trait_tissue_values = primary_trait_tissue_vals_dict[self.this_trait.symbol.lower(
+            )]
+            gene_symbol_list = [
+                trait.symbol for trait in self.correlation_results if trait.symbol]
 
-            corr_result_tissue_vals_dict= correlation_functions.get_trait_symbol_and_tissue_values(
-                                                    symbol_list=gene_symbol_list)
+            corr_result_tissue_vals_dict = correlation_functions.get_trait_symbol_and_tissue_values(
+                symbol_list=gene_symbol_list)
 
             for trait in self.correlation_results:
                 if trait.symbol and trait.symbol.lower() in corr_result_tissue_vals_dict:
-                    this_trait_tissue_values = corr_result_tissue_vals_dict[trait.symbol.lower()]
+                    this_trait_tissue_values = corr_result_tissue_vals_dict[trait.symbol.lower(
+                    )]
 
                     result = correlation_functions.cal_zero_order_corr_for_tiss(primary_trait_tissue_values,
-                                                                          this_trait_tissue_values,
-                                                                          self.corr_method)
+                                                                                this_trait_tissue_values,
+                                                                                self.corr_method)
 
                     trait.tissue_corr = result[0]
                     trait.tissue_pvalue = result[2]
 
     def do_lit_correlation_for_trait_list(self):
+        # pylint: disable = E, W, R, C
 
         input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(
             self.dataset.group.species.lower(), self.this_trait.geneid)
@@ -127,15 +141,16 @@ class CorrelationResults:
             else:
                 trait.lit_corr = 0
 
-
-
     def do_lit_correlation_for_all_traits(self):
-        print("calling lit correlation for all traits")
-        input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), self.this_trait.geneid)
+        """method for lit_correlation for all traits"""
+        # pylint: disable = E, W, R, C
+        input_trait_mouse_gene_id = self.convert_to_mouse_gene_id(
+            self.dataset.group.species.lower(), self.this_trait.geneid)
 
         lit_corr_data = {}
         for trait, gene_id in list(self.trait_geneid_dict.items()):
-            mouse_gene_id = self.convert_to_mouse_gene_id(self.dataset.group.species.lower(), gene_id)
+            mouse_gene_id = self.convert_to_mouse_gene_id(
+                self.dataset.group.species.lower(), gene_id)
 
             if mouse_gene_id and str(mouse_gene_id).find(";") == -1:
                 #print("gene_symbols:", input_trait_mouse_gene_id + " / " + mouse_gene_id)
@@ -163,24 +178,25 @@ class CorrelationResults:
                 lit_corr_data[trait] = [gene_id, 0]
 
         lit_corr_data = collections.OrderedDict(sorted(list(lit_corr_data.items()),
-                                                           key=lambda t: -abs(t[1][1])))
+                                                       key=lambda t: -abs(t[1][1])))
 
         return lit_corr_data
 
-
     def do_tissue_correlation_for_all_traits(self, tissue_dataset_id=1):
-        #Gets tissue expression values for the primary trait
+        # Gets tissue expression values for the primary trait
+        # pylint: disable = E, W, R, C
         print("CALLING TISSUE Correlation for all traits")
         print(self.trait_symbol_dict)
         primary_trait_tissue_vals_dict = correlation_functions.get_trait_symbol_and_tissue_values(
-            symbol_list = [self.this_trait.symbol])
+            symbol_list=[self.this_trait.symbol])
 
         if self.this_trait.symbol.lower() in primary_trait_tissue_vals_dict:
-            primary_trait_tissue_values = primary_trait_tissue_vals_dict[self.this_trait.symbol.lower()]
+            primary_trait_tissue_values = primary_trait_tissue_vals_dict[self.this_trait.symbol.lower(
+            )]
 
             #print("trait_gene_symbols: ", pf(trait_gene_symbols.values()))
-            corr_result_tissue_vals_dict= correlation_functions.get_trait_symbol_and_tissue_values(
-                                                    symbol_list=list(self.trait_symbol_dict.values()))
+            corr_result_tissue_vals_dict = correlation_functions.get_trait_symbol_and_tissue_values(
+                symbol_list=list(self.trait_symbol_dict.values()))
 
             #print("corr_result_tissue_vals: ", pf(corr_result_tissue_vals_dict))
 
@@ -189,16 +205,17 @@ class CorrelationResults:
             tissue_corr_data = {}
             for trait, symbol in list(self.trait_symbol_dict.items()):
                 if symbol and symbol.lower() in corr_result_tissue_vals_dict:
-                    this_trait_tissue_values = corr_result_tissue_vals_dict[symbol.lower()]
+                    this_trait_tissue_values = corr_result_tissue_vals_dict[symbol.lower(
+                    )]
 
                     result = correlation_functions.cal_zero_order_corr_for_tiss(primary_trait_tissue_values,
-                                                                          this_trait_tissue_values,
-                                                                          self.corr_method)
+                                                                                this_trait_tissue_values,
+                                                                                self.corr_method)
 
                     tissue_corr_data[trait] = [symbol, result[0], result[2]]
 
             tissue_corr_data = collections.OrderedDict(sorted(list(tissue_corr_data.items()),
-                                                           key=lambda t: -abs(t[1][1])))
+                                                              key=lambda t: -abs(t[1][1])))
 
     def get_sample_r_and_p_values(self, trait, target_samples):
         """Calculates the sample r (or rho) and p-value
@@ -208,6 +225,7 @@ class CorrelationResults:
         using the corresponding scipy functions.
 
         """
+        # pylint: disable = E, W, R, C
         self.this_trait_vals = []
         target_vals = []
 
@@ -277,10 +295,10 @@ class CorrelationResults:
 
         return mouse_gene_id
 
-    def test_function(self):
-        pass
-
-    def do_correlation(self, start_vars, create_dataset=create_dataset, create_trait=create_trait, get_species_dataset_trait=get_species_dataset_trait):
+    def do_correlation(self, start_vars, create_dataset=create_dataset,
+                       create_trait=create_trait,
+                       get_species_dataset_trait=get_species_dataset_trait):
+        # pylint: disable = E, W, R, C
         # probably refactor start_vars being passed twice
         # this method  aims to replace the do_correlation but also add dependendency injection
         # to enable testing
@@ -346,7 +364,7 @@ class CorrelationResults:
         # If either BXD/whatever Only or All Samples, append all of that group's samplelist
 
         if corr_samples_group != 'samples_other':
-            print("prossing data", corr_samples_group)
+            print("processing data", corr_samples_group)
             self.process_samples(start_vars, primary_samples)
 
         if corr_samples_group != 'samples_primary':
@@ -406,7 +424,6 @@ class CorrelationResults:
         self.correlation_data = collections.OrderedDict(sorted(list(self.correlation_data.items()),
                                                                key=lambda t: -abs(t[1][0])))
 
-       
         # ZS: Convert min/max chromosome to an int for the location range option
 
         """
@@ -507,22 +524,26 @@ class CorrelationResults:
 
 
 def do_bicor(this_trait_vals, target_trait_vals):
+    # pylint: disable = E, W, R, C
     r_library = ro.r["library"]             # Map the library function
     r_options = ro.r["options"]             # Map the options function
 
     r_library("WGCNA")
     r_bicor = ro.r["bicorAndPvalue"]        # Map the bicorAndPvalue function
 
-    r_options(stringsAsFactors = False)
+    r_options(stringsAsFactors=False)
 
     this_vals = ro.Vector(this_trait_vals)
     target_vals = ro.Vector(target_trait_vals)
 
-    the_r, the_p, _fisher_transform, _the_t, _n_obs = [numpy.asarray(x) for x in r_bicor(x = this_vals, y = target_vals)]
+    the_r, the_p, _fisher_transform, _the_t, _n_obs = [
+        numpy.asarray(x) for x in r_bicor(x=this_vals, y=target_vals)]
 
     return the_r, the_p
 
+
 def get_header_fields(data_type, corr_method):
+    """function to get header fields when doing correlation"""
     if data_type == "ProbeSet":
         if corr_method == "spearman":
 
@@ -610,6 +631,8 @@ def get_header_fields(data_type, corr_method):
 
 
 def generate_corr_json(corr_results, this_trait, dataset, target_dataset, for_api=False):
+    """function to generate corr json data"""
+    #todo refactor this function
     results_list = []
     for i, trait in enumerate(corr_results):
         if trait.view == False:
