@@ -1,6 +1,20 @@
 """Integration tests for correlation api"""
 import unittest
+import os
+import json
 from gn3.app import create_app
+
+
+
+
+def file_path(relative_path):
+    """getting abs path for file """
+    # adopted from github
+    dir_name = os.path.dirname(os.path.abspath(__file__))
+    split_path = relative_path.split("/")
+    new_path = os.path.join(dir_name, *split_path)
+    return new_path
+
 
 
 class CorrelationAPITest(unittest.TestCase):
@@ -9,6 +23,13 @@ class CorrelationAPITest(unittest.TestCase):
 
     def setUp(self):
         self.app = create_app().test_client()
+
+        with open(file_path("correlation_data.json")) as json_file:
+            self.correlation_data = json.load(json_file)
+
+    def tearDown(self):
+        self.correlation_data = ""
+
 
     def test_corr_compute(self):
         """Test that the correct response in correlation"""
@@ -93,10 +114,7 @@ class CorrelationAPITest(unittest.TestCase):
             }
         }
 
-        self.assertEqual(2, 2)
+        response = self.app.post(
+            "/api/correlation/corr_compute", json=self.correlation_data, follow_redirects=True)
 
-        # response = self.app.post(
-        #     "/corr_compute", json=post_data, follow_redirects=True)
-        # # self.assertEqual(response.get_json().get("result"), "hello world")
-        # self.assertEqual(response.status_code, 200)
-        # self.assertEqual(response.get_json(), expected_data_correlation)
+        self.assertEqual(response.status_code,200)
