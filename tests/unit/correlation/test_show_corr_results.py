@@ -17,8 +17,14 @@ class AttributeSetter:
     def __init__(self, trait_obj):
         for key, value in trait_obj.items():
             setattr(self, key, value)
+class ObjectMixin:
+    def __str__(self):
+        raise NotImplementedError
 
-class MockGroup:
+    def get_dict(self):
+        raise NotImplementedError
+
+class MockGroup(ObjectMixin):
     """mock  class for Group"""
 
     def __init__(self):
@@ -27,15 +33,7 @@ class MockGroup:
 
         self.filist = None
 
-    def __str__(self):
-        return self.__class__.__name__
-
-    def get_dict(self):
-        """get obj dict"""
-        return self.__dict__
-
-
-class MockCreateTrait:
+class MockCreateTrait(ObjectMixin):
     """mock class for create trait"""
 
     def __init__(self):
@@ -180,13 +178,12 @@ class TestCorrelationResults(unittest.TestCase):
     def test_generate_corr_json(self, mock_data_hmac):
         mock_data_hmac.return_value = "hajsdiau"
 
-        dataset = AttributeSetter({"name": "the_name"})
-        this_trait = AttributeSetter(
-            {"name": "trait_test", "dataset": dataset})
-        target_dataset = AttributeSetter({"type": "Publish"})
-        corr_trait_1 = AttributeSetter({
+        dataset =  SimpleNamespace(**{"name": "the_name"})
+        this_trait = SimpleNamespace(**{"name": "trait_test", "dataset": dataset})
+        target_dataset = SimpleNamespace(**{"type": "Publish"})
+        corr_trait_1 = SimpleNamespace(**{
             "name": "trait_1",
-            "dataset": AttributeSetter({"name": "dataset_1"}),
+            "dataset": SimpleNamespace(**{"name": "dataset_1"}),
             "view": True,
             "abbreviation": "T1",
             "description_display": "Trait I description",
@@ -223,10 +220,10 @@ class TestCorrelationResults(unittest.TestCase):
 
 
     def test_generate_corr_json_view_false(self):
-        trait = AttributeSetter({"view": False})
+        trait = SimpleNamespace(**{"view": False})
         corr_results = [trait]
-        this_trait = AttributeSetter({"name": "trait_test"})
-        dataset = AttributeSetter({"name": "the_name"})
+        this_trait = SimpleNamespace(**{"name": "trait_test"})
+        dataset = SimpleNamespace(**{"name": "the_name"})
 
         results_where_view_is_false = generate_corr_json(
             corr_results=corr_results, this_trait=this_trait, dataset={}, target_dataset={}, for_api=False)

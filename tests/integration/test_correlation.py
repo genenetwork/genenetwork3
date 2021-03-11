@@ -2,6 +2,7 @@
 import unittest
 import os
 import json
+import pickle
 from gn3.app import create_app
 
 
@@ -9,7 +10,6 @@ from gn3.app import create_app
 
 def file_path(relative_path):
     """getting abs path for file """
-    # adopted from github
     dir_name = os.path.dirname(os.path.abspath(__file__))
     split_path = relative_path.split("/")
     new_path = os.path.join(dir_name, *split_path)
