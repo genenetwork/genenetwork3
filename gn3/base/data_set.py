@@ -731,9 +731,9 @@ class PhenotypeDataSet(DataSet):
             # of the post-publication description
             if this_trait.confidential:
                 this_trait.description_display = ""
-                continue   # for now, because no authorization features
+                continue   # todo for now, because no authorization features
 
-                if not webqtlUtil.hasAccessToConfidentialPhenotypeTrait(
+                if not webqtlUtil.has_access_to_confidentail_phenotype_trait(
                         privilege=self.privilege,
                         userName=self.userName,
                         authorized_users=this_trait.authorized_users):
