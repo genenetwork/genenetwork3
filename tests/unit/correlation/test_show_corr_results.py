@@ -12,12 +12,8 @@ from gn3.correlation.show_corr_results import generate_corr_json
 
 
 
-class AttributeSetter:
-    """should refactot to use named tuple"""
-    def __init__(self, trait_obj):
-        for key, value in trait_obj.items():
-            setattr(self, key, value)
 class ObjectMixin:
+    """object for adding other methods"""
     def __str__(self):
         raise NotImplementedError
 

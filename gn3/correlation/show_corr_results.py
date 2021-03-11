@@ -531,15 +531,18 @@ class CorrelationResults:
         # archwiki for documentation
         # exwm for window manager ->13
 
-        # return self.__dict__
-        return {
-            "Results": "succeess",
-            "return_number": self.return_number,
-            "primary_samples": primary_samples,
-            "time_taken": 12,
-            "correlation_data": self.correlation_data,
-            "correlation_json": self.json_results
-        }
+        # will fit perfectly with genenetwork 2 with change of anything if return self
+
+        # alternative for this
+        return self
+        # return {
+        #     # "Results": "succeess",
+        #     # "return_number": self.return_number,
+        #     # "primary_samples": primary_samples,
+        #     # "time_taken": 12,
+        #     # "correlation_data": self.correlation_data,
+        #     "correlation_json": self.json_results
+        # }
 
 
 def do_bicor(this_trait_vals, target_trait_vals):

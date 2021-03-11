@@ -5,19 +5,6 @@ from gn3.correlation.correlation_computations import filter_input_data
 from gn3.correlation.correlation_computations import compute_correlation
 
 
-class AttributeSetter:
-    """class for attribute setter"""
-
-    def __init__(self, trait_obj):
-        for key, value in trait_obj.items():
-            setattr(self, key, value)
-
-    def __str__(self):
-        return self.__class__.__name__
-
-    def get_items(self):
-        """get object dict values"""
-        return self.__dict__
 
 
 # mock for calculating correlation function
