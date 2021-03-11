@@ -15,7 +15,7 @@ def valid_file(file_name):
 def valid_path(dir_name):
     """check if path is valid"""
     if os.path.isdir(dir_name):
-        return dir
+        return dir_name
     return None
 
 
@@ -33,4 +33,5 @@ def locate_ignore_error(name, subdir=None):
         lookfor = base + "/" + name
         if valid_file(lookfor):
             return lookfor
+
     return None

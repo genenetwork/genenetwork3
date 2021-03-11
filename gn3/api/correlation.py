@@ -53,10 +53,7 @@ def corr_compute_page():
 
     # accepts both form and json data
 
-
-
-
-    initial_start_vars = request.form
+    initial_start_vars = request.json
 
     corr_results = compute_correlation(init_start_vars=initial_start_vars)
     try:

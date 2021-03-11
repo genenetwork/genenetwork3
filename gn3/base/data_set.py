@@ -227,6 +227,7 @@ class DatasetGroup:
         return mapping_id, mapping_names
 
     def get_samplelist(self):
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&77")
         result = None
         key = "samplelist:v3:" + self.name
         if USE_REDIS:
@@ -235,12 +236,16 @@ class DatasetGroup:
         if result is not None:
 
             self.samplelist = json.loads(result)
+            print("bewlo me**************8",result)
+            print(self.samplelist)
 
         else:
             # logger.debug("Cache not hit")
             # should enable logger
             genotype_fn = locate_ignore_error(self.name+".geno", 'genotype')
+            print("******************************",genotype_fn)
             if genotype_fn:
+                print("CALLING***************************************")
                 self.samplelist = get_group_samplelists.get_samplelist(
                     "geno", genotype_fn)
 
