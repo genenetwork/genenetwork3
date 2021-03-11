@@ -176,7 +176,7 @@ class TestCorrelationResults(unittest.TestCase):
 
 
 
-    @mock.patch("wqflask.correlation.show_corr_results.hmac.data_hmac")
+    @mock.patch("gn3.utility.hmac.data_hmac")
     def test_generate_corr_json(self, mock_data_hmac):
         mock_data_hmac.return_value = "hajsdiau"
 
