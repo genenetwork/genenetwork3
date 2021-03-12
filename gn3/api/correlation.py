@@ -51,9 +51,15 @@ def corr_compute_page():
 
     initial_start_vars = request.json
 
-    corr_results = compute_correlation(correlation_input_data=initial_start_vars)
-    try:
 
-        return corr_results.json_results
+    
+    try:
+        corr_results = compute_correlation(correlation_input_data=initial_start_vars)
+
+        
     except Exception as error:  # pylint: disable=broad-except
         return jsonify({"error": str(error)})
+
+    return {
+    "correlation_results":corr_results
+    }

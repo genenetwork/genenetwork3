@@ -1,11 +1,12 @@
 """Integration tests for correlation api"""
-import unittest
+
 import os
 import json
 import pickle
+import unittest
+from unittest import mock
+
 from gn3.app import create_app
-
-
 
 
 def file_path(relative_path):
@@ -14,7 +15,6 @@ def file_path(relative_path):
     split_path = relative_path.split("/")
     new_path = os.path.join(dir_name, *split_path)
     return new_path
-
 
 
 class CorrelationAPITest(unittest.TestCase):
@@ -27,12 +27,19 @@ class CorrelationAPITest(unittest.TestCase):
         with open(file_path("correlation_data.json")) as json_file:
             self.correlation_data = json.load(json_file)
 
+        with open(file_path("expected_corr_results.json")) as results_file:
+            self.correlation_results = json.load(results_file)
+
     def tearDown(self):
         self.correlation_data = ""
 
+        self.correlation_results = ""
 
-    def test_corr_compute(self):
+    @mock.patch("gn3.api.correlation.compute_correlation")
+    def test_corr_compute(self,compute_corr):
         """Test that the correct response in correlation"""
+
+        compute_corr.return_value = self.correlation_results
 
         sample_vals = """{"C57BL/6J":"7.197","DBA/2J":"7.148","B6D2F1":"6.999"}"""
         _post_data = {
@@ -117,4 +124,4 @@ class CorrelationAPITest(unittest.TestCase):
         response = self.app.post(
             "/api/correlation/corr_compute", json=self.correlation_data, follow_redirects=True)
 
-        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.status_code, 200)

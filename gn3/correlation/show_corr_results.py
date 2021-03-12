@@ -522,7 +522,7 @@ class CorrelationResults:
         # will fit perfectly with genenetwork 2 with change of anything if return self
 
         # alternative for this
-        return self
+        return self.json_results
         # return {
         #     # "Results": "succeess",
         #     # "return_number": self.return_number,
