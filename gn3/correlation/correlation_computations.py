@@ -51,7 +51,23 @@ def filter_wanted_inputs():
 
 def compute_correlation(correlation_input_data,
                         correlation_results=CorrelationResults):
-    """function that does correlation .creates Correlation results instance"""
+    """function that does correlation .creates Correlation results instance
+
+    correlation_input_data structure is a dict with
+
+     {
+     "trait_id":"valid trait id",
+     "dataset":"",
+      "sample_vals":{},
+      "primary_samples":"",
+      "corr_type":"",
+      corr_dataset:"",
+      "corr_return_results":"",
+       
+       
+     }
+
+    """
 
     # start_vars_container = get_input_data(
     #     initial_start_vars=init_start_vars)
