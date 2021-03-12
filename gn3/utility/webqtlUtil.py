@@ -63,5 +63,4 @@ def has_access_to_confidentail_phenotype_trait(privilege, username, authorized_u
     access_to_confidential_phenotype_trait = 0
 
     results = (privilege, username, authorized_users)
-    print(results)
     return access_to_confidential_phenotype_trait

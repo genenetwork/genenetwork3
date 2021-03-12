@@ -19,5 +19,4 @@ class AttributeSetter:
 def get_genofile_samplelist(dataset):
     """mock function to get genofile samplelist"""
 
-    print(dataset)
     return ["C57BL/6J"]

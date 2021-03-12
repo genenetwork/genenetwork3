@@ -6,14 +6,12 @@ from flask import jsonify
 from flask import request
 from flask import g
 from flask import after_this_request
+from default_settings import SQL_URI
 
 # import pymysql
 
 from sqlalchemy import create_engine
 from gn3.correlation.correlation_computations import compute_correlation
-
-
-SQL_URI = "mysql+pymysql://kabui:1234@localhost/db_webqtl"
 
 
 correlation = Blueprint("correlation", __name__)
@@ -36,8 +34,6 @@ def connect_db():
 @correlation.after_request
 def after_request_func(response):
     final_time = time.time() -  g.initial_time
-    print(response)
-
     print(f"This request for Correlation took {final_time} Seconds")
 
     g.initial_time = None
@@ -55,7 +51,7 @@ def corr_compute_page():
 
     initial_start_vars = request.json
 
-    corr_results = compute_correlation(init_start_vars=initial_start_vars)
+    corr_results = compute_correlation(correlation_input_data=initial_start_vars)
     try:
 
         return corr_results.json_results

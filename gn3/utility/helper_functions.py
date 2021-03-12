@@ -6,7 +6,6 @@ from gn3.base.species import TheSpecies
 
 def get_species_dataset_trait(self, start_vars):
     """function to get species dataset and trait"""
-    print("DEBUGSETTING dataset HERE ")
     if "temp_trait" in list(start_vars.keys()):
         if start_vars['temp_trait'] == "True":
             self.dataset = create_dataset(

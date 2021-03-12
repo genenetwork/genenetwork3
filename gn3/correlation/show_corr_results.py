@@ -61,7 +61,6 @@ class CorrelationResults:
     def process_samples(self, start_vars, sample_names, excluded_samples=None):
         """method to process samples"""
 
-        print("new here sample names are sample_names",sample_names)
 
         if not excluded_samples:
             excluded_samples = ()
@@ -190,8 +189,6 @@ class CorrelationResults:
     def do_tissue_correlation_for_all_traits(self, tissue_dataset_id=1):
         # Gets tissue expression values for the primary trait
         # pylint: disable = E, W, R, C
-        print("CALLING TISSUE Correlation for all traits")
-        print(self.trait_symbol_dict)
         primary_trait_tissue_vals_dict = correlation_functions.get_trait_symbol_and_tissue_values(
             symbol_list=[self.this_trait.symbol])
 
@@ -368,12 +365,8 @@ class CorrelationResults:
             primary_samples += self.dataset.group.f1list
 
         # If either BXD/whatever Only or All Samples, append all of that group's samplelist
-        print("NEW SET Primary^^^^^^^^^^^^^^")
-        print(primary_samples)
 
         if corr_samples_group != 'samples_other':
-            print("INNER LOOP VALUES")
-            print(primary_samples)
                 
             # print("primary samples are *****",primary_samples)
 

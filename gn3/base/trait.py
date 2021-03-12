@@ -34,7 +34,6 @@ def create_trait(**kw):
 
     if "view" in permissions['data']:
         the_trait = GeneralTrait(**kw)
-        print(f"the general trait is {the_trait}")
         if the_trait.dataset.type != "Temp":
             the_trait = retrieve_trait_info(
                 the_trait,
@@ -65,7 +64,6 @@ class GeneralTrait:
                 self.dataset = create_dataset(kw.get('dataset_name'))
 
         else:
-            print("the dataset is described below here")
             self.dataset = kw.get("dataset")
 
         self.cellid = kw.get('cellid')
