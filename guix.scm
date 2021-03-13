@@ -77,9 +77,12 @@
                        ("python-mypy-extensions" ,python-mypy-extensions)
                        ("python-redis" ,python-redis)
                        ("python-scipy" ,python-scipy)
+                       ;; Remove one of these!
                        ("python-sqlalchemy" ,python-sqlalchemy)
                        ("python-mysqlclient" ,python-mysqlclient)
-                       ("python-rpy2" ,python-rpy2)
+                       ;; This requires R in it's path
+                       ;; TODO: Remove!
+                       ("python-rpy2" ,python-rpy2)))
   (build-system python-build-system)
   (home-page "https://github.com/genenetwork/genenetwork3")
   (synopsis "GeneNetwork3 API for data science and machine learning.")
