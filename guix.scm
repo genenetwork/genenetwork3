@@ -80,7 +80,6 @@
                        ("python-sqlalchemy" ,python-sqlalchemy)
                        ("python-mysqlclient" ,python-mysqlclient)
                        ("python-rpy2" ,python-rpy2)
-                       ("python-pylint" ,python-pylint)))
   (build-system python-build-system)
   (home-page "https://github.com/genenetwork/genenetwork3")
   (synopsis "GeneNetwork3 API for data science and machine learning.")
