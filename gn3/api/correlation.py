@@ -47,14 +47,17 @@ def after_request_func(response):
 def corr_compute_page():
     """api for doing  correlation"""
 
-    # accepts both form and json data
+    # todo accepts both form and json data
 
-    initial_start_vars = request.json
+    correlation_input = request.json
+
+    if correlation_input is None:
+        return jsonify({"error": str("Bad request")}),400
 
 
     
     try:
-        corr_results = compute_correlation(correlation_input_data=initial_start_vars)
+        corr_results = compute_correlation(correlation_input_data=correlation_input)
 
         
     except Exception as error:  # pylint: disable=broad-except
