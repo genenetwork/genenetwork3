@@ -2,7 +2,8 @@
 from typing import List
 from typing import Tuple
 from typing import Optional
-
+from typing import Callable
+from typing import Union
 import scipy.stats  # type: ignore
 
 
@@ -75,7 +76,7 @@ def compute_sample_r_correlation(corr_method: str, trait_vals, target_samples_va
 
 def do_bicor(x_val, y_val) -> Tuple[float, float]:
     """not implemented method for doing biweight mid correlation
-    use  astropy package :not packaged in guix
+    use  astropy stats package :not packaged in guix
     """
 
     return (x_val, y_val)
@@ -83,7 +84,7 @@ def do_bicor(x_val, y_val) -> Tuple[float, float]:
 
 def filter_shared_sample_keys(this_samplelist, target_samplelist)->Tuple[List, List]:
     """given primary and target samplelist for two base and target\
-    trait get shared keys """
+    trait selecct filter the values using the shared keys"""
     this_vals = []
     target_vals = []
 
@@ -96,7 +97,7 @@ def filter_shared_sample_keys(this_samplelist, target_samplelist)->Tuple[List, L
 
 
 def compute_all_sample_correlation(this_trait, target_dataset, corr_method="pearson")->List:
-    """given a trait and target__dataset compute all sample correlation"""
+    """given a trait samplelist and target__datasets compute all sample correlation"""
 
     corr_results = []
 
@@ -127,3 +128,58 @@ def tissue_lit_corr_for_probe_type(this_dataset_type: str, target_dataset_type: 
     _for_trait list depedeing on whether both dataset and target_dataset are\
     both set to probet"""
     return (this_dataset_type, target_dataset_type)
+
+
+def tissue_correlation_for_trait_list(primary_tissue_vals: List,
+                                      target_tissues_values: List,
+                                      corr_method: str,
+                                      compute_corr_p_value: Callable =
+                                      compute_corr_coeff_p_value)->List:
+    """given a primary tissue values for a trait and the target tissues values\
+    compute the correlation_cooeff and p value  the input required are arrays\
+    output - > List containing Dicts with corr_coefficient value,P_value and\
+    also the tissue numbers is len(primary) == len(target)"""
+
+    lit_corr_results = []
+
+    for target_trait_tissue in target_tissues_values:
+        (tissue_corr_coeffient, p_value) = compute_corr_p_value(
+            primary_values=primary_tissue_vals,
+            target_values=target_trait_tissue, corr_method=corr_method)
+
+        corr_result = {
+            "tissue_corr": tissue_corr_coeffient,
+            "p_value": p_value,
+            "tissue_number": len(primary_tissue_vals)
+        }
+
+        lit_corr_results.append(corr_result)
+
+    return lit_corr_results
+
+
+def fetch_lit_correlation_data(database,
+                               input_mouse_gene_id: str,
+                               mouse_gene_id: str)->Tuple[str, Union[int, float]]:
+    """given input trait mouse gene id and mouse gene id fetch the lit\
+    corr_data"""
+    if mouse_gene_id is not None and ";" not in mouse_gene_id:
+        query = """
+        SELECT VALUE  
+        FROM  LCorrRamin3
+        WHERE GeneId1='%s' and
+        GeneId2='%s'
+        """ % (mouse_gene_id, input_mouse_gene_id)
+        _lit_corr_results = database.execute(query).fetchone()
+
+    return ("HC_AMC_C", 3.1)
+
+
+def lit_correlation_for_trait_list(trait_geneid_dict: dict):
+    """given  a list of traits from corr results compute fetch\
+    fetch their lit and p values from the databse"""
+
+    for _trait, _gene_id in list(trait_geneid_dict.items()):
+        pass
+
+    return trait_geneid_dict

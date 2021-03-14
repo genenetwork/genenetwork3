@@ -12,15 +12,16 @@ correlation = Blueprint("correlation", __name__)
 @correlation.route("/sample_r", methods=["POST"])
 def compute_sample_r():
     """correlation endpoint for computing sample r correlations\
-    api expects the trait data  and aslo the target_dataset  data"""
+    api expects the trait data with has the trait and also the\
+    target_dataset  data"""
     correlation_input = request.json
     corr_method = correlation_input.get("corr_method")
-    this_trait = correlation_input.get("this_trait")
-    target_dataset = correlation_input.get("target_dataset")
+    this_trait_data = correlation_input.get("this_trait")
+    target_datasets = correlation_input.get("target_dataset")
 
     correlation_results = compute_all_sample_correlation(corr_method=corr_method,
-                                                         this_trait=this_trait,
-                                                         target_dataset=target_dataset)
+                                                         this_trait=this_trait_data,
+                                                         target_dataset=target_datasets)
 
     return jsonify({
         "corr_results": correlation_results
