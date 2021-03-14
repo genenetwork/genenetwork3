@@ -3,31 +3,25 @@ from flask import jsonify
 from flask import Blueprint
 from flask import request
 
-from gn3.computations.correlations import compute_sample_r_correlation
+from gn3.computations.correlations import compute_all_sample_correlation
 
 
 correlation = Blueprint("correlation", __name__)
 
 
-@correlation.route("/")
-def hello():
-    """hello world api endpoint"""
-    return jsonify({"response": "hello there"})
-
-
-@correlation.route("/sample_r", methods=["Post"])
+@correlation.route("/sample_r", methods=["POST"])
 def compute_sample_r():
-    """correlation endpoint for computing sample r correlations"""
+    """correlation endpoint for computing sample r correlations\
+    api expects the trait data  and aslo the target_dataset  data"""
     correlation_input = request.json
-    corr_method = correlation_input["corr_method"]
-    trait_vals = correlation_input["trait_vals"]
-    target_samples_vals = correlation_input["target_samples_vals"]
-    # corr_method: str, trait_vals, target_samples_vals
+    corr_method = correlation_input.get("corr_method")
+    this_trait = correlation_input.get("this_trait")
+    target_dataset = correlation_input.get("target_dataset")
 
-    correlation_results = compute_sample_r_correlation(corr_method=corr_method,
-                                                       trait_vals=trait_vals,
-                                                       target_samples_vals=target_samples_vals)
+    correlation_results = compute_all_sample_correlation(corr_method=corr_method,
+                                                         this_trait=this_trait,
+                                                         target_dataset=target_dataset)
 
     return jsonify({
-        "results": correlation_results
+        "corr_results": correlation_results
     })

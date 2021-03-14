@@ -32,7 +32,8 @@ def normalize_values(a_values: List, b_values: List)->Tuple[List[float], List[fl
     return a_new, b_new, len(a_new)
 
 
-def compute_corr_coeff_p_value(primary_values: List, target_values: List, corr_method: str):
+def compute_corr_coeff_p_value(primary_values: List, target_values: List, corr_method: str)->\
+        Tuple[float, float]:
     """given array like inputs calculate the primary and target_value
      methods ->pearson,spearman and biweight mid correlation
      return value is rho and p_value
@@ -78,3 +79,51 @@ def do_bicor(x_val, y_val) -> Tuple[float, float]:
     """
 
     return (x_val, y_val)
+
+
+def filter_shared_sample_keys(this_samplelist, target_samplelist)->Tuple[List, List]:
+    """given primary and target samplelist for two base and target\
+    trait get shared keys """
+    this_vals = []
+    target_vals = []
+
+    for key, value in target_samplelist.items():
+        if key in this_samplelist:
+            target_vals.append(value)
+            this_vals.append(this_samplelist[key])
+
+    return (this_vals, target_vals)
+
+
+def compute_all_sample_correlation(this_trait, target_dataset, corr_method="pearson")->List:
+    """given a trait and target__dataset compute all sample correlation"""
+
+    corr_results = []
+
+    for target_trait in target_dataset:
+        this_vals, target_vals = filter_shared_sample_keys(
+            this_trait, target_trait)
+
+        sample_correlation = compute_sample_r_correlation(
+            corr_method=corr_method, trait_vals=this_vals, target_samples_vals=target_vals)
+
+        if sample_correlation is not None:
+            (corr_coeffient, p_value, num_overlap) = sample_correlation
+
+        else:
+            continue
+
+        corr_result = {"corr_coeffient": corr_coeffient,
+                       "p_value": p_value,
+                       "num_overlap": num_overlap}
+
+        corr_results.append(corr_result)
+
+    return corr_results
+
+
+def tissue_lit_corr_for_probe_type(this_dataset_type: str, target_dataset_type: str):
+    """function that does either lit_corr_for_trait_list or tissue_corr\
+    _for_trait list depedeing on whether both dataset and target_dataset are\
+    both set to probet"""
+    return (this_dataset_type, target_dataset_type)
