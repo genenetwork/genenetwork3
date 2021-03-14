@@ -14,12 +14,26 @@ class CorrelationIntegrationTest(TestCase):
         """initial method for class that fails"""
         self.assertEqual(2, 2)
 
-    @mock.patch("gn3.api.correlation.compute_sample_r_correlation")
-    def test_sample_r_correlation(self, mock_compute_sample):
+    @mock.patch("gn3.api.correlation.compute_all_sample_correlation")
+    def test_sample_r_correlation(self, mock_compute_samples):
         """test for  /api/correlation/sample_r"""
+
+        this_trait_data = {
+            "C57BL/6J": "6.631",
+            "DBA/2J": "6.261",
+            "B6D2F1": "6.496",
+            "D2B6F1": "6.565",
+            "BXD2": "6.452"
+        }
+
+        traits_dataset = [{
+            "DBA/2J": "1.231",
+            "D2B6F1": "6.561",
+            "BXD2": "6.453"
+        }]
         correlation_input_data = {"corr_method": "pearson",
-                                  "trait_vals": [1, 2, 3],
-                                  "target_samples_vals": [6.7, 1.4, 1.1]}
+                                  "this_trait": this_trait_data,
+                                  "target_dataset": traits_dataset}
         expected_results = [
             {
                 "sample_r": "-0.407",
@@ -31,10 +45,10 @@ class CorrelationIntegrationTest(TestCase):
             }
         ]
 
-        mock_compute_sample.return_value = expected_results
+        mock_compute_samples.return_value = expected_results
 
         api_response = {
-            "results": expected_results
+            "corr_results": expected_results
         }
 
         response = self.app.post("/api/correlation/sample_r",
