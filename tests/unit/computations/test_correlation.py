@@ -1,6 +1,7 @@
 """module contains the tests for correlation"""
 from unittest import TestCase
 from unittest import mock
+from collections import namedtuple
 
 from gn3.computations.correlations import normalize_values
 from gn3.computations.correlations import do_bicor
@@ -8,6 +9,62 @@ from gn3.computations.correlations import compute_sample_r_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
 from gn3.computations.correlations import tissue_lit_corr_for_probe_type
+from gn3.computations.correlations import tissue_correlation_for_trait_list
+from gn3.computations.correlations import lit_correlation_for_trait_list
+from gn3.computations.correlations import fetch_lit_correlation_data
+
+
+class QueryableMixin:
+    """base class for db call"""
+
+    def execute(self, query_options):
+        """base method for execute"""
+        raise NotImplementedError()
+
+    def fetchone(self):
+        """base method for fetching one iten"""
+        raise NotImplementedError()
+
+    def fetchall(self):
+        """base method for fetch all items"""
+        raise NotImplementedError()
+
+
+class IllegalOperationError(Exception):
+    """custom error to raise illegal operation in db"""
+
+    def __init__(self):
+        super().__init__("Operation not permitted!")
+
+
+class DataBase(QueryableMixin):
+    """Class for creating db object"""
+
+    def __init__(self):
+        self.__query_options = None
+        self.__results = None
+
+    def execute(self, query_options):
+        """method to execute an sql query"""
+        self.__query_options = query_options
+        self.__results_generator()
+
+    def fetchone(self):
+        """method to fetch single item from the db query"""
+        if self.__results is None:
+            raise IllegalOperationError()
+
+        return self.__results[0]
+
+    def fetchall(self):
+        """method for fetching all items from db query"""
+        if self.__results is None:
+            raise IllegalOperationError()
+        return self.__results
+
+    def __results_generator(self):
+        """private class  for generating mock results"""
+        self.__results = [namedtuple("val", x*0.1) for x in range(1, 4)]
 
 
 class TestCorrelation(TestCase):
@@ -134,3 +191,44 @@ class TestCorrelation(TestCase):
                                                  target_dataset_type=None)
 
         self.assertEqual(results, (None, None))
+
+    @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
+    def test_tissue_correlation_for_trait_list(self, mock_compute_corr_coeff):
+        """test given a primary tissue values for a trait  and and a list of\
+        target tissues for traits  do the tissue correlation for them"""
+
+        primary_tissue_values = [1.1, 1.5, 2.3]
+        target_tissues_values = [[1, 2, 3], [3, 4, 1]]
+        mock_compute_corr_coeff.side_effect = [(0.4, 0.9), (-0.2, 0.91)]
+        expected_tissue_results = [{'tissue_corr': 0.4, 'p_value': 0.9, "tissue_number": 3},
+                                   {'tissue_corr': -0.2, 'p_value': 0.91, "tissue_number": 3}]
+
+        tissue_results = tissue_correlation_for_trait_list(
+            primary_tissue_values, target_tissues_values,
+            corr_method="pearson", compute_corr_p_value=mock_compute_corr_coeff)
+
+        self.assertEqual(tissue_results, expected_tissue_results)
+
+    def test_lit_correlation_for_trait_list(self):
+        """fetch results from  db call for lit correlation given a trait list\
+        after doing correlation"""
+
+        corr_results = [{"trait_id": "12121_AT"},
+                        {"trait_id": "1214_AT"}]
+
+        expected_lit_results = [{'lit_corr': -0.2, 'p_value': 0.91},
+                                {'lit': -0.2, 'p_value': 0.91}]
+
+        _lit_corr_results = lit_correlation_for_trait_list(corr_results[0])
+
+        self.assertEqual(expected_lit_results, expected_lit_results)
+
+    def test_fetch_lit_correlation_data(self):
+        """test for fetching lit correlation data from\
+        the database"""
+
+        database_instance = DataBase()
+        results = fetch_lit_correlation_data(database=database_instance, input_mouse_gene_id=None,
+                                             mouse_gene_id=None)
+
+        self.assertEqual(results, ("HC_AMC_C", 3.1))
