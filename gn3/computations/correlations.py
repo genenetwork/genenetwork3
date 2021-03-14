@@ -160,26 +160,83 @@ def tissue_correlation_for_trait_list(primary_tissue_vals: List,
 
 def fetch_lit_correlation_data(database,
                                input_mouse_gene_id: str,
-                               mouse_gene_id: str)->Tuple[str, Union[int, float]]:
+                               mouse_gene_id: str,
+                               gene_id: str = "1")->Tuple[str, Union[int, float]]:
     """given input trait mouse gene id and mouse gene id fetch the lit\
     corr_data"""
     if mouse_gene_id is not None and ";" not in mouse_gene_id:
         query = """
-        SELECT VALUE  
+        SELECT VALUE
         FROM  LCorrRamin3
         WHERE GeneId1='%s' and
         GeneId2='%s'
-        """ % (mouse_gene_id, input_mouse_gene_id)
-        _lit_corr_results = database.execute(query).fetchone()
+        """
 
-    return ("HC_AMC_C", 3.1)
+        query_values = (mouse_gene_id, input_mouse_gene_id)
+
+        results = database.execute(
+            query_formatter(query, *query_values)).fetchone()
+
+        lit_corr_results = results if results is not None else database.execute(
+            query_formatter(query, *tuple(reversed(query_values)))).fetchone()
+
+        lit_results = (gene_id, lit_corr_results.val)\
+            if lit_corr_results else (gene_id, 0)
+        return lit_results
+
+    return (gene_id, 0)
 
 
-def lit_correlation_for_trait_list(trait_geneid_dict: dict):
-    """given  a list of traits from corr results compute fetch\
-    fetch their lit and p values from the databse"""
+def lit_correlation_for_trait_list(database,
+                                   target_trait_lists: List,
+                                   species: Optional[str] = None,
+                                   trait_gene_id: Optional[str] = None):
+    """given species,base trait gene id fetch the lit corr results from the db\
+    output is float for lit corr results """
 
-    for _trait, _gene_id in list(trait_geneid_dict.items()):
-        pass
+    lit_results: List[Optional[dict]] = []
 
-    return trait_geneid_dict
+    # _this_trait_mouse_gene_id = map_to_mouse_gene_id(
+    #     database=database, species=species, gene_id=trait_gene_id)
+
+    for trait in target_trait_lists:
+        _input_data = (species, trait_gene_id, target_trait_lists, database)
+        _target_trait_gene_id = trait.get("'geneid")
+        # target_trait_mouse_gene_id = map_to_mouse_gene_id(
+        #     database=database, species=species, gene_id=target_trait_gene_id)
+
+        # lit_result = fetch_lit_corr_results(\
+        # , mouse_gene_id=target_trait_mouse_gene_id)
+
+    return lit_results
+
+
+def query_formatter(query_string: str, * query_values):
+    """formatter query string given the unformatted query string\
+    and the respectibe values.Assumes number of placeholders is
+    equal to the number of query values """
+    results = query_string % (query_values)
+
+    return results
+
+
+def map_to_mouse_gene_id(database, species: str, gene_id: Optional[int])->Optional[int]:
+    """given a species which is not mouse map the gene_id\
+    to respective mouse gene id"""
+    if None in (species, gene_id):
+        return None
+    if species.lower() == "mouse":
+        return gene_id
+
+    query = """SELECT mouse
+                FROM GeneIDXRef
+                WHERE '%s' = '%s'"""
+
+    query_values = (species, gene_id)
+
+    results = database.execute(
+        query_formatter(query, *query_values)).fetchone()
+
+    mouse_gene_id = results.mouse if results is not None else None
+
+    return mouse_gene_id
