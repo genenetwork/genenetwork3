@@ -12,6 +12,8 @@ from gn3.computations.correlations import tissue_lit_corr_for_probe_type
 from gn3.computations.correlations import tissue_correlation_for_trait_list
 from gn3.computations.correlations import lit_correlation_for_trait_list
 from gn3.computations.correlations import fetch_lit_correlation_data
+from gn3.computations.correlations import query_formatter
+from gn3.computations.correlations import map_to_mouse_gene_id
 
 
 class QueryableMixin:
@@ -47,7 +49,8 @@ class DataBase(QueryableMixin):
     def execute(self, query_options):
         """method to execute an sql query"""
         self.__query_options = query_options
-        self.__results_generator()
+        self.results_generator()
+        return self
 
     def fetchone(self):
         """method to fetch single item from the db query"""
@@ -62,9 +65,14 @@ class DataBase(QueryableMixin):
             raise IllegalOperationError()
         return self.__results
 
-    def __results_generator(self):
-        """private class  for generating mock results"""
-        self.__results = [namedtuple("val", x*0.1) for x in range(1, 4)]
+    def results_generator(self, expected_results=None):
+        """private method  for generating mock results"""
+
+        if expected_results is None:
+            self.__results = [namedtuple("lit_coeff", "val")(x*0.1)
+                              for x in range(1, 4)]
+        else:
+            self.__results = expected_results
 
 
 class TestCorrelation(TestCase):
@@ -213,22 +221,106 @@ class TestCorrelation(TestCase):
         """fetch results from  db call for lit correlation given a trait list\
         after doing correlation"""
 
-        corr_results = [{"trait_id": "12121_AT"},
-                        {"trait_id": "1214_AT"}]
+        corr_results = [{"trait_id": "1210_AT", "gene_id": 1250},
+                        {"trait_id": "1216_AT", "gene_id": 1100},
+                        {"trait_id": "1211_AT", "gene_id": 15}]
 
-        expected_lit_results = [{'lit_corr': -0.2, 'p_value': 0.91},
-                                {'lit': -0.2, 'p_value': 0.91}]
+        expected_lit_results = [{"lit_corr": -0.2, "gene_id": 1250},
+                                {'lit_corr': 0.6, "gene_id": 110}]
 
-        _lit_corr_results = lit_correlation_for_trait_list(corr_results[0])
+        lit_corr_results = lit_correlation_for_trait_list(
+            corr_results[0], target_trait_lists=[])
 
-        self.assertEqual(expected_lit_results, expected_lit_results)
+        self.assertEqual([], lit_corr_results)
 
     def test_fetch_lit_correlation_data(self):
         """test for fetching lit correlation data from\
-        the database"""
+        the database where the input and mouse geneid are none"""
 
         database_instance = DataBase()
         results = fetch_lit_correlation_data(database=database_instance, input_mouse_gene_id=None,
                                              mouse_gene_id=None)
 
-        self.assertEqual(results, ("HC_AMC_C", 3.1))
+        self.assertEqual(results, ("1", 0))
+
+    def test_fetch_lit_correlation_data_db_query(self):
+        """test for fetching lit corr coefficent givent the input\
+         input trait mouse gene id and mouse gene id"""
+
+        database_instance = DataBase()
+        expected_results = ("1", 0.1)
+
+        lit_results = fetch_lit_correlation_data(database=database_instance,
+                                                 input_mouse_gene_id="20",
+                                                 mouse_gene_id="15")
+
+        self.assertEqual(expected_results, lit_results)
+
+    def test_query_lit_correlation_for_db_empty(self):
+        """test that corr coeffient returned is 0 given the\
+        db value if corr coefficient is empty"""
+        database_instance = mock.Mock()
+        database_instance.execute.return_value.fetchone.return_value = None
+
+        lit_results = fetch_lit_correlation_data(database=database_instance,
+                                                 input_mouse_gene_id="12",
+                                                 gene_id="16",
+                                                 mouse_gene_id="12")
+
+        self.assertEqual(lit_results, ("16", 0))
+
+    def test_query_formatter(self):
+        """test for formatting a query given the query string and also the\
+        values"""
+        query = """
+        SELECT VALUE  
+        FROM  LCorr
+        WHERE GeneId1='%s' and
+        GeneId2='%s'
+        """
+
+        expected_formatted_query = """
+        SELECT VALUE  
+        FROM  LCorr
+        WHERE GeneId1='20' and
+        GeneId2='15'
+        """
+
+        mouse_gene_id = "20"
+        input_mouse_gene_id = "15"
+
+        query_values = (mouse_gene_id, input_mouse_gene_id)
+
+        formatted_query = query_formatter(query, *query_values)
+
+        self.assertEqual(formatted_query, expected_formatted_query)
+
+    def test_query_formatter_no_query_values(self):
+        """test for formatting a query where there are no\
+        string placeholder"""
+        query = """SELECT * FROM  USERS"""
+        formatted_query = query_formatter(query)
+
+        self.assertEqual(formatted_query, query)
+
+    def test_map_to_mouse_gene_id(self):
+        """test for converting a gene id to mouse geneid\
+        given a species which is not mouse"""
+
+        database_instance = mock.Mock()
+
+        test_data = [("Human", 14), (None, 9), ("Mouse", 15), ("Rat", 14)]
+
+        database_instance.execute.return_value.fetchone.side_effect = [
+            namedtuple("mouse_id", "mouse")(val) for val in [12, 16]]
+
+        results = []
+
+        expected_results = [12, None, 15, 16]
+        for (species, gene_id) in test_data:
+            mouse_gene_id = map_to_mouse_gene_id(database=database_instance,
+                                                 species=species, gene_id=gene_id)
+
+            results.append(mouse_gene_id)
+
+        self.assertEqual(results, expected_results)
