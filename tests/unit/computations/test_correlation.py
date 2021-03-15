@@ -1,6 +1,8 @@
 """module contains the tests for correlation"""
+import unittest
 from unittest import TestCase
 from unittest import mock
+
 from collections import namedtuple
 
 from gn3.computations.correlations import normalize_values
@@ -165,22 +167,29 @@ class TestCorrelation(TestCase):
         sample_r_corr.return_value = ([-1.0, 0.9, 6])
 
         this_trait_data = {
-            "C57BL/6J": "6.638",
-            "DBA/2J": "6.266",
-            "B6D2F1": "6.494",
-            "D2B6F1": "6.565",
-            "BXD2": "6.456"
-        }
+            "trait_id": "1455376_at",
+            "trait_sample_data": {
+                "C57BL/6J": "6.638",
+                "DBA/2J": "6.266",
+                "B6D2F1": "6.494",
+                "D2B6F1": "6.565",
+                "BXD2": "6.456"
+            }}
 
-        traits_dataset = [{
-            "DBA/2J": "1.23",
-            "D2B6F1": "6.565",
-            "BXD2": "6.456"
-        }]
+        traits_dataset = [
+            {
+                "trait_id": "1419792_at",
+                "trait_sample_data": {
+                    "DBA/2J": "1.23",
+                    "D2B6F1": "6.565",
+                    "BXD2": "6.456"
+                }
+            }
+        ]
 
-        sample_all_results = [{"corr_coeffient": -1.0,
-                               "p_value": 0.9,
-                               "num_overlap": 6}]
+        sample_all_results = [{"1419792_at": {"corr_coeffient": -1.0,
+                                              "p_value": 0.9,
+                                              "num_overlap": 6}}]
         # ?corr_method: str, trait_vals, target_samples_vals
 
         self.assertEqual(compute_all_sample_correlation(
@@ -189,14 +198,16 @@ class TestCorrelation(TestCase):
             corr_method="pearson", trait_vals=['1.23', '6.565', '6.456'],
             target_samples_vals=['6.266', '6.565', '6.456'])
         filter_shared_samples.assert_called_once_with(
-            this_trait_data, traits_dataset[0])
+            this_trait_data.get("trait_sample_data"), traits_dataset[0].get("trait_sample_data"))
 
+    @unittest.skip("not implemented")
     def test_tissue_lit_corr_for_probe_type(self):
         """tests for doing tissue and lit correlation for  trait list\
-        if both the dataset and target dataset are probeset"""
+        if both the dataset and target dataset are probeset runs\
+        on after initial correlation has been done"""
 
-        results = tissue_lit_corr_for_probe_type(this_dataset_type=None,
-                                                 target_dataset_type=None)
+        results = tissue_lit_corr_for_probe_type(
+            corr_type="tissue", top_corr_results={})
 
         self.assertEqual(results, (None, None))
 

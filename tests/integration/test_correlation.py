@@ -17,23 +17,31 @@ class CorrelationIntegrationTest(TestCase):
     @mock.patch("gn3.api.correlation.compute_all_sample_correlation")
     def test_sample_r_correlation(self, mock_compute_samples):
         """test for  /api/correlation/sample_r"""
-
         this_trait_data = {
-            "C57BL/6J": "6.631",
-            "DBA/2J": "6.261",
-            "B6D2F1": "6.496",
-            "D2B6F1": "6.565",
-            "BXD2": "6.452"
-        }
+            "trait_id": "1455376_at",
+            "trait_sample_data": {
+                "C57BL/6J": "6.138",
+                "DBA/2J": "6.266",
+                "B6D2F1": "6.434",
+                "D2B6F1": "6.55",
+                "BXS2": "6.7"
+            }}
 
-        traits_dataset = [{
-            "DBA/2J": "1.231",
-            "D2B6F1": "6.561",
-            "BXD2": "6.453"
-        }]
+        traits_dataset = [
+            {
+                "trait_id": "14192_at",
+                "trait_sample_data": {
+                    "DBA/2J": "7.13",
+                    "D2B6F1": "5.65",
+                    "BXD2": "1.46"
+                }
+            }
+        ]
+
         correlation_input_data = {"corr_method": "pearson",
                                   "this_trait": this_trait_data,
                                   "target_dataset": traits_dataset}
+
         expected_results = [
             {
                 "sample_r": "-0.407",
@@ -51,7 +59,7 @@ class CorrelationIntegrationTest(TestCase):
             "corr_results": expected_results
         }
 
-        response = self.app.post("/api/correlation/sample_r",
+        response = self.app.post("/api/correlation/sample_r/pearson",
                                  json=correlation_input_data, follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
