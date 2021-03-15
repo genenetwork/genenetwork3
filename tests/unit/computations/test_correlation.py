@@ -217,28 +217,38 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(tissue_results, expected_tissue_results)
 
-    def test_lit_correlation_for_trait_list(self):
+    @mock.patch("gn3.computations.correlations.fetch_lit_correlation_data")
+    @mock.patch("gn3.computations.correlations.map_to_mouse_gene_id")
+    def test_lit_correlation_for_trait_list(self, mock_mouse_gene_id, fetch_lit_data):
         """fetch results from  db call for lit correlation given a trait list\
         after doing correlation"""
 
-        corr_results = [{"trait_id": "1210_AT", "gene_id": 1250},
-                        {"trait_id": "1216_AT", "gene_id": 1100},
-                        {"trait_id": "1211_AT", "gene_id": 15}]
+        target_trait_lists = [{"gene_id": 15},
+                              {"gene_id": 17},
+                              {"gene_id": 11}]
+        mock_mouse_gene_id.side_effect = [12, 11, 18, 16, 20]
 
-        expected_lit_results = [{"lit_corr": -0.2, "gene_id": 1250},
-                                {'lit_corr': 0.6, "gene_id": 110}]
+        database_instance = namedtuple("database", "execute")("fetchone")
 
-        lit_corr_results = lit_correlation_for_trait_list(
-            corr_results[0], target_trait_lists=[])
+        fetch_lit_data.side_effect = [(15, 9), (17, 8), (11, 12)]
 
-        self.assertEqual([], lit_corr_results)
+        lit_results = lit_correlation_for_trait_list(
+            database=database_instance, target_trait_lists=target_trait_lists,
+            species="rat", trait_gene_id="12")
+
+        expected_results = [{"gene_id": 15, "lit_corr": 9}, {
+            "gene_id": 17, "lit_corr": 8}, {"gene_id": 11, "lit_corr": 12}]
+
+        self.assertEqual(lit_results, expected_results)
 
     def test_fetch_lit_correlation_data(self):
         """test for fetching lit correlation data from\
         the database where the input and mouse geneid are none"""
 
         database_instance = DataBase()
-        results = fetch_lit_correlation_data(database=database_instance, input_mouse_gene_id=None,
+        results = fetch_lit_correlation_data(database=database_instance,
+                                             gene_id="1",
+                                             input_mouse_gene_id=None,
                                              mouse_gene_id=None)
 
         self.assertEqual(results, ("1", 0))
@@ -251,6 +261,7 @@ class TestCorrelation(TestCase):
         expected_results = ("1", 0.1)
 
         lit_results = fetch_lit_correlation_data(database=database_instance,
+                                                 gene_id="1",
                                                  input_mouse_gene_id="20",
                                                  mouse_gene_id="15")
 
@@ -273,14 +284,14 @@ class TestCorrelation(TestCase):
         """test for formatting a query given the query string and also the\
         values"""
         query = """
-        SELECT VALUE  
+        SELECT VALUE
         FROM  LCorr
         WHERE GeneId1='%s' and
         GeneId2='%s'
         """
 
         expected_formatted_query = """
-        SELECT VALUE  
+        SELECT VALUE
         FROM  LCorr
         WHERE GeneId1='20' and
         GeneId2='15'
@@ -306,21 +317,19 @@ class TestCorrelation(TestCase):
     def test_map_to_mouse_gene_id(self):
         """test for converting a gene id to mouse geneid\
         given a species which is not mouse"""
-
         database_instance = mock.Mock()
-
         test_data = [("Human", 14), (None, 9), ("Mouse", 15), ("Rat", 14)]
 
-        database_instance.execute.return_value.fetchone.side_effect = [
-            namedtuple("mouse_id", "mouse")(val) for val in [12, 16]]
-
+        database_results = [namedtuple("mouse_id", "mouse")(val)
+                            for val in range(12, 20)]
         results = []
 
-        expected_results = [12, None, 15, 16]
+        database_instance.execute.return_value.fetchone.side_effect = database_results
+        expected_results = [12, None, 13, 14]
         for (species, gene_id) in test_data:
-            mouse_gene_id = map_to_mouse_gene_id(database=database_instance,
-                                                 species=species, gene_id=gene_id)
 
-            results.append(mouse_gene_id)
+            mouse_gene_id_results = map_to_mouse_gene_id(
+                database=database_instance, species=species, gene_id=gene_id)
+            results.append(mouse_gene_id_results)
 
         self.assertEqual(results, expected_results)
