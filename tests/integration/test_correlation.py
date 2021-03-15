@@ -2,7 +2,6 @@
 
 import os
 import json
-import pickle
 import unittest
 from unittest import mock
 
@@ -20,7 +19,6 @@ def file_path(relative_path):
 class CorrelationAPITest(unittest.TestCase):
     # currently disable
     """Test cases for the Correlation API"""
-
     def setUp(self):
         self.app = create_app().test_client()
 
@@ -40,18 +38,20 @@ class CorrelationAPITest(unittest.TestCase):
         """Test that the correct response in correlation"""
 
         compute_corr.return_value = self.correlation_results
-        response = self.app.post(
-            "/api/correlation/corr_compute", json=self.correlation_data, follow_redirects=True)
+        response = self.app.post("/api/correlation/corr_compute",
+                                 json=self.correlation_data,
+                                 follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
 
     @mock.patch("gn3.api.correlation.compute_correlation")
-    def test_corr_compute_failed_request(self,compute_corr):
+    def test_corr_compute_failed_request(self, compute_corr):
         """test taht cormpute requests fails """
 
-        compute_corr.return_value = self.correlation_results 
+        compute_corr.return_value = self.correlation_results
 
-        response  = self.app.post(
-            "/api/correlation/corr_compute", json=None, follow_redirects=True)
+        response = self.app.post("/api/correlation/corr_compute",
+                                 json=None,
+                                 follow_redirects=True)
 
-        self.assertEqual(response.status_code,400)
+        self.assertEqual(response.status_code, 400)
