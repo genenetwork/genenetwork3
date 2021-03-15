@@ -10,3 +10,8 @@ GENODIR = ""
 REDIS_URI = "redis://localhost:6379/0"
 REDIS_JOB_QUEUE = "GN3::job-queue"
 TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
+
+# SQL confs
+SQLALCHEMY_DATABASE_URI = "mysql://kabui:1234@localhost/test"
+SECRET_KEY = "password"
+SQLALCHEMY_TRACK_MODIFICATIONS = False
