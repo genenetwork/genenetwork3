@@ -3,7 +3,7 @@ from typing import List
 from typing import Tuple
 from typing import Optional
 from typing import Callable
-from typing import Union
+
 import scipy.stats  # type: ignore
 
 
@@ -84,7 +84,7 @@ def do_bicor(x_val, y_val) -> Tuple[float, float]:
 
 def filter_shared_sample_keys(this_samplelist, target_samplelist)->Tuple[List, List]:
     """given primary and target samplelist for two base and target\
-    trait selecct filter the values using the shared keys"""
+    trait select filter the values using the shared keys"""
     this_vals = []
     target_vals = []
 
@@ -125,7 +125,7 @@ def compute_all_sample_correlation(this_trait, target_dataset, corr_method="pear
 
 def tissue_lit_corr_for_probe_type(this_dataset_type: str, target_dataset_type: str):
     """function that does either lit_corr_for_trait_list or tissue_corr\
-    _for_trait list depedeing on whether both dataset and target_dataset are\
+    _for_trait list depending on whether both dataset and target_dataset are\
     both set to probet"""
     return (this_dataset_type, target_dataset_type)
 
@@ -159,9 +159,9 @@ def tissue_correlation_for_trait_list(primary_tissue_vals: List,
 
 
 def fetch_lit_correlation_data(database,
-                               input_mouse_gene_id: str,
-                               mouse_gene_id: str,
-                               gene_id: str = "1")->Tuple[str, Union[int, float]]:
+                               input_mouse_gene_id: Optional[str],
+                               gene_id: str,
+                               mouse_gene_id: Optional[str] = None)->Tuple[str, float]:
     """given input trait mouse gene id and mouse gene id fetch the lit\
     corr_data"""
     if mouse_gene_id is not None and ";" not in mouse_gene_id:
@@ -172,7 +172,7 @@ def fetch_lit_correlation_data(database,
         GeneId2='%s'
         """
 
-        query_values = (mouse_gene_id, input_mouse_gene_id)
+        query_values = (str(mouse_gene_id), str(input_mouse_gene_id))
 
         results = database.execute(
             query_formatter(query, *query_values)).fetchone()
@@ -190,25 +190,29 @@ def fetch_lit_correlation_data(database,
 def lit_correlation_for_trait_list(database,
                                    target_trait_lists: List,
                                    species: Optional[str] = None,
-                                   trait_gene_id: Optional[str] = None):
+                                   trait_gene_id: Optional[str] = None)->List:
     """given species,base trait gene id fetch the lit corr results from the db\
     output is float for lit corr results """
+    fetched_lit_corr_results = []
 
-    lit_results: List[Optional[dict]] = []
-
-    # _this_trait_mouse_gene_id = map_to_mouse_gene_id(
-    #     database=database, species=species, gene_id=trait_gene_id)
+    this_trait_mouse_gene_id = map_to_mouse_gene_id(
+        database=database, species=species, gene_id=trait_gene_id)
 
     for trait in target_trait_lists:
-        _input_data = (species, trait_gene_id, target_trait_lists, database)
-        _target_trait_gene_id = trait.get("'geneid")
-        # target_trait_mouse_gene_id = map_to_mouse_gene_id(
-        #     database=database, species=species, gene_id=target_trait_gene_id)
+        target_trait_gene_id = trait.get("gene_id")
+        if target_trait_gene_id:
+            target_mouse_gene_id = map_to_mouse_gene_id(
+                database=database, species=species, gene_id=target_trait_gene_id)
 
-        # lit_result = fetch_lit_corr_results(\
-        # , mouse_gene_id=target_trait_mouse_gene_id)
+            fetched_corr_data = fetch_lit_correlation_data(
+                database=database, input_mouse_gene_id=this_trait_mouse_gene_id,
+                gene_id=target_trait_gene_id, mouse_gene_id=target_mouse_gene_id)
 
-    return lit_results
+            dict_results = dict(
+                zip(("gene_id", "lit_corr"), fetched_corr_data))
+            fetched_lit_corr_results.append(dict_results)
+
+    return fetched_lit_corr_results
 
 
 def query_formatter(query_string: str, * query_values):
@@ -220,12 +224,14 @@ def query_formatter(query_string: str, * query_values):
     return results
 
 
-def map_to_mouse_gene_id(database, species: str, gene_id: Optional[int])->Optional[int]:
+def map_to_mouse_gene_id(database, species: Optional[str], gene_id: Optional[str])->Optional[str]:
     """given a species which is not mouse map the gene_id\
     to respective mouse gene id"""
+    # AK:xtodo move the code for checking nullity out of thing functions bug while\
+    # method for string
     if None in (species, gene_id):
         return None
-    if species.lower() == "mouse":
+    if species == "mouse":
         return gene_id
 
     query = """SELECT mouse
