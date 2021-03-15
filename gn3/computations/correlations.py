@@ -97,13 +97,17 @@ def filter_shared_sample_keys(this_samplelist, target_samplelist)->Tuple[List, L
 
 
 def compute_all_sample_correlation(this_trait, target_dataset, corr_method="pearson")->List:
-    """given a trait samplelist and target__datasets compute all sample correlation"""
+    """given a trait data samplelist and target__datasets compute all sample correlation"""
+
+    this_trait_samples = this_trait["trait_sample_data"]
 
     corr_results = []
 
     for target_trait in target_dataset:
+        trait_id = target_trait.get("trait_id")
+        target_trait_data = target_trait["trait_sample_data"]
         this_vals, target_vals = filter_shared_sample_keys(
-            this_trait, target_trait)
+            this_trait_samples, target_trait_data)
 
         sample_correlation = compute_sample_r_correlation(
             corr_method=corr_method, trait_vals=this_vals, target_samples_vals=target_vals)
@@ -118,16 +122,30 @@ def compute_all_sample_correlation(this_trait, target_dataset, corr_method="pear
                        "p_value": p_value,
                        "num_overlap": num_overlap}
 
-        corr_results.append(corr_result)
+        corr_results.append({trait_id: corr_result})
 
     return corr_results
 
 
-def tissue_lit_corr_for_probe_type(this_dataset_type: str, target_dataset_type: str):
+def tissue_lit_corr_for_probe_type(corr_type: str, top_corr_results):
     """function that does either lit_corr_for_trait_list or tissue_corr\
     _for_trait list depending on whether both dataset and target_dataset are\
     both set to probet"""
-    return (this_dataset_type, target_dataset_type)
+
+    corr_results = {"lit": 1}
+
+    if corr_type not in ("lit", "literature"):
+
+        corr_results["top_corr_results"] = top_corr_results
+        # run lit_correlation for  the given  top_corr_results
+    if corr_type == "tissue":
+        # run lit correlation the given top corr results
+        pass
+    if corr_type == "sample":
+        pass
+        # run sample r correlation for the given top  results
+
+    return corr_results
 
 
 def tissue_correlation_for_trait_list(primary_tissue_vals: List,
