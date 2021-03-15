@@ -79,6 +79,7 @@
                        ("python-scipy" ,python-scipy)
                        ;; Remove one of these!
                        ("python-sqlalchemy" ,python-sqlalchemy)
+                       ("python-sqlalchemy-stubs" ,python-sqlalchemy-stubs)
                        ("python-mysqlclient" ,python-mysqlclient)
                        ;; This requires R in it's path
                        ;; TODO: Remove!
