@@ -72,19 +72,11 @@
                        ("python" ,python-wrapper)
                        ("python-flask" ,python-flask)
                        ("python-pylint" python-pylint)
-                       ("python-numpy" ,python-numpy)
                        ("python-scipy" ,python-scipy)
                        ("python-mypy" ,python-mypy)
                        ("python-mypy-extensions" ,python-mypy-extensions)
                        ("python-redis" ,python-redis)
-                       ("python-scipy" ,python-scipy)
-                       ;; Remove one of these!
-                       ("python-sqlalchemy" ,python-sqlalchemy)
-                       ("python-sqlalchemy-stubs" ,python-sqlalchemy-stubs)
-                       ("python-mysqlclient" ,python-mysqlclient)
-                       ;; This requires R in it's path
-                       ;; TODO: Remove!
-                       ("python-rpy2" ,python-rpy2)))
+                       ("python-scipy" ,python-scipy)))
   (build-system python-build-system)
   (home-page "https://github.com/genenetwork/genenetwork3")
   (synopsis "GeneNetwork3 API for data science and machine learning.")
