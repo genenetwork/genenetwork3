@@ -17,6 +17,7 @@ from gn3.computations.correlations import fetch_lit_correlation_data
 from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
 from gn3.computations.correlations import compute_all_lit_correlation
+from gn3.computations.correlations import compute_all_tissue_correlation
 
 
 class QueryableMixin:
@@ -218,10 +219,10 @@ class TestCorrelation(TestCase):
         target tissues for traits  do the tissue correlation for them"""
 
         primary_tissue_values = [1.1, 1.5, 2.3]
-        target_tissues_values = [[1, 2, 3], [3, 4, 1]]
+        target_tissues_values = [1, 2, 3]
         mock_compute_corr_coeff.side_effect = [(0.4, 0.9), (-0.2, 0.91)]
-        expected_tissue_results = [{'tissue_corr': 0.4, 'p_value': 0.9, "tissue_number": 3},
-                                   {'tissue_corr': -0.2, 'p_value': 0.91, "tissue_number": 3}]
+        expected_tissue_results = {
+            'tissue_corr': 0.4, 'p_value': 0.9, "tissue_number": 3}
 
         tissue_results = tissue_correlation_for_trait_list(
             primary_tissue_values, target_tissues_values,
@@ -368,3 +369,31 @@ class TestCorrelation(TestCase):
         }
 
         self.assertEqual(lit_correlation_results, expected_results)
+
+    @mock.patch("gn3.computations.correlations.tissue_correlation_for_trait_list")
+    def test_compute_all_tissue_correlation(self, mock_tissue_corr):
+        """test for compute all tissue corelation which abstracts
+        api calling the tissue_correlation for trait_list"""
+
+        primary_tissue_dict = {"trait_id": "1419792_at",
+                               "tissue_values": [1, 2, 3, 4, 5]}
+
+        target_tissue_dict = [{"trait_id": "1418702_a_at", "tissue_values": [1, 2, 3]},
+                              {"trait_id": "1412_at", "tissue_values": [1, 2, 3]}]
+
+        mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3},
+                                        {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}]
+
+        expected_results = {"1418702_a_at":
+                            {"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3},
+                            "1412_at":
+                            {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}}
+
+        results = compute_all_tissue_correlation(
+            primary_tissue_dict=primary_tissue_dict,
+            target_tissues_dict_list=target_tissue_dict,
+            corr_method="pearson")
+
+        self.assertEqual(mock_tissue_corr.call_count, 2)
+
+        self.assertEqual(results, expected_results)

@@ -79,3 +79,21 @@ class CorrelationIntegrationTest(TestCase):
 
         self.assertEqual(mock_compute_corr.call_count, 1)
         self.assertEqual(response.status_code, 200)
+
+    @mock.patch("gn3.api.correlation.compute_all_tissue_correlation")
+    def test_tissue_correlation(self, mock_tissue_corr):
+        """Test api/correlation/tissue_corr/{corr_method}"""
+        mock_tissue_corr.return_value = {}
+
+        primary_dict = {"trait_id": "1449593_at", "tissue_values": [1, 2, 3]}
+
+        target_tissue_dict_list = [
+            {"trait_id": "1449593_at", "tissue_values": [1, 2, 3]}]
+
+        tissue_corr_input_data = {"primary_tissue": primary_dict,
+                                  "target_tissues": target_tissue_dict_list}
+
+        response = self.app.post("/api/correlation/tissue_corr/spearman",
+                                 json=tissue_corr_input_data, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
