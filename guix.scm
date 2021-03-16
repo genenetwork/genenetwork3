@@ -73,6 +73,7 @@
                        ("python-flask" ,python-flask)
                        ("python-pylint" python-pylint)
                        ("python-numpy" ,python-numpy)
+                       ("python-scipy" ,python-scipy)
                        ("python-mypy" ,python-mypy)
                        ("python-mypy-extensions" ,python-mypy-extensions)
                        ("python-redis" ,python-redis)
