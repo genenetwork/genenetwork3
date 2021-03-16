@@ -1,9 +1,12 @@
 """Endpoints for running correlations"""
+from unittest import mock
+
 from flask import jsonify
 from flask import Blueprint
 from flask import request
 
 from gn3.computations.correlations import compute_all_sample_correlation
+from gn3.computations.correlations import compute_all_lit_correlation
 
 
 correlation = Blueprint("correlation", __name__)
@@ -25,3 +28,19 @@ def compute_sample_r(corr_method):
     return jsonify({
         "corr_results": correlation_results
     })
+
+
+@correlation.route("/lit_corr/<string:species>/<int:gene_id>", methods=["POST"])
+def compute_lit_corr(species=None, gene_id=None):
+    """api endpoint for doing lit correlation.results for lit correlation\
+    are fetched from the database this is the only case where the db\
+    might be needed for actual computing of the correlation results"""
+
+    database_instance = mock.Mock()
+    target_traits_gene_ids = request.get_json()
+
+    lit_corr_results = compute_all_lit_correlation(
+        database_instance=database_instance, trait_lists=target_traits_gene_ids,
+        species=species, gene_id=gene_id)
+
+    return jsonify(lit_corr_results)
