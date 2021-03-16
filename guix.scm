@@ -27,6 +27,7 @@
  (gnu packages base)
  (gnu packages check)
  (gnu packages databases)
+ (gnu packages statistics)
  (gnu packages python)
  (gnu packages python-check)
  (gnu packages python-crypto)
@@ -67,7 +68,6 @@
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
                        ("gemma-wrapper" ,gemma-wrapper)
-                       ("jupyter" ,jupyter)
                        ("python-bcrypt" ,python-bcrypt)
                        ("python" ,python-wrapper)
                        ("python-flask" ,python-flask)
@@ -77,7 +77,14 @@
                        ("python-mypy" ,python-mypy)
                        ("python-mypy-extensions" ,python-mypy-extensions)
                        ("python-redis" ,python-redis)
-                       ("python-pylint" ,python-pylint)))
+                       ("python-scipy" ,python-scipy)
+                       ;; Remove one of these!
+                       ("python-sqlalchemy" ,python-sqlalchemy)
+                       ("python-sqlalchemy-stubs" ,python-sqlalchemy-stubs)
+                       ("python-mysqlclient" ,python-mysqlclient)
+                       ;; This requires R in it's path
+                       ;; TODO: Remove!
+                       ("python-rpy2" ,python-rpy2)))
   (build-system python-build-system)
   (home-page "https://github.com/genenetwork/genenetwork3")
   (synopsis "GeneNetwork3 API for data science and machine learning.")

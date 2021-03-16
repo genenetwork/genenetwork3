@@ -4,7 +4,6 @@ import os
 from typing import Dict
 from typing import Union
 from flask import Flask
-
 from gn3.api.gemma import gemma
 from gn3.api.general import general
 from gn3.api.correlation import correlation
