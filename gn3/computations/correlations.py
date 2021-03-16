@@ -152,28 +152,26 @@ def tissue_correlation_for_trait_list(primary_tissue_vals: List,
                                       target_tissues_values: List,
                                       corr_method: str,
                                       compute_corr_p_value: Callable =
-                                      compute_corr_coeff_p_value)->List:
+                                      compute_corr_coeff_p_value)->dict:
     """given a primary tissue values for a trait and the target tissues values\
     compute the correlation_cooeff and p value  the input required are arrays\
     output - > List containing Dicts with corr_coefficient value,P_value and\
     also the tissue numbers is len(primary) == len(target)"""
 
-    lit_corr_results = []
+    # ax :todo assertion that lenggth one one target tissue ==primary_tissue
 
-    for target_trait_tissue in target_tissues_values:
-        (tissue_corr_coeffient, p_value) = compute_corr_p_value(
-            primary_values=primary_tissue_vals,
-            target_values=target_trait_tissue, corr_method=corr_method)
+    (tissue_corr_coeffient, p_value) = compute_corr_p_value(
+        primary_values=primary_tissue_vals,
+        target_values=target_tissues_values,
+        corr_method=corr_method)
 
-        corr_result = {
-            "tissue_corr": tissue_corr_coeffient,
-            "p_value": p_value,
-            "tissue_number": len(primary_tissue_vals)
-        }
+    lit_corr_result = {
+        "tissue_corr": tissue_corr_coeffient,
+        "p_value": p_value,
+        "tissue_number": len(primary_tissue_vals)
+    }
 
-        lit_corr_results.append(corr_result)
-
-    return lit_corr_results
+    return lit_corr_result
 
 
 def fetch_lit_correlation_data(database,
@@ -268,6 +266,7 @@ def map_to_mouse_gene_id(database, species: Optional[str], gene_id: Optional[str
 
 def compute_all_lit_correlation(database_instance, trait_lists: List, species: str, gene_id):
     """function that acts as an abstraction for lit_correlation_for_trait_list"""
+    # xtodo to be refactored
 
     lit_results = lit_correlation_for_trait_list(database=database_instance,
                                                  target_trait_lists=trait_lists,
@@ -278,3 +277,29 @@ def compute_all_lit_correlation(database_instance, trait_lists: List, species: s
     return {
         "lit_results": lit_results
     }
+
+
+def compute_all_tissue_correlation(primary_tissue_dict: dict,
+                                   target_tissues_dict_list: List,
+                                   corr_method: str):
+    """function acts as an abstraction for tissue_correlation_for_trait_list\
+    required input are target tissue object and primary tissue trait """
+
+    tissues_results = {}
+
+    primary_tissue_vals = primary_tissue_dict["tissue_values"]
+
+    target_tissues_list = target_tissues_dict_list
+
+    for target_tissue_obj in target_tissues_list:
+        trait_id = target_tissue_obj.get("trait_id")
+
+        target_tissue_vals = target_tissue_obj.get("tissue_values")
+
+        tissue_result = tissue_correlation_for_trait_list(primary_tissue_vals=primary_tissue_vals,
+                                                          target_tissues_values=target_tissue_vals,
+                                                          corr_method=corr_method)
+
+        tissues_results[trait_id] = tissue_result
+
+    return tissues_results
