@@ -264,3 +264,17 @@ def map_to_mouse_gene_id(database, species: Optional[str], gene_id: Optional[str
     mouse_gene_id = results.mouse if results is not None else None
 
     return mouse_gene_id
+
+
+def compute_all_lit_correlation(database_instance, trait_lists: List, species: str, gene_id):
+    """function that acts as an abstraction for lit_correlation_for_trait_list"""
+
+    lit_results = lit_correlation_for_trait_list(database=database_instance,
+                                                 target_trait_lists=trait_lists,
+                                                 species=species,
+                                                 trait_gene_id=gene_id
+                                                 )
+
+    return {
+        "lit_results": lit_results
+    }
