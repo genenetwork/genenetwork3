@@ -16,6 +16,7 @@ from gn3.computations.correlations import lit_correlation_for_trait_list
 from gn3.computations.correlations import fetch_lit_correlation_data
 from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
+from gn3.computations.correlations import compute_all_lit_correlation
 
 
 class QueryableMixin:
@@ -344,3 +345,26 @@ class TestCorrelation(TestCase):
             results.append(mouse_gene_id_results)
 
         self.assertEqual(results, expected_results)
+
+    @mock.patch("gn3.computations.correlations.lit_correlation_for_trait_list")
+    def test_compute_all_lit_correlation(self, mock_lit_corr):
+        """test for compute all lit correlation which acts\
+        as an abstraction for lit_correlation_for_trait_list
+        and is used in the api/correlation/lit"""
+
+        database = mock.Mock()
+
+        expected_mocked_lit_results = [{"gene_id": 11, "lit_corr": 9}, {
+            "gene_id": 17, "lit_corr": 8}]
+
+        mock_lit_corr.side_effect = expected_mocked_lit_results
+
+        lit_correlation_results = compute_all_lit_correlation(
+            database_instance=database, trait_lists=[{"gene_id": 11}],
+            species="rat", gene_id=12)
+
+        expected_results = {
+            "lit_results": {"gene_id": 11, "lit_corr": 9}
+        }
+
+        self.assertEqual(lit_correlation_results, expected_results)

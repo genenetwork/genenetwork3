@@ -16,7 +16,7 @@ class CorrelationIntegrationTest(TestCase):
 
     @mock.patch("gn3.api.correlation.compute_all_sample_correlation")
     def test_sample_r_correlation(self, mock_compute_samples):
-        """test for  /api/correlation/sample_r"""
+        """Test /api/correlation/sample_r/{method}"""
         this_trait_data = {
             "trait_id": "1455376_at",
             "trait_sample_data": {
@@ -64,3 +64,18 @@ class CorrelationIntegrationTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), api_response)
+
+    @mock.patch("gn3.api.correlation.compute_all_lit_correlation")
+    def test_lit_correlation(self, mock_compute_corr):
+        """Test api/correlation/lit_corr/{species}/{gene_id}"""
+
+        mock_compute_corr.return_value = []
+
+        post_data = [{"gene_id": 8, "lit_corr": 1}, {
+            "gene_id": 12, "lit_corr": 0.3}]
+
+        response = self.app.post(
+            "/api/correlation/lit_corr/mouse/16", json=post_data, follow_redirects=True)
+
+        self.assertEqual(mock_compute_corr.call_count, 1)
+        self.assertEqual(response.status_code, 200)
