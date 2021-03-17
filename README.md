@@ -69,7 +69,8 @@ Make sure that the dependencies in the `requirements.txt` file match those in
 guix. To freeze dependencies:
 
 ```bash
-# The -l flag ensures you don't include
-# python packages installed globally.
-pip freeze -l > requirements.txt
+# Consistent way to ensure you don't capture globally
+# installed packages
+pip freeze --path venv/lib/python3.8/site-packages > requirements.txt
+
 ```
