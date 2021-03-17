@@ -61,3 +61,15 @@ To spin up the server:
 ```bash
 env FLASK_DEBUG=1 FLASK_APP="main.py" flask run --port=8080
 ```
+
+
+#### A note on dependencies
+
+Make sure that the dependencies in the `requirements.txt` file match those in
+guix. To freeze dependencies:
+
+```bash
+# The -l flag ensures you don't include
+# python packages installed globally.
+pip freeze -l > requirements.txt
+```
