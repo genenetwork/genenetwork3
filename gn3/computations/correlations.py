@@ -4,7 +4,7 @@ from typing import Tuple
 from typing import Optional
 from typing import Callable
 
-import scipy.stats  # type: ignore
+import scipy.stats
 
 
 def compute_sum(rhs: int, lhs: int) -> int:
