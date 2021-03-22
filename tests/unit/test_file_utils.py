@@ -8,6 +8,7 @@ from unittest import mock
 from gn3.file_utils import extract_uploaded_file
 from gn3.file_utils import get_dir_hash
 from gn3.file_utils import jsonfile_to_dict
+from gn3.file_utils import cache_ipfs_file
 
 
 @dataclass
@@ -19,6 +20,7 @@ class MockFile:
 
 class TestFileUtils(unittest.TestCase):
     """Test cases for procedures defined in file_utils.py"""
+
     def test_get_dir_hash(self):
         """Test that a directory is hashed correctly"""
         test_dir = os.path.join(os.path.dirname(__file__), "test_data")
@@ -75,3 +77,44 @@ extracting the file"""
             "status": 128,
             "error": "gzip failed to unpack file"
         })
+
+    def test_cache_ipfs_file_cache_hit(self):
+        """Test that the correct file location is returned if there's a cache hit"""
+        # Create empty file
+        test_dir = "/tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test"
+        if not os.path.exists(test_dir):
+            os.mkdir(test_dir)
+        open(f"{test_dir}/genotype.txt", "a").close()
+        file_loc = cache_ipfs_file(
+            ipfs_file=("/ipfs/"
+                       "QmQPeNsJPyVWPFDVHb"
+                       "77w8G42Fvo15z4bG2X8D2GhfbSXc-test/"
+                       "genotype.txt"),
+            cache_dir="/tmp")
+        # Clean up
+        os.remove(f"{test_dir}/genotype.txt")
+        os.rmdir(test_dir)
+        self.assertEqual(file_loc, f"{test_dir}/genotype.txt")
+
+    @mock.patch("gn3.file_utils.ipfshttpclient")
+    def test_cache_ipfs_file_cache_miss(self,
+                                        mock_ipfs):
+        """Test that a file is cached if there's a cache miss"""
+        mock_ipfs_client = mock.MagicMock()
+        mock_ipfs.connect.return_value = mock_ipfs_client
+
+        test_dir = "/tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test"
+        self.assertEqual(cache_ipfs_file(
+            ipfs_file=("/ipfs/"
+                       "QmQPeNsJPyVWPFDVHb"
+                       "77w8G42Fvo15z4bG2X8D2GhfbSXc-test/"
+                       "genotype.txt"),
+            cache_dir="/tmp"
+        ), f"{test_dir}/genotype.txt")
+        mock_ipfs_client.get.assert_called_once_with(
+            ("/ipfs/"
+             "QmQPeNsJPyVWPFDVHb"
+             "77w8G42Fvo15z4bG2X8D2GhfbSXc-test/"
+             "genotype.txt"),
+            target=f"{test_dir}/genotype.txt"
+        )
