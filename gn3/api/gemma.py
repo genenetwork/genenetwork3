@@ -9,6 +9,7 @@ from flask import request
 
 from gn3.commands import queue_cmd
 from gn3.commands import run_cmd
+from gn3.file_utils import cache_ipfs_file
 from gn3.file_utils import jsonfile_to_dict
 from gn3.computations.gemma import generate_gemma_cmd
 from gn3.computations.gemma import do_paths_exist
@@ -47,10 +48,13 @@ traitfile, and snpsfile are extracted from a metadata.json file.
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [
+        phenofile, snpsfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps"]
+            for x in ["pheno", "snps"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR'))
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
@@ -85,10 +89,14 @@ values.
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [
+        phenofile, snpsfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps"]
+            for x in ["pheno", "snps"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
@@ -123,10 +131,14 @@ def compute_gwa(k_filename, token):
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [
+        phenofile, snpsfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps"]
+            for x in ["pheno", "snps"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         gemma_kwargs = {
             "g": genofile,
             "p": phenofile,
@@ -166,10 +178,14 @@ def compute_gwa_with_covar(k_filename, token):
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile, covarfile = [
+        phenofile, snpsfile, covarfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps", "covar"]
+            for x in ["pheno", "snps", "covar"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         gemma_kwargs = {
             "g": genofile,
             "p": phenofile,
@@ -211,10 +227,14 @@ def compute_gwa_with_loco_maf(k_filename, maf, token):
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [
+        phenofile, snpsfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps"]
+            for x in ["pheno", "snps"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {
@@ -258,10 +278,14 @@ def compute_gwa_with_loco_covar(k_filename, maf, token):
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile, covarfile = [
+        phenofile, snpsfile, covarfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps", "covar"]
+            for x in ["pheno", "snps", "covar"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         if not do_paths_exist([genofile, phenofile, snpsfile, covarfile]):
             raise FileNotFoundError
         gemma_kwargs = {
@@ -308,10 +332,14 @@ covars; lmm defaults to 9!
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [
+        phenofile, snpsfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps"]
+            for x in ["pheno", "snps"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
@@ -360,10 +388,14 @@ covars; lmm defaults to 9!
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile, covarfile = [
+        phenofile, snpsfile, covarfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps", "covar"]
+            for x in ["pheno", "snps", "covar"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
@@ -411,10 +443,14 @@ def compute_k_gwa_with_loco_only(chromosomes, maf, token):
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile = [
+        phenofile, snpsfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps"]
+            for x in ["pheno", "snps"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
@@ -465,10 +501,14 @@ def compute_k_gwa_with_loco_and_cavar(chromosomes, maf, token):
     working_dir = os.path.join(current_app.config.get("TMPDIR"), token)
     _dict = jsonfile_to_dict(os.path.join(working_dir, "metadata.json"))
     try:
-        genofile, phenofile, snpsfile, covarfile = [
+        phenofile, snpsfile, covarfile = [
             os.path.join(working_dir, _dict.get(x))
-            for x in ["geno", "pheno", "snps", "covar"]
+            for x in ["pheno", "snps", "covar"]
         ]
+        genofile = cache_ipfs_file(
+            ipfs_file=_dict.get("geno"),
+            cache_dir=current_app.config.get('CACHEDIR')
+        )
         if not do_paths_exist([genofile, phenofile, snpsfile]):
             raise FileNotFoundError
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
