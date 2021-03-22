@@ -116,5 +116,5 @@ extracting the file"""
              "QmQPeNsJPyVWPFDVHb"
              "77w8G42Fvo15z4bG2X8D2GhfbSXc-test/"
              "genotype.txt"),
-            target=f"{test_dir}/genotype.txt"
+            target=f"{test_dir}"
         )
