@@ -24,6 +24,7 @@
  (ice-9 popen)
  (ice-9 rdelim)
  (gn packages gemma)
+ (gn packages python)
  (gnu packages base)
  (gnu packages check)
  (gnu packages databases)
