@@ -5,6 +5,7 @@ import os
 import random
 import string
 import tarfile
+import pathlib
 
 from functools import partial
 from typing import Dict
@@ -90,6 +91,7 @@ def cache_ipfs_file(ipfs_file: str,
     if not os.path.exists(file_loc):
         client = ipfshttpclient.connect(ipfs_addr)
         client.get(ipfs_file,
-                   target=os.path.join(cache_dir,
-                                       ipfs_file.split("ipfs/")[-1]))
+                   target=pathlib.Path
+                   (os.path.join(cache_dir,
+                                 ipfs_file.split("ipfs/")[-1])).parent)
     return file_loc
