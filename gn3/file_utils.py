@@ -91,7 +91,8 @@ def cache_ipfs_file(ipfs_file: str,
     if not os.path.exists(file_loc):
         client = ipfshttpclient.connect(ipfs_addr)
         client.get(ipfs_file,
-                   target=pathlib.Path
-                   (os.path.join(cache_dir,
-                                 ipfs_file.split("ipfs/")[-1])).parent)
+                   target=str(
+                       pathlib.Path
+                       (os.path.join(cache_dir,
+                                     ipfs_file.split("ipfs/")[-1])).parent))
     return file_loc
