@@ -5,11 +5,13 @@ import os
 import random
 import string
 import tarfile
+
 from functools import partial
 from typing import Dict
 from typing import List
-
 from werkzeug.utils import secure_filename
+
+import ipfshttpclient
 
 
 def get_hash_of_files(files: List[str]) -> str:
@@ -75,3 +77,19 @@ contents to TARGET_DIR/<dir-hash>.
     except Exception:
         return {"status": 128, "error": "gzip failed to unpack file"}
     return {"status": 0, "token": token}
+
+
+def cache_ipfs_file(ipfs_file: str,
+                    cache_dir: str,
+                    ipfs_addr: str = "/ip4/127.0.0.1/tcp/5001") -> str:
+    """Check if a file exists in cache; if it doesn't, cache it.  Return the
+    cached file location
+
+    """
+    file_loc = os.path.join(cache_dir, ipfs_file.split("ipfs/")[-1])
+    if not os.path.exists(file_loc):
+        client = ipfshttpclient.connect(ipfs_addr)
+        client.get(ipfs_file,
+                   target=os.path.join(cache_dir,
+                                       ipfs_file.split("ipfs/")[-1]))
+    return file_loc
