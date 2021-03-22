@@ -60,13 +60,14 @@ traitfile, and snpsfile are extracted from a metadata.json file.
             output_dir=current_app.config.get('TMPDIR'),
             token=token,
             gemma_kwargs=gemma_kwargs)
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=results.get("gemma_cmd")),
-                       status="queued",
-                       output_file=results.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=results.get("gemma_cmd")),
+            status="queued",
+            output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -98,13 +99,14 @@ values.
             token=token,
             gemma_kwargs=gemma_kwargs,
             chromosomes=chromosomes)
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=results.get("gemma_cmd")),
-                       status="queued",
-                       output_file=results.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=results.get("gemma_cmd")),
+            status="queued",
+            output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -140,13 +142,14 @@ def compute_gwa(k_filename, token):
             gemma_wrapper_kwargs={
                 "input": os.path.join(working_dir, k_filename)
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=results.get("gemma_cmd")),
-                       status="queued",
-                       output_file=results.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=results.get("gemma_cmd")),
+            status="queued",
+            output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -183,13 +186,14 @@ def compute_gwa_with_covar(k_filename, token):
             gemma_wrapper_kwargs={
                 "input": os.path.join(working_dir, k_filename)
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=results.get("gemma_cmd")),
-                       status="queued",
-                       output_file=results.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=results.get("gemma_cmd")),
+            status="queued",
+            output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -229,13 +233,14 @@ def compute_gwa_with_loco_maf(k_filename, maf, token):
             gemma_wrapper_kwargs={
                 "loco": f"--input {os.path.join(working_dir, k_filename)}"
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=results.get("gemma_cmd")),
-                       status="queued",
-                       output_file=results.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=results.get("gemma_cmd")),
+            status="queued",
+            output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -276,13 +281,14 @@ def compute_gwa_with_loco_covar(k_filename, maf, token):
             gemma_wrapper_kwargs={
                 "loco": f"--input {os.path.join(working_dir, k_filename)}"
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=results.get("gemma_cmd")),
-                       status="queued",
-                       output_file=results.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=results.get("gemma_cmd")),
+            status="queued",
+            output_file=results.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -326,14 +332,15 @@ covars; lmm defaults to 9!
                 "input": os.path.join(working_dir,
                                       gemma_k_cmd.get("output_file"))
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
-                 f"{gemma_gwa_cmd.get('gemma_cmd')}")),
-                       status="queued",
-                       output_file=gemma_gwa_cmd.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
+                     f"{gemma_gwa_cmd.get('gemma_cmd')}")),
+            status="queued",
+            output_file=gemma_gwa_cmd.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -378,14 +385,15 @@ covars; lmm defaults to 9!
                 "input": os.path.join(working_dir,
                                       gemma_k_cmd.get("output_file"))
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
-                 f"{gemma_gwa_cmd.get('gemma_cmd')}")),
-                       status="queued",
-                       output_file=gemma_gwa_cmd.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
+                     f"{gemma_gwa_cmd.get('gemma_cmd')}")),
+            status="queued",
+            output_file=gemma_gwa_cmd.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -431,14 +439,15 @@ def compute_k_gwa_with_loco_only(chromosomes, maf, token):
                  f"{os.path.join(working_dir, gemma_k_cmd.get('output_file'))}"
                  )
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
-                 f"{gemma_gwa_cmd.get('gemma_cmd')}")),
-                       status="queued",
-                       output_file=gemma_gwa_cmd.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
+                     f"{gemma_gwa_cmd.get('gemma_cmd')}")),
+            status="queued",
+            output_file=gemma_gwa_cmd.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
@@ -485,14 +494,15 @@ def compute_k_gwa_with_loco_and_cavar(chromosomes, maf, token):
                  f"{os.path.join(working_dir, gemma_k_cmd.get('output_file'))}"
                  )
             })
-        return jsonify(unique_id=queue_cmd(
-            conn=redis.Redis(),
-            email=(request.get_json() or {}).get('email'),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
-                 f"{gemma_gwa_cmd.get('gemma_cmd')}")),
-                       status="queued",
-                       output_file=gemma_gwa_cmd.get("output_file"))
+        return jsonify(
+            unique_id=queue_cmd(
+                conn=redis.Redis(),
+                email=(request.get_json() or {}).get('email'),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                cmd=(f"{gemma_k_cmd.get('gemma_cmd')} && "
+                     f"{gemma_gwa_cmd.get('gemma_cmd')}")),
+            status="queued",
+            output_file=gemma_gwa_cmd.get("output_file"))
     # pylint: disable=W0703
     except Exception:
         return jsonify(
