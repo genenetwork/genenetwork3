@@ -18,6 +18,8 @@ from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
 from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_all_tissue_correlation
+from gn3.computations.correlations import map_sample_list_to_values
+from gn3.computations.correlations import map_shared_keys_to_values
 
 
 class QueryableMixin:
@@ -395,5 +397,33 @@ class TestCorrelation(TestCase):
             corr_method="pearson")
 
         self.assertEqual(mock_tissue_corr.call_count, 2)
+
+        self.assertEqual(results, expected_results)
+
+    def test_map_sample_list_to_values(self):
+        """test for creating a dict from two lists """
+
+        results = map_sample_list_to_values(["BXA", "BXD"], [1, 2, 3])
+
+        expected_dict_results = {"BXA": 1, "BXD": 2}
+        self.assertEqual(results, expected_dict_results)
+
+    def test_map_shared_keys_to_values(self):
+        """test helper function needed to integrate with genenenetwork2\
+        given a a samplelist containing dataset sampelist keys\
+        map that to given sample values """
+
+        dataset_sample_keys = ["BXD1", "BXD2", "BXD5"]
+
+        target_dataset_data = {"HCMA:_AT": [4.1, 5.6, 3.2],
+                               "TXD_AT": [6.2, 5.7, 3.6, ]}
+
+        expected_results = [{"trait_id": "HCMA:_AT",
+                             "trait_sample_data": {"BXD1": 4.1, "BXD2": 5.6, "BXD5": 3.2}},
+                            {"trait_id": "TXD_AT",
+                             "trait_sample_data": {"BXD1": 6.2, "BXD2": 5.7, "BXD5": 3.6}}]
+
+        results = map_shared_keys_to_values(
+            dataset_sample_keys, target_dataset_data)
 
         self.assertEqual(results, expected_results)

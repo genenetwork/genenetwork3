@@ -12,6 +12,35 @@ def compute_sum(rhs: int, lhs: int)-> int:
     return rhs + lhs
 
 
+def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict)->List:
+    """function to construct target dataset data items given commoned shared\
+    keys and trait samplelist values for example given keys  >>>>>>>>>>\
+    ["BXD1", "BXD2", "BXD5", "BXD6", "BXD8", "BXD9"] and value object as\
+    "HCMA:_AT": [4.1, 5.6, 3.2, 1.1, 4.4, 2.2],TXD_AT": [6.2, 5.7, 3.6, 1.5, 4.2, 2.3]}\
+    return  results should be a list of dicts mapping the shared keys to the trait values"""
+    target_dataset_data = []
+
+    for trait_id, sample_values in target_sample_vals.items():
+        target_trait_dict = dict(zip(target_sample_keys, sample_values))
+
+        target_trait = {
+            "trait_id": trait_id,
+            "trait_sample_data": target_trait_dict
+        }
+
+        target_dataset_data.append(target_trait)
+
+    return target_dataset_data
+
+
+def map_sample_list_to_values(sample_keys: List, sample_values: List)->dict:
+    """create a dict given two arrays  example  include keys=['X1',"X2",X3]\
+    shared values =[1,2,3] expected results {X1:1,"X2":2,"X3":3}"""
+    new_dict = dict(zip(sample_keys, sample_values))
+
+    return new_dict
+
+
 def normalize_values(a_values: List, b_values: List)->Tuple[List[float], List[float], int]:
     """
     Trim two lists of values to contain only the values they both share
@@ -235,6 +264,7 @@ def query_formatter(query_string: str, * query_values):
     """formatter query string given the unformatted query string\
     and the respectibe values.Assumes number of placeholders is
     equal to the number of query values """
+    # xtodo escape sql queries
     results = query_string % (query_values)
 
     return results
