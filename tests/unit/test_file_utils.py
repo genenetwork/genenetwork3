@@ -24,7 +24,7 @@ class TestFileUtils(unittest.TestCase):
     def test_get_dir_hash(self):
         """Test that a directory is hashed correctly"""
         test_dir = os.path.join(os.path.dirname(__file__), "test_data")
-        self.assertEqual("fd9d74a9554b7f13bfeffbdda8e61486",
+        self.assertEqual("3aeafab7d53b4f76d223366ae7ee9738",
                          get_dir_hash(test_dir))
 
     def test_get_dir_hash_non_existent_dir(self):
