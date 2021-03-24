@@ -8,9 +8,30 @@ from flask import request
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_all_tissue_correlation
-
+from gn3.computations.correlations import map_shared_keys_to_values
 
 correlation = Blueprint("correlation", __name__)
+
+
+@correlation.route("/sample_x/<string:corr_method>", methods=["POST"])
+def compute_sample_integration(corr_method="pearson"):
+    """temporary api to  help integrate genenetwork2  to genenetwork3 """
+
+    # xtodo to be remove all merged to the compute_sample)r api
+
+    # xtodo better option is even to use a decorator to construct this
+    correlation_input = request.get_json()
+
+    target_samplelist = correlation_input.get("target_samplelist")
+    target_data_values = correlation_input.get("target_dataset")
+    this_trait_data = correlation_input.get("trait_data")
+    results = map_shared_keys_to_values(target_samplelist, target_data_values)
+
+    correlation_results = compute_all_sample_correlation(corr_method=corr_method,
+                                                         this_trait=this_trait_data,
+                                                         target_dataset=results)
+
+    return jsonify(correlation_results)
 
 
 @correlation.route("/sample_r/<string:corr_method>", methods=["POST"])
