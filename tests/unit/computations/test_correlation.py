@@ -18,7 +18,6 @@ from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
 from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_all_tissue_correlation
-from gn3.computations.correlations import map_sample_list_to_values
 from gn3.computations.correlations import map_shared_keys_to_values
 
 
@@ -399,14 +398,6 @@ class TestCorrelation(TestCase):
         self.assertEqual(mock_tissue_corr.call_count, 2)
 
         self.assertEqual(results, expected_results)
-
-    def test_map_sample_list_to_values(self):
-        """test for creating a dict from two lists """
-
-        results = map_sample_list_to_values(["BXA", "BXD"], [1, 2, 3])
-
-        expected_dict_results = {"BXA": 1, "BXD": 2}
-        self.assertEqual(results, expected_dict_results)
 
     def test_map_shared_keys_to_values(self):
         """test helper function needed to integrate with genenenetwork2\

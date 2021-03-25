@@ -12,7 +12,7 @@ def compute_sum(rhs: int, lhs: int)-> int:
     return rhs + lhs
 
 
-def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict)->List:
+def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict)-> List:
     """function to construct target dataset data items given commoned shared\
     keys and trait samplelist values for example given keys  >>>>>>>>>>\
     ["BXD1", "BXD2", "BXD5", "BXD6", "BXD8", "BXD9"] and value object as\
@@ -31,14 +31,6 @@ def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict
         target_dataset_data.append(target_trait)
 
     return target_dataset_data
-
-
-def map_sample_list_to_values(sample_keys: List, sample_values: List)->dict:
-    """create a dict given two arrays  example  include keys=['X1',"X2",X3]\
-    shared values =[1,2,3] expected results {X1:1,"X2":2,"X3":3}"""
-    new_dict = dict(zip(sample_keys, sample_values))
-
-    return new_dict
 
 
 def normalize_values(a_values: List, b_values: List)->Tuple[List[float], List[float], int]:
@@ -73,6 +65,7 @@ def compute_corr_coeff_p_value(primary_values: List, target_values: List, corr_m
         "pearson": scipy.stats.pearsonr,
         "spearman": scipy.stats.spearmanr
     }
+
 
     use_corr_method = corr_mapping.get(corr_method, "spearman")
 
@@ -187,12 +180,13 @@ def tissue_correlation_for_trait_list(primary_tissue_vals: List,
     output - > List containing Dicts with corr_coefficient value,P_value and\
     also the tissue numbers is len(primary) == len(target)"""
 
-    # ax :todo assertion that lenggth one one target tissue ==primary_tissue
+    # ax :todo assertion that length one one target tissue ==primary_tissue
 
     (tissue_corr_coeffient, p_value) = compute_corr_p_value(
         primary_values=primary_tissue_vals,
         target_values=target_tissues_values,
         corr_method=corr_method)
+
 
     lit_corr_result = {
         "tissue_corr": tissue_corr_coeffient,
