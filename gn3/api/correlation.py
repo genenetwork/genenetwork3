@@ -1,6 +1,4 @@
 """Endpoints for running correlations"""
-from unittest import mock
-
 from flask import jsonify
 from flask import Blueprint
 from flask import request
@@ -9,6 +7,7 @@ from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_all_tissue_correlation
 from gn3.computations.correlations import map_shared_keys_to_values
+from gn3.db_utils import database_connector
 
 correlation = Blueprint("correlation", __name__)
 
@@ -58,7 +57,8 @@ def compute_lit_corr(species=None, gene_id=None):
     are fetched from the database this is the only case where the db\
     might be needed for actual computing of the correlation results"""
 
-    database_instance = mock.Mock()
+    # database_instance = mock.Mock()
+    _, database_instance = database_connector()
     target_traits_gene_ids = request.get_json()
 
     lit_corr_results = compute_all_lit_correlation(

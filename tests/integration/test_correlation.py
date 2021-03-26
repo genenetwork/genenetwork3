@@ -66,10 +66,13 @@ class CorrelationIntegrationTest(TestCase):
         self.assertEqual(response.get_json(), api_response)
 
     @mock.patch("gn3.api.correlation.compute_all_lit_correlation")
-    def test_lit_correlation(self, mock_compute_corr):
+    @mock.patch("gn3.api.correlation.database_connector")
+    def test_lit_correlation(self, database_connector, mock_compute_corr):
         """Test api/correlation/lit_corr/{species}/{gene_id}"""
 
         mock_compute_corr.return_value = []
+
+        database_connector.return_value = (mock.Mock(), mock.Mock())
 
         post_data = [{"gene_id": 8, "lit_corr": 1}, {
             "gene_id": 12, "lit_corr": 0.3}]
