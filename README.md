@@ -16,7 +16,10 @@ virtualenv --python python3 venv
 3. Install the required packages
 
 ```bash
-pip install -r requirements.txt
+# The --ignore-installed flag forces packages to
+# get installed in the venv even if they existed 
+# in the global env
+pip install -r requirements.txt --ignore-installed
 ```
 
 #### Using guix
@@ -57,4 +60,17 @@ To spin up the server:
 
 ```bash
 env FLASK_DEBUG=1 FLASK_APP="main.py" flask run --port=8080
+```
+
+
+#### A note on dependencies
+
+Make sure that the dependencies in the `requirements.txt` file match those in
+guix. To freeze dependencies:
+
+```bash
+# Consistent way to ensure you don't capture globally
+# installed packages
+pip freeze --path venv/lib/python3.8/site-packages > requirements.txt
+
 ```
