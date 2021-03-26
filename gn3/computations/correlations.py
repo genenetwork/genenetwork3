@@ -66,7 +66,6 @@ def compute_corr_coeff_p_value(primary_values: List, target_values: List, corr_m
         "spearman": scipy.stats.spearmanr
     }
 
-
     use_corr_method = corr_mapping.get(corr_method, "spearman")
 
     corr_coeffient, p_val = use_corr_method(primary_values, target_values)
@@ -186,7 +185,6 @@ def tissue_correlation_for_trait_list(primary_tissue_vals: List,
         primary_values=primary_tissue_vals,
         target_values=target_tissues_values,
         corr_method=corr_method)
-
 
     lit_corr_result = {
         "tissue_corr": tissue_corr_coeffient,
