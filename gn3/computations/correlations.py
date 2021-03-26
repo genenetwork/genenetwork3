@@ -36,7 +36,6 @@ def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict
 def normalize_values(a_values: List,
                      b_values: List) -> Tuple[List[float], List[float], int]:
     """Trim two lists of values to contain only the values they both share
-
     Given two lists of sample values, trim each list so that it contains only
     the samples that contain a value in both lists. Also returns the number of
     such samples.
