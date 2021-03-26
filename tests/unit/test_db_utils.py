@@ -14,4 +14,4 @@ class TestDatabase(TestCase):
         """test for creating database connection"""
         results = database_connector()
 
-        self.assertEqual(results, True)
+        self.assertEqual(results, False)

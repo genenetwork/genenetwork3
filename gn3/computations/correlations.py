@@ -12,7 +12,6 @@ def compute_sum(rhs: int, lhs: int) -> int:
     return rhs + lhs
 
 
-<<<<<<< HEAD
 def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict)-> List:
     """function to construct target dataset data items given commoned shared\
     keys and trait samplelist values for example given keys  >>>>>>>>>>\
@@ -34,14 +33,9 @@ def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict
     return target_dataset_data
 
 
-def normalize_values(a_values: List, b_values: List)->Tuple[List[float], List[float], int]:
-    """
-    Trim two lists of values to contain only the values they both share
-=======
 def normalize_values(a_values: List,
                      b_values: List) -> Tuple[List[float], List[float], int]:
     """Trim two lists of values to contain only the values they both share
->>>>>>> 5151987063eab58b10a2dd8e831ec036df217531
 
     Given two lists of sample values, trim each list so that it contains only
     the samples that contain a value in both lists. Also returns the number of
