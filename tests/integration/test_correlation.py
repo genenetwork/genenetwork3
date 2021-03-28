@@ -74,8 +74,9 @@ class CorrelationIntegrationTest(TestCase):
 
         database_connector.return_value = (mock.Mock(), mock.Mock())
 
-        post_data = [{"gene_id": 8, "lit_corr": 1}, {
-            "gene_id": 12, "lit_corr": 0.3}]
+        post_data = {"1426678_at": "68031",
+                     "1426679_at": "68036",
+                     "1426680_at": "74777"}
 
         response = self.app.post(
             "/api/correlation/lit_corr/mouse/16", json=post_data, follow_redirects=True)
