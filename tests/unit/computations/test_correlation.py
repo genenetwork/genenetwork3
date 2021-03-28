@@ -256,8 +256,10 @@ class TestCorrelation(TestCase):
             database=database_instance, target_trait_lists=target_trait_lists,
             species="rat", trait_gene_id="12")
 
-        expected_results = [{"gene_id": 15, "lit_corr": 9}, {
-            "gene_id": 17, "lit_corr": 8}, {"gene_id": 11, "lit_corr": 12}]
+        expected_results = [{"1426679_at": {"gene_id": 15, "lit_corr": 9}},
+                            {"1426702_at": {
+                                "gene_id": 17, "lit_corr": 8}},
+                            {"1426682_at": {"gene_id": 11, "lit_corr": 12}}]
 
         self.assertEqual(lit_results, expected_results)
 

@@ -261,7 +261,8 @@ def lit_correlation_for_trait_list(
                                                     species=species,
                                                     gene_id=trait_gene_id)
 
-    for (_trait_name, target_trait_gene_id) in target_trait_lists:
+    for (trait_name, target_trait_gene_id) in target_trait_lists:
+        corr_results = {}
         if target_trait_gene_id:
             target_mouse_gene_id = map_to_mouse_gene_id(
                 database=database,
@@ -276,7 +277,8 @@ def lit_correlation_for_trait_list(
 
             dict_results = dict(zip(("gene_id", "lit_corr"),
                                     fetched_corr_data))
-            fetched_lit_corr_results.append(dict_results)
+            corr_results[trait_name] = dict_results
+            fetched_lit_corr_results.append(corr_results)
 
     return fetched_lit_corr_results
 
