@@ -228,15 +228,19 @@ def fetch_lit_correlation_data(
 
         query_values = (str(mouse_gene_id), str(input_mouse_gene_id))
 
-        results = database.execute(query_formatter(query,
-                                                   *query_values)).fetchone()
+        cursor = database.cursor()
+
+        cursor.execute(query_formatter(query,
+                                       *query_values))
+        results = cursor.fetchone()
         lit_corr_results = None
         if results is not None:
             lit_corr_results = results
         else:
-            lit_corr_results = database.execute(
-                query_formatter(query,
-                                *tuple(reversed(query_values)))).fetchone()
+            cursor = database.cursor()
+            cursor.execute(query_formatter(query,
+                                           *tuple(reversed(query_values))))
+            lit_corr_results = cursor.fetchone()
         lit_results = (gene_id, lit_corr_results.val)\
             if lit_corr_results else (gene_id, 0)
         return lit_results
@@ -257,8 +261,7 @@ def lit_correlation_for_trait_list(
                                                     species=species,
                                                     gene_id=trait_gene_id)
 
-    for trait in target_trait_lists:
-        target_trait_gene_id = trait.get("gene_id")
+    for (_trait_name, target_trait_gene_id) in target_trait_lists:
         if target_trait_gene_id:
             target_mouse_gene_id = map_to_mouse_gene_id(
                 database=database,
@@ -299,14 +302,15 @@ def map_to_mouse_gene_id(database, species: Optional[str],
     if species == "mouse":
         return gene_id
 
+    cursor = database.cursor()
     query = """SELECT mouse
                 FROM GeneIDXRef
                 WHERE '%s' = '%s'"""
 
     query_values = (species, gene_id)
-
-    results = database.execute(query_formatter(query,
-                                               *query_values)).fetchone()
+    cursor.execute(query_formatter(query,
+                                   *query_values))
+    results = cursor.fetchone()
 
     mouse_gene_id = results.mouse if results is not None else None
 

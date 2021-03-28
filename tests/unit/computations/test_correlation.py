@@ -28,6 +28,10 @@ class QueryableMixin:
         """base method for execute"""
         raise NotImplementedError()
 
+    def cursor(self):
+        """method for creating db cursor"""
+        raise NotImplementedError()
+
     def fetchone(self):
         """base method for fetching one iten"""
         raise NotImplementedError()
@@ -47,37 +51,39 @@ class IllegalOperationError(Exception):
 class DataBase(QueryableMixin):
     """Class for creating db object"""
 
-    def __init__(self):
+    def __init__(self, expected_results=None, password="1234", db_name=None):
+        """expects the expectede results value to be an array"""
+        self.password = password
+        self.db_name = db_name
         self.__query_options = None
-        self.__results = None
+        self.results_generator(expected_results)
 
     def execute(self, query_options):
         """method to execute an sql query"""
         self.__query_options = query_options
-        self.results_generator()
+        return 1
+
+    def cursor(self):
+        """method for creating db cursor"""
         return self
 
     def fetchone(self):
         """method to fetch single item from the db query"""
         if self.__results is None:
-            raise IllegalOperationError()
+            return None
 
         return self.__results[0]
 
     def fetchall(self):
         """method for fetching all items from db query"""
         if self.__results is None:
-            raise IllegalOperationError()
+            return None
         return self.__results
 
-    def results_generator(self, expected_results=None):
+    def results_generator(self, expected_results):
         """private method  for generating mock results"""
 
-        if expected_results is None:
-            self.__results = [namedtuple("lit_coeff", "val")(x*0.1)
-                              for x in range(1, 4)]
-        else:
-            self.__results = expected_results
+        self.__results = expected_results
 
 
 class TestCorrelation(TestCase):
@@ -237,12 +243,12 @@ class TestCorrelation(TestCase):
         """fetch results from  db call for lit correlation given a trait list\
         after doing correlation"""
 
-        target_trait_lists = [{"gene_id": 15},
-                              {"gene_id": 17},
-                              {"gene_id": 11}]
+        target_trait_lists = [("1426679_at", 15),
+                              ("1426702_at", 17),
+                              ("1426682_at", 11)]
         mock_mouse_gene_id.side_effect = [12, 11, 18, 16, 20]
 
-        database_instance = namedtuple("database", "execute")("fetchone")
+        database_instance = DataBase()
 
         fetch_lit_data.side_effect = [(15, 9), (17, 8), (11, 12)]
 
@@ -271,7 +277,9 @@ class TestCorrelation(TestCase):
         """test for fetching lit corr coefficent givent the input\
          input trait mouse gene id and mouse gene id"""
 
-        database_instance = DataBase()
+        expected_db_results = [namedtuple("lit_coeff", "val")(x*0.1)
+                               for x in range(1, 4)]
+        database_instance = DataBase(expected_results=expected_db_results)
         expected_results = ("1", 0.1)
 
         lit_results = fetch_lit_correlation_data(database=database_instance,
@@ -284,9 +292,7 @@ class TestCorrelation(TestCase):
     def test_query_lit_correlation_for_db_empty(self):
         """test that corr coeffient returned is 0 given the\
         db value if corr coefficient is empty"""
-        database_instance = mock.Mock()
-        database_instance.execute.return_value.fetchone.return_value = None
-
+        database_instance = DataBase()
         lit_results = fetch_lit_correlation_data(database=database_instance,
                                                  input_mouse_gene_id="12",
                                                  gene_id="16",
@@ -337,8 +343,10 @@ class TestCorrelation(TestCase):
         database_results = [namedtuple("mouse_id", "mouse")(val)
                             for val in range(12, 20)]
         results = []
-
-        database_instance.execute.return_value.fetchone.side_effect = database_results
+        cursor = mock.Mock()
+        cursor.execute.return_value = 1
+        cursor.fetchone.side_effect = database_results
+        database_instance.cursor.return_value = cursor
         expected_results = [12, None, 13, 14]
         for (species, gene_id) in test_data:
 
