@@ -335,18 +335,22 @@ def compute_all_lit_correlation(database_instance, trait_lists: List,
 
 
 def compute_all_tissue_correlation(primary_tissue_dict: dict,
-                                   target_tissues_dict_list: List,
+                                   target_tissues_data: dict,
                                    corr_method: str):
     """Function acts as an abstraction for tissue_correlation_for_trait_list\
-    required input are target tissue object and primary tissue trait
+    required input are target tissue object and primary tissue trait\
+    target tissues data contains the trait_symbol_dict and symbol_tissue_vals
 
     """
 
     tissues_results = {}
 
     primary_tissue_vals = primary_tissue_dict["tissue_values"]
+    traits_symbol_dict = target_tissues_data["trait_symbol_dict"]
+    symbol_tissue_vals_dict = target_tissues_data["symbol_tissue_vals_dict"]
 
-    target_tissues_list = target_tissues_dict_list
+    target_tissues_list = process_trait_symbol_dict(
+        traits_symbol_dict, symbol_tissue_vals_dict)
 
     for target_tissue_obj in target_tissues_list:
         trait_id = target_tissue_obj.get("trait_id")
@@ -361,3 +365,22 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
         tissues_results[trait_id] = tissue_result
 
     return tissues_results
+
+
+def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> List:
+    """method for processing trait symbol\
+    dict given the symbol tissue values """
+    traits_tissue_vals = []
+
+    for (trait, symbol) in trait_symbol_dict.items():
+        if symbol is not None:
+            target_symbol = symbol.lower()
+            if target_symbol in symbol_tissue_vals_dict:
+                trait_tissue_val = symbol_tissue_vals_dict[target_symbol]
+                target_tissue_dict = {"trait_id": trait,
+                                      "symbol": target_symbol,
+                                      "tissue_values": trait_tissue_val}
+
+                traits_tissue_vals.append(target_tissue_dict)
+
+    return traits_tissue_vals

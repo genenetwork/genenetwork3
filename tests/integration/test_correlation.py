@@ -10,10 +10,6 @@ class CorrelationIntegrationTest(TestCase):
     def setUp(self):
         self.app = create_app().test_client()
 
-    def test_fail(self):
-        """initial method for class that fails"""
-        self.assertEqual(2, 2)
-
     @mock.patch("gn3.api.correlation.compute_all_sample_correlation")
     def test_sample_r_correlation(self, mock_compute_samples):
         """Test /api/correlation/sample_r/{method}"""
@@ -89,13 +85,20 @@ class CorrelationIntegrationTest(TestCase):
         """Test api/correlation/tissue_corr/{corr_method}"""
         mock_tissue_corr.return_value = {}
 
+        target_trait_symbol_dict = {
+            "1418702_a_at": "Bxdc1", "1412_at": "Bxdc2"}
+        symbol_tissue_dict = {
+            "bxdc1": [12, 21.1, 11.4, 16.7], "bxdc2": [12, 20.1, 12.4, 1.1]}
+
         primary_dict = {"trait_id": "1449593_at", "tissue_values": [1, 2, 3]}
 
-        target_tissue_dict_list = [
-            {"trait_id": "1449593_at", "tissue_values": [1, 2, 3]}]
+        target_tissue_data = {
+            "trait_symbol_dict": target_trait_symbol_dict,
+            "symbol_tissue_vals_dict": symbol_tissue_dict
+        }
 
         tissue_corr_input_data = {"primary_tissue": primary_dict,
-                                  "target_tissues": target_tissue_dict_list}
+                                  "target_tissues_dict": target_tissue_data}
 
         response = self.app.post("/api/correlation/tissue_corr/spearman",
                                  json=tissue_corr_input_data, follow_redirects=True)
