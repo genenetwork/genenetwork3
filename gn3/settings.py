@@ -12,6 +12,6 @@ REDIS_JOB_QUEUE = "GN3::job-queue"
 TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
 
 # SQL confs
-SQL_URI = os.environ.get("SQL_URI")
+SQL_URI = os.environ.get("SQL_URI", "mysql://kabui:1234@localhost/db_webqtl")
 SECRET_KEY = "password"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
