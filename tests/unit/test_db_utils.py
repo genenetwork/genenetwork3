@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from gn3.db_utils import database_connector
 from gn3.db_utils import execute_sql_query
+from gn3.db_utils import parse_db_url
 
 
 class TestDatabase(TestCase):
@@ -15,10 +16,11 @@ class TestDatabase(TestCase):
     @mock.patch("gn3.db_utils.mdb")
     def test_database_connector(self, mock_sql):
         """test for creating database connection"""
-        results = database_connector()
-        cursor_object = SimpleNamespace(cursor=SimpleNamespace(execute=3))
+        callable_cursor = lambda: SimpleNamespace(execute=3)
+        cursor_object = SimpleNamespace(cursor=callable_cursor)
         mock_sql.connect.return_value = cursor_object
         mock_sql.close.return_value = None
+        results = database_connector()
 
         self.assertIsInstance(
             results, tuple, "database not created successfully")
@@ -30,3 +32,11 @@ class TestDatabase(TestCase):
         results = execute_sql_query()
 
         self.assertEqual(results, True)
+
+    @mock.patch("gn3.db_utils.SQL_URI",
+                "mysql://username:4321@localhost/test")
+    def test_parse_db_url(self):
+        """test for parsing db_uri env variable"""
+        results = parse_db_url()
+        expected_results = ("localhost", "username", "4321", "test")
+        self.assertEqual(results, expected_results)

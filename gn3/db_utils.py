@@ -1,6 +1,19 @@
 """module contains all db related stuff"""
 from typing import Tuple
+from typing import Optional
+from urllib.parse import urlparse
 import MySQLdb as mdb   # type: ignore
+from gn3.settings import SQL_URI
+
+
+def parse_db_url() -> Optional[Tuple]:
+    """function to parse SQL_URI env variable"""
+    if SQL_URI is not None:
+        parsed_db = urlparse(SQL_URI)
+        return (parsed_db.hostname, parsed_db.username,
+                parsed_db.password, parsed_db.path[1:])
+
+    return None
 
 
 def database_connector(host="localhost",
