@@ -12,3 +12,9 @@ def database_connector(host="localhost",
     cursor = conn.cursor()
 
     return (conn, cursor)
+
+
+def execute_sql_query():
+    """function for executing any sql query\
+    and return required results"""
+    return True
