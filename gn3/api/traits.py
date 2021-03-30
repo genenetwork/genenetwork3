@@ -20,7 +20,7 @@ def home():
 def create_trait(trait_name, dataset_name):
     """endpoints for creating trait first should\
     call the endpoint for creating the trait only\
-    trait  data is the  sample data"""
+    also acts as endpoints for fetching trait data"""
 
     trait_dataset = mock.Mock()  # xtodo should replace this with calling epoints
     trait_dataset.name = dataset_name
