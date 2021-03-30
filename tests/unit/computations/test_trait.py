@@ -37,7 +37,8 @@ class TestTrait(TestCase):
         self.assertEqual(results, expected_trait)
         get_sample_data.assert_called_once_with(None, "AXFDSF_AT")
 
-    def test_get_trait_sample_data(self):
+    @mock.patch("gn3.computations.traits.retrieve_trait_sample_data")
+    def test_get_trait_sample_data(self, mock_retrieve_sample_data):
         """test for getting sample data from  either\
         the trait's dataset or form redis"""
 
@@ -47,7 +48,7 @@ class TestTrait(TestCase):
             ('A/J', 7.596, None, None, 'A/J'),
             ('AKR/J', 7.774, None, None, 'AKR/J'),
             ('B6D2F1', 7.707, None, None, 'B6D2F1')]
-        trait_dataset.retrieve_sample_data.return_value = dataset_trait_sample_data
+        mock_retrieve_sample_data.return_value = dataset_trait_sample_data
 
         trait_name = "1426679_at"
 

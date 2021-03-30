@@ -1,4 +1,5 @@
 """module contains all operating related to traits"""
+from gn3.computations.datasets import retrieve_trait_sample_data
 
 
 def compute_sum(rhs_val: int, lhs_val: int) -> int:
@@ -28,7 +29,8 @@ def get_trait_sample_data(trait_dataset, trait_name) -> dict:
     try to fetch from the traits dataset redis is only  used for\
     temp dataset type which is not used in this case """
 
-    sample_results = trait_dataset.retrieve_sample_data(trait_name)
+    sample_results = retrieve_trait_sample_data(
+        trait_dataset.id, trait_dataset.type, trait_name)
 
     trait_data = {}
 
