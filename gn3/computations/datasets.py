@@ -1,8 +1,15 @@
 """module contains the code all related to datasets"""
+import json
 from unittest import mock
 
 from typing import Optional
 from typing import List
+
+from dataclasses import dataclass
+import requests
+
+from gn3.experimental_db import database_connector
+from gn3.settings import GN2_BASE_URL
 
 
 def retrieve_trait_sample_data(dataset,
@@ -35,6 +42,10 @@ def fetch_from_db_sample_data(formatted_query: str, database_instance) -> List:
     """this is the function that does the actual fetching of\
     results from the database"""
     cursor = database_instance.cursor()
+    _conn = database_connector
+    # conn, cursor = database_connector()
+    # cursor = conn.cursor()
+
     cursor.execute(formatted_query)
     results = cursor.fetchall()
 
@@ -87,7 +98,8 @@ def get_query_for_dataset_sample(dataset_type) -> Optional[str]:
                 SELECT
                         Strain.Name, ProbeSetData.value, ProbeSetSE.error, NStrain.count, Strain.Name2
                 FROM
-                        (ProbeSetData, ProbeSetFreeze, Strain, ProbeSet, ProbeSetXRef)
+                        (ProbeSetData, ProbeSetFreeze,
+                         Strain, ProbeSet, ProbeSetXRef)
                 left join ProbeSetSE on
                         (ProbeSetSE.DataId = ProbeSetData.Id AND ProbeSetSE.StrainId = ProbeSetData.StrainId)
                 left join NStrain on
@@ -108,3 +120,87 @@ def get_query_for_dataset_sample(dataset_type) -> Optional[str]:
     dataset_query["ProbeSet"] = probeset_query
 
     return dataset_query.get(dataset_type)
+
+
+@dataclass
+class Dataset:
+    """class for creating datasets"""
+    name: Optional[str] = None
+    dataset_type: Optional[str] = None
+    dataset_id: int = -1
+
+
+def create_mrna_tissue_dataset(dataset_name, dataset_type):
+    """an mrna assay is a quantitative assessment(assay) associated\
+    with an mrna trait.This used to be called probeset,but that term\
+    only referes specifically to the afffymetrix platform and is\
+    far too speficified"""
+
+    return Dataset(name=dataset_name, dataset_type=dataset_type)
+
+
+def dataset_type_getter(dataset_name, redis_instance=None) -> Optional[str]:
+    """given the dataset name fetch the type\
+    of the dataset this in turn  enables fetching\
+    the creation of the correct object could utilize\
+    redis for the case"""
+
+    results = redis_instance.get(dataset_name, None)
+
+    if results:
+        return results
+
+    return fetch_dataset_type_from_gn2_api(dataset_name)
+
+
+def fetch_dataset_type_from_gn2_api(dataset_name):
+    """this function is only called when the\
+    the redis is empty and does have the specificied\
+    dataset_type"""
+    # should only run once
+
+    dataset_structure = {}
+
+    map_dataset_to_new_type = {
+        "Phenotypes": "Publish",
+        "Genotypes": "Geno",
+        "MrnaTypes": "ProbeSet"
+    }
+
+    data = json.loads(requests.get(
+        GN2_BASE_URL + "/api/v_pre1/gen_dropdown", timeout=5).content)
+    _name = dataset_name
+    for species in data['datasets']:
+        for group in data['datasets'][species]:
+            for dataset_type in data['datasets'][species][group]:
+                for dataset in data['datasets'][species][group][dataset_type]:
+                    # assumes  the first is dataset_short_name
+                    short_dataset_name = next(
+                        item for item in dataset if item != "None" and item is not None)
+
+                    dataset_structure[short_dataset_name] = map_dataset_to_new_type.get(
+                        dataset_type, "MrnaTypes")
+    return dataset_structure
+
+
+def dataset_creator_store(dataset_type):
+    """function contains key value pairs for\
+    the function need to be called to create\
+    each dataset_type"""
+
+    dataset_obj = {
+        "ProbeSet": create_mrna_tissue_dataset
+    }
+
+    return dataset_obj[dataset_type]
+
+
+def create_dataset(dataset_type=None, dataset_name: str = None):
+    """function for creating new dataset  temp not implemented"""
+    if dataset_type is None:
+        dataset_type = dataset_type_getter(dataset_name)
+
+    dataset_creator = dataset_creator_store(dataset_type)
+    results = dataset_creator(
+        dataset_name=dataset_name, dataset_type=dataset_type)
+    return results

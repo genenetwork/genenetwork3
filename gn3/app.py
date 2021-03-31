@@ -8,6 +8,7 @@ from gn3.api.gemma import gemma
 from gn3.api.general import general
 from gn3.api.correlation import correlation
 from gn3.api.traits import trait
+from gn3.api.datasets import dataset
 
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
@@ -30,4 +31,5 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(gemma, url_prefix="/api/gemma")
     app.register_blueprint(correlation, url_prefix="/api/correlation")
     app.register_blueprint(trait, url_prefix="/api/trait")
+    app.register_blueprint(dataset, url_prefix="/api/dataset")
     return app
