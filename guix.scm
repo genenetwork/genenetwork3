@@ -78,7 +78,7 @@
                        ("python-pylint" python-pylint)
                        ("python-redis" ,python-redis)
                        ("python-scipy" ,python-scipy)
-                       ("python-scipy" ,python-scipy)
+                       ("python-mysqlclient" ,python-mysqlclient)
                        ("python-sqlalchemy-stubs" ,python-sqlalchemy-stubs)))
   (build-system python-build-system)
   (home-page "https://github.com/genenetwork/genenetwork3")

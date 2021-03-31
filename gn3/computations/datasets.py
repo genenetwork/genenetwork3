@@ -204,3 +204,23 @@ def create_dataset(dataset_type=None, dataset_name: str = None):
     results = dataset_creator(
         dataset_name=dataset_name, dataset_type=dataset_type)
     return results
+
+
+def fetch_dataset_sample_id(samplelist: List, database, species: str) -> dict:
+    """fetch the strain ids from the db only if\
+    it is in the samplelist"""
+    # xtodo create an in clause for samplelist
+
+    strain_query = """
+        SELECT Strain.Name, Strain.Id FROM Strain, Species
+        WHERE Strain.Name IN {}
+        and Strain.SpeciesId=Species.Id
+        and Species.name = '{}'
+        """
+
+    database_cursor = database.cursor()
+    database_cursor.execute(strain_query.format(samplelist, species))
+
+    results = database_cursor.fetchall()
+
+    return dict(results)
