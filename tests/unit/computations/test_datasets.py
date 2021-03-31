@@ -13,6 +13,7 @@ from gn3.computations.datasets import create_dataset
 from gn3.computations.datasets import dataset_creator_store
 from gn3.computations.datasets import dataset_type_getter
 from gn3.computations.datasets import fetch_dataset_type_from_gn2_api
+from gn3.computations.datasets import fetch_dataset_sample_id
 
 
 class TestDatasets(TestCase):
@@ -157,3 +158,24 @@ class TestDatasets(TestCase):
         }
 
         self.assertEqual(expected_results, results)
+
+    def test_fetch_dataset_sample_id(self):
+        """get from the database the sample\
+        id if only in the samplelists"""
+
+        expected_results = {"B6D2F1": 1, "BXD1": 4, "BXD11": 10,
+                            "BXD12": 11, "BXD13": 12, "BXD15": 14, "BXD16": 15}
+
+        database_instance = mock.Mock()
+        database_cursor = mock.Mock()
+
+        database_cursor.execute.return_value = 5
+        database_cursor.fetchall.return_value = list(expected_results.items())
+        database_instance.cursor.return_value = database_cursor
+        strain_list = ["B6D2F1", "BXD1", "BXD11",
+                       "BXD12", "BXD13", "BXD16", "BXD15"]
+
+        results = fetch_dataset_sample_id(
+            samplelist=strain_list, database=database_instance, species="mouse")
+
+        self.assertEqual(results, expected_results)

@@ -26,3 +26,12 @@ class DatasetIntegrationTests(TestCase):
         results = response.get_json()["dataset"]
         self.assertEqual(results[1], "ProbeSet")
         self.assertEqual(response.status_code, 200)
+
+    def test_fetch_traits_data(self):
+        """test api/dataset/fetch_traits_data/d_name/d_type"""
+
+        response = self.app.get(
+            "/api/dataset/fetch_traits_data/Aging-Brain-UCIPublish/Publish")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {})

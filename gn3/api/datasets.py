@@ -23,6 +23,17 @@ def create_dataset_api(dataset_name, dataset_type=None):
         dataset_type=dataset_type, dataset_name=dataset_name)
 
     results = {
-        "dataset":new_dataset
+        "dataset": new_dataset
     }
     return jsonify(results)
+
+
+@dataset.route("/fetch_traits_data/<dataset_name>/<dataset_type>")
+def fetch_traits_data(dataset_name, dataset_type):
+    """endpoints fetches sample for each trait in\
+    a dataset"""
+    # what actually brings speed issues in correlation
+    _query_values = dataset_name, dataset_type
+
+    return jsonify({})
+    
