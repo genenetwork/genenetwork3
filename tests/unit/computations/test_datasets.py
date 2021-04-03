@@ -14,6 +14,8 @@ from gn3.computations.datasets import dataset_creator_store
 from gn3.computations.datasets import dataset_type_getter
 from gn3.computations.datasets import fetch_dataset_type_from_gn2_api
 from gn3.computations.datasets import fetch_dataset_sample_id
+from gn3.computations.datasets import divide_into_chunks
+from gn3.computations.datasets import get_traits_data
 
 
 class TestDatasets(TestCase):
@@ -177,5 +179,31 @@ class TestDatasets(TestCase):
 
         results = fetch_dataset_sample_id(
             samplelist=strain_list, database=database_instance, species="mouse")
+
+        self.assertEqual(results, expected_results)
+
+    @mock.patch("gn3.computations.datasets.fetch_from_db_sample_data")
+    @mock.patch("gn3.computations.datasets.divide_into_chunks")
+    def test_get_traits_data(self, mock_divide_into_chunks, mock_fetch_samples):
+        """test for for function to get data\
+        of traits in dataset"""
+
+        expected_results = {'AT_DSAFDS': [
+            12, 14, 13, 23, 12, 14, 13, 23, 12, 14, 13, 23]}
+        database = mock.Mock()
+        sample_id = [1, 2, 7, 3, 22, 8]
+        mock_divide_into_chunks.return_value = [
+            [1, 2, 7], [3, 22, 8], [5, 22, 333]]
+        mock_fetch_samples.return_value = ("AT_DSAFDS", 12, 14, 13, 23)
+        results = get_traits_data(sample_id, database, "HC_M2", "Publish")
+
+        self.assertEqual(expected_results, dict(results))
+
+    def test_divide_into_chunks(self):
+        """test for dividing a list into given number of\
+        chunks for example"""
+        results = divide_into_chunks([1, 2, 7, 3, 22, 8, 5, 22, 333], 3)
+
+        expected_results = [[1, 2, 7], [3, 22, 8], [5, 22, 333]]
 
         self.assertEqual(results, expected_results)

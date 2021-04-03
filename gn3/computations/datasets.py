@@ -1,11 +1,15 @@
 """module contains the code all related to datasets"""
 import json
 from unittest import mock
+from math import ceil
+from collections import defaultdict
 
 from typing import Optional
 from typing import List
 
 from dataclasses import dataclass
+from MySQLdb import escape_string  # type: ignore
+
 import requests
 
 from gn3.experimental_db import database_connector
@@ -224,3 +228,89 @@ def fetch_dataset_sample_id(samplelist: List, database, species: str) -> dict:
     results = database_cursor.fetchall()
 
     return dict(results)
+
+
+def divide_into_chunks(the_list, number_chunks):
+    """Divides a list into approximately number_chunks
+    >>> divide_into_chunks([1, 2, 7, 3, 22, 8, 5, 22, 333], 3)
+    [[1, 2, 7], [3, 22, 8], [5, 22, 333]]"""
+
+    length = len(the_list)
+    if length == 0:
+        return [[]]
+
+    if length <= number_chunks:
+        number_chunks = length
+    chunk_size = int(ceil(length/number_chunks))
+    chunks = []
+
+    for counter in range(0, length, chunk_size):
+        chunks.append(the_list[counter:counter+chunk_size])
+    return chunks
+
+
+def mescape(*items) -> List:
+    """multiple escape for query values"""
+
+    return [escape_string(str(item)).decode('utf8') for item in items]
+
+
+def get_traits_data(sample_ids, database_instance, dataset_name, dataset_type):
+    """function to fetch trait data"""
+    # MySQL limits the number of tables that can be used in a join to 61,
+    # so we break the sample ids into smaller chunks
+    # Postgres doesn't have that limit, so we can get rid of this after we transition
+
+    trait_data = defaultdict(list)
+    chunk_size = 50
+    number_chunks = int(ceil(len(sample_ids) / chunk_size))
+    for sample_ids_step in divide_into_chunks(sample_ids, number_chunks):
+        if dataset_type == "Publish":
+            full_dataset_type = "Phenotype"
+        else:
+            full_dataset_type = dataset_type
+        temp = ['T%s.value' % item for item in sample_ids_step]
+
+        if dataset_type:
+            query = "SELECT {}XRef.Id,".format(escape_string(dataset_type))
+
+        else:
+            query = "SELECT {}.Name,".format(escape_string(full_dataset_type))
+
+        query += ', '.join(temp)
+        query += ' FROM ({}, {}XRef, {}Freeze) '.format(*mescape(full_dataset_type,
+                                                                 dataset_type,
+                                                                 dataset_type))
+        for item in sample_ids_step:
+            query += """
+                    left join {}Data as T{} on T{}.Id = {}XRef.DataId
+                    and T{}.StrainId={}\n
+                    """.format(*mescape(dataset_type, item, item, dataset_type, item, item))
+
+        if dataset_type == "Publish":
+            query += """
+            WHERE {}XRef.InbredSetId = {}Freeze.InbredSetId
+            and {}Freeze.Name = '{}'
+            and {}.Id = {}XRef.{}Id
+            order by {}.Id
+            """.format(*mescape(dataset_type, dataset_type, dataset_type, dataset_name,
+                                full_dataset_type, dataset_type, dataset_type, dataset_type))
+        else:
+
+            query += """
+            WHERE {}XRef.{}FreezeId = {}Freeze.Id
+            and {}Freeze.Name = '{}'
+            and {}.Id = {}XRef.{}Id
+            order by {}.Id
+            """.format(*mescape(dataset_type, dataset_type, dataset_type, dataset_type,
+                                dataset_name, full_dataset_type, dataset_type,
+                                dataset_type, full_dataset_type))
+
+        results = fetch_from_db_sample_data(query, database_instance)
+
+        trait_name = results[0]
+
+        sample_value_results = results[1:]
+
+        trait_data[trait_name] += (sample_value_results)
+    return trait_data
