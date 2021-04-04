@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from MySQLdb import escape_string  # type: ignore
 
 import requests
-
-from gn3.experimental_db import database_connector
 from gn3.settings import GN2_BASE_URL
 
 
@@ -45,13 +43,13 @@ def retrieve_trait_sample_data(dataset,
 def fetch_from_db_sample_data(formatted_query: str, database_instance) -> List:
     """this is the function that does the actual fetching of\
     results from the database"""
-    cursor = database_instance.cursor()
-    _conn = database_connector
-    # conn, cursor = database_connector()
-    # cursor = conn.cursor()
+    try:
+        cursor = database_instance.cursor()
+        cursor.execute(formatted_query)
+        results = cursor.fetchall()
 
-    cursor.execute(formatted_query)
-    results = cursor.fetchall()
+    except Exception as error:
+        raise error
 
     cursor.close()
 
@@ -249,6 +247,11 @@ def divide_into_chunks(the_list, number_chunks):
     return chunks
 
 
+def escape(string_):
+    """function escape sql value"""
+    return escape_string(string_).decode('utf8')
+
+
 def mescape(*items) -> List:
     """multiple escape for query values"""
 
@@ -261,8 +264,8 @@ def get_traits_data(sample_ids, database_instance, dataset_name, dataset_type):
     # so we break the sample ids into smaller chunks
     # Postgres doesn't have that limit, so we can get rid of this after we transition
 
-    trait_data = defaultdict(list)
-    chunk_size = 50
+    _trait_data = defaultdict(list)
+    chunk_size = 61
     number_chunks = int(ceil(len(sample_ids) / chunk_size))
     for sample_ids_step in divide_into_chunks(sample_ids, number_chunks):
         if dataset_type == "Publish":
@@ -271,46 +274,47 @@ def get_traits_data(sample_ids, database_instance, dataset_name, dataset_type):
             full_dataset_type = dataset_type
         temp = ['T%s.value' % item for item in sample_ids_step]
 
-        if dataset_type:
-            query = "SELECT {}XRef.Id,".format(escape_string(dataset_type))
+        if dataset_type == "Publish":
+            query = "SELECT {}XRef.Id,".format(escape(dataset_type))
 
         else:
-            query = "SELECT {}.Name,".format(escape_string(full_dataset_type))
+            query = "SELECT {}.Name,".format(escape(full_dataset_type))
 
         query += ', '.join(temp)
         query += ' FROM ({}, {}XRef, {}Freeze) '.format(*mescape(full_dataset_type,
                                                                  dataset_type,
                                                                  dataset_type))
         for item in sample_ids_step:
+
             query += """
                     left join {}Data as T{} on T{}.Id = {}XRef.DataId
                     and T{}.StrainId={}\n
-                    """.format(*mescape(dataset_type, item, item, dataset_type, item, item))
+                    """.format(*mescape(dataset_type, item,
+                                        item, dataset_type, item, item))
 
         if dataset_type == "Publish":
             query += """
-            WHERE {}XRef.InbredSetId = {}Freeze.InbredSetId
-            and {}Freeze.Name = '{}'
-            and {}.Id = {}XRef.{}Id
-            order by {}.Id
-            """.format(*mescape(dataset_type, dataset_type, dataset_type, dataset_name,
-                                full_dataset_type, dataset_type, dataset_type, dataset_type))
+                        WHERE {}XRef.{}FreezeId = {}Freeze.Id
+                        and {}Freeze.Name = '{}'
+                        and {}.Id = {}XRef.{}Id
+                        order by {}.Id
+                        """.format(*mescape(dataset_type, dataset_type,
+                                            dataset_type, dataset_type,
+                                            dataset_name, full_dataset_type,
+                                            dataset_type, dataset_type,
+                                            full_dataset_type))
+
         else:
-
             query += """
-            WHERE {}XRef.{}FreezeId = {}Freeze.Id
-            and {}Freeze.Name = '{}'
-            and {}.Id = {}XRef.{}Id
-            order by {}.Id
-            """.format(*mescape(dataset_type, dataset_type, dataset_type, dataset_type,
-                                dataset_name, full_dataset_type, dataset_type,
-                                dataset_type, full_dataset_type))
+                        WHERE {}XRef.{}FreezeId = {}Freeze.Id
+                        and {}Freeze.Name = '{}'
+                        and {}.Id = {}XRef.{}Id
+                        order by {}.Id
+                        """.format(*mescape(dataset_type, dataset_type,
+                                            dataset_type, dataset_type,
+                                            dataset_name, dataset_type,
+                                            dataset_type, dataset_type,
+                                            full_dataset_type))
 
-        results = fetch_from_db_sample_data(query, database_instance)
-
-        trait_name = results[0]
-
-        sample_value_results = results[1:]
-
-        trait_data[trait_name] += (sample_value_results)
-    return trait_data
+        _results = fetch_from_db_sample_data(query, database_instance)
+    return {}

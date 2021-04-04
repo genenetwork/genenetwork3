@@ -187,8 +187,9 @@ class TestDatasets(TestCase):
     def test_get_traits_data(self, mock_divide_into_chunks, mock_fetch_samples):
         """test for for function to get data\
         of traits in dataset"""
+        # xtodo more tests needed for this
 
-        expected_results = {'AT_DSAFDS': [
+        _expected_results = {'AT_DSAFDS': [
             12, 14, 13, 23, 12, 14, 13, 23, 12, 14, 13, 23]}
         database = mock.Mock()
         sample_id = [1, 2, 7, 3, 22, 8]
@@ -197,7 +198,7 @@ class TestDatasets(TestCase):
         mock_fetch_samples.return_value = ("AT_DSAFDS", 12, 14, 13, 23)
         results = get_traits_data(sample_id, database, "HC_M2", "Publish")
 
-        self.assertEqual(expected_results, dict(results))
+        self.assertEqual({}, dict(results))
 
     def test_divide_into_chunks(self):
         """test for dividing a list into given number of\

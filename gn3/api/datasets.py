@@ -3,6 +3,8 @@ from flask import Blueprint
 from flask import jsonify
 
 from gn3.computations.datasets import create_dataset
+from gn3.computations.datasets import get_traits_data
+from gn3.experimental_db import database_connector
 
 
 dataset = Blueprint("dataset", __name__)
@@ -33,7 +35,17 @@ def fetch_traits_data(dataset_name, dataset_type):
     """endpoints fetches sample for each trait in\
     a dataset"""
     # what actually brings speed issues in correlation
-    _query_values = dataset_name, dataset_type
+    sample_ids = [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15,
+                  17, 18, 19, 20, 21, 22, 24, 25, 26, 28, 29, 30, 31,
+                  35, 36, 37, 39, 98, 99, 100, 103, 487, 105, 106, 110, 115,
+                  116, 117, 118, 119, 120, 919, 147,
+                  121, 40, 41, 124, 125, 128, 135, 129, 130, 131,
+                  132, 134, 138, 139, 140, 141, 142, 144,
+                  145, 148, 149, 920, 922, 2, 3, 1, 1100]
 
-    return jsonify({})
-    
+    conn, _cursor = database_connector()
+    results = get_traits_data(sample_ids=sample_ids, database_instance=conn,
+                              dataset_name=dataset_name, dataset_type=dataset_type)
+    conn.close()
+
+    return jsonify({"results": results})
