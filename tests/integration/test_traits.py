@@ -26,7 +26,13 @@ class TraitIntegrationTest(TestCase):
         trait_results = {
             "dataset": None,
             "trait_name": "1449593_at",
-            "trait_data": {}
+            "trait_data": {
+                "BXD11": 8.464,
+                "BXD12": 8.414,
+                "BXD13": 8.753,
+                "BXD15": 8.5,
+                "BXD16": 8.832
+            }
 
         }
         mock_fetch_trait.return_value = trait_results

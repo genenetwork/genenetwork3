@@ -25,6 +25,8 @@ class TestTrait(TestCase):
             "WQC": 11.1
         }
 
+        database = mock.Mock()
+
         get_sample_data.return_value = expected_sample_data
 
         expected_trait = {
@@ -32,10 +34,12 @@ class TestTrait(TestCase):
             "dataset": None,
             "trait_data": expected_sample_data
         }
-        results = fetch_trait(dataset=None, trait_name="AXFDSF_AT")
+        results = fetch_trait(dataset=None,
+                              trait_name="AXFDSF_AT",
+                              database=database)
 
         self.assertEqual(results, expected_trait)
-        get_sample_data.assert_called_once_with(None, "AXFDSF_AT")
+        self.assertEqual(get_sample_data.call_count, 1)
 
     @mock.patch("gn3.computations.traits.retrieve_trait_sample_data")
     def test_get_trait_sample_data(self, mock_retrieve_sample_data):
@@ -52,8 +56,10 @@ class TestTrait(TestCase):
 
         trait_name = "1426679_at"
 
+        database = mock.Mock()
+
         results = get_trait_sample_data(
-            trait_dataset, trait_name)
+            trait_dataset, trait_name, database)
 
         expected_results = {
             "129S1/SvImJ": 7.433,

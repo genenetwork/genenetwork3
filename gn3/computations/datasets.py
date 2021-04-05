@@ -1,6 +1,5 @@
 """module contains the code all related to datasets"""
 import json
-from unittest import mock
 from math import ceil
 from collections import defaultdict
 
@@ -16,7 +15,8 @@ from gn3.settings import GN2_BASE_URL
 
 def retrieve_trait_sample_data(dataset,
                                trait_name: str,
-                               group_species_id=None,) -> List:
+                               database,
+                               group_species_id=None) -> List:
     """given the dataset id and trait_name fetch the\
     sample_name,value from the dataset"""
 
@@ -35,7 +35,8 @@ def retrieve_trait_sample_data(dataset,
 
     if dataset_query:
         formatted_query = dataset_query % sample_query_values[dataset_type]
-        results = fetch_from_db_sample_data(formatted_query, mock.Mock())
+
+        results = fetch_from_db_sample_data(formatted_query, database)
 
     return results
 

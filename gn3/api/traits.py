@@ -7,6 +7,8 @@ from flask import request
 
 from gn3.computations.traits import fetch_trait
 from gn3.computations.traits import get_trait_info_data
+from gn3.experimental_db import database_connector
+
 trait = Blueprint("trait", __name__)
 
 
@@ -18,14 +20,23 @@ def home():
 
 @trait.route("/<string:trait_name>/<string:dataset_name>")
 def create_trait(trait_name, dataset_name):
-    """endpoints for creating trait first should\
-    call the endpoint for creating the trait only\
-    also acts as endpoints for fetching trait data"""
+    """/test:trait_name/dataset_name/type :retrieve sample\
+    data for trait"""
 
-    trait_dataset = mock.Mock()  # xtodo should replace this with calling epoints
-    trait_dataset.name = dataset_name
+    # xtodo replace the object at most this endpoint
+    # requires dataset_type,dataset_name ,dataset_id
+    trait_dataset = {
+        "name": dataset_name,
+        "id": 12,
+        "type": "ProbeSet"  # temp values
+    }
+    conn, _cursor = database_connector()
 
-    trait_results = fetch_trait(dataset=trait_dataset, trait_name=trait_name)
+    trait_results = fetch_trait(dataset=trait_dataset,
+                                trait_name=trait_name,
+                                database=conn)
+
+    conn.close()
 
     return jsonify(trait_results)
 

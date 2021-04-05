@@ -7,7 +7,7 @@ def compute_sum(rhs_val: int, lhs_val: int) -> int:
     return rhs_val + lhs_val
 
 
-def fetch_trait(dataset, trait_name: str) -> dict:
+def fetch_trait(dataset, trait_name: str, database) -> dict:
     """this method creates a trait by\
     fetching required data given the\
     dataset and trait_name"""
@@ -17,20 +17,20 @@ def fetch_trait(dataset, trait_name: str) -> dict:
         "trait_name": trait_name
     }
 
-    trait_data = get_trait_sample_data(dataset, trait_name)
+    trait_data = get_trait_sample_data(dataset, trait_name, database)
 
     created_trait["trait_data"] = trait_data
 
     return created_trait
 
 
-def get_trait_sample_data(trait_dataset, trait_name) -> dict:
+def get_trait_sample_data(trait_dataset, trait_name, database) -> dict:
     """first try to fetch the traits sample data from redis if that\
     try to fetch from the traits dataset redis is only  used for\
     temp dataset type which is not used in this case """
 
     sample_results = retrieve_trait_sample_data(
-        trait_dataset.id, trait_dataset.type, trait_name)
+        trait_dataset, trait_name, database)
 
     trait_data = {}
 

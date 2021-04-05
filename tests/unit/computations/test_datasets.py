@@ -29,6 +29,8 @@ class TestDatasets(TestCase):
         dataset_id = "HC_M2_0606_P&"
         dataset_type = "Publish"
 
+        database = mock.Mock()
+
         dataset = {
             "id": dataset_id,
             "type": dataset_type,
@@ -40,7 +42,7 @@ class TestDatasets(TestCase):
         mock_fetch_sample_results.return_value = fetch_results
 
         results = retrieve_trait_sample_data(
-            dataset, trait_name)
+            dataset, trait_name, database)
         self.assertEqual(mock_fetch_sample_results.call_count, 1)
         self.assertEqual(results, fetch_results)
 
