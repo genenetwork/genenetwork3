@@ -249,12 +249,12 @@ class TestCorrelation(TestCase):
                               ("1426682_at", 11)]
         mock_mouse_gene_id.side_effect = [12, 11, 18, 16, 20]
 
-        database_instance = DataBase()
+        conn = DataBase()
 
         fetch_lit_data.side_effect = [(15, 9), (17, 8), (11, 12)]
 
         lit_results = lit_correlation_for_trait_list(
-            database=database_instance, target_trait_lists=target_trait_lists,
+            conn=conn, target_trait_lists=target_trait_lists,
             species="rat", trait_gene_id="12")
 
         expected_results = [{"1426679_at": {"gene_id": 15, "lit_corr": 9}},
@@ -268,8 +268,8 @@ class TestCorrelation(TestCase):
         """test for fetching lit correlation data from\
         the database where the input and mouse geneid are none"""
 
-        database_instance = DataBase()
-        results = fetch_lit_correlation_data(database=database_instance,
+        conn = DataBase()
+        results = fetch_lit_correlation_data(conn=conn,
                                              gene_id="1",
                                              input_mouse_gene_id=None,
                                              mouse_gene_id=None)
@@ -285,7 +285,7 @@ class TestCorrelation(TestCase):
         database_instance = DataBase(expected_results=expected_db_results)
         expected_results = ("1", 0.1)
 
-        lit_results = fetch_lit_correlation_data(database=database_instance,
+        lit_results = fetch_lit_correlation_data(conn=database_instance,
                                                  gene_id="1",
                                                  input_mouse_gene_id="20",
                                                  mouse_gene_id="15")
@@ -296,7 +296,7 @@ class TestCorrelation(TestCase):
         """test that corr coeffient returned is 0 given the\
         db value if corr coefficient is empty"""
         database_instance = DataBase()
-        lit_results = fetch_lit_correlation_data(database=database_instance,
+        lit_results = fetch_lit_correlation_data(conn=database_instance,
                                                  input_mouse_gene_id="12",
                                                  gene_id="16",
                                                  mouse_gene_id="12")
@@ -354,7 +354,7 @@ class TestCorrelation(TestCase):
         for (species, gene_id) in test_data:
 
             mouse_gene_id_results = map_to_mouse_gene_id(
-                database=database_instance, species=species, gene_id=gene_id)
+                conn=database_instance, species=species, gene_id=gene_id)
             results.append(mouse_gene_id_results)
 
         self.assertEqual(results, expected_results)
@@ -373,7 +373,7 @@ class TestCorrelation(TestCase):
         mock_lit_corr.side_effect = expected_mocked_lit_results
 
         lit_correlation_results = compute_all_lit_correlation(
-            database_instance=database, trait_lists=[{"gene_id": 11}],
+            conn=database, trait_lists=[{"gene_id": 11}],
             species="rat", gene_id=12)
 
         expected_results = {

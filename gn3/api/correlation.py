@@ -57,16 +57,15 @@ def compute_lit_corr(species=None, gene_id=None):
     are fetched from the database this is the only case where the db\
     might be needed for actual computing of the correlation results"""
 
-    # database_instance = mock.Mock()
-    database_instance, _cursor_object = database_connector()
+    conn, _cursor_object = database_connector()
     target_traits_gene_ids = request.get_json()
     target_trait_gene_list = list(target_traits_gene_ids.items())
 
     lit_corr_results = compute_all_lit_correlation(
-        database_instance=database_instance, trait_lists=target_trait_gene_list,
+        conn=conn, trait_lists=target_trait_gene_list,
         species=species, gene_id=gene_id)
 
-    database_instance.close()
+    conn.close()
 
     return jsonify(lit_corr_results)
 

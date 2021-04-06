@@ -13,7 +13,7 @@ def compute_sum(rhs: int, lhs: int) -> int:
 
 
 def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict)-> List:
-    """function to construct target dataset data items given commoned shared\
+    """Function to construct target dataset data items given commoned shared\
     keys and trait samplelist values for example given keys  >>>>>>>>>>\
     ["BXD1", "BXD2", "BXD5", "BXD6", "BXD8", "BXD9"] and value object as\
     "HCMA:_AT": [4.1, 5.6, 3.2, 1.1, 4.4, 2.2],TXD_AT": [6.2, 5.7, 3.6, 1.5, 4.2, 2.3]}\
@@ -212,11 +212,11 @@ def tissue_correlation_for_trait_list(
 
 
 def fetch_lit_correlation_data(
-        database,
+        conn,
         input_mouse_gene_id: Optional[str],
         gene_id: str,
         mouse_gene_id: Optional[str] = None) -> Tuple[str, float]:
-    """given input trait mouse gene id and mouse gene id fetch the lit\
+    """Given input trait mouse gene id and mouse gene id fetch the lit\
     corr_data"""
     if mouse_gene_id is not None and ";" not in mouse_gene_id:
         query = """
@@ -228,7 +228,7 @@ def fetch_lit_correlation_data(
 
         query_values = (str(mouse_gene_id), str(input_mouse_gene_id))
 
-        cursor = database.cursor()
+        cursor = conn.cursor()
 
         cursor.execute(query_formatter(query,
                                        *query_values))
@@ -237,7 +237,7 @@ def fetch_lit_correlation_data(
         if results is not None:
             lit_corr_results = results
         else:
-            cursor = database.cursor()
+            cursor = conn.cursor()
             cursor.execute(query_formatter(query,
                                            *tuple(reversed(query_values))))
             lit_corr_results = cursor.fetchone()
@@ -249,7 +249,7 @@ def fetch_lit_correlation_data(
 
 
 def lit_correlation_for_trait_list(
-        database,
+        conn,
         target_trait_lists: List,
         species: Optional[str] = None,
         trait_gene_id: Optional[str] = None) -> List:
@@ -257,7 +257,7 @@ def lit_correlation_for_trait_list(
     output is float for lit corr results """
     fetched_lit_corr_results = []
 
-    this_trait_mouse_gene_id = map_to_mouse_gene_id(database=database,
+    this_trait_mouse_gene_id = map_to_mouse_gene_id(conn=conn,
                                                     species=species,
                                                     gene_id=trait_gene_id)
 
@@ -265,12 +265,12 @@ def lit_correlation_for_trait_list(
         corr_results = {}
         if target_trait_gene_id:
             target_mouse_gene_id = map_to_mouse_gene_id(
-                database=database,
+                conn=conn,
                 species=species,
                 gene_id=target_trait_gene_id)
 
             fetched_corr_data = fetch_lit_correlation_data(
-                database=database,
+                conn=conn,
                 input_mouse_gene_id=this_trait_mouse_gene_id,
                 gene_id=target_trait_gene_id,
                 mouse_gene_id=target_mouse_gene_id)
@@ -284,7 +284,7 @@ def lit_correlation_for_trait_list(
 
 
 def query_formatter(query_string: str, *query_values):
-    """formatter query string given the unformatted query string\
+    """Formatter query string given the unformatted query string\
     and the respectibe values.Assumes number of placeholders is
     equal to the number of query values """
     # xtodo escape sql queries
@@ -293,9 +293,9 @@ def query_formatter(query_string: str, *query_values):
     return results
 
 
-def map_to_mouse_gene_id(database, species: Optional[str],
+def map_to_mouse_gene_id(conn, species: Optional[str],
                          gene_id: Optional[str]) -> Optional[str]:
-    """given a species which is not mouse map the gene_id\
+    """Given a species which is not mouse map the gene_id\
     to respective mouse gene id"""
     # AK:xtodo move the code for checking nullity out of thing functions bug
     # while method for string
@@ -304,7 +304,7 @@ def map_to_mouse_gene_id(database, species: Optional[str],
     if species == "mouse":
         return gene_id
 
-    cursor = database.cursor()
+    cursor = conn.cursor()
     query = """SELECT mouse
                 FROM GeneIDXRef
                 WHERE '%s' = '%s'"""
@@ -319,14 +319,14 @@ def map_to_mouse_gene_id(database, species: Optional[str],
     return mouse_gene_id
 
 
-def compute_all_lit_correlation(database_instance, trait_lists: List,
+def compute_all_lit_correlation(conn, trait_lists: List,
                                 species: str, gene_id):
     """Function that acts as an abstraction for
     lit_correlation_for_trait_list"""
     # xtodo to be refactored
 
     lit_results = lit_correlation_for_trait_list(
-        database=database_instance,
+        conn=conn,
         target_trait_lists=trait_lists,
         species=species,
         trait_gene_id=gene_id)
@@ -368,7 +368,7 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
 
 
 def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> List:
-    """method for processing trait symbol\
+    """Method for processing trait symbol\
     dict given the symbol tissue values """
     traits_tissue_vals = []
 
