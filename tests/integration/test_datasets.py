@@ -28,12 +28,14 @@ class DatasetIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     @mock.patch("gn3.api.datasets.get_traits_data")
-    def test_fetch_traits_data(self, mock_get_trait_data):
+    @mock.patch("gn3.api.datasets.database_connector")
+    def test_fetch_traits_data(self, mock_db, mock_get_trait_data):
         """Test api/dataset/fetch_traits_data/d_name/d_type"""
 
         mock_get_trait_data.return_value = {}
+        mock_db.return_value = (mock.Mock(), mock.Mock())
         response = self.app.get(
-            "/api/dataset/fetch_traits_data/Aging-Brain-UCIPublish/Publish")
+            "/api/dataset/fetch_traits_data/Aging-Brain-UCIPublish/Publish", follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), {"results": {}})

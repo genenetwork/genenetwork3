@@ -13,10 +13,11 @@ class TraitIntegrationTest(TestCase):
         self.app = create_app().test_client()
 
     @mock.patch("gn3.api.traits.fetch_trait")
-    def test_create_trait(self, mock_fetch_trait):
+    @mock.patch("gn3.api.traits.database_connector")
+    def test_create_trait(self, mock_database, mock_fetch_trait):
         """test the endpoint for creating traits\
         endpoint requires trait name and dataset name"""
-
+        mock_database.return_value = (mock.Mock(), mock.Mock())
         trait_results = {
             "dataset": None,
             "trait_name": "1449593_at",
@@ -36,6 +37,7 @@ class TraitIntegrationTest(TestCase):
 
         trait_data = results.get_json()
 
+        self.assertEqual(mock_database.call_count, 1)
         self.assertEqual(results.status_code, 200)
         self.assertEqual(trait_data, trait_results)
 
