@@ -2,7 +2,6 @@
 from unittest import TestCase
 from unittest import mock
 
-from gn3.computations.traits import compute_sum
 from gn3.computations.traits import fetch_trait
 from gn3.computations.traits import get_trait_sample_data
 from gn3.computations.traits import get_trait_info_data
@@ -10,11 +9,6 @@ from gn3.computations.traits import get_trait_info_data
 
 class TestTrait(TestCase):
     """class contains tests for creating traits"""
-
-    def test_sum(self):
-        """initial faling tests"""
-        results = compute_sum(2, 5)
-        self.assertEqual(results, 7)
 
     @mock.patch("gn3.computations.traits.get_trait_sample_data")
     def test_fetch_trait(self, get_sample_data):

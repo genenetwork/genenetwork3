@@ -12,12 +12,6 @@ class TraitIntegrationTest(TestCase):
     def setUp(self):
         self.app = create_app().test_client()
 
-    def test_home(self):
-        """test for initial endpoint for trait"""
-        results = self.app.get("/api/trait", follow_redirects=True)
-
-        self.assertEqual(200, results.status_code)
-
     @mock.patch("gn3.api.traits.fetch_trait")
     def test_create_trait(self, mock_fetch_trait):
         """test the endpoint for creating traits\

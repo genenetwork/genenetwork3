@@ -317,5 +317,7 @@ def get_traits_data(sample_ids, database_instance, dataset_name, dataset_type):
                                             dataset_type, dataset_type,
                                             full_dataset_type))
 
+        # print(query)
+
         _results = fetch_from_db_sample_data(query, database_instance)
     return {}

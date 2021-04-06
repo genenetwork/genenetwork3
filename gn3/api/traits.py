@@ -12,11 +12,6 @@ from gn3.experimental_db import database_connector
 trait = Blueprint("trait", __name__)
 
 
-@trait.route("/")
-def home():
-    """initial endpoint for traits"""
-    return jsonify({"results": "success"})
-
 
 @trait.route("/<string:trait_name>/<string:dataset_name>")
 def create_trait(trait_name, dataset_name):

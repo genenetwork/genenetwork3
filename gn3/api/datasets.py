@@ -10,11 +10,6 @@ from gn3.experimental_db import database_connector
 dataset = Blueprint("dataset", __name__)
 
 
-@dataset.route("/")
-def dataset_home():
-    """initial test endpont for dataset"""
-    return jsonify({"results": "ok"})
-
 
 @dataset.route("/create/<dataset_name>/")
 @dataset.route("/create/<dataset_name>/<dataset_type>")

@@ -2,11 +2,6 @@
 from gn3.computations.datasets import retrieve_trait_sample_data
 
 
-def compute_sum(rhs_val: int, lhs_val: int) -> int:
-    """initial function for trait module"""
-    return rhs_val + lhs_val
-
-
 def fetch_trait(dataset, trait_name: str, database) -> dict:
     """this method creates a trait by\
     fetching required data given the\
