@@ -1,4 +1,4 @@
-"""this module contains integration tests for datasets"""
+"""This module contains integration tests for datasets"""
 from unittest import TestCase
 from unittest import mock
 
@@ -14,7 +14,7 @@ class DatasetIntegrationTests(TestCase):
 
     @mock.patch("gn3.api.datasets.create_dataset")
     def test_create_dataset(self, mock_dataset):
-        """test for creating dataset object"""
+        """Test for creating dataset object"""
         mock_dataset_creator = namedtuple(
             'ProbeSet', ["dataset_name", "dataset_type"])
         new_dataset = mock_dataset_creator("HC_M2_0606_P", "ProbeSet")
@@ -29,7 +29,7 @@ class DatasetIntegrationTests(TestCase):
 
     @mock.patch("gn3.api.datasets.get_traits_data")
     def test_fetch_traits_data(self, mock_get_trait_data):
-        """test api/dataset/fetch_traits_data/d_name/d_type"""
+        """Test api/dataset/fetch_traits_data/d_name/d_type"""
 
         mock_get_trait_data.return_value = {}
         response = self.app.get(

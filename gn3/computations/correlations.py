@@ -89,10 +89,9 @@ package :not packaged in guix
 
 def filter_shared_sample_keys(this_samplelist,
                               target_samplelist) -> Tuple[List, List]:
-    """Given primary and target samplelist for two base and target trait select
-filter the values using the shared keys
-
-    """
+    """Given primary and target samplelist\
+    for two base and target trait select\
+    filter the values using the shared keys"""
     this_vals = []
     target_vals = []
     for key, value in target_samplelist.items():
@@ -105,8 +104,9 @@ filter the values using the shared keys
 def compute_all_sample_correlation(this_trait,
                                    target_dataset,
                                    corr_method="pearson") -> List:
-    """Given a trait data samplelist and target__datasets compute all sample
-correlation"""
+    """Given a trait data samplelist and\
+    target__datasets compute all sample correlation
+    """
 
     this_trait_samples = this_trait["trait_sample_data"]
 
@@ -269,7 +269,7 @@ def query_formatter(query_string: str, *query_values):
 
 def map_to_mouse_gene_id(database, species: Optional[str],
                          gene_id: Optional[str]) -> Optional[str]:
-    """given a species which is not mouse map the gene_id\
+    """Given a species which is not mouse map the gene_id\
     to respective mouse gene id"""
     # AK:xtodo move the code for checking nullity out of thing functions bug
     # while method for string
@@ -296,7 +296,6 @@ def compute_all_lit_correlation(database_instance, trait_lists: List,
                                 species: str, gene_id):
     """Function that acts as an abstraction for
     lit_correlation_for_trait_list"""
-    # xtodo to be refactored
 
     lit_results = lit_correlation_for_trait_list(
         database=database_instance,

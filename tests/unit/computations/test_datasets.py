@@ -1,4 +1,4 @@
-"""module contains tests from datasets"""
+"""Module contains tests from datasets"""
 import json
 
 from unittest import TestCase
@@ -19,12 +19,13 @@ from gn3.computations.datasets import get_traits_data
 
 
 class TestDatasets(TestCase):
-    """class contains tests for datasets"""
+    """Class contains tests for datasets"""
 
     @mock.patch("gn3.computations.datasets.fetch_from_db_sample_data")
     def test_retrieve_trait_sample_data(self, mock_fetch_sample_results):
-        """test  retrieving sample data\
-         for trait from the dataset"""
+        """Test  retrieving sample data\
+         for trait from the dataset
+        """
         trait_name = "1419792_at"
         dataset_id = "HC_M2_0606_P&"
         dataset_type = "Publish"
@@ -47,7 +48,7 @@ class TestDatasets(TestCase):
         self.assertEqual(results, fetch_results)
 
     def test_query_for_dataset_sample(self):
-        """test for getting query for sample data"""
+        """Test for getting query for sample data"""
 
         no_results = get_query_for_dataset_sample("does not exists")
 
@@ -57,8 +58,9 @@ class TestDatasets(TestCase):
         self.assertIsInstance(query_exists, str)
 
     def test_fetch_from_db_sample_data(self):
-        """test for function that fetches sample\
-        results from the database"""
+        """Test for function that fetches sample\
+        results from the database
+        """
 
         database_results = [('BXD31', 8.001, None, None, 'BXD31'),
                             ('BXD32', 7.884, None, None, 'BXD32'),
@@ -91,9 +93,10 @@ class TestDatasets(TestCase):
     @mock.patch("gn3.computations.datasets.dataset_creator_store")
     @mock.patch("gn3.computations.datasets.dataset_type_getter")
     def test_create_dataset(self, mock_dataset_type, mock_store):
-        """test function that creates/fetches required dataset\
+        """Test function that creates/fetches required dataset\
         can either be published phenotype,genotype,Microarray or\
-        user defined ->Temp"""
+        user defined ->Temp
+        """
         probe_name = "HC_M2_0606_P"
         probe_type = "ProbeSet"
 
@@ -109,28 +112,31 @@ class TestDatasets(TestCase):
         self.assertEqual(dataset.dataset_type, probe_type)
 
     def test_dataset_creator_store(self):
-        """test  for functions that actual
+        """Test  for functions that actual
         function to create differerent \
-        datasets"""
+        datasets
+        """
         results = dataset_creator_store("ProbeSet")
 
         self.assertTrue(results)
 
     def test_dataset_type_getter(self):
-        """test for fetching type of dataset given\
-        the dataset name"""
+        """Test for fetching type of dataset given\
+        the dataset name
+        """
 
         redis_instance = mock.Mock()
-        # found in redis
+        # fetched  in redis
         redis_instance.get.return_value = "ProbeSet"
         results = dataset_type_getter("HC_M2_0_P", redis_instance)
         self.assertEqual(results, "ProbeSet")
 
     @mock.patch("gn3.computations.datasets.requests")
     def test_fetch_dataset_type_from_gn2_api(self, mock_request):
-        """test for function that test fetching\
+        """Test for function that test fetching\
         all datasets from gn2 api in order to store\
-        in redis"""
+        in redis
+        """
 
         expected_json_results = {"datasets": {
             "arabidopsis": {
@@ -164,8 +170,9 @@ class TestDatasets(TestCase):
         self.assertEqual(expected_results, results)
 
     def test_fetch_dataset_sample_id(self):
-        """get from the database the sample\
-        id if only in the samplelists"""
+        """Get from the database the sample\
+        id if only in the samplelists
+        """
 
         expected_results = {"B6D2F1": 1, "BXD1": 4, "BXD11": 10,
                             "BXD12": 11, "BXD13": 12, "BXD15": 14, "BXD16": 15}
@@ -187,10 +194,9 @@ class TestDatasets(TestCase):
     @mock.patch("gn3.computations.datasets.fetch_from_db_sample_data")
     @mock.patch("gn3.computations.datasets.divide_into_chunks")
     def test_get_traits_data(self, mock_divide_into_chunks, mock_fetch_samples):
-        """test for for function to get data\
-        of traits in dataset"""
-        # xtodo more tests needed for this
-
+        """Test for for function to get data\
+        of traits in dataset
+        """
         _expected_results = {'AT_DSAFDS': [
             12, 14, 13, 23, 12, 14, 13, 23, 12, 14, 13, 23]}
         database = mock.Mock()
@@ -203,8 +209,9 @@ class TestDatasets(TestCase):
         self.assertEqual({}, dict(results))
 
     def test_divide_into_chunks(self):
-        """test for dividing a list into given number of\
-        chunks for example"""
+        """Test for dividing a list into given number of\
+        chunks for example
+        """
         results = divide_into_chunks([1, 2, 7, 3, 22, 8, 5, 22, 333], 3)
 
         expected_results = [[1, 2, 7], [3, 22, 8], [5, 22, 333]]

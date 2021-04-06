@@ -12,11 +12,10 @@ from gn3.experimental_db import database_connector
 trait = Blueprint("trait", __name__)
 
 
-
 @trait.route("/<string:trait_name>/<string:dataset_name>")
 def create_trait(trait_name, dataset_name):
-    """/test:trait_name/dataset_name/type :retrieve sample\
-    data for trait"""
+    """Endpoint for creating trait and fetching strain\
+    values"""
 
     # xtodo replace the object at most this endpoint
     # requires dataset_type,dataset_name ,dataset_id
@@ -38,7 +37,7 @@ def create_trait(trait_name, dataset_name):
 
 @trait.route("/trait_info/<string:trait_name>", methods=["POST"])
 def fetch_trait_info(trait_name):
-    """api endpoint for fetching the trait info \
+    """Api endpoint for fetching the trait info \
     expects the trait and trait dataset to have\
     been created """
     data = request.get_json()

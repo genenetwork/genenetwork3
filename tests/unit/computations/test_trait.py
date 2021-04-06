@@ -1,4 +1,4 @@
-"""module contains tests for creating traits"""
+"""Module contains tests for creating traits"""
 from unittest import TestCase
 from unittest import mock
 
@@ -8,11 +8,11 @@ from gn3.computations.traits import get_trait_info_data
 
 
 class TestTrait(TestCase):
-    """class contains tests for creating traits"""
+    """Class contains tests for creating traits"""
 
     @mock.patch("gn3.computations.traits.get_trait_sample_data")
     def test_fetch_trait(self, get_sample_data):
-        """test for creating/fetching trait"""
+        """Test for creating/fetching trait"""
 
         expected_sample_data = {
             "A/Y": 12.3,
@@ -37,8 +37,9 @@ class TestTrait(TestCase):
 
     @mock.patch("gn3.computations.traits.retrieve_trait_sample_data")
     def test_get_trait_sample_data(self, mock_retrieve_sample_data):
-        """test for getting sample data from  either\
-        the trait's dataset or form redis"""
+        """Test for getting sample data from  either\
+        the trait's dataset or form redis
+        """
 
         trait_dataset = mock.Mock()
         dataset_trait_sample_data = [
@@ -65,8 +66,9 @@ class TestTrait(TestCase):
         self.assertEqual(results, expected_results)
 
     def test_get_trait_info_data(self):
-        """test for getting info data related\
-        to trait"""
+        """Test for getting info data related\
+        to trait
+        """
 
         results = get_trait_info_data(
             trait_name="AXSF_AT", trait_dataset=mock.Mock(), database_instance=None)

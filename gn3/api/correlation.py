@@ -15,9 +15,10 @@ correlation = Blueprint("correlation", __name__)
 
 @correlation.route("/sample_r/<string:corr_method>", methods=["POST"])
 def compute_sample_r(corr_method="pearson"):
-    """correlation endpoint for computing sample r correlations\
+    """Correlation endpoint for computing sample r correlations\
     api expects the trait data with has the trait and also the\
-    target_dataset  data"""
+    target_dataset  data
+    """
     correlation_input = request.get_json()
 
     # xtodo move code below to compute_all_sampl correlation
@@ -35,9 +36,10 @@ def compute_sample_r(corr_method="pearson"):
 
 @correlation.route("/lit_corr/<string:species>/<int:gene_id>", methods=["POST"])
 def compute_lit_corr(species=None, gene_id=None):
-    """api endpoint for doing lit correlation.results for lit correlation\
+    """Api endpoint for doing lit correlation.results for lit correlation\
     are fetched from the database this is the only case where the db\
-    might be needed for actual computing of the correlation results"""
+    might be needed for actual computing of the correlation results
+    """
 
     database_instance = mock.Mock()
     target_traits_gene_ids = request.get_json()
@@ -51,7 +53,7 @@ def compute_lit_corr(species=None, gene_id=None):
 
 @correlation.route("/tissue_corr/<string:corr_method>", methods=["POST"])
 def compute_tissue_corr(corr_method="pearson"):
-    """api endpoint fr doing tissue correlation"""
+    """Api endpoint fr doing tissue correlation"""
     tissue_input_data = request.get_json()
     primary_tissue_dict = tissue_input_data["primary_tissue"]
     target_tissues_dict_list = tissue_input_data["target_tissues"]

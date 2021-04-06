@@ -10,10 +10,6 @@ class CorrelationIntegrationTest(TestCase):
     def setUp(self):
         self.app = create_app().test_client()
 
-    def test_fail(self):
-        """initial method for class that fails"""
-        self.assertEqual(2, 2)
-
     @mock.patch("gn3.api.correlation.compute_all_sample_correlation")
     def test_sample_r_correlation(self, mock_compute_samples):
         """Test /api/correlation/sample_r/{method}"""
