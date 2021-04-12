@@ -7,7 +7,7 @@ from flask import request
 
 from gn3.computations.traits import fetch_trait
 from gn3.computations.traits import get_trait_info_data
-from gn3.experimental_db import database_connector
+from gn3.db_utils import database_connector
 
 trait = Blueprint("trait", __name__)
 

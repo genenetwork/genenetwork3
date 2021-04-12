@@ -4,7 +4,7 @@ from flask import jsonify
 
 from gn3.computations.datasets import create_dataset
 from gn3.computations.datasets import get_traits_data
-from gn3.experimental_db import database_connector
+from gn3.db_utils import database_connector
 
 
 dataset = Blueprint("dataset", __name__)
