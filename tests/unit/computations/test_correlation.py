@@ -302,6 +302,7 @@ class TestCorrelation(TestCase):
         db value if corr coefficient is empty
         """
         database_instance = mock.Mock()
+        database_instance.cursor.return_value = DataBase()
         database_instance.execute.return_value.fetchone.return_value = None
 
         lit_results = fetch_lit_correlation_data(conn=database_instance,
