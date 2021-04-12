@@ -12,10 +12,30 @@ def compute_sum(rhs: int, lhs: int) -> int:
     return rhs + lhs
 
 
+def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict)-> List:
+    """Function to construct target dataset data items given commoned shared\
+    keys and trait samplelist values for example given keys  >>>>>>>>>>\
+    ["BXD1", "BXD2", "BXD5", "BXD6", "BXD8", "BXD9"] and value object as\
+    "HCMA:_AT": [4.1, 5.6, 3.2, 1.1, 4.4, 2.2],TXD_AT": [6.2, 5.7, 3.6, 1.5, 4.2, 2.3]}\
+    return  results should be a list of dicts mapping the shared keys to the trait values"""
+    target_dataset_data = []
+
+    for trait_id, sample_values in target_sample_vals.items():
+        target_trait_dict = dict(zip(target_sample_keys, sample_values))
+
+        target_trait = {
+            "trait_id": trait_id,
+            "trait_sample_data": target_trait_dict
+        }
+
+        target_dataset_data.append(target_trait)
+
+    return target_dataset_data
+
+
 def normalize_values(a_values: List,
                      b_values: List) -> Tuple[List[float], List[float], int]:
     """Trim two lists of values to contain only the values they both share
-
     Given two lists of sample values, trim each list so that it contains only
     the samples that contain a value in both lists. Also returns the number of
     such samples.
@@ -175,7 +195,7 @@ def tissue_correlation_for_trait_list(
 
     """
 
-    # ax :todo assertion that lenggth one one target tissue ==primary_tissue
+    # ax :todo assertion that length one one target tissue ==primary_tissue
 
     (tissue_corr_coeffient,
      p_value) = compute_corr_p_value(primary_values=primary_tissue_vals,
@@ -192,11 +212,11 @@ def tissue_correlation_for_trait_list(
 
 
 def fetch_lit_correlation_data(
-        database,
+        conn,
         input_mouse_gene_id: Optional[str],
         gene_id: str,
         mouse_gene_id: Optional[str] = None) -> Tuple[str, float]:
-    """given input trait mouse gene id and mouse gene id fetch the lit\
+    """Given input trait mouse gene id and mouse gene id fetch the lit\
     corr_data"""
     if mouse_gene_id is not None and ";" not in mouse_gene_id:
         query = """
@@ -208,15 +228,19 @@ def fetch_lit_correlation_data(
 
         query_values = (str(mouse_gene_id), str(input_mouse_gene_id))
 
-        results = database.execute(query_formatter(query,
-                                                   *query_values)).fetchone()
+        cursor = conn.cursor()
+
+        cursor.execute(query_formatter(query,
+                                       *query_values))
+        results = cursor.fetchone()
         lit_corr_results = None
         if results is not None:
             lit_corr_results = results
         else:
-            lit_corr_results = database.execute(
-                query_formatter(query,
-                                *tuple(reversed(query_values)))).fetchone()
+            cursor = conn.cursor()
+            cursor.execute(query_formatter(query,
+                                           *tuple(reversed(query_values))))
+            lit_corr_results = cursor.fetchone()
         lit_results = (gene_id, lit_corr_results.val)\
             if lit_corr_results else (gene_id, 0)
         return lit_results
@@ -225,7 +249,7 @@ def fetch_lit_correlation_data(
 
 
 def lit_correlation_for_trait_list(
-        database,
+        conn,
         target_trait_lists: List,
         species: Optional[str] = None,
         trait_gene_id: Optional[str] = None) -> List:
@@ -233,41 +257,43 @@ def lit_correlation_for_trait_list(
     output is float for lit corr results """
     fetched_lit_corr_results = []
 
-    this_trait_mouse_gene_id = map_to_mouse_gene_id(database=database,
+    this_trait_mouse_gene_id = map_to_mouse_gene_id(conn=conn,
                                                     species=species,
                                                     gene_id=trait_gene_id)
 
-    for trait in target_trait_lists:
-        target_trait_gene_id = trait.get("gene_id")
+    for (trait_name, target_trait_gene_id) in target_trait_lists:
+        corr_results = {}
         if target_trait_gene_id:
             target_mouse_gene_id = map_to_mouse_gene_id(
-                database=database,
+                conn=conn,
                 species=species,
                 gene_id=target_trait_gene_id)
 
             fetched_corr_data = fetch_lit_correlation_data(
-                database=database,
+                conn=conn,
                 input_mouse_gene_id=this_trait_mouse_gene_id,
                 gene_id=target_trait_gene_id,
                 mouse_gene_id=target_mouse_gene_id)
 
             dict_results = dict(zip(("gene_id", "lit_corr"),
                                     fetched_corr_data))
-            fetched_lit_corr_results.append(dict_results)
+            corr_results[trait_name] = dict_results
+            fetched_lit_corr_results.append(corr_results)
 
     return fetched_lit_corr_results
 
 
 def query_formatter(query_string: str, *query_values):
-    """formatter query string given the unformatted query string\
+    """Formatter query string given the unformatted query string\
     and the respectibe values.Assumes number of placeholders is
     equal to the number of query values """
+    # xtodo escape sql queries
     results = query_string % (query_values)
 
     return results
 
 
-def map_to_mouse_gene_id(database, species: Optional[str],
+def map_to_mouse_gene_id(conn, species: Optional[str],
                          gene_id: Optional[str]) -> Optional[str]:
     """Given a species which is not mouse map the gene_id\
     to respective mouse gene id"""
@@ -278,27 +304,28 @@ def map_to_mouse_gene_id(database, species: Optional[str],
     if species == "mouse":
         return gene_id
 
+    cursor = conn.cursor()
     query = """SELECT mouse
                 FROM GeneIDXRef
                 WHERE '%s' = '%s'"""
 
     query_values = (species, gene_id)
-
-    results = database.execute(query_formatter(query,
-                                               *query_values)).fetchone()
+    cursor.execute(query_formatter(query,
+                                   *query_values))
+    results = cursor.fetchone()
 
     mouse_gene_id = results.mouse if results is not None else None
 
     return mouse_gene_id
 
 
-def compute_all_lit_correlation(database_instance, trait_lists: List,
+def compute_all_lit_correlation(conn, trait_lists: List,
                                 species: str, gene_id):
     """Function that acts as an abstraction for
     lit_correlation_for_trait_list"""
 
     lit_results = lit_correlation_for_trait_list(
-        database=database_instance,
+        conn=conn,
         target_trait_lists=trait_lists,
         species=species,
         trait_gene_id=gene_id)
@@ -307,18 +334,22 @@ def compute_all_lit_correlation(database_instance, trait_lists: List,
 
 
 def compute_all_tissue_correlation(primary_tissue_dict: dict,
-                                   target_tissues_dict_list: List,
+                                   target_tissues_data: dict,
                                    corr_method: str):
     """Function acts as an abstraction for tissue_correlation_for_trait_list\
-    required input are target tissue object and primary tissue trait
+    required input are target tissue object and primary tissue trait\
+    target tissues data contains the trait_symbol_dict and symbol_tissue_vals
 
     """
 
     tissues_results = {}
 
     primary_tissue_vals = primary_tissue_dict["tissue_values"]
+    traits_symbol_dict = target_tissues_data["trait_symbol_dict"]
+    symbol_tissue_vals_dict = target_tissues_data["symbol_tissue_vals_dict"]
 
-    target_tissues_list = target_tissues_dict_list
+    target_tissues_list = process_trait_symbol_dict(
+        traits_symbol_dict, symbol_tissue_vals_dict)
 
     for target_tissue_obj in target_tissues_list:
         trait_id = target_tissue_obj.get("trait_id")
@@ -333,3 +364,22 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
         tissues_results[trait_id] = tissue_result
 
     return tissues_results
+
+
+def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> List:
+    """Method for processing trait symbol\
+    dict given the symbol tissue values """
+    traits_tissue_vals = []
+
+    for (trait, symbol) in trait_symbol_dict.items():
+        if symbol is not None:
+            target_symbol = symbol.lower()
+            if target_symbol in symbol_tissue_vals_dict:
+                trait_tissue_val = symbol_tissue_vals_dict[target_symbol]
+                target_tissue_dict = {"trait_id": trait,
+                                      "symbol": target_symbol,
+                                      "tissue_values": trait_tissue_val}
+
+                traits_tissue_vals.append(target_tissue_dict)
+
+    return traits_tissue_vals
