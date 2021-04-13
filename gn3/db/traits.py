@@ -1,0 +1,31 @@
+"""This contains all the necessary functions that are required to add traits
+to the published database"""
+from collections import namedtuple
+from typing import Any
+
+
+riset = namedtuple('riset', ['name', 'id'])
+
+
+def get_riset(data_type: str, name: str, conn: Any):
+    query, _name, _id = None, None, None
+    if data_type == "Publish":
+        query = ("SELECT InbredSet.Name, InbredSet.Id FROM InbredSet, "
+                 "PublishFreeze WHERE PublishFreeze.InbredSetId = "
+                 "InbredSet.Id AND PublishFreeze.Name = '%s'" % name)
+    elif data_type == "Geno":
+        query = ("SELECT InbredSet.Name, InbredSet.Id FROM InbredSet, "
+                 "GenoFreeze WHERE GenoFreeze.InbredSetId = "
+                 "InbredSet.Id AND GenoFreeze.Name = '%s'" % name)
+    elif data_type == "ProbeSet":
+        query = ("SELECT InbredSet.Name, InbredSet.Id FROM "
+                 "InbredSet, ProbeSetFreeze, ProbeFreeze WHERE "
+                 "ProbeFreeze.InbredSetId = InbredSet.Id AND "
+                 "ProbeFreeze.Id = ProbeSetFreeze.ProbeFreezeId AND "
+                 "ProbeSetFreeze.Name = '%s'" % name)
+    if query:
+        with conn.cursor() as cursor:
+            _name, _id = cursor.fetchone()
+            if _name == "BXD300":
+                _name = "BXD"
+    return riset(_name, _id)
