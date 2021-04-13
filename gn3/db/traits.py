@@ -1,7 +1,7 @@
 """This contains all the necessary functions that are required to add traits
 to the published database"""
 from collections import namedtuple
-from typing import Any
+from typing import Any, Dict, Optional
 
 
 riset = namedtuple('riset', ['name', 'id'])
@@ -29,3 +29,22 @@ def get_riset(data_type: str, name: str, conn: Any):
             if _name == "BXD300":
                 _name = "BXD"
     return riset(_name, _id)
+
+
+def insert_publication(pubmed_id: int, publication: Optional[Dict],
+                       conn: Any):
+    """Creates a new publication record if it's not available"""
+    sql = ("SELECT Id FROM Publication where "
+           "PubMed_ID = %d" % pubmed_id)
+    _id = None
+    with conn.cursor() as cursor:
+        cursor.execute(sql)
+        _id = cursor.fetchone()
+    if not _id:
+        # The Publication contains the fields: 'authors', 'title', 'abstract',
+        # 'journal','volume','pages','month','year'
+        insert_query = ("INSERT into Publication (%s) Values (%s)" %
+                        (", ".join(publication.keys()),
+                         ", ".join(['%s'] * len(publication))))
+        with conn.cursor() as cursor:
+            cursor.execute(insert_query, tuple(publication.values()))
