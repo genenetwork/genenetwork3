@@ -1,10 +1,17 @@
 """This contains all the necessary functions that are required to add traits
 to the published database"""
-from collections import namedtuple
 from typing import Any, Dict, Optional
+from dataclasses import dataclass
 
 
-riset = namedtuple('riset', ['name', 'id'])
+@dataclass(frozen=True)
+class riset:
+    """Class for keeping track of riset. A riset is a group e.g. rat HSNIH-Palmer,
+BXD
+
+    """
+    name: str
+    r_id: int
 
 
 def get_riset(data_type: str, name: str, conn: Any):
