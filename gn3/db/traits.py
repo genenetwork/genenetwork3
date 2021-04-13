@@ -1,8 +1,9 @@
 """This contains all the necessary functions that are required to add traits
 to the published database"""
-from typing import Any, Dict, Optional
 from dataclasses import dataclass
+from itertools import chain
 from typing import Optional
+from typing import Any, Dict, List, Optional
 
 
 @dataclass(frozen=True)
@@ -74,6 +75,21 @@ def insert_publication(pubmed_id: int, publication: Optional[Dict],
                          ", ".join(['%s'] * len(publication))))
         with conn.cursor() as cursor:
             cursor.execute(insert_query, tuple(publication.values()))
+
+
+def insert_publication_data(riset_id: int, strains: List, conn: Any):
+    species_id = None
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT SpeciesId from InbredSet where "
+                       "Id=%s" % riset_id)
+        species_id, *_ = cursor.fetchone()
+        cursor.execute(
+            "SELECT Id FROM Strain WHERE SpeciesId="
+            "%s AND Name in (%s)"
+            % (riset_id, ", ".join(f"'{strain}'" for strain in strains)))
+        strain_ids = cursor.fetchall()
+        if strain_ids:
+            strain_ids = list(chain(*strain_ids))
 
 
 def insert_phenotype(phenotype: Optional[Dict], conn: Any):
