@@ -48,3 +48,11 @@ def insert_publication(pubmed_id: int, publication: Optional[Dict],
                          ", ".join(['%s'] * len(publication))))
         with conn.cursor() as cursor:
             cursor.execute(insert_query, tuple(publication.values()))
+
+
+def insert_phenotype(phenotype: Optional[Dict], conn: Any):
+    insert_query = ("INSERT into Phenotype (%s) Values (%s)" %
+                    (", ".join(phenotype.keys()),
+                     ", ".join(['%s'] * len(phenotype))))
+    with conn.cursor() as cursor:
+        cursor.execute(insert_query, tuple(phenotype.values()))
