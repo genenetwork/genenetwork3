@@ -2,6 +2,7 @@
 to the published database"""
 from typing import Any, Dict, Optional
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -12,6 +13,24 @@ BXD
     """
     name: str
     r_id: int
+
+
+@dataclass(frozen=True)
+class webqtlCaseData:
+    """Class for keeping track of one case data in one trait"""
+    value: Optional[float] = None
+    variance: Optional[float] = None
+    count: Optional[int] = None  # Number of Individuals
+
+    def __str__(self):
+        _str = ""
+        if self.value:
+            _str += f"value={self.value:.3f}"
+        if self.variance:
+            _str += f" variance={self.variance:.3f}"
+        if self.count:
+            _str += " n_data={self.count}"
+        return _str
 
 
 def get_riset(data_type: str, name: str, conn: Any):
