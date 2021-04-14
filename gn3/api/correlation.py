@@ -16,6 +16,8 @@ correlation = Blueprint("correlation", __name__)
 def compute_sample_integration(corr_method="pearson"):
     """temporary api to  help integrate genenetwork2  to genenetwork3 """
 
+    # for debug
+    print("Calling this endpoint")
     correlation_input = request.get_json()
 
     target_samplelist = correlation_input.get("target_samplelist")
@@ -23,7 +25,6 @@ def compute_sample_integration(corr_method="pearson"):
     this_trait_data = correlation_input.get("trait_data")
 
     results = map_shared_keys_to_values(target_samplelist, target_data_values)
-
     correlation_results = compute_all_sample_correlation(corr_method=corr_method,
                                                          this_trait=this_trait_data,
                                                          target_dataset=results)
@@ -75,6 +76,8 @@ def compute_lit_corr(species=None, gene_id=None):
 @correlation.route("/tissue_corr/<string:corr_method>", methods=["POST"])
 def compute_tissue_corr(corr_method="pearson"):
     """Api endpoint fr doing tissue correlation"""
+    # for debug
+    print("The request has been received")
     tissue_input_data = request.get_json()
     primary_tissue_dict = tissue_input_data["primary_tissue"]
     target_tissues_dict = tissue_input_data["target_tissues_dict"]

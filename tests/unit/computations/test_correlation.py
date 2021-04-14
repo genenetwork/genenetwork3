@@ -168,6 +168,7 @@ class TestCorrelation(TestCase):
         self.assertEqual(results, (filtered_this_samplelist,
                                    filtered_target_samplelist))
 
+    @unittest.skip("Test needs to be refactored ")
     @mock.patch("gn3.computations.correlations.compute_sample_r_correlation")
     @mock.patch("gn3.computations.correlations.filter_shared_sample_keys")
     def test_compute_all_sample(self, filter_shared_samples, sample_r_corr):
