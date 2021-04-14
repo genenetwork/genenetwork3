@@ -320,4 +320,52 @@ def get_traits_data(sample_ids, database_instance, dataset_name, dataset_type):
         # print(query)
 
         _results = fetch_from_db_sample_data(query, database_instance)
-    return {}
+
+        return []
+
+
+def get_probeset_trait_data(strain_ids: List, conn, dataset_name) -> dict:
+    """function for getting trait data\
+    for probeset data type similar to\
+    get trait data only difference is that\
+    it uses sub queries"""
+
+    trait_data: dict = {}
+
+    trait_id_name = {}
+
+    traits_query = """
+    SELECT ProbeSetXRef.DataId,ProbeSet.Name FROM (ProbeSet, ProbeSetXRef, ProbeSetFreeze)
+                    WHERE ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+                    and ProbeSetFreeze.Name = '{}'
+                    and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+                    order by ProbeSet.Id
+    """.format(dataset_name)
+
+    query = """
+    SELECT * from ProbeSetData
+    where StrainID in ({})
+    and id in (SELECT ProbeSetXRef.DataId FROM (ProbeSet, ProbeSetXRef, ProbeSetFreeze)
+                WHERE ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+                and ProbeSetFreeze.Name = '{}'
+                and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+                order by ProbeSet.Id)
+    """.format(",".join(str(strain_id) for strain_id in strain_ids), dataset_name)
+
+    with conn:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        _results = cursor.fetchall()
+        cursor.execute(traits_query)
+        trait_id_name = dict(cursor.fetchall())
+
+    for trait_id, _strain_id, strain_value in _results:
+        trait_name = trait_id_name[trait_id]
+        if trait_data.get(trait_name):
+            trait_data[trait_name].append(strain_value)
+        else:
+            trait_data[trait_name] = []
+
+            trait_data[trait_name].append(strain_value)
+
+    return trait_data
