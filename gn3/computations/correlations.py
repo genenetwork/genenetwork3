@@ -152,42 +152,42 @@ def compute_all_sample_correlation(this_trait,
 
     return corr_results
 
-    def benchmark_compute_all_sample(this_trait,
-                                     target_datasets,
-                                     corr_method="pearson") ->List:
-        """Temp function to benchmark with compute_all_sample_r
-        """
+def benchmark_compute_all_sample(this_trait,
+                                 target_dataset,
+                                 corr_method="pearson") ->List:
+    """Temp function to benchmark with compute_all_sample_r
+    """
 
-        this_trait_samples = this_trait["trait_sample_data"]
+    this_trait_samples = this_trait["trait_sample_data"]
 
-        corr_results = []
+    corr_results = []
 
-        for target_trait in target_dataset:
-            trait_id = target_trait.get("trait_id")
-            target_trait_data = target_trait["trait_sample_data"]
-            this_vals, target_vals = filter_shared_sample_keys(
-                this_trait_samples, target_trait_data)
+    for target_trait in target_dataset:
+        trait_id = target_trait.get("trait_id")
+        target_trait_data = target_trait["trait_sample_data"]
+        this_vals, target_vals = filter_shared_sample_keys(
+            this_trait_samples, target_trait_data)
 
-            sample_correlation = compute_sample_r_correlation(
-                corr_method=corr_method,
-                trait_vals=this_vals,
-                target_samples_vals=target_vals)
+        sample_correlation = compute_sample_r_correlation(
+            corr_method=corr_method,
+            trait_vals=this_vals,
+            target_samples_vals=target_vals)
 
-            if sample_correlation is not None:
-                (corr_coeffient, p_value, num_overlap) = sample_correlation
+        if sample_correlation is not None:
+            (corr_coeffient, p_value, num_overlap) = sample_correlation
 
-            else:
-                continue
+        else:
+            continue
 
-            corr_result = {
-                "corr_coeffient": corr_coeffient,
-                "p_value": p_value,
-                "num_overlap": num_overlap
-            }
+        corr_result = {
+            "corr_coeffient": corr_coeffient,
+            "p_value": p_value,
+            "num_overlap": num_overlap
+        }
 
-            corr_results.append({trait_id: corr_result})
+        corr_results.append({trait_id: corr_result})
 
-        return corr_results
+    return corr_results
 
 
 def tissue_lit_corr_for_probe_type(corr_type: str, top_corr_results):
