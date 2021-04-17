@@ -381,20 +381,16 @@ class TestCorrelation(TestCase):
 
         database = mock.Mock()
 
-        expected_mocked_lit_results = [{"gene_id": 11, "lit_corr": 9}, {
-            "gene_id": 17, "lit_corr": 8}]
+        expected_mocked_lit_results = [{"1412_at": {"gene_id": 11, "lit_corr": 0.9}}, {"1412_a": {
+            "gene_id": 17, "lit_corr": 0.48}}]
 
-        mock_lit_corr.side_effect = expected_mocked_lit_results
+        mock_lit_corr.return_value = expected_mocked_lit_results
 
         lit_correlation_results = compute_all_lit_correlation(
-            conn=database, trait_lists=[{"gene_id": 11}],
+            conn=database, trait_lists=[("1412_at", 11), ("1412_a", 121)],
             species="rat", gene_id=12)
 
-        expected_results = {
-            "lit_results": {"gene_id": 11, "lit_corr": 9}
-        }
-
-        self.assertEqual(lit_correlation_results, expected_results)
+        self.assertEqual(lit_correlation_results, expected_mocked_lit_results)
 
     @mock.patch("gn3.computations.correlations.tissue_correlation_for_trait_list")
     @mock.patch("gn3.computations.correlations.process_trait_symbol_dict")
@@ -421,10 +417,8 @@ class TestCorrelation(TestCase):
         mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3},
                                         {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}]
 
-        expected_results = {"1418702_a_at":
-                            {"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3},
-                            "1412_at":
-                            {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}}
+        expected_results = [{"1412_at": {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}},
+                            {"1418702_a_at": {"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3}}]
 
         results = compute_all_tissue_correlation(
             primary_tissue_dict=primary_tissue_dict,
