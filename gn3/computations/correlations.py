@@ -150,10 +150,9 @@ def compute_all_sample_correlation(this_trait,
 
                 corr_results.append({"trait_name_key": corr_result})
 
-    sorted_corr_results = sorted(
+    return sorted(
         corr_results,
         key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coeffient"]))
-    return sorted_corr_results
 
 
 def benchmark_compute_all_sample(this_trait,
@@ -294,7 +293,6 @@ def lit_correlation_for_trait_list(
     this_trait_mouse_gene_id = map_to_mouse_gene_id(conn=conn,
                                                     species=species,
                                                     gene_id=trait_gene_id)
-
 
     for (trait_name, target_trait_gene_id) in target_trait_lists:
         corr_results = {}

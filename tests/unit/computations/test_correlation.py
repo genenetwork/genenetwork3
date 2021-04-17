@@ -417,8 +417,10 @@ class TestCorrelation(TestCase):
         mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3},
                                         {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}]
 
-        expected_results = [{"1412_at": {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}},
-                            {"1418702_a_at": {"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3}}]
+        expected_results = [{"1412_at":
+                             {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}},
+                            {"1418702_a_at":
+                             {"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3}}]
 
         results = compute_all_tissue_correlation(
             primary_tissue_dict=primary_tissue_dict,
