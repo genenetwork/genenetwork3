@@ -150,7 +150,11 @@ def compute_all_sample_correlation(this_trait,
 
                 corr_results.append({"trait_name_key": corr_result})
 
-    return corr_results
+    sorted_corr_results = sorted(
+        corr_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coeffient"]))
+    return sorted_corr_results
+
 
 def benchmark_compute_all_sample(this_trait,
                                  target_dataset,
@@ -234,8 +238,8 @@ def tissue_correlation_for_trait_list(
 
     lit_corr_result = {
         "tissue_corr": tissue_corr_coeffient,
-        "p_value": p_value,
-        "tissue_number": len(primary_tissue_vals)
+        "tissue_number": len(primary_tissue_vals),
+        "p_value": p_value
     }
 
     return lit_corr_result
@@ -290,6 +294,7 @@ def lit_correlation_for_trait_list(
     this_trait_mouse_gene_id = map_to_mouse_gene_id(conn=conn,
                                                     species=species,
                                                     gene_id=trait_gene_id)
+
 
     for (trait_name, target_trait_gene_id) in target_trait_lists:
         corr_results = {}
@@ -359,8 +364,11 @@ def compute_all_lit_correlation(conn, trait_lists: List,
         target_trait_lists=trait_lists,
         species=species,
         trait_gene_id=gene_id)
+    sorted_lit_results = sorted(
+        lit_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["lit_corr"]))
 
-    return {"lit_results": lit_results}
+    return sorted_lit_results
 
 
 def compute_all_tissue_correlation(primary_tissue_dict: dict,
@@ -372,7 +380,7 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
 
     """
 
-    tissues_results = {}
+    tissues_results = []
 
     primary_tissue_vals = primary_tissue_dict["tissue_values"]
     traits_symbol_dict = target_tissues_data["trait_symbol_dict"]
@@ -391,9 +399,14 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
             target_tissues_values=target_tissue_vals,
             corr_method=corr_method)
 
-        tissues_results[trait_id] = tissue_result
+        tissue_result_dict = {trait_id: tissue_result}
+        tissues_results.append(tissue_result_dict)
 
-    return tissues_results
+    sorted_tissues_results = sorted(
+        tissues_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["tissue_corr"]))
+
+    return sorted_tissues_results
 
 
 def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> List:
