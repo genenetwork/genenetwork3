@@ -70,8 +70,8 @@ pearson,spearman and biweight mid correlation return value is rho and p_value
     return (corr_coeffient, p_val)
 
 
-def compute_sample_r_correlation(corr_method, trait_vals,
-                                 target_samples_vals) -> Optional[Tuple[float, float, int]]:
+def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
+                                 target_samples_vals) -> Optional[Tuple[str, float, float, int]]:
     """Given a primary trait values and target trait values calculate the
     correlation coeff and p value
 
@@ -89,7 +89,7 @@ def compute_sample_r_correlation(corr_method, trait_vals,
         # xtodo check if corr_coefficient is None
         # should use numpy.isNan scipy.isNan is deprecated
         if corr_coeffient is not None:
-            return (corr_coeffient, p_value, num_overlap)
+            return (trait_name, corr_coeffient, p_value, num_overlap)
 
     return None
 
@@ -123,24 +123,26 @@ def compute_all_sample_correlation(this_trait,
     target__datasets compute all sample correlation
     """
     # xtodo fix trait_name currently returning single one
+    # pylint: disable-msg=too-many-locals
 
     this_trait_samples = this_trait["trait_sample_data"]
     corr_results = []
     processed_values = []
     for target_trait in target_dataset:
-        # trait_name = target_trait.get("trait_id")
+        trait_name = target_trait.get("trait_id")
         target_trait_data = target_trait["trait_sample_data"]
         # this_vals, target_vals = filter_shared_sample_keys(
         #     this_trait_samples, target_trait_data)
 
-        processed_values.append((corr_method, *filter_shared_sample_keys(
+        processed_values.append((trait_name, corr_method, *filter_shared_sample_keys(
             this_trait_samples, target_trait_data)))
     with multiprocessing.Pool() as pool:
         results = pool.starmap(compute_sample_r_correlation, processed_values)
 
         for sample_correlation in results:
             if sample_correlation is not None:
-                (corr_coeffient, p_value, num_overlap) = sample_correlation
+                (trait_name, corr_coeffient, p_value,
+                 num_overlap) = sample_correlation
 
                 corr_result = {
                     "corr_coeffient": corr_coeffient,
@@ -148,7 +150,7 @@ def compute_all_sample_correlation(this_trait,
                     "num_overlap": num_overlap
                 }
 
-                corr_results.append({"trait_name_key": corr_result})
+                corr_results.append({trait_name: corr_result})
 
     return sorted(
         corr_results,
@@ -158,7 +160,9 @@ def compute_all_sample_correlation(this_trait,
 def benchmark_compute_all_sample(this_trait,
                                  target_dataset,
                                  corr_method="pearson") ->List:
-    """Temp function to benchmark with compute_all_sample_r
+    """Temp function to benchmark with compute_all_sample_r\
+    alternative to compute_all_sample_r where we use \
+    multiprocessing
     """
 
     this_trait_samples = this_trait["trait_sample_data"]
@@ -166,18 +170,19 @@ def benchmark_compute_all_sample(this_trait,
     corr_results = []
 
     for target_trait in target_dataset:
-        trait_id = target_trait.get("trait_id")
+        trait_name = target_trait.get("trait_id")
         target_trait_data = target_trait["trait_sample_data"]
         this_vals, target_vals = filter_shared_sample_keys(
             this_trait_samples, target_trait_data)
 
         sample_correlation = compute_sample_r_correlation(
+            trait_name=trait_name,
             corr_method=corr_method,
             trait_vals=this_vals,
             target_samples_vals=target_vals)
 
         if sample_correlation is not None:
-            (corr_coeffient, p_value, num_overlap) = sample_correlation
+            (trait_name, corr_coeffient, p_value, num_overlap) = sample_correlation
 
         else:
             continue
@@ -188,7 +193,7 @@ def benchmark_compute_all_sample(this_trait,
             "num_overlap": num_overlap
         }
 
-        corr_results.append({trait_id: corr_result})
+        corr_results.append({trait_name: corr_result})
 
     return corr_results
 

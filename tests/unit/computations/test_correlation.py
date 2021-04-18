@@ -120,21 +120,24 @@ class TestCorrelation(TestCase):
                                   [3.4, 6.2, 4, 1.1, 8, 1.1], 6)
         compute_corr.side_effect = [(0.7, 0.3), (-1.0, 0.9), (1, 0.21)]
 
-        pearson_results = compute_sample_r_correlation(corr_method="pearson",
+        pearson_results = compute_sample_r_correlation(trait_name="1412_at",
+                                                       corr_method="pearson",
                                                        trait_vals=primary_values,
                                                        target_samples_vals=target_values)
 
-        spearman_results = compute_sample_r_correlation(corr_method="spearman",
+        spearman_results = compute_sample_r_correlation(trait_name="1412_at",
+                                                        corr_method="spearman",
                                                         trait_vals=primary_values,
                                                         target_samples_vals=target_values)
 
-        bicor_results = compute_sample_r_correlation(corr_method="bicor",
+        bicor_results = compute_sample_r_correlation(trait_name="1412_at",
+                                                     corr_method="bicor",
                                                      trait_vals=primary_values,
                                                      target_samples_vals=target_values)
 
-        self.assertEqual(bicor_results, (1, 0.21, 6))
-        self.assertEqual(pearson_results, (0.7, 0.3, 6))
-        self.assertEqual(spearman_results, (-1.0, 0.9, 6))
+        self.assertEqual(bicor_results, ("1412_at", 1, 0.21, 6))
+        self.assertEqual(pearson_results, ("1412_at", 0.7, 0.3, 6))
+        self.assertEqual(spearman_results, ("1412_at", -1.0, 0.9, 6))
 
         self.assertIsInstance(
             pearson_results, tuple, "message")
