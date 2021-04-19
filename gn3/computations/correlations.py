@@ -429,3 +429,50 @@ def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> Lis
                 traits_tissue_vals.append(target_tissue_dict)
 
     return traits_tissue_vals
+
+
+def experimental_compute_all_tissue_correlation(primary_tissue_dict: dict,
+                                                target_tissues_data: dict,
+                                                corr_method: str):
+    """Experimental function that uses multiprocessing\
+    for computing tissue correlation
+    """
+
+    tissues_results = []
+
+    primary_tissue_vals = primary_tissue_dict["tissue_values"]
+    traits_symbol_dict = target_tissues_data["trait_symbol_dict"]
+    symbol_tissue_vals_dict = target_tissues_data["symbol_tissue_vals_dict"]
+
+    target_tissues_list = process_trait_symbol_dict(
+        traits_symbol_dict, symbol_tissue_vals_dict)
+    processed_values = []
+
+    for target_tissue_obj in target_tissues_list:
+        trait_id = target_tissue_obj.get("trait_id")
+
+        target_tissue_vals = target_tissue_obj.get("tissue_values")
+        processed_values.append(
+            (primary_tissue_vals, target_tissue_vals, corr_method))
+
+    tissue_results = []
+    with multiprocessing.Pool() as pool:
+        results = pool.starmap(
+            tissue_correlation_for_trait_list, processed_values)
+        for result in results:
+            tissue_result_dict = {"trait_name": result}
+            tissues_results.append(tissue_result_dict)
+
+        # tissue_result = tissue_correlation_for_trait_list(
+        #     primary_tissue_vals=primary_tissue_vals,
+        #     target_tissues_values=target_tissue_vals,
+        #     corr_method=corr_method)
+
+        # tissue_result_dict = {trait_id: tissue_result}
+        # tissues_results.append(tissue_result_dict)
+
+    sorted_tissues_results = sorted(
+        tissues_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["tissue_corr"]))
+
+    return sorted_tissues_results
