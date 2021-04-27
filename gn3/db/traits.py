@@ -34,6 +34,19 @@ class webqtlCaseData:
         return _str
 
 
+def lookup_webqtldataset_name(riset_name: str, conn: Any):
+    """Given a group name(riset), return it's name e.g. BXDPublish,
+HLCPublish."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT PublishFreeze.Name FROM "
+            "PublishFreeze, InbredSet WHERE "
+            "PublishFreeze.InbredSetId = InbredSet.Id "
+            "AND InbredSet.Name = '%s'" % riset_name)
+        _result, *_ = cursor.fetchone()
+        return _result
+
+
 def get_riset(data_type: str, name: str, conn: Any):
     query, _name, _id = None, None, None
     if data_type == "Publish":
