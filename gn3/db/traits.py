@@ -88,8 +88,32 @@ def insert_publication_data(riset_id: int, strains: List, conn: Any):
             "%s AND Name in (%s)"
             % (riset_id, ", ".join(f"'{strain}'" for strain in strains)))
         strain_ids = cursor.fetchall()
+        data_id, *_ = cursor.execute("SELECT max(Id) "
+                                     "from PublishData").fetchone()
+
         if strain_ids:
             strain_ids = list(chain(*strain_ids))
+        for strain, strain_id in zip(strains, strain_ids):
+            # TODO: Fetch this values correctly using sql
+            value, variance, trait_np = 1, 1, 1
+            if value:
+                cursor.execute(
+                    "INSERT INTO PublishData values (%d, %d, %s)" %
+                    (data_id, strain_id, value))
+            if variance:
+                cursor.execute(
+                    "INSERT INTO PublishSE values (%d, %d, %s)" %
+                    (data_id, strain_id, variance))
+            if trait_np:
+                cursor.execute(
+                    "INSERT INTO NStrain values (%d, %d, %s)" %
+                    (data_id, strain_id, trait_np))
+        inbred_set_id = lookup_webqtldataset_name(riset_name="",
+                                                  conn=conn)
+        cursor.execute(
+            "SELECT max(Sequence) FROM PublishXRef where "
+            "InbredSetId = %d and PhenotypeId = %d and PublicationId = %d" %
+            (inbred_set_id, phenotype_id, publication_id))
 
 
 def insert_phenotype(phenotype: Optional[Dict], conn: Any):
