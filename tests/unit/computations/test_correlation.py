@@ -104,7 +104,7 @@ class TestCorrelation(TestCase):
 
         results = do_bicor(x_val=[1, 2, 3], y_val=[4, 5, 6])
 
-        self.assertEqual(results, ([1, 2, 3], [4, 5, 6])
+        self.assertEqual(results, (0.0, 0.0)
                          )
 
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
@@ -291,10 +291,10 @@ class TestCorrelation(TestCase):
 
         expected_db_results = [namedtuple("lit_coeff", "val")(x*0.1)
                                for x in range(1, 4)]
-        database_instance = DataBase(expected_results=expected_db_results)
+        conn = DataBase(expected_results=expected_db_results)
         expected_results = ("1", 0.1)
 
-        lit_results = fetch_lit_correlation_data(conn=database_instance,
+        lit_results = fetch_lit_correlation_data(conn=conn,
                                                  gene_id="1",
                                                  input_mouse_gene_id="20",
                                                  mouse_gene_id="15")
@@ -305,11 +305,11 @@ class TestCorrelation(TestCase):
         """Test that corr coeffient returned is 0 given the\
         db value if corr coefficient is empty
         """
-        database_instance = mock.Mock()
-        database_instance.cursor.return_value = DataBase()
-        database_instance.execute.return_value.fetchone.return_value = None
+        conn = mock.Mock()
+        conn.cursor.return_value = DataBase()
+        conn.execute.return_value.fetchone.return_value = None
 
-        lit_results = fetch_lit_correlation_data(conn=database_instance,
+        lit_results = fetch_lit_correlation_data(conn=conn,
                                                  input_mouse_gene_id="12",
                                                  gene_id="16",
                                                  mouse_gene_id="12")
@@ -356,7 +356,7 @@ class TestCorrelation(TestCase):
         """Test for converting a gene id to mouse geneid\
         given a species which is not mouse
         """
-        database_instance = mock.Mock()
+        conn = mock.Mock()
         test_data = [("Human", 14), (None, 9), ("Mouse", 15), ("Rat", 14)]
 
         database_results = [namedtuple("mouse_id", "mouse")(val)
@@ -365,12 +365,12 @@ class TestCorrelation(TestCase):
         cursor = mock.Mock()
         cursor.execute.return_value = 1
         cursor.fetchone.side_effect = database_results
-        database_instance.cursor.return_value = cursor
+        conn.cursor.return_value = cursor
         expected_results = [12, None, 13, 14]
         for (species, gene_id) in test_data:
 
             mouse_gene_id_results = map_to_mouse_gene_id(
-                conn=database_instance, species=species, gene_id=gene_id)
+                conn=conn, species=species, gene_id=gene_id)
             results.append(mouse_gene_id_results)
 
         self.assertEqual(results, expected_results)
@@ -382,7 +382,7 @@ class TestCorrelation(TestCase):
         and is used in the api/correlation/lit
         """
 
-        database = mock.Mock()
+        conn = mock.Mock()
 
         expected_mocked_lit_results = [{"1412_at": {"gene_id": 11, "lit_corr": 0.9}}, {"1412_a": {
             "gene_id": 17, "lit_corr": 0.48}}]
@@ -390,7 +390,7 @@ class TestCorrelation(TestCase):
         mock_lit_corr.return_value = expected_mocked_lit_results
 
         lit_correlation_results = compute_all_lit_correlation(
-            conn=database, trait_lists=[("1412_at", 11), ("1412_a", 121)],
+            conn=conn, trait_lists=[("1412_at", 11), ("1412_a", 121)],
             species="rat", gene_id=12)
 
         self.assertEqual(lit_correlation_results, expected_mocked_lit_results)

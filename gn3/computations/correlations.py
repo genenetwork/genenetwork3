@@ -99,7 +99,8 @@ def do_bicor(x_val, y_val) -> Tuple[float, float]:
 package :not packaged in guix
 
     """
-    return (x_val, y_val)
+    _corr_input = (x_val, y_val)
+    return (0.0, 0.0)
 
 
 def filter_shared_sample_keys(this_samplelist,
