@@ -137,7 +137,7 @@ def compute_all_sample_correlation(this_trait,
 
         processed_values.append((trait_name, corr_method, *filter_shared_sample_keys(
             this_trait_samples, target_trait_data)))
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(4) as pool:
         results = pool.starmap(compute_sample_r_correlation, processed_values)
 
         for sample_correlation in results:
@@ -457,7 +457,7 @@ def compute_tissue_correlation(primary_tissue_dict: dict,
         processed_values.append(
             (primary_tissue_vals, target_tissue_vals, corr_method, trait_id))
 
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(4) as pool:
         results = pool.starmap(
             tissue_correlation_for_trait_list, processed_values)
         for result in results:
