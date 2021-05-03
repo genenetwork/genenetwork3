@@ -226,6 +226,7 @@ def tissue_correlation_for_trait_list(
         primary_tissue_vals: List,
         target_tissues_values: List,
         corr_method: str,
+        trait_id: str,
         compute_corr_p_value: Callable = compute_corr_coeff_p_value) -> dict:
     """Given a primary tissue values for a trait and the target tissues values
     compute the correlation_cooeff and p value the input required are arrays
@@ -241,13 +242,12 @@ def tissue_correlation_for_trait_list(
                                      target_values=target_tissues_values,
                                      corr_method=corr_method)
 
-    lit_corr_result = {
+    tiss_corr_result = {trait_id: {
         "tissue_corr": tissue_corr_coeffient,
         "tissue_number": len(primary_tissue_vals),
-        "p_value": p_value
-    }
+        "p_value": p_value}}
 
-    return lit_corr_result
+    return tiss_corr_result
 
 
 def fetch_lit_correlation_data(
@@ -432,9 +432,9 @@ def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> Lis
     return traits_tissue_vals
 
 
-def experimental_compute_all_tissue_correlation(primary_tissue_dict: dict,
-                                                target_tissues_data: dict,
-                                                corr_method: str):
+def compute_tissue_correlation(primary_tissue_dict: dict,
+                               target_tissues_data: dict,
+                               corr_method: str):
     """Experimental function that uses multiprocessing\
     for computing tissue correlation
     """
@@ -450,25 +450,17 @@ def experimental_compute_all_tissue_correlation(primary_tissue_dict: dict,
     processed_values = []
 
     for target_tissue_obj in target_tissues_list:
+        trait_id = target_tissue_obj.get("trait_id")
 
         target_tissue_vals = target_tissue_obj.get("tissue_values")
         processed_values.append(
-            (primary_tissue_vals, target_tissue_vals, corr_method))
+            (primary_tissue_vals, target_tissue_vals, corr_method, trait_id))
 
     with multiprocessing.Pool() as pool:
         results = pool.starmap(
             tissue_correlation_for_trait_list, processed_values)
         for result in results:
-            tissue_result_dict = {"trait_name": result}
-            tissues_results.append(tissue_result_dict)
-
-        # tissue_result = tissue_correlation_for_trait_list(
-        #     primary_tissue_vals=primary_tissue_vals,
-        #     target_tissues_values=target_tissue_vals,
-        #     corr_method=corr_method)
-
-        # tissue_result_dict = {trait_id: tissue_result}
-        # tissues_results.append(tissue_result_dict)
+            tissues_results.append(result)
 
     return sorted(
         tissues_results,

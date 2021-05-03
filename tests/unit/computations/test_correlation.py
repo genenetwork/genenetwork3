@@ -235,12 +235,12 @@ class TestCorrelation(TestCase):
         primary_tissue_values = [1.1, 1.5, 2.3]
         target_tissues_values = [1, 2, 3]
         mock_compute_corr_coeff.side_effect = [(0.4, 0.9), (-0.2, 0.91)]
-        expected_tissue_results = {
-            'tissue_corr': 0.4, 'p_value': 0.9, "tissue_number": 3}
-
+        expected_tissue_results = {"1456_at": {"tissue_corr": 0.4,
+                                               "p_value": 0.9, "tissue_number": 3}}
         tissue_results = tissue_correlation_for_trait_list(
             primary_tissue_values, target_tissues_values,
-            corr_method="pearson", compute_corr_p_value=mock_compute_corr_coeff)
+            corr_method="pearson", trait_id="1456_at",
+            compute_corr_p_value=mock_compute_corr_coeff)
 
         self.assertEqual(tissue_results, expected_tissue_results)
 
