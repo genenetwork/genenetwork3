@@ -401,6 +401,7 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
         tissue_result = tissue_correlation_for_trait_list(
             primary_tissue_vals=primary_tissue_vals,
             target_tissues_values=target_tissue_vals,
+            trait_id=trait_id,
             corr_method=corr_method)
 
         tissue_result_dict = {trait_id: tissue_result}
