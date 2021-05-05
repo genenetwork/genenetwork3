@@ -1,15 +1,12 @@
 """module contains code for correlations"""
+import multiprocessing
+
 from typing import List
 from typing import Tuple
 from typing import Optional
 from typing import Callable
 
 import scipy.stats
-
-
-def compute_sum(rhs: int, lhs: int) -> int:
-    """Initial tests to compute sum of two numbers"""
-    return rhs + lhs
 
 
 def map_shared_keys_to_values(target_sample_keys: List, target_sample_vals: dict)-> List:
@@ -73,14 +70,12 @@ pearson,spearman and biweight mid correlation return value is rho and p_value
     return (corr_coeffient, p_val)
 
 
-def compute_sample_r_correlation(
-        corr_method: str, trait_vals,
-        target_samples_vals) -> Optional[Tuple[float, float, int]]:
+def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
+                                 target_samples_vals) -> Optional[Tuple[str, float, float, int]]:
     """Given a primary trait values and target trait values calculate the
     correlation coeff and p value
 
     """
-
     (sanitized_traits_vals, sanitized_target_vals,
      num_overlap) = normalize_values(trait_vals, target_samples_vals)
 
@@ -94,7 +89,7 @@ def compute_sample_r_correlation(
         # xtodo check if corr_coefficient is None
         # should use numpy.isNan scipy.isNan is deprecated
         if corr_coeffient is not None:
-            return (corr_coeffient, p_value, num_overlap)
+            return (trait_name, corr_coeffient, p_value, num_overlap)
 
     return None
 
@@ -104,15 +99,15 @@ def do_bicor(x_val, y_val) -> Tuple[float, float]:
 package :not packaged in guix
 
     """
-    return (x_val, y_val)
+    _corr_input = (x_val, y_val)
+    return (0.0, 0.0)
 
 
 def filter_shared_sample_keys(this_samplelist,
                               target_samplelist) -> Tuple[List, List]:
-    """Given primary and target samplelist for two base and target trait select
-filter the values using the shared keys
-
-    """
+    """Given primary and target samplelist\
+    for two base and target trait select\
+    filter the values using the shared keys"""
     this_vals = []
     target_vals = []
     for key, value in target_samplelist.items():
@@ -125,26 +120,70 @@ filter the values using the shared keys
 def compute_all_sample_correlation(this_trait,
                                    target_dataset,
                                    corr_method="pearson") -> List:
-    """Given a trait data samplelist and target__datasets compute all sample
-correlation"""
+    """Given a trait data samplelist and\
+    target__datasets compute all sample correlation
+    """
+    # xtodo fix trait_name currently returning single one
+    # pylint: disable-msg=too-many-locals
+
+    this_trait_samples = this_trait["trait_sample_data"]
+    corr_results = []
+    processed_values = []
+    for target_trait in target_dataset:
+        trait_name = target_trait.get("trait_id")
+        target_trait_data = target_trait["trait_sample_data"]
+        # this_vals, target_vals = filter_shared_sample_keys(
+        #     this_trait_samples, target_trait_data)
+
+        processed_values.append((trait_name, corr_method, *filter_shared_sample_keys(
+            this_trait_samples, target_trait_data)))
+    with multiprocessing.Pool(4) as pool:
+        results = pool.starmap(compute_sample_r_correlation, processed_values)
+
+        for sample_correlation in results:
+            if sample_correlation is not None:
+                (trait_name, corr_coeffient, p_value,
+                 num_overlap) = sample_correlation
+
+                corr_result = {
+                    "corr_coeffient": corr_coeffient,
+                    "p_value": p_value,
+                    "num_overlap": num_overlap
+                }
+
+                corr_results.append({trait_name: corr_result})
+
+    return sorted(
+        corr_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coeffient"]))
+
+
+def benchmark_compute_all_sample(this_trait,
+                                 target_dataset,
+                                 corr_method="pearson") ->List:
+    """Temp function to benchmark with compute_all_sample_r\
+    alternative to compute_all_sample_r where we use \
+    multiprocessing
+    """
 
     this_trait_samples = this_trait["trait_sample_data"]
 
     corr_results = []
 
     for target_trait in target_dataset:
-        trait_id = target_trait.get("trait_id")
+        trait_name = target_trait.get("trait_id")
         target_trait_data = target_trait["trait_sample_data"]
         this_vals, target_vals = filter_shared_sample_keys(
             this_trait_samples, target_trait_data)
 
         sample_correlation = compute_sample_r_correlation(
+            trait_name=trait_name,
             corr_method=corr_method,
             trait_vals=this_vals,
             target_samples_vals=target_vals)
 
         if sample_correlation is not None:
-            (corr_coeffient, p_value, num_overlap) = sample_correlation
+            (trait_name, corr_coeffient, p_value, num_overlap) = sample_correlation
 
         else:
             continue
@@ -155,7 +194,7 @@ correlation"""
             "num_overlap": num_overlap
         }
 
-        corr_results.append({trait_id: corr_result})
+        corr_results.append({trait_name: corr_result})
 
     return corr_results
 
@@ -187,6 +226,7 @@ def tissue_correlation_for_trait_list(
         primary_tissue_vals: List,
         target_tissues_values: List,
         corr_method: str,
+        trait_id: str,
         compute_corr_p_value: Callable = compute_corr_coeff_p_value) -> dict:
     """Given a primary tissue values for a trait and the target tissues values
     compute the correlation_cooeff and p value the input required are arrays
@@ -202,13 +242,12 @@ def tissue_correlation_for_trait_list(
                                      target_values=target_tissues_values,
                                      corr_method=corr_method)
 
-    lit_corr_result = {
+    tiss_corr_result = {trait_id: {
         "tissue_corr": tissue_corr_coeffient,
-        "p_value": p_value,
-        "tissue_number": len(primary_tissue_vals)
-    }
+        "tissue_number": len(primary_tissue_vals),
+        "p_value": p_value}}
 
-    return lit_corr_result
+    return tiss_corr_result
 
 
 def fetch_lit_correlation_data(
@@ -323,15 +362,17 @@ def compute_all_lit_correlation(conn, trait_lists: List,
                                 species: str, gene_id):
     """Function that acts as an abstraction for
     lit_correlation_for_trait_list"""
-    # xtodo to be refactored
 
     lit_results = lit_correlation_for_trait_list(
         conn=conn,
         target_trait_lists=trait_lists,
         species=species,
         trait_gene_id=gene_id)
+    sorted_lit_results = sorted(
+        lit_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["lit_corr"]))
 
-    return {"lit_results": lit_results}
+    return sorted_lit_results
 
 
 def compute_all_tissue_correlation(primary_tissue_dict: dict,
@@ -343,7 +384,7 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
 
     """
 
-    tissues_results = {}
+    tissues_results = []
 
     primary_tissue_vals = primary_tissue_dict["tissue_values"]
     traits_symbol_dict = target_tissues_data["trait_symbol_dict"]
@@ -360,11 +401,17 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
         tissue_result = tissue_correlation_for_trait_list(
             primary_tissue_vals=primary_tissue_vals,
             target_tissues_values=target_tissue_vals,
+            trait_id=trait_id,
             corr_method=corr_method)
 
-        tissues_results[trait_id] = tissue_result
+        tissue_result_dict = {trait_id: tissue_result}
+        tissues_results.append(tissue_result_dict)
 
-    return tissues_results
+    sorted_tissues_results = sorted(
+        tissues_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["tissue_corr"]))
+
+    return sorted_tissues_results
 
 
 def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> List:
@@ -384,3 +431,38 @@ def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> Lis
                 traits_tissue_vals.append(target_tissue_dict)
 
     return traits_tissue_vals
+
+
+def compute_tissue_correlation(primary_tissue_dict: dict,
+                               target_tissues_data: dict,
+                               corr_method: str):
+    """Experimental function that uses multiprocessing\
+    for computing tissue correlation
+    """
+
+    tissues_results = []
+
+    primary_tissue_vals = primary_tissue_dict["tissue_values"]
+    traits_symbol_dict = target_tissues_data["trait_symbol_dict"]
+    symbol_tissue_vals_dict = target_tissues_data["symbol_tissue_vals_dict"]
+
+    target_tissues_list = process_trait_symbol_dict(
+        traits_symbol_dict, symbol_tissue_vals_dict)
+    processed_values = []
+
+    for target_tissue_obj in target_tissues_list:
+        trait_id = target_tissue_obj.get("trait_id")
+
+        target_tissue_vals = target_tissue_obj.get("tissue_values")
+        processed_values.append(
+            (primary_tissue_vals, target_tissue_vals, corr_method, trait_id))
+
+    with multiprocessing.Pool(4) as pool:
+        results = pool.starmap(
+            tissue_correlation_for_trait_list, processed_values)
+        for result in results:
+            tissues_results.append(result)
+
+    return sorted(
+        tissues_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["tissue_corr"]))
