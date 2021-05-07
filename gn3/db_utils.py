@@ -1,7 +1,7 @@
 """module contains all db related stuff"""
 from typing import Tuple
 from urllib.parse import urlparse
-import MySQLdb as mdb   # type: ignore
+import MySQLdb as mdb
 from gn3.settings import SQL_URI
 
 
