@@ -33,7 +33,7 @@ class TestGemma(unittest.TestCase):
 
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     def test_compute_k_values_without_loco(self, mock_get_hash):
-        """Test computing k valuse without loco"""
+        """Test computing k values without loco"""
         mock_get_hash.return_value = "my-hash"
         self.assertEqual(
             generate_gemma_cmd(gemma_cmd="gemma-wrapper",
@@ -54,7 +54,7 @@ class TestGemma(unittest.TestCase):
 
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     def test_generate_gemma_cmd_with_loco(self, mock_get_hash):
-        """Test computing k valuse with loco"""
+        """Test computing k values with loco"""
         mock_get_hash.return_value = "my-hash"
         self.assertEqual(
             generate_gemma_cmd(gemma_cmd="gemma-wrapper",
