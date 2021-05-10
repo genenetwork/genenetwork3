@@ -77,7 +77,7 @@
                        ("python-mypy-extensions" ,python-mypy-extensions)
                        ("python-mysqlclient" ,python-mysqlclient)
                        ("python-numpy" ,python-numpy)
-                       ("python-pylint" python-pylint)
+                       ("python-pylint" ,python-pylint)
                        ("python-redis" ,python-redis)
                        ("python-requests" ,python-requests)
                        ("python-scipy" ,python-scipy)
