@@ -3,10 +3,12 @@ from unittest import TestCase
 from unittest import mock
 
 from gn3.db.species import get_chromosome
+from gn3.db.species import get_all_species
 
 
 class TestChromosomes(TestCase):
     """Test cases for fetching chromosomes"""
+
     def test_get_chromosome_using_species_name(self):
         """Test that the chromosome is fetched using a species name"""
         db_mock = mock.MagicMock()
@@ -35,4 +37,14 @@ class TestChromosomes(TestCase):
                 "Length FROM Chr_Length, InbredSet WHERE "
                 "Chr_Length.SpeciesId = InbredSet.SpeciesId AND "
                 "InbredSet.Name = 'TestCase' ORDER BY OrderId"
+            )
+
+    def test_get_all_species(self):
+        """Test that species are fetched correctly"""
+        db_mock = mock.MagicMock()
+        with db_mock.cursor() as cursor:
+            cursor.fetchall.return_value = ()
+            self.assertEqual(get_all_species(db_mock), ())
+            cursor.execute.assert_called_once_with(
+                "SELECT Name, MenuName FROM Species ORDER BY OrderId"
             )
