@@ -29,7 +29,6 @@ setup(author='Bonface M. K.',
           'gn3',
           'gn3.computations',
           'gn3.db',
-          'gn3.utility'
       ],
       url='https://github.com/genenetwork/genenetwork3',
       version='0.1')
