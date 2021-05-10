@@ -27,6 +27,7 @@ setup(author='Bonface M. K.',
       name='gn3',
       packages=[
           'gn3',
+          'gn3.api',
           'gn3.computations',
           'gn3.db',
       ],
