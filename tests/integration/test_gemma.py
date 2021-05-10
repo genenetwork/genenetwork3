@@ -25,10 +25,9 @@ class GemmaAPITest(unittest.TestCase):
             "GENODIR":
             os.path.abspath(
                 os.path.join(os.path.dirname(__file__), "test_data/")),
-            "REDIS_JOB_QUEUE":
-            "GN3::job-queue",
-            "GEMMA_WRAPPER_CMD":
-            "gemma-wrapper"
+            "REDIS_JOB_QUEUE": "GN3::job-queue",
+            "GEMMA_WRAPPER_CMD": "gemma-wrapper",
+            "TMPDIR": "/tmp"
         }).test_client()
 
     @mock.patch("gn3.api.gemma.run_cmd")
