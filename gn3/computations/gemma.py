@@ -7,7 +7,7 @@ from typing import Dict
 from typing import List
 from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
-from gn3.file_utils import get_hash_of_files
+from gn3.fs_helpers import get_hash_of_files
 
 
 def generate_hash_of_string(unhashed_str: str) -> str:
