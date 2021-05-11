@@ -1,14 +1,14 @@
-"""Test cases for procedures defined in file_utils.py"""
+"""Test cases for procedures defined in fs_helpers.py"""
 import os
 import unittest
 
 from dataclasses import dataclass
 from typing import Callable
 from unittest import mock
-from gn3.file_utils import extract_uploaded_file
-from gn3.file_utils import get_dir_hash
-from gn3.file_utils import jsonfile_to_dict
-from gn3.file_utils import cache_ipfs_file
+from gn3.fs_helpers import extract_uploaded_file
+from gn3.fs_helpers import get_dir_hash
+from gn3.fs_helpers import jsonfile_to_dict
+from gn3.fs_helpers import cache_ipfs_file
 
 
 @dataclass
@@ -19,7 +19,7 @@ class MockFile:
 
 
 class TestFileUtils(unittest.TestCase):
-    """Test cases for procedures defined in file_utils.py"""
+    """Test cases for procedures defined in fs_helpers.py"""
 
     def test_get_dir_hash(self):
         """Test that a directory is hashed correctly"""
@@ -45,8 +45,8 @@ non-existent"""
         self.assertRaises(FileNotFoundError, jsonfile_to_dict,
                           "/non-existent-dir")
 
-    @mock.patch("gn3.file_utils.tarfile")
-    @mock.patch("gn3.file_utils.secure_filename")
+    @mock.patch("gn3.fs_helpers.tarfile")
+    @mock.patch("gn3.fs_helpers.secure_filename")
     def test_extract_uploaded_file(self, mock_file, mock_tarfile):
         """Test that the gzip file is extracted to the right location"""
         mock_file.return_value = "upload-data.tar.gz"
@@ -65,7 +65,7 @@ non-existent"""
         mock_file.assert_called_once_with("upload-data.tar.gz")
         self.assertEqual(result, {"status": 0, "token": "abcdef-abcdef"})
 
-    @mock.patch("gn3.file_utils.secure_filename")
+    @mock.patch("gn3.fs_helpers.secure_filename")
     def test_extract_uploaded_file_non_existent_gzip(self, mock_file):
         """Test that the right error message is returned when there is a problem
 extracting the file"""
@@ -96,7 +96,7 @@ extracting the file"""
         os.rmdir(test_dir)
         self.assertEqual(file_loc, f"{test_dir}/genotype.txt")
 
-    @mock.patch("gn3.file_utils.ipfshttpclient")
+    @mock.patch("gn3.fs_helpers.ipfshttpclient")
     def test_cache_ipfs_file_cache_miss(self,
                                         mock_ipfs):
         """Test that a file is cached if there's a cache miss"""

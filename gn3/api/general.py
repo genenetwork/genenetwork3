@@ -5,7 +5,7 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.file_utils import extract_uploaded_file
+from gn3.fs_helpers import extract_uploaded_file
 
 
 general = Blueprint("general", __name__)

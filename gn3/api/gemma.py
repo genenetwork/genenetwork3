@@ -9,8 +9,8 @@ from flask import request
 
 from gn3.commands import queue_cmd
 from gn3.commands import run_cmd
-from gn3.file_utils import cache_ipfs_file
-from gn3.file_utils import jsonfile_to_dict
+from gn3.fs_helpers import cache_ipfs_file
+from gn3.fs_helpers import jsonfile_to_dict
 from gn3.computations.gemma import generate_gemma_cmd
 from gn3.computations.gemma import do_paths_exist
 
