@@ -11,7 +11,7 @@ from gn3.computations.correlations import compute_sample_r_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
 from gn3.computations.correlations import tissue_lit_corr_for_probe_type
-from gn3.computations.correlations import tissue_correlation_for_trait_list
+from gn3.computations.correlations import tissue_correlation_for_trait
 from gn3.computations.correlations import lit_correlation_for_trait_list
 from gn3.computations.correlations import fetch_lit_correlation_data
 from gn3.computations.correlations import query_formatter
@@ -227,7 +227,7 @@ class TestCorrelation(TestCase):
         self.assertEqual(results, (None, None))
 
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
-    def test_tissue_correlation_for_trait_list(self, mock_compute_corr_coeff):
+    def test_tissue_correlation_for_trait(self, mock_compute_corr_coeff):
         """Test given a primary tissue values for a trait  and and a list of\
         target tissues for traits  do the tissue correlation for them
         """
@@ -237,7 +237,7 @@ class TestCorrelation(TestCase):
         mock_compute_corr_coeff.side_effect = [(0.4, 0.9), (-0.2, 0.91)]
         expected_tissue_results = {"1456_at": {"tissue_corr": 0.4,
                                                "tissue_p_val": 0.9, "tissue_number": 3}}
-        tissue_results = tissue_correlation_for_trait_list(
+        tissue_results = tissue_correlation_for_trait(
             primary_tissue_values, target_tissues_values,
             corr_method="pearson", trait_id="1456_at",
             compute_corr_p_value=mock_compute_corr_coeff)
@@ -395,7 +395,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(lit_correlation_results, expected_mocked_lit_results)
 
-    @mock.patch("gn3.computations.correlations.tissue_correlation_for_trait_list")
+    @mock.patch("gn3.computations.correlations.tissue_correlation_for_trait")
     @mock.patch("gn3.computations.correlations.process_trait_symbol_dict")
     def test_compute_all_tissue_correlation(self, process_trait_symbol, mock_tissue_corr):
         """Test for compute all tissue corelation which abstracts

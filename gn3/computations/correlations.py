@@ -222,7 +222,7 @@ probet
     return corr_results
 
 
-def tissue_correlation_for_trait_list(
+def tissue_correlation_for_trait(
         primary_tissue_vals: List,
         target_tissues_values: List,
         corr_method: str,
@@ -378,7 +378,7 @@ def compute_all_lit_correlation(conn, trait_lists: List,
 def compute_all_tissue_correlation(primary_tissue_dict: dict,
                                    target_tissues_data: dict,
                                    corr_method: str):
-    """Function acts as an abstraction for tissue_correlation_for_trait_list\
+    """Function acts as an abstraction for tissue_correlation_for_trait\
     required input are target tissue object and primary tissue trait\
     target tissues data contains the trait_symbol_dict and symbol_tissue_vals
 
@@ -398,7 +398,7 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
 
         target_tissue_vals = target_tissue_obj.get("tissue_values")
 
-        tissue_result = tissue_correlation_for_trait_list(
+        tissue_result = tissue_correlation_for_trait(
             primary_tissue_vals=primary_tissue_vals,
             target_tissues_values=target_tissue_vals,
             trait_id=trait_id,
@@ -459,7 +459,7 @@ def compute_tissue_correlation(primary_tissue_dict: dict,
 
     with multiprocessing.Pool(4) as pool:
         results = pool.starmap(
-            tissue_correlation_for_trait_list, processed_values)
+            tissue_correlation_for_trait, processed_values)
         for result in results:
             tissues_results.append(result)
 
