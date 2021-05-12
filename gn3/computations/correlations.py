@@ -199,29 +199,6 @@ def benchmark_compute_all_sample(this_trait,
     return corr_results
 
 
-def tissue_lit_corr_for_probe_type(corr_type: str, top_corr_results):
-    """Function that does either lit_corr_for_trait_list or tissue_corr _for_trait
-list depending on whether both dataset and target_dataset are both set to
-probet
-
-    """
-
-    corr_results = {"lit": 1}
-
-    if corr_type not in ("lit", "literature"):
-
-        corr_results["top_corr_results"] = top_corr_results
-        # run lit_correlation for  the given  top_corr_results
-    if corr_type == "tissue":
-        # run lit correlation the given top corr results
-        pass
-    if corr_type == "sample":
-        pass
-        # run sample r correlation for the given top  results
-
-    return corr_results
-
-
 def tissue_correlation_for_trait(
         primary_tissue_vals: List,
         target_tissues_values: List,

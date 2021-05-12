@@ -10,7 +10,6 @@ from gn3.computations.correlations import do_bicor
 from gn3.computations.correlations import compute_sample_r_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
-from gn3.computations.correlations import tissue_lit_corr_for_probe_type
 from gn3.computations.correlations import tissue_correlation_for_trait
 from gn3.computations.correlations import lit_correlation_for_trait
 from gn3.computations.correlations import fetch_lit_correlation_data
@@ -213,18 +212,6 @@ class TestCorrelation(TestCase):
             target_samples_vals=['6.266', '6.565', '6.456'])
         filter_shared_samples.assert_called_once_with(
             this_trait_data.get("trait_sample_data"), traits_dataset[0].get("trait_sample_data"))
-
-    @unittest.skip("not implemented")
-    def test_tissue_lit_corr_for_probe_type(self):
-        """Tests for doing tissue and lit correlation for  trait list\
-        if both the dataset and target dataset are probeset runs\
-        on after initial correlation has been done
-        """
-
-        results = tissue_lit_corr_for_probe_type(
-            corr_type="tissue", top_corr_results={})
-
-        self.assertEqual(results, (None, None))
 
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
     def test_tissue_correlation_for_trait(self, mock_compute_corr_coeff):
