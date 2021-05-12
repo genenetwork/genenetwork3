@@ -12,7 +12,7 @@ from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
 from gn3.computations.correlations import tissue_lit_corr_for_probe_type
 from gn3.computations.correlations import tissue_correlation_for_trait
-from gn3.computations.correlations import lit_correlation_for_trait_list
+from gn3.computations.correlations import lit_correlation_for_trait
 from gn3.computations.correlations import fetch_lit_correlation_data
 from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
@@ -246,7 +246,7 @@ class TestCorrelation(TestCase):
 
     @mock.patch("gn3.computations.correlations.fetch_lit_correlation_data")
     @mock.patch("gn3.computations.correlations.map_to_mouse_gene_id")
-    def test_lit_correlation_for_trait_list(self, mock_mouse_gene_id, fetch_lit_data):
+    def test_lit_correlation_for_trait(self, mock_mouse_gene_id, fetch_lit_data):
         """Fetch results from  db call for lit correlation given a trait list\
         after doing correlation
         """
@@ -260,7 +260,7 @@ class TestCorrelation(TestCase):
 
         fetch_lit_data.side_effect = [(15, 9), (17, 8), (11, 12)]
 
-        lit_results = lit_correlation_for_trait_list(
+        lit_results = lit_correlation_for_trait(
             conn=conn, target_trait_lists=target_trait_lists,
             species="rat", trait_gene_id="12")
 
@@ -375,10 +375,10 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, expected_results)
 
-    @mock.patch("gn3.computations.correlations.lit_correlation_for_trait_list")
+    @mock.patch("gn3.computations.correlations.lit_correlation_for_trait")
     def test_compute_all_lit_correlation(self, mock_lit_corr):
         """Test for compute all lit correlation which acts\
-        as an abstraction for lit_correlation_for_trait_list
+        as an abstraction for lit_correlation_for_trait
         and is used in the api/correlation/lit
         """
 

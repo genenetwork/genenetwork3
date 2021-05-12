@@ -287,7 +287,7 @@ def fetch_lit_correlation_data(
     return (gene_id, 0)
 
 
-def lit_correlation_for_trait_list(
+def lit_correlation_for_trait(
         conn,
         target_trait_lists: List,
         species: Optional[str] = None,
@@ -361,9 +361,9 @@ def map_to_mouse_gene_id(conn, species: Optional[str],
 def compute_all_lit_correlation(conn, trait_lists: List,
                                 species: str, gene_id):
     """Function that acts as an abstraction for
-    lit_correlation_for_trait_list"""
+    lit_correlation_for_trait"""
 
-    lit_results = lit_correlation_for_trait_list(
+    lit_results = lit_correlation_for_trait(
         conn=conn,
         target_trait_lists=trait_lists,
         species=species,
