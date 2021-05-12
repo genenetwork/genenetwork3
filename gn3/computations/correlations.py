@@ -245,7 +245,7 @@ def tissue_correlation_for_trait_list(
     tiss_corr_result = {trait_id: {
         "tissue_corr": tissue_corr_coeffient,
         "tissue_number": len(primary_tissue_vals),
-        "p_value": p_value}}
+        "tissue_p_val": p_value}}
 
     return tiss_corr_result
 

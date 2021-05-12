@@ -236,7 +236,7 @@ class TestCorrelation(TestCase):
         target_tissues_values = [1, 2, 3]
         mock_compute_corr_coeff.side_effect = [(0.4, 0.9), (-0.2, 0.91)]
         expected_tissue_results = {"1456_at": {"tissue_corr": 0.4,
-                                               "p_value": 0.9, "tissue_number": 3}}
+                                               "tissue_p_val": 0.9, "tissue_number": 3}}
         tissue_results = tissue_correlation_for_trait_list(
             primary_tissue_values, target_tissues_values,
             corr_method="pearson", trait_id="1456_at",
@@ -417,13 +417,15 @@ class TestCorrelation(TestCase):
         target_tissue_data = {"trait_symbol_dict": target_trait_symbol,
                               "symbol_tissue_vals_dict": target_symbol_tissue_vals}
 
-        mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3},
-                                        {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}]
+        mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "tissue_p_val": 0.9,
+                                         "tissue_number": 3},
+                                        {"tissue_corr": 1.11, "tissue_p_val": 0.2,
+                                         "tissue_number": 3}]
 
         expected_results = [{"1412_at":
-                             {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}},
+                             {"tissue_corr": 1.11, "tissue_p_val": 0.2, "tissue_number": 3}},
                             {"1418702_a_at":
-                             {"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3}}]
+                             {"tissue_corr": -0.5, "tissue_p_val": 0.9, "tissue_number": 3}}]
 
         results = compute_all_tissue_correlation(
             primary_tissue_dict=primary_tissue_dict,
