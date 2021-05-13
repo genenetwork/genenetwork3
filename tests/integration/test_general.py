@@ -46,3 +46,14 @@ class GeneralAPITest(unittest.TestCase):
         self.assertEqual(response.get_json(),
                          {"status": 128,
                           "error": "gzip failed to unpack file"})
+
+    @mock.patch("gn3.api.general.run_cmd")
+    def test_run_r_qtl(self, mock_run_cmd):
+        """Test correct upload of file"""
+        mock_run_cmd.return_value = "Random results from STDOUT"
+        response = self.app.post("/api/qtl/run/"
+                                 "geno_file_test/"
+                                 "pheno_file_test")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json(),
+                         "Random results from STDOUT")
