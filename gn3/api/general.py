@@ -5,7 +5,8 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.file_utils import extract_uploaded_file
+from gn3.fs_helpers import extract_uploaded_file
+from gn3.commands import run_cmd
 
 
 general = Blueprint("general", __name__)
@@ -50,3 +51,16 @@ TTL is set in the metadata file. If none is provided, the default is 1 week.
     if results.get("status") > 0:
         status = 500
     return jsonify(results), status
+
+
+@general.route("/qtl/run/<geno_filestr>/<pheno_filestr>",
+               methods=["POST"],
+               strict_slashes=False)
+def run_r_qtl(geno_filestr, pheno_filestr):
+    """Run r_qtl command using the written rqtl_wrapper program
+
+    """
+    rqtl_wrapper = current_app.config["RQTL_WRAPPER"]
+    cmd = (f"Rscript {rqtl_wrapper} "
+           f"{geno_filestr} {pheno_filestr}")
+    return jsonify(run_cmd(cmd)), 201

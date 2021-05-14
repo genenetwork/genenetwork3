@@ -10,6 +10,7 @@ CACHEDIR = ""
 REDIS_URI = "redis://localhost:6379/0"
 REDIS_JOB_QUEUE = "GN3::job-queue"
 TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
+RQTL_WRAPPER = "rqtl_wrapper.R"
 
 # SQL confs
 SQL_URI = os.environ.get("SQL_URI", "mysql://webqtlout:webqtlout@localhost/db_webqtl")

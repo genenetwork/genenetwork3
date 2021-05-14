@@ -3,25 +3,6 @@ GeneNetwork3 REST API for data science and machine  learning
 
 ## Installation
 
-##### Using python-pip
-
-1. Prepare your system. You need to make you have python > 3.8, and
-   the ability to install modules.
-2. Create and enter your virtualenv:
-
-```bash
-virtualenv --python python3 venv
-. venv/bin/activate
-```
-3. Install the required packages
-
-```bash
-# The --ignore-installed flag forces packages to
-# get installed in the venv even if they existed 
-# in the global env
-pip install -r requirements.txt --ignore-installed
-```
-
 #### Using guix
 
 Simply load up the environment (for development purposes):
@@ -31,6 +12,18 @@ guix environment --load=guix.scm
 ```
 
 Also, make sure you have the *guix-bioinformatics* channel set up.
+
+```bash
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --load=guix.scm
+python3
+  import redis
+```
+
+Better run a proper container
+
+```
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --load=guix.scm 
+```
 
 #### Running Tests
 
@@ -62,6 +55,26 @@ To spin up the server:
 env FLASK_DEBUG=1 FLASK_APP="main.py" flask run --port=8080
 ```
 
+##### Using python-pip
+
+IMPORTANT NOTE: we do not recommend using pip tools, use Guix instead
+
+1. Prepare your system. You need to make you have python > 3.8, and
+   the ability to install modules.
+2. Create and enter your virtualenv:
+
+```bash
+virtualenv --python python3 venv
+. venv/bin/activate
+```
+3. Install the required packages
+
+```bash
+# The --ignore-installed flag forces packages to
+# get installed in the venv even if they existed 
+# in the global env
+pip install -r requirements.txt --ignore-installed
+```
 
 #### A note on dependencies
 
