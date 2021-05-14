@@ -276,7 +276,7 @@ class TestCorrelation(TestCase):
          input trait mouse gene id and mouse gene id
         """
 
-        expected_db_results = [namedtuple("lit_coeff", "val")(x*0.1)
+        expected_db_results = [("val", x*0.1)
                                for x in range(1, 4)]
         conn = DataBase(expected_results=expected_db_results)
         expected_results = ("1", 0.1)
