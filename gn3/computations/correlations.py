@@ -89,8 +89,6 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
                                        target_values=sanitized_target_vals,
                                        corr_method=corr_method)
 
-        # xtodo check if corr_coefficient is None
-        # should use numpy.isNan scipy.isNan is deprecated
         if corr_coeffient is not None:
             return (trait_name, corr_coeffient, p_value, num_overlap)
     return None
@@ -187,7 +185,8 @@ def benchmark_compute_all_sample(this_trait,
         }
         corr_results.append({trait_name: corr_result})
     return corr_results
-  
+
+
 def tissue_correlation_for_trait(
         primary_tissue_vals: List,
         target_tissues_values: List,
@@ -298,8 +297,6 @@ def map_to_mouse_gene_id(conn, species: Optional[str],
                          gene_id: Optional[str]) -> Optional[str]:
     """Given a species which is not mouse map the gene_id\
     to respective mouse gene id"""
-    # AK:xtodo move the code for checking nullity out of thing functions bug
-    # while method for string
     if None in (species, gene_id):
         return None
     if species == "mouse":
