@@ -1,5 +1,4 @@
-import os
-
+"""Endpoints for running the rqtl cmd"""
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
@@ -12,8 +11,10 @@ rqtl = Blueprint("rqtl", __name__)
 
 @rqtl.route("/compute", methods=["POST"])
 def compute():
-    working_dir = os.path.join(current_app.config.get("TMPDIR"))
+    """Given at least a geno_file and pheno_file, generate and
+run the rqtl_wrapper script and return the results as JSON
 
+    """
     genofile = request.form['geno_file']
     phenofile = request.form['pheno_file']
 
@@ -28,10 +29,8 @@ def compute():
             rqtl_kwargs[kwarg] = request.form[kwarg]
 
     results = generate_rqtl_cmd(
-        rqtl_wrapper_cmd = current_app.config.get("RQTL_WRAPPER_CMD"),
-        output_dir = current_app.config.get('TMPDIR'),
-        rqtl_wrapper_kwargs = rqtl_kwargs
+        rqtl_wrapper_cmd=current_app.config.get("RQTL_WRAPPER_CMD"),
+        rqtl_wrapper_kwargs=rqtl_kwargs
     )
 
     return jsonify(results)
-
