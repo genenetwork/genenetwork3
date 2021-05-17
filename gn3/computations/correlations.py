@@ -89,8 +89,6 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
                                        target_values=sanitized_target_vals,
                                        corr_method=corr_method)
 
-        # xtodo check if corr_coefficient is None
-        # should use numpy.isNan scipy.isNan is deprecated
         if corr_coeffient is not None:
             return (trait_name, corr_coeffient, p_value, num_overlap)
     return None
@@ -189,27 +187,7 @@ def benchmark_compute_all_sample(this_trait,
     return corr_results
 
 
-def tissue_lit_corr_for_probe_type(corr_type: str, top_corr_results):
-    """Function that does either lit_corr_for_trait_list or tissue_corr _for_trait
-list depending on whether both dataset and target_dataset are both set to
-probet
-
-    """
-    corr_results = {"lit": 1}
-    if corr_type not in ("lit", "literature"):
-        corr_results["top_corr_results"] = top_corr_results
-        # run lit_correlation for  the given  top_corr_results
-    if corr_type == "tissue":
-        # run lit correlation the given top corr results
-        pass
-    if corr_type == "sample":
-        pass
-        # run sample r correlation for the given top  results
-
-    return corr_results
-
-
-def tissue_correlation_for_trait_list(
+def tissue_correlation_for_trait(
         primary_tissue_vals: List,
         target_tissues_values: List,
         corr_method: str,
@@ -232,7 +210,7 @@ def tissue_correlation_for_trait_list(
     tiss_corr_result = {trait_id: {
         "tissue_corr": tissue_corr_coeffient,
         "tissue_number": len(primary_tissue_vals),
-        "p_value": p_value}}
+        "tissue_p_val": p_value}}
 
     return tiss_corr_result
 
@@ -269,13 +247,13 @@ def fetch_lit_correlation_data(
             cursor.execute(query_formatter(query,
                                            *tuple(reversed(query_values))))
             lit_corr_results = cursor.fetchone()
-        lit_results = (gene_id, lit_corr_results.val)\
+        lit_results = (gene_id, lit_corr_results[1])\
             if lit_corr_results else (gene_id, 0)
         return lit_results
     return (gene_id, 0)
 
 
-def lit_correlation_for_trait_list(
+def lit_correlation_for_trait(
         conn,
         target_trait_lists: List,
         species: Optional[str] = None,
@@ -319,8 +297,6 @@ def map_to_mouse_gene_id(conn, species: Optional[str],
                          gene_id: Optional[str]) -> Optional[str]:
     """Given a species which is not mouse map the gene_id\
     to respective mouse gene id"""
-    # AK:xtodo move the code for checking nullity out of thing functions bug
-    # while method for string
     if None in (species, gene_id):
         return None
     if species == "mouse":
@@ -339,11 +315,10 @@ def map_to_mouse_gene_id(conn, species: Optional[str],
 
 def compute_all_lit_correlation(conn, trait_lists: List,
                                 species: str, gene_id):
-    """Function that acts as an abstraction for lit_correlation_for_trait_list
+    """Function that acts as an abstraction for
+    lit_correlation_for_trait"""
 
-    """
-
-    lit_results = lit_correlation_for_trait_list(
+    lit_results = lit_correlation_for_trait(
         conn=conn,
         target_trait_lists=trait_lists,
         species=species,
@@ -358,10 +333,9 @@ def compute_all_lit_correlation(conn, trait_lists: List,
 def compute_all_tissue_correlation(primary_tissue_dict: dict,
                                    target_tissues_data: dict,
                                    corr_method: str):
-    """Function acts as an abstraction for tissue_correlation_for_trait_list
-    required input are target tissue object and primary tissue trait target
-    tissues data contains the trait_symbol_dict and symbol_tissue_vals
-
+    """Function acts as an abstraction for tissue_correlation_for_trait\
+    required input are target tissue object and primary tissue trait\
+    target tissues data contains the trait_symbol_dict and symbol_tissue_vals
     """
     tissues_results = []
     primary_tissue_vals = primary_tissue_dict["tissue_values"]
@@ -372,7 +346,8 @@ def compute_all_tissue_correlation(primary_tissue_dict: dict,
     for target_tissue_obj in target_tissues_list:
         trait_id = target_tissue_obj.get("trait_id")
         target_tissue_vals = target_tissue_obj.get("tissue_values")
-        tissue_result = tissue_correlation_for_trait_list(
+
+        tissue_result = tissue_correlation_for_trait(
             primary_tissue_vals=primary_tissue_vals,
             target_tissues_values=target_tissue_vals,
             trait_id=trait_id,
@@ -425,7 +400,7 @@ def compute_tissue_correlation(primary_tissue_dict: dict,
 
     with multiprocessing.Pool(4) as pool:
         results = pool.starmap(
-            tissue_correlation_for_trait_list, processed_values)
+            tissue_correlation_for_trait, processed_values)
         for result in results:
             tissues_results.append(result)
 

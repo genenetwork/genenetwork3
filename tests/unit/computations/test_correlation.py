@@ -10,9 +10,8 @@ from gn3.computations.correlations import do_bicor
 from gn3.computations.correlations import compute_sample_r_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
-from gn3.computations.correlations import tissue_lit_corr_for_probe_type
-from gn3.computations.correlations import tissue_correlation_for_trait_list
-from gn3.computations.correlations import lit_correlation_for_trait_list
+from gn3.computations.correlations import tissue_correlation_for_trait
+from gn3.computations.correlations import lit_correlation_for_trait
 from gn3.computations.correlations import fetch_lit_correlation_data
 from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
@@ -214,20 +213,8 @@ class TestCorrelation(TestCase):
         filter_shared_samples.assert_called_once_with(
             this_trait_data.get("trait_sample_data"), traits_dataset[0].get("trait_sample_data"))
 
-    @unittest.skip("not implemented")
-    def test_tissue_lit_corr_for_probe_type(self):
-        """Tests for doing tissue and lit correlation for  trait list\
-        if both the dataset and target dataset are probeset runs\
-        on after initial correlation has been done
-        """
-
-        results = tissue_lit_corr_for_probe_type(
-            corr_type="tissue", top_corr_results={})
-
-        self.assertEqual(results, (None, None))
-
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
-    def test_tissue_correlation_for_trait_list(self, mock_compute_corr_coeff):
+    def test_tissue_correlation_for_trait(self, mock_compute_corr_coeff):
         """Test given a primary tissue values for a trait  and and a list of\
         target tissues for traits  do the tissue correlation for them
         """
@@ -236,8 +223,8 @@ class TestCorrelation(TestCase):
         target_tissues_values = [1, 2, 3]
         mock_compute_corr_coeff.side_effect = [(0.4, 0.9), (-0.2, 0.91)]
         expected_tissue_results = {"1456_at": {"tissue_corr": 0.4,
-                                               "p_value": 0.9, "tissue_number": 3}}
-        tissue_results = tissue_correlation_for_trait_list(
+                                               "tissue_p_val": 0.9, "tissue_number": 3}}
+        tissue_results = tissue_correlation_for_trait(
             primary_tissue_values, target_tissues_values,
             corr_method="pearson", trait_id="1456_at",
             compute_corr_p_value=mock_compute_corr_coeff)
@@ -246,7 +233,7 @@ class TestCorrelation(TestCase):
 
     @mock.patch("gn3.computations.correlations.fetch_lit_correlation_data")
     @mock.patch("gn3.computations.correlations.map_to_mouse_gene_id")
-    def test_lit_correlation_for_trait_list(self, mock_mouse_gene_id, fetch_lit_data):
+    def test_lit_correlation_for_trait(self, mock_mouse_gene_id, fetch_lit_data):
         """Fetch results from  db call for lit correlation given a trait list\
         after doing correlation
         """
@@ -260,7 +247,7 @@ class TestCorrelation(TestCase):
 
         fetch_lit_data.side_effect = [(15, 9), (17, 8), (11, 12)]
 
-        lit_results = lit_correlation_for_trait_list(
+        lit_results = lit_correlation_for_trait(
             conn=conn, target_trait_lists=target_trait_lists,
             species="rat", trait_gene_id="12")
 
@@ -289,7 +276,7 @@ class TestCorrelation(TestCase):
          input trait mouse gene id and mouse gene id
         """
 
-        expected_db_results = [namedtuple("lit_coeff", "val")(x*0.1)
+        expected_db_results = [("val", x*0.1)
                                for x in range(1, 4)]
         conn = DataBase(expected_results=expected_db_results)
         expected_results = ("1", 0.1)
@@ -375,10 +362,10 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, expected_results)
 
-    @mock.patch("gn3.computations.correlations.lit_correlation_for_trait_list")
+    @mock.patch("gn3.computations.correlations.lit_correlation_for_trait")
     def test_compute_all_lit_correlation(self, mock_lit_corr):
         """Test for compute all lit correlation which acts\
-        as an abstraction for lit_correlation_for_trait_list
+        as an abstraction for lit_correlation_for_trait
         and is used in the api/correlation/lit
         """
 
@@ -395,7 +382,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(lit_correlation_results, expected_mocked_lit_results)
 
-    @mock.patch("gn3.computations.correlations.tissue_correlation_for_trait_list")
+    @mock.patch("gn3.computations.correlations.tissue_correlation_for_trait")
     @mock.patch("gn3.computations.correlations.process_trait_symbol_dict")
     def test_compute_all_tissue_correlation(self, process_trait_symbol, mock_tissue_corr):
         """Test for compute all tissue corelation which abstracts
@@ -417,13 +404,15 @@ class TestCorrelation(TestCase):
         target_tissue_data = {"trait_symbol_dict": target_trait_symbol,
                               "symbol_tissue_vals_dict": target_symbol_tissue_vals}
 
-        mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3},
-                                        {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}]
+        mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "tissue_p_val": 0.9,
+                                         "tissue_number": 3},
+                                        {"tissue_corr": 1.11, "tissue_p_val": 0.2,
+                                         "tissue_number": 3}]
 
         expected_results = [{"1412_at":
-                             {"tissue_corr": 1.11, "p_value": 0.2, "tissue_number": 3}},
+                             {"tissue_corr": 1.11, "tissue_p_val": 0.2, "tissue_number": 3}},
                             {"1418702_a_at":
-                             {"tissue_corr": -0.5, "p_value": 0.9, "tissue_number": 3}}]
+                             {"tissue_corr": -0.5, "tissue_p_val": 0.9, "tissue_number": 3}}]
 
         results = compute_all_tissue_correlation(
             primary_tissue_dict=primary_tissue_dict,
