@@ -30,6 +30,13 @@ def compose_gemma_cmd(gemma_wrapper_cmd: str = "gemma-wrapper",
         cmd += " ".join([f"{arg}" for arg in gemma_args])
     return cmd
 
+def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
+                     rqtl_wrapper_kwargs: Dict) -> str:
+    """Compose a valid R/qtl command given the correct input"""
+    cmd = rqtl_wrapper_cmd + " " + " ".join(
+        [f"--{key} {val}" for key, val in rqtl_wrapper_kwargs.items()])
+
+    return cmd
 
 def queue_cmd(conn: Redis,
               job_queue: str,
