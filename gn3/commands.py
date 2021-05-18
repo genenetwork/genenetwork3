@@ -31,10 +31,17 @@ def compose_gemma_cmd(gemma_wrapper_cmd: str = "gemma-wrapper",
     return cmd
 
 def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
-                     rqtl_wrapper_kwargs: Dict) -> str:
+                     rqtl_wrapper_kwargs: Dict,
+                     rqtl_wrapper_bool_kwargs: list) -> str:
     """Compose a valid R/qtl command given the correct input"""
+    # Add kwargs with values
     cmd = rqtl_wrapper_cmd + " " + " ".join(
         [f"--{key} {val}" for key, val in rqtl_wrapper_kwargs.items()])
+
+    # Add boolean kwargs (kwargs without values)
+    if len(rqtl_wrapper_bool_kwargs):
+        cmd += " "
+        cmd += " ".join([f"--{val}" for val in rqtl_wrapper_bool_kwargs])
 
     return cmd
 
