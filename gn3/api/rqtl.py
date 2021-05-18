@@ -21,16 +21,24 @@ run the rqtl_wrapper script and return the results as JSON
     if not do_paths_exist([genofile, phenofile]):
         raise FileNotFoundError
 
-    kwarg_list = ["addcovar", "model", "method", "interval", "nperm", "scale", "control_marker"]
+    # Split kwargs by those with values and boolean ones that just convert to True/False
+    kwargs = ["model", "method", "nperm", "scale", "control_marker"]
+    boolean_kwargs = ["addcovar", "interval"]
+    all_kwargs = kwargs + boolean_kwargs
 
     rqtl_kwargs = {"geno": genofile, "pheno": phenofile}
-    for kwarg in kwarg_list:
+    rqtl_bool_kwargs = []
+    for kwarg in all_kwargs:
         if kwarg in request.form:
-            rqtl_kwargs[kwarg] = request.form[kwarg]
+            if kwarg in kwargs:
+                rqtl_kwargs[kwarg] = request.form[kwarg]
+            if kwarg in boolean_kwargs:
+                rqtl_bool_kwargs.append(kwarg)
 
     results = generate_rqtl_cmd(
         rqtl_wrapper_cmd=current_app.config.get("RQTL_WRAPPER_CMD"),
-        rqtl_wrapper_kwargs=rqtl_kwargs
+        rqtl_wrapper_kwargs=rqtl_kwargs,
+        rqtl_wrapper_bool_kwargs=boolean_kwargs
     )
 
     return jsonify(results)
