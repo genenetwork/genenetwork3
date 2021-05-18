@@ -7,7 +7,7 @@ drives, RAID5) the query took 1 hour. On Tux01 (solid state NVME) it took 6
 minutes. Adding an index for StrainId (see explorations below) reduced that
 query to 3 minutes - which is kinda acceptable. The real problem, however is
 that this is a quadratic search - so it will get worse quickly - and we need
-to solve it.
+to solve it. This table has doubled in size in the last 5 years.
 
 So what does ProbeSetData contain?
 
@@ -26,7 +26,8 @@ select * from ProbeSetData limit 5;
 
 You can see Id is sectioned in the file (and there are not that many Ids) but
 StrainId is *distributed* through the database file and some 'StrainIds' match
-many data points. Id stands for Dataset and StrainId really means Measurement(!)
+many data points. Id stands for Dataset (item) and StrainId really means
+measurement type or trait measured(!)
 
 Our query looked for 1,236,088 measurement distributed over a 53Gb file (and
 an even larger index file). Turns out the full table is read many many times
@@ -41,9 +42,11 @@ We have the following options:
 
 *** Reorder the table
 
-We could reorder the table on StrainID which would make this search much
-faster but it would many common (dataset) queries slower. So, that is not a
-great idea. One thing we could try is create a copy of the first table.
+We could reorder the table on StrainID which would make this search much faster
+but it would many common (dataset) queries slower. So, that is not a great
+idea. One thing we could try is add a copy of the first table. Not exactly
+elegant but a quick fix for sure. We'll need an embedded procedure to keep it 
+up-to-data.
 
 *** Use column based storage
 
