@@ -39,7 +39,7 @@ def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
         [f"--{key} {val}" for key, val in rqtl_wrapper_kwargs.items()])
 
     # Add boolean kwargs (kwargs without values)
-    if len(rqtl_wrapper_bool_kwargs):
+    if rqtl_wrapper_bool_kwargs:
         cmd += " "
         cmd += " ".join([f"--{val}" for val in rqtl_wrapper_bool_kwargs])
 
