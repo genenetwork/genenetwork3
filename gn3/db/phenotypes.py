@@ -3,8 +3,15 @@
 the db"""
 from dataclasses import dataclass, asdict, astuple
 
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 from MySQLdb import escape_string
+
+from typing_extensions import Protocol
+
+
+class Dataclass(Protocol):
+    """Type Definition for a Dataclass"""
+    __dataclass_fields__: Dict
 
 
 @dataclass(frozen=True)
