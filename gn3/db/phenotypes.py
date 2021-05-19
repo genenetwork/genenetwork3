@@ -1,4 +1,4 @@
-# pylint: disable=[R0902]
+# pylint: disable=[R0902, R0903]
 """This contains all the necessary functions that access the phenotypes from
 the db"""
 from dataclasses import dataclass, asdict, astuple
@@ -85,22 +85,23 @@ TABLEMAP = {
 }
 
 
-def update_phenotype(conn: Any,
-                     data: Phenotype,
-                     where: Phenotype) -> Optional[int]:
-    """Update phenotype metadata with DATA that depends on the WHERE clause"""
+def update(conn: Any,
+           table: str,
+           data: Dataclass,
+           where: Dataclass) -> Optional[int]:
+    """Run an UPDATE on a table"""
     if not any(astuple(data) + astuple(where)):
         return None
-    sql = "UPDATE Phenotype SET "
-    sql += ", ".join(f"{phenotype_column_mapping.get(k)} "
+    sql = f"UPDATE {table} SET "
+    sql += ", ".join(f"{TABLEMAP[table].get(k)} "
                      f"= '{escape_string(str(v)).decode('utf-8')}'" for
                      k, v in asdict(data).items()
-                     if v is not None and k in phenotype_column_mapping)
+                     if v is not None and k in TABLEMAP[table])
     sql += " WHERE "
-    sql += "AND ".join(f"{phenotype_column_mapping.get(k)} = "
+    sql += "AND ".join(f"{TABLEMAP[table].get(k)} = "
                        f"'{escape_string(str(v)).decode('utf-8')}'" for
                        k, v in asdict(where).items()
-                       if v is not None and k in phenotype_column_mapping)
+                       if v is not None and k in TABLEMAP[table])
     with conn.cursor() as cursor:
         cursor.execute(sql)
         return cursor.rowcount
