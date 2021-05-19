@@ -1,3 +1,4 @@
+# pylint: disable=[R0902]
 """This contains all the necessary functions that access the phenotypes from
 the db"""
 from dataclasses import dataclass, asdict, astuple
@@ -6,7 +7,6 @@ from typing import Any, Optional
 from MySQLdb import escape_string
 
 
-# pylint: disable=[R0902]
 @dataclass(frozen=True)
 class Phenotype:
     """Data Type that represents a Phenotype"""
