@@ -26,6 +26,9 @@ output filename generated from a hash of the genotype and phenotype files
     _hash += generate_hash_of_string(
         ",".join(rqtl_wrapper_bool_kwargs))
 
+    # Temporarily substitute forward-slashes in hash with underscores
+    _hash = _hash.replace("/", "_")
+
     _output_filename = f"{_hash}-output.json"
     return {
         "output_file":
