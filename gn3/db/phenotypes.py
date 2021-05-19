@@ -56,20 +56,20 @@ class PublishXRef:
     comments: Optional[str] = None
 
 
-# Mapping from the Phenotype dataclass to the actual column names in the
+# Mapping from the PublishXRef dataclass to the actual column names in the
 # database
-phenotype_column_mapping = {
-    "id_": "id",
-    "pre_pub_description": "Pre_publication_description",
-    "post_pub_description": "Post_publication_description",
-    "original_description": "Original_description",
-    "units": "Units",
-    "pre_pub_abbrevition": "Pre_publication_abbreviation",
-    "post_pub_abbreviation": "Post_publication_abbreviation",
-    "lab_code": "Lab_code",
-    "submitter": "Submitter",
-    "owner": "Owner",
-    "authorized_users": "Authorized_Users",
+publish_x_ref_mapping = {
+    "id_": "Id",
+    "inbred_set_id": "InbredSetId",
+    "phenotype_id": "PhenotypeId",
+    "publication_id": "PublicationId",
+    "data_id": "DataId",
+    "mean": "mean",
+    "locus": "locus",
+    "lrs": "lrs",
+    "additive": "additive",
+    "sequence": "sequence",
+    "comments": "comments",
 }
 
 
