@@ -23,6 +23,22 @@ class Phenotype:
     authorized_users: Optional[str] = None
 
 
+@dataclass(frozen=True)
+class PublishXRef:
+    """Data Type that represents the table PublishXRef"""
+    id_: Optional[int] = None
+    inbred_set_id: Optional[str] = None
+    phenotype_id: Optional[int] = None
+    publication_id: Optional[str] = None
+    data_id: Optional[int] = None
+    mean: Optional[float] = None
+    locus: Optional[str] = None
+    lrs: Optional[float] = None
+    additive: Optional[float] = None
+    sequence: Optional[int] = None
+    comments: Optional[str] = None
+
+
 # Mapping from the Phenotype dataclass to the actual column names in the
 # database
 phenotype_column_mapping = {
