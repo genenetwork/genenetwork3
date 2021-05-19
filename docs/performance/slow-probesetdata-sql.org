@@ -423,6 +423,92 @@ order by ProbeSet.Id limit 5;
 5 rows in set (0.000 sec)
 #+END_SRC
 
+The difference is the use of ProbeSetId and DataId in ProbeSetFreeze
+
+: left join ProbeSetData as T4 on T4.StrainId=4 and T4.Id = ProbeSetXRef.DataId
+
+#+BEGIN_SRC SQL
+select ProbeSetData.id,ProbeSet.name,strainid,probesetfreezeid,value from (ProbeSet,ProbeSetData,ProbeSetFreeze,ProbeSetXRef)
+where ProbeSetData.id=ProbeSetId
+  and (strainid=4 or strainid=5)
+  and ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+  and ProbeSetFreeze.Name = 'UMUTAffyExon_0209_RMA'
+limit 5;
++---------+----------+------------------+-------+
+| name    | strainid | probesetfreezeid | value |
++---------+----------+------------------+-------+
+| 4331726 |        4 |              206 | 7.835 |
+| 5054239 |        4 |              206 | 9.595 |
+| 4642578 |        4 |              206 | 8.982 |
+| 4398221 |        4 |              206 | 8.153 |
+| 5543360 |        4 |              206 | 7.111 |
++---------+----------+------------------+-------+
+5 rows in set (2.174 sec)
+#+END_SRC
+
+
+#+BEGIN_SRC SQL
+MariaDB [db_webqtl]> select ProbeSetData.id,ProbeSet.name,strainid,probesetfreezeid,value from (ProbeSet,ProbeSetData,ProbeSetFreeze,ProbeSetXRef)
+    where ProbeSetData.id=ProbeSetId
+      and (strainid=4 or strainid=5)
+      and ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+      and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+      and ProbeSetFreeze.Name = 'UMUTAffyExon_0209_RMA'
+    limit 5;
++--------+---------+----------+------------------+-------+
+| id     | name    | strainid | probesetfreezeid | value |
++--------+---------+----------+------------------+-------+
+| 225088 | 4331726 |        4 |              206 | 7.835 |
+| 225089 | 5054239 |        4 |              206 | 9.595 |
+| 225090 | 4642578 |        4 |              206 | 8.982 |
+| 225091 | 4398221 |        4 |              206 | 8.153 |
+| 225092 | 5543360 |        4 |              206 | 7.111 |
++--------+---------+----------+------------------+-------+
+5 rows in set (2.085 sec)
+#+END_SRC
+
+
+#+BEGIN_SRC SQL
+MariaDB [db_webqtl]> SELECT T4.id,ProbeSet.Name,T4.StrainID,Probesetfreezeid,T4.value
+    -> FROM (ProbeSet, ProbeSetXRef, ProbeSetFreeze)
+    ->   left join ProbeSetData as T4 on T4.StrainId=4 and T4.Id = ProbeSetXRef.DataId
+    -> WHERE ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+    ->   and ProbeSetFreeze.Name = 'UMUTAffyExon_0209_RMA'
+    ->   and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+    -> order by ProbeSet.Id limit 5;
++----------+---------+----------+------------------+---------+
+| id       | Name    | StrainID | Probesetfreezeid | value   |
++----------+---------+----------+------------------+---------+
+| 38574432 | 4331726 |        4 |              206 | 5.52895 |
+| 39254882 | 5054239 |        4 |              206 | 6.29465 |
+| 38867352 | 4642578 |        4 |              206 | 9.13706 |
+| 38637053 | 4398221 |        4 |              206 | 6.77672 |
+| 39715382 | 5543360 |        4 |              206 | 4.30016 |
++----------+---------+----------+------------------+---------+
+5 rows in set (0.001 sec)
+#+END_SRC
+
+Now you can see the difference.
+
+#+BEGIN_SRC SQL
+select ProbeSetData.id,ProbeSet.name,strainid,probesetfreezeid,value from (ProbeSet,ProbeSetData,ProbeSetFreeze,ProbeSetXRef)
+    where ProbeSetData.id=ProbeSetXRef.DataId
+      and (strainid=4 or strainid=5)
+      and ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+      and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+      and ProbeSetFreeze.Name = 'UMUTAffyExon_0209_RMA'
+      and ProbeSet.name = '4331726'
+    limit 5;
+
++----------+---------+----------+------------------+---------+
+| id       | name    | strainid | probesetfreezeid | value   |
++----------+---------+----------+------------------+---------+
+| 38574432 | 4331726 |        4 |              206 | 5.52895 |
++----------+---------+----------+------------------+---------+
+#+END_SRC
+
+It worked!
 
 ** Original query
 
