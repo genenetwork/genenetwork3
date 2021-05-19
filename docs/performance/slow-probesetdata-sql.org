@@ -380,7 +380,13 @@ select id,strainid,value from (ProbeSetData,ProbeSetXRef) where   ProbeSetXRef.P
 #+END_SRC
 
 #+BEGIN_SRC SQL
-MariaDB [db_webqtl]> select ProbeSet.name,strainid,probesetfreezeid,value from (ProbeSet,ProbeSetData,ProbeSetFreeze,ProbeSetXRef) where   ProbeSetXRef.ProbeSetFreezeId = 206 and ProbeSetData.id=ProbeSetId   and (strainid=4 or strainid=5) and ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id and ProbeSet.Id = ProbeSetXRef.ProbeSetId limit 5;
+select ProbeSet.name,strainid,probesetfreezeid,value from (ProbeSet,ProbeSetData,ProbeSetFreeze,ProbeSetXRef)
+where ProbeSetData.id=ProbeSetId
+  and (strainid=4 or strainid=5)
+  and ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+  and ProbeSetFreeze.Name = 'UMUTAffyExon_0209_RMA'
+limit 5;
 +---------+----------+------------------+-------+
 | name    | strainid | probesetfreezeid | value |
 +---------+----------+------------------+-------+
@@ -393,10 +399,29 @@ MariaDB [db_webqtl]> select ProbeSet.name,strainid,probesetfreezeid,value from (
 5 rows in set (2.174 sec)
 #+END_SRC
 
-
 No more joins and super fast!!
 
 *** TODO check if the values match the original query.
+
+#+BEGIN_SRC SQL
+SELECT ProbeSet.Name,T4.StrainID,Probesetfreezeid,T4.value
+FROM (ProbeSet, ProbeSetXRef, ProbeSetFreeze)
+  left join ProbeSetData as T4 on T4.StrainId=4 and T4.Id = ProbeSetXRef.DataId
+WHERE ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+  and ProbeSetFreeze.Name = 'UMUTAffyExon_0209_RMA'
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+order by ProbeSet.Id limit 5;
++---------+----------+------------------+---------+
+| Name    | StrainID | Probesetfreezeid | value   |
++---------+----------+------------------+---------+
+| 4331726 |        4 |              206 | 5.52895 |
+| 5054239 |        4 |              206 | 6.29465 |
+| 4642578 |        4 |              206 | 9.13706 |
+| 4398221 |        4 |              206 | 6.77672 |
+| 5543360 |        4 |              206 | 4.30016 |
++---------+----------+------------------+---------+
+5 rows in set (0.000 sec)
+#+END_SRC
 
 
 ** Original query
