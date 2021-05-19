@@ -79,6 +79,36 @@ publish_x_ref_mapping = {
     "comments": "comments",
 }
 
+
+@dataclass(frozen=True)
+class Publication:
+    """Data Type that represents the table Publication"""
+    id_: Optional[int] = None
+    pubmed_id: Optional[int] = None
+    abstract: Optional[str] = None
+    authors: Optional[str] = None
+    title: Optional[str] = None
+    journal: Optional[str] = None
+    volume: Optional[str] = None
+    pages: Optional[str] = None
+    month: Optional[str] = None
+    year: Optional[str] = None
+
+
+publication_mapping = {
+    "id_": "id",
+    "PubMed_ID": "pubmed_id",
+    "Abstract": "abstract",
+    "Authors": "authors",
+    "Title": "title",
+    "Journal": "journal",
+    "Volume": "volume",
+    "Pages": "pages",
+    "Month": "month",
+    "Year": "year",
+}
+
+
 TABLEMAP = {
     "Phenotype": phenotype_column_mapping,
     "PublishXRef": publish_x_ref_mapping,
