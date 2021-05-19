@@ -64,6 +64,18 @@ compression and/or ZFS.
 
 My prediction is that we can not get around this.
 
+** Result
+
+The final query is shown at the bottom of 'Exploration'. It takes 2 minutes
+on Penguin2 and Tux01. Essentially I took out the joins (which parsed the same
+table repeatedly) and added an index. The trick is to keep minimizing the query.
+
+The 2 minute query will do for now and it probably is no longer quadratic.
+
+We can probably improve things in the future by changing the way ProbeSetData
+is stored.
+
+
 ** Exploration
 
 In the following steps I reduce the complex case to a simple case explaining
@@ -401,8 +413,6 @@ limit 5;
 
 No more joins and super fast!!
 
-*** TODO check if the values match the original query.
-
 #+BEGIN_SRC SQL
 SELECT ProbeSet.Name,T4.StrainID,Probesetfreezeid,T4.value
 FROM (ProbeSet, ProbeSetXRef, ProbeSetFreeze)
@@ -495,9 +505,8 @@ Now you can see the difference.
 select ProbeSetData.id,ProbeSet.name,strainid,probesetfreezeid,value from (ProbeSet,ProbeSetData,ProbeSetFreeze,ProbeSetXRef)
     where ProbeSetData.id=ProbeSetXRef.DataId
       and (strainid=4 or strainid=5)
-      and ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
+      and ProbeSetXRef.ProbeSetFreezeId = 206
       and ProbeSet.Id = ProbeSetXRef.ProbeSetId
-      and ProbeSetFreeze.Name = 'UMUTAffyExon_0209_RMA'
       and ProbeSet.name = '4331726'
     limit 5;
 
@@ -509,6 +518,137 @@ select ProbeSetData.id,ProbeSet.name,strainid,probesetfreezeid,value from (Probe
 #+END_SRC
 
 It worked!
+
+BUT IT IS SLOW for the full query. This is now due to this table being huge
+and DataID distributed through the table (sigh!).
+
+#+BEGIN_SRC SQL
+MariaDB [db_webqtl]> select count(*) from ProbeSetXRef;
++----------+
+| count(*) |
++----------+
+| 47713039 |
++----------+
+1 row in set (0.000 sec)
+#+END_SRC
+
+
+#+BEGIN_SRC SQL
+select ProbeSetData.id,ProbeSet.name,strainid,probesetfreezeid,value from (ProbeSet,ProbeSetData,ProbeSetFreeze,ProbeSetXRef)
+         where
+           ProbeSetXRef.ProbeSetFreezeId = 206
+           and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+           and ProbeSetFreeze.Id = 206
+           and ProbeSetData.id=ProbeSetXRef.DataId
+           and (strainid=4 or strainid=5)
+         limit 5;
+
++----------+---------+----------+------------------+---------+
+| id       | name    | strainid | probesetfreezeid | value   |
++----------+---------+----------+------------------+---------+
+| 38549183 | 4304920 |        4 |              206 | 4.97269 |
+| 38549184 | 4304921 |        4 |              206 | 6.25133 |
+| 38549185 | 4304922 |        4 |              206 | 6.03701 |
+| 38549186 | 4304923 |        4 |              206 | 9.10316 |
+| 38549187 | 4304925 |        4 |              206 | 8.90826 |
++----------+---------+----------+------------------+---------+
+5 rows in set (23.995 sec)
+
+select count(ProbeSetId) from ProbeSetXRef where ProbeSetFreezeId = 206;
++-------------------+
+| count(ProbeSetId) |
++-------------------+
+|           1236087 |
++-------------------+
+
+select count(ProbeSet.name) from (ProbeSet,ProbeSetXRef)
+  where ProbeSetFreezeId = 206
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId;
++----------------------+
+| count(ProbeSet.name) |
++----------------------+
+|              1236087 |
++----------------------+
+1 row in set (7.126 sec)
+
+select ProbeSet.name,ProbeSetData.id from (ProbeSet,ProbeSetXRef,ProbeSetData)
+  where ProbeSetFreezeId = 206
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+  and ProbeSetData.id = ProbeSetXRef.DataId
+;
+
+MariaDB [db_webqtl]> select count(ProbeSetData.id) from (ProbeSet,ProbeSetXRef,ProbeSetData)   where ProbeSetFreezeId = 206   and ProbeSet.Id = ProbeSetXRef.ProbeSetId   and ProbeSetData.id = ProbeSetXRef.DataId;
++------------------------+
+| count(ProbeSetData.id) |
++------------------------+
+|              114956091 |
++------------------------+
+1 row in set (35.836 sec)
+
+select count(*) from (ProbeSet,ProbeSetXRef,ProbeSetData)   where ProbeSetFreezeId = 206   and ProbeSet.Id = ProbeSetXRef.ProbeSetId   and ProbeSetData.id = ProbeSetXRef.DataId ;
++-----------+
+| count(*)  |
++-----------+
+| 114956091 |
++-----------+
+1 row in set (35.392 sec)
+
+
+select ProbeSet.name,ProbeSetData.value from (ProbeSet,ProbeSetXRef,ProbeSetData)
+  where ProbeSetFreezeId = 206
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+  and ProbeSetData.id = ProbeSetXRef.DataId
+;
+
+select count(value) from (ProbeSet,ProbeSetXRef,ProbeSetData)   where ProbeSetFreezeId = 206   and ProbeSet.Id = ProbeSetXRef.ProbeSetId   and ProbeSetData.id = ProbeSetXRef.DataId and strainid=5 ;
++--------------+
+| count(value) |
++--------------+
+|      1236087 |
++--------------+
+1 row in set (14.819 sec)
+
+
+select count(value) from (ProbeSet,ProbeSetXRef,ProbeSetData)
+where ProbeSetFreezeId = 206
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+  and ProbeSetData.id = ProbeSetXRef.DataId
+  and ((strainid>=4 and strainid<=31) or strainid in (33,35,36,37,39,98,100,103))
+;
+
++--------------+
+| count(value) |
++--------------+
+|     43263045 |
++--------------+
+1 row in set (1 min 40.498 sec)
+
+select name,strainid,value from (ProbeSet,ProbeSetXRef,ProbeSetData)
+where ProbeSetFreezeId = 206
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+  and ProbeSetData.id = ProbeSetXRef.DataId
+  and ((strainid>=4 and strainid<=31) or strainid in (33,35,36,37,39,98,100,103))
+limit 5;
++---------+----------+---------+
+| name    | strainid | value   |
++---------+----------+---------+
+| 4331726 |        4 | 5.52895 |
+| 4331726 |        5 | 6.76158 |
+| 4331726 |        6 | 6.06911 |
+| 4331726 |        7 | 6.24858 |
+| 4331726 |        8 | 6.36076 |
++---------+----------+---------+
+
+select name,strainid,value from (ProbeSet,ProbeSetXRef,ProbeSetData)
+where ProbeSetFreezeId = 206
+  and ProbeSet.Id = ProbeSetXRef.ProbeSetId
+  and ProbeSetData.id = ProbeSetXRef.DataId
+  and ((strainid>=4 and strainid<=31) or strainid in (33,35,36,37,39,98,100,103))
+;
+
+#+END_SRC
+
+The final query works in 2.2 minutes on both Penguin2 and Tux01.
 
 ** Original query
 
