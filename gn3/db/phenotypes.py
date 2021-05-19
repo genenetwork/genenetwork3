@@ -79,6 +79,11 @@ publish_x_ref_mapping = {
     "comments": "comments",
 }
 
+TABLEMAP = {
+    "Phenotype": phenotype_column_mapping,
+    "PublishXRef": publish_x_ref_mapping,
+}
+
 
 def update_phenotype(conn: Any,
                      data: Phenotype,
