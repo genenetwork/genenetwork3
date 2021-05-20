@@ -22,7 +22,7 @@ class Phenotype:
     post_pub_description: Optional[str] = None
     original_description: Optional[str] = None
     units: Optional[str] = None
-    pre_pub_abbrevition: Optional[str] = None
+    pre_pub_abbreviation: Optional[str] = None
     post_pub_abbreviation: Optional[str] = None
     lab_code: Optional[str] = None
     submitter: Optional[str] = None
@@ -38,7 +38,7 @@ phenotype_mapping = {
     "post_pub_description": "Post_publication_description",
     "original_description": "Original_description",
     "units": "Units",
-    "pre_pub_abbrevition": "Pre_publication_abbreviation",
+    "pre_pub_abbreviation": "Pre_publication_abbreviation",
     "post_pub_abbreviation": "Post_publication_abbreviation",
     "lab_code": "Lab_code",
     "submitter": "Submitter",
