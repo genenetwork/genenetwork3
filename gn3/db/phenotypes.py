@@ -112,6 +112,8 @@ publication_mapping = {
 TABLEMAP = {
     "Phenotype": phenotype_mapping,
     "PublishXRef": publish_x_ref_mapping,
+    "Publication": publication_mapping,
+}
 }
 
 
