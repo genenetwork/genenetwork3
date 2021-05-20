@@ -114,6 +114,11 @@ TABLEMAP = {
     "PublishXRef": publish_x_ref_mapping,
     "Publication": publication_mapping,
 }
+
+DATACLASSMAP = {
+    "Phenotype": Phenotype,
+    "PublishXRef": PublishXRef,
+    "Publication": Publication,
 }
 
 
