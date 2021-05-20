@@ -32,7 +32,7 @@ class Phenotype:
 
 # Mapping from the Phenotype dataclass to the actual column names in the
 # database
-phenotype_column_mapping = {
+phenotype_mapping = {
     "id_": "id",
     "pre_pub_description": "Pre_publication_description",
     "post_pub_description": "Post_publication_description",
@@ -110,7 +110,7 @@ publication_mapping = {
 
 
 TABLEMAP = {
-    "Phenotype": phenotype_column_mapping,
+    "Phenotype": phenotype_mapping,
     "PublishXRef": publish_x_ref_mapping,
 }
 
