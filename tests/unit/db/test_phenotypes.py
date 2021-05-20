@@ -2,6 +2,7 @@
 from unittest import TestCase
 from unittest import mock
 
+from gn3.db.phenotypes import fetchone
 from gn3.db.phenotypes import Phenotype
 from gn3.db.phenotypes import update
 
@@ -41,3 +42,24 @@ class TestPhenotypes(TestCase):
                 "'Test Post Pub', Submitter = 'Rob' "
                 "WHERE id = '1'"
             )
+
+    def test_fetch_phenotype(self):
+        """Test that a single phenotype is fetched properly
+
+        """
+        db_mock = mock.MagicMock()
+        with db_mock.cursor() as cursor:
+            test_data = (
+                35, "Test pre-publication", "Test post-publication",
+                "Original description A", "cm^2", "pre-abbrev",
+                "post-abbrev", "LAB001", "R. W.", "R. W.", "R. W."
+            )
+            cursor.fetchone.return_value = test_data
+            phenotype = fetchone(db_mock,
+                                 "Phenotype",
+                                 where=Phenotype(id_=35))
+            self.assertEqual(phenotype.id_, 35)
+            self.assertEqual(phenotype.pre_pub_description,
+                             "Test pre-publication")
+            cursor.execute.assert_called_once_with(
+                "SELECT * FROM Phenotype WHERE id = '35'")
