@@ -142,3 +142,20 @@ def update(conn: Any,
     with conn.cursor() as cursor:
         cursor.execute(sql)
         return cursor.rowcount
+
+
+def fetchone(conn: Any,
+             table: str,
+             where: Dataclass) -> Optional[Dataclass]:
+    """Run a SELECT on a table. Returns only one result!"""
+    if not any(astuple(where)):
+        return None
+    sql = f"SELECT * FROM {table} "
+    sql += "WHERE "
+    sql += "AND ".join(f"{TABLEMAP[table].get(k)} = "
+                       f"'{escape_string(str(v)).decode('utf-8')}'" for
+                       k, v in asdict(where).items()
+                       if v is not None and k in TABLEMAP[table])
+    with conn.cursor() as cursor:
+        cursor.execute(sql)
+        return DATACLASSMAP[table](*cursor.fetchone())
