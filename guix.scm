@@ -87,6 +87,8 @@
                        ; ("r-ctl" ,r-ctl)
                        ("r-qtl" ,r-qtl)
                        ("r-optparse" ,r-optparse)
+                       ("r-stringi" ,r-stringi)
+                       ("r-stringr" ,r-stringr)
                        ; ("r-wgcna" ,r-wgcna)
                        ))
   (build-system python-build-system)
