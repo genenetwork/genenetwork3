@@ -97,15 +97,15 @@ class Publication:
 
 publication_mapping = {
     "id_": "id",
-    "PubMed_ID": "pubmed_id",
-    "Abstract": "abstract",
-    "Authors": "authors",
-    "Title": "title",
-    "Journal": "journal",
-    "Volume": "volume",
-    "Pages": "pages",
-    "Month": "month",
-    "Year": "year",
+    "pubmed_id": "PubMed_ID",
+    "abstract": "Abstract",
+    "authors": "Authors",
+    "title": "Title",
+    "journal": "Journal",
+    "volume": "Volume",
+    "pages": "Pages",
+    "month": "Month",
+    "year": "Year",
 }
 
 
