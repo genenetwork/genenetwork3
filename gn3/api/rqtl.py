@@ -1,10 +1,13 @@
 """Endpoints for running the rqtl cmd"""
+import os
+
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.computations.rqtl import generate_rqtl_cmd
+from gn3.commands import run_cmd
+from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_output, process_perm_output
 from gn3.computations.gemma import do_paths_exist
 
 rqtl = Blueprint("rqtl", __name__)
@@ -35,10 +38,17 @@ run the rqtl_wrapper script and return the results as JSON
             if kwarg in boolean_kwargs:
                 rqtl_bool_kwargs.append(kwarg)
 
-    results = generate_rqtl_cmd(
+    rqtl_cmd = generate_rqtl_cmd(
         rqtl_wrapper_cmd=current_app.config.get("RQTL_WRAPPER_CMD"),
         rqtl_wrapper_kwargs=rqtl_kwargs,
         rqtl_wrapper_bool_kwargs=boolean_kwargs
     )
 
-    return jsonify(results)
+    os.system(rqtl_cmd.get('rqtl_cmd'))
+
+    rqtl_output = {}
+    rqtl_output['results'] = process_rqtl_output(rqtl_cmd.get('output_file'))
+    if int(rqtl_kwargs['nperm']) > 0:
+        rqtl_output['perm_results'], rqtl_output['suggestive'], rqtl_output['significant'] = process_perm_output(rqtl_cmd.get('output_file'))
+
+    return jsonify(rqtl_output)

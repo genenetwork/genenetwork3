@@ -1,6 +1,11 @@
 """Procedures related rqtl computations"""
-
+import os
+import numpy as np
 from typing import Dict
+from typing import List
+
+from flask import current_app
+
 from gn3.commands import compose_rqtl_cmd
 from gn3.computations.gemma import generate_hash_of_string
 from gn3.fs_helpers import get_hash_of_files
@@ -29,7 +34,9 @@ output filename generated from a hash of the genotype and phenotype files
     # Temporarily substitute forward-slashes in hash with underscores
     _hash = _hash.replace("/", "_")
 
-    _output_filename = f"{_hash}-output.json"
+    _output_filename = f"{_hash}-output.csv"
+    rqtl_wrapper_kwargs["filename"] = _output_filename
+
     return {
         "output_file":
         _output_filename,
@@ -38,3 +45,56 @@ output filename generated from a hash of the genotype and phenotype files
                          rqtl_wrapper_kwargs=rqtl_wrapper_kwargs,
                          rqtl_wrapper_bool_kwargs=rqtl_wrapper_bool_kwargs)
     }
+
+
+def process_rqtl_output(file_name: str) -> List:
+    """Given an output file name, read in R/qtl results and return
+    a List of marker objects
+
+    """
+    marker_obs = []
+    # Later I should probably redo this using csv.read to avoid the
+    # awkwardness with removing quotes with [1:-1]
+    with open(os.path.join(current_app.config.get("TMPDIR"), "output", file_name), "r") as the_file:
+        for line in the_file:
+            line_items = line.split(",")
+            if line_items[1][1:-1] == "chr" or not line_items:
+                # Skip header line
+                continue
+            else:
+                # Convert chr to int if possible
+                try:
+                    the_chr = int(line_items[1][1:-1])
+                except:
+                    the_chr = line_items[1][1:-1]
+                this_marker = {
+                    "name": line_items[0][1:-1],
+                    "chr": the_chr,
+                    "cM": float(line_items[2]),
+                    "Mb": float(line_items[2]),
+                    "lod_score": float(line_items[3])
+                }
+                marker_obs.append(this_marker)
+
+    return marker_obs
+
+
+def process_perm_output(file_name: str):
+    """Given base filename, read in R/qtl permutation output and calculate
+    suggestive and significant thresholds
+
+    """
+    perm_results = []
+    with open(os.path.join(current_app.config.get("TMPDIR"), "output", "PERM_" + file_name), "r") as the_file:
+        for i, line in enumerate(the_file):
+            if i == 0:
+                # Skip header line
+                continue
+            else:
+                line_items = line.split(",")
+                perm_results.append(float(line_items[1]))
+
+    suggestive = np.percentile(np.array(perm_results), 67)
+    significant = np.percentile(np.array(perm_results), 95)
+
+    return perm_results, suggestive, significant
