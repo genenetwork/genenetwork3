@@ -2,9 +2,9 @@
 from unittest import TestCase
 from unittest import mock
 
-from gn3.db.phenotypes import fetchone
+from gn3.db import fetchone
+from gn3.db import update
 from gn3.db.phenotypes import Phenotype
-from gn3.db.phenotypes import update
 
 
 class TestPhenotypes(TestCase):
