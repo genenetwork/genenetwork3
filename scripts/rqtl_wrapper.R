@@ -13,6 +13,7 @@ option_list = list(
   make_option(c("--method"), type="character", default="hk", help="Mapping Method - hk (Haley Knott), ehk (Extended Haley Knott), mr (Marker Regression), em (Expectation-Maximization), imp (Imputation)"),
   make_option(c("-i", "--interval"), action="store_true", default=NULL, help="Use interval mapping"),
   make_option(c("--nperm"), type="integer", default=0, help="Number of permutations"),
+  make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata (stored as final column/vector in phenotype input file)"),
   make_option(c("-s", "--scale"), type="character", default="mb", help="Mapping scale - Megabases (Mb) or Centimorgans (cM)"),
   make_option(c("--control"), type="character", default=NULL, help="Name of marker (contained in genotype file) to be used as a control"),
   make_option(c("-o", "--outdir"), type="character", default=file.path(tmp_dir, "output"), help="Directory in which to write result file"),
@@ -135,15 +136,17 @@ df <- read.table(pheno_file, na.strings = "x", header=TRUE, check.names=FALSE)
 sample_names <- df$Sample
 trait_names <- colnames(df)[2:length(colnames(df))]
 
+# Since there will always only be one non-covar phenotype, its name will be in the first column
+pheno_name = unlist(trait_names)[1]
+
 trait_vals <- vector(mode = "list", length = length(trait_names))
 for (i in 1:length(trait_names)) {
   this_trait <- trait_names[i]
   this_vals <- df[this_trait]
   trait_vals[[i]] <- this_vals
-}
 
-# Since there will always only be one non-covar phenotype, its name will be in the first column
-pheno_name = unlist(trait_names)[1]
+  trait_names[i] = paste("T_", this_trait, sep = "")
+}
 
 verbose_print('Generating cross object\n')
 cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file)
@@ -158,10 +161,22 @@ if (!is.null(opt$interval)) {
 }
 
 # Pull covariates out of cross object, if they exist
-covars = vector()
+covars = vector(mode = "list", length = length(trait_names) - 1)
 if (!is.null(opt$addcovar)) {
-  covar_names = trait_names[2:length(trait_names)]
+  #If perm strata are being used, it'll be included as the final column in the phenotype file
+  if (!is.null(opt$pstrata)) {
+    covar_names = trait_names[3:length(trait_names) - 1]
+  } else {
+    covar_names = trait_names[3:length(trait_names)]
+  }
   covars <- pull.pheno(cross_object, covar_names)
+}
+
+# Pull permutation strata out of cross object, if it is being used
+perm_strata = vector()
+if (!is.null(opt$pstrata)) {
+  strata_col = trait_names[length(trait_names)]
+  perm_strata <- pull.pheno(cross_object, strata_col)
 }
 
 # If a marker name is supplied as covariate, get its vector of values and add them as a covariate
@@ -173,17 +188,27 @@ if (!is.null(opt$control)) {
 # Calculate permutations
 if (opt$nperm > 0) {
   if (!is.null(opt$filename)){
-    perm_out_file = file.path(opt$outdir, paste("PERM_", opt$filename, sep = ""))
+    perm_out_file = file.path(opt$outdir, paste("PERM_", opt$filename, sep = "" ))
   } else {
-    perm_out_file = file.path(opt$outdir, paste(pheno_name, "_PERM_", stri_rand_strings(1, 8), ".csv", sep = ""))
+    perm_out_file = file.path(opt$outdir, paste(pheno_name, "_PERM_", stri_rand_strings(1, 8), sep = ""))
   }
 
   if (!is.null(opt$addcovar) || !is.null(opt$control)){
-    verbose_print('Running permutations with cofactors\n')
-    perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, model=opt$model, method=opt$method)
+    if (!is.null(opt$pstrata)) {
+      verbose_print('Running permutations with cofactors and strata\n')
+      perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
+    } else {
+      verbose_print('Running permutations with cofactors\n')
+      perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, model=opt$model, method=opt$method)
+    }
   } else {
-    verbose_print('Running permutations\n')
-    perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, model=opt$model, method=opt$method)
+    if (!is.null(opt$pstrata)) {
+      verbose_print('Running permutations with strata\n')
+      perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
+    } else {
+      verbose_print('Running permutations\n')
+      perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, model=opt$model, method=opt$method)
+    }
   }
   write.csv(perm_results, perm_out_file)
 }
@@ -191,7 +216,7 @@ if (opt$nperm > 0) {
 if (!is.null(opt$filename)){
   out_file = file.path(opt$outdir, opt$filename)
 } else {
-  out_file = file.path(opt$outdir, paste(pheno_name, "_", stri_rand_strings(1, 8), ".csv", sep = ""))
+  out_file = file.path(opt$outdir, paste(pheno_name, "_", stri_rand_strings(1, 8), sep = ""))
 }
 
 if (!is.null(opt$addcovar) || !is.null(opt$control)){
