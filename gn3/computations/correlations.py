@@ -247,7 +247,7 @@ def fetch_lit_correlation_data(
             cursor.execute(query_formatter(query,
                                            *tuple(reversed(query_values))))
             lit_corr_results = cursor.fetchone()
-        lit_results = (gene_id, lit_corr_results[1])\
+        lit_results = (gene_id, lit_corr_results[0])\
             if lit_corr_results else (gene_id, 0)
         return lit_results
     return (gene_id, 0)
