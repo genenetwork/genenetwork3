@@ -34,14 +34,14 @@ class TestPhenotypes(TestCase):
                     pre_pub_description="Test Pre Pub",
                     submitter="Rob",
                     post_pub_description="Test Post Pub"),
-                where=Phenotype(id_=1)), 1)
+                where=Phenotype(id_=1, owner="Rob")), 1)
             cursor.execute.assert_called_once_with(
                 "UPDATE Phenotype SET "
                 "Pre_publication_description = "
                 "'Test Pre Pub', "
                 "Post_publication_description = "
                 "'Test Post Pub', Submitter = 'Rob' "
-                "WHERE id = '1'"
+                "WHERE id = '1' AND Owner = 'Rob'"
             )
 
     def test_fetch_phenotype(self):
@@ -58,12 +58,12 @@ class TestPhenotypes(TestCase):
             cursor.fetchone.return_value = test_data
             phenotype = fetchone(db_mock,
                                  "Phenotype",
-                                 where=Phenotype(id_=35))
+                                 where=Phenotype(id_=35, owner="Rob"))
             self.assertEqual(phenotype.id_, 35)
             self.assertEqual(phenotype.pre_pub_description,
                              "Test pre-publication")
             cursor.execute.assert_called_once_with(
-                "SELECT * FROM Phenotype WHERE id = '35'")
+                "SELECT * FROM Phenotype WHERE id = '35' AND Owner = 'Rob'")
 
     def test_diff_from_dict(self):
         """Test that a correct diff is generated"""
