@@ -36,7 +36,7 @@ def update(conn: Any,
            data: Dataclass,
            where: Dataclass) -> Optional[int]:
     """Run an UPDATE on a table"""
-    if not any(astuple(data) + astuple(where)):
+    if not (any(astuple(data)) and any(astuple(where))):
         return None
     sql = f"UPDATE {table} SET "
     sql += ", ".join(f"{TABLEMAP[table].get(k)} "
