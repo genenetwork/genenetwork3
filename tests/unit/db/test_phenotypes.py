@@ -4,6 +4,7 @@ from unittest import mock
 
 from gn3.db import fetchone
 from gn3.db import update
+from gn3.db import diff_from_dict
 from gn3.db.phenotypes import Phenotype
 
 
@@ -63,3 +64,10 @@ class TestPhenotypes(TestCase):
                              "Test pre-publication")
             cursor.execute.assert_called_once_with(
                 "SELECT * FROM Phenotype WHERE id = '35'")
+
+    def test_diff_from_dict(self):
+        """Test that a correct diff is generated"""
+        self.assertEqual(diff_from_dict({"id": 1, "data": "a"},
+                                        {"id": 2, "data": "b"}),
+                         {"id": {"old": 1, "new": 2},
+                          "data": {"old": "a", "new": "b"}})
