@@ -44,10 +44,10 @@ def update(conn: Any,
                      k, v in asdict(data).items()
                      if v is not None and k in TABLEMAP[table])
     sql += " WHERE "
-    sql += "AND ".join(f"{TABLEMAP[table].get(k)} = "
-                       f"'{escape_string(str(v)).decode('utf-8')}'" for
-                       k, v in asdict(where).items()
-                       if v is not None and k in TABLEMAP[table])
+    sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
+                        f"'{escape_string(str(v)).decode('utf-8')}'" for
+                        k, v in asdict(where).items()
+                        if v is not None and k in TABLEMAP[table])
     with conn.cursor() as cursor:
         cursor.execute(sql)
         return cursor.rowcount
@@ -61,10 +61,10 @@ def fetchone(conn: Any,
         return None
     sql = f"SELECT * FROM {table} "
     sql += "WHERE "
-    sql += "AND ".join(f"{TABLEMAP[table].get(k)} = "
-                       f"'{escape_string(str(v)).decode('utf-8')}'" for
-                       k, v in asdict(where).items()
-                       if v is not None and k in TABLEMAP[table])
+    sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
+                        f"'{escape_string(str(v)).decode('utf-8')}'" for
+                        k, v in asdict(where).items()
+                        if v is not None and k in TABLEMAP[table])
     with conn.cursor() as cursor:
         cursor.execute(sql)
         return DATACLASSMAP[table](*cursor.fetchone())
