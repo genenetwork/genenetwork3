@@ -93,6 +93,7 @@ def insert(conn: Any,
         conn.commit()
         return cursor.rowcount
 
+
 def diff_from_dict(old: Dict, new: Dict) -> Dict:
     """Construct a new dict with a specific structure that contains the difference
 between the 2 dicts in the structure:
@@ -104,6 +105,6 @@ Should return:
 {"id": {"old": 1, "new": 2}, "data": {"old": "a", "new": "b"}}
     """
     dict_ = {}
-    for key, value in old.items():
+    for key in old.keys():
         dict_[key] = {"old": old[key], "new": new[key]}
     return dict_
