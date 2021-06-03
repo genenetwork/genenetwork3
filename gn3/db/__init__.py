@@ -66,14 +66,14 @@ def fetchone(conn: Any,
     """Run a SELECT on a table. Returns only one result!"""
     if not any(astuple(where)):
         return None
+    where_ = {k: v for k, v in asdict(where).items()
+              if v is not None and k in TABLEMAP[table]}
     sql = f"SELECT * FROM {table} "
     sql += "WHERE "
     sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
-                        f"'{escape_string(str(v)).decode('utf-8')}'" for
-                        k, v in asdict(where).items()
-                        if v is not None and k in TABLEMAP[table])
+                        "%s" for k in where_.keys())
     with conn.cursor() as cursor:
-        cursor.execute(sql)
+        cursor.execute(sql, tuple(where_.values()))
         return DATACLASSMAP[table](*cursor.fetchone())
 
 

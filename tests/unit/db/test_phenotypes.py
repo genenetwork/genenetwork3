@@ -61,7 +61,8 @@ class TestPhenotypes(TestCase):
             self.assertEqual(phenotype.pre_pub_description,
                              "Test pre-publication")
             cursor.execute.assert_called_once_with(
-                "SELECT * FROM Phenotype WHERE id = '35' AND Owner = 'Rob'")
+                "SELECT * FROM Phenotype WHERE id = %s AND Owner = %s",
+                (35, 'Rob'))
 
     def test_diff_from_dict(self):
         """Test that a correct diff is generated"""
