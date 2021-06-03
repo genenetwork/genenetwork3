@@ -5,21 +5,26 @@ from dataclasses import dataclass, asdict, astuple
 from typing_extensions import Protocol
 from MySQLdb import escape_string
 
+from gn3.db.metadata_audit import MetadataAudit
 from gn3.db.phenotypes import Phenotype
 from gn3.db.phenotypes import PublishXRef
 from gn3.db.phenotypes import Publication
 
+from gn3.db.metadata_audit import metadata_audit_mapping
 from gn3.db.phenotypes import phenotype_mapping
 from gn3.db.phenotypes import publish_x_ref_mapping
 from gn3.db.phenotypes import publication_mapping
 
+
 TABLEMAP = {
+    "metadata_audit": metadata_audit_mapping,
     "Phenotype": phenotype_mapping,
     "PublishXRef": publish_x_ref_mapping,
     "Publication": publication_mapping,
 }
 
 DATACLASSMAP = {
+    "MetadataAudit": MetadataAudit,
     "Phenotype": Phenotype,
     "PublishXRef": PublishXRef,
     "Publication": Publication,
