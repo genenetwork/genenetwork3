@@ -43,18 +43,20 @@ def update(conn: Any,
     """Run an UPDATE on a table"""
     if not (any(astuple(data)) and any(astuple(where))):
         return None
+    data_ = {k: v for k, v in asdict(data).items()
+             if v is not None and k in TABLEMAP[table]}
+    where_ = {k: v for k, v in asdict(where).items()
+              if v is not None and k in TABLEMAP[table]}
     sql = f"UPDATE {table} SET "
     sql += ", ".join(f"{TABLEMAP[table].get(k)} "
-                     f"= '{escape_string(str(v)).decode('utf-8')}'" for
-                     k, v in asdict(data).items()
-                     if v is not None and k in TABLEMAP[table])
+                     "= %s" for k in data_.keys())
     sql += " WHERE "
     sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
-                        f"'{escape_string(str(v)).decode('utf-8')}'" for
-                        k, v in asdict(where).items()
-                        if v is not None and k in TABLEMAP[table])
+                        "%s" for k in where_.keys())
     with conn.cursor() as cursor:
-        cursor.execute(sql)
+        cursor.execute(sql,
+                       tuple(data_.values()) + tuple(where_.values()))
+        conn.commit()
         return cursor.rowcount
 
 

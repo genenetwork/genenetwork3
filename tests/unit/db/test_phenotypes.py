@@ -37,12 +37,10 @@ class TestPhenotypes(TestCase):
                 where=Phenotype(id_=1, owner="Rob")), 1)
             cursor.execute.assert_called_once_with(
                 "UPDATE Phenotype SET "
-                "Pre_publication_description = "
-                "'Test Pre Pub', "
-                "Post_publication_description = "
-                "'Test Post Pub', Submitter = 'Rob' "
-                "WHERE id = '1' AND Owner = 'Rob'"
-            )
+                "Pre_publication_description = %s, "
+                "Post_publication_description = %s, "
+                "Submitter = %s WHERE id = %s AND Owner = %s",
+                ('Test Pre Pub', 'Test Post Pub', 'Rob', 1, 'Rob'))
 
     def test_fetch_phenotype(self):
         """Test that a single phenotype is fetched properly
