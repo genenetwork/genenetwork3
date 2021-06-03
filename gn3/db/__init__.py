@@ -3,7 +3,6 @@
 from typing import Optional, Dict, Any
 from dataclasses import asdict, astuple
 from typing_extensions import Protocol
-from MySQLdb import escape_string
 
 from gn3.db.metadata_audit import MetadataAudit
 from gn3.db.phenotypes import Phenotype
