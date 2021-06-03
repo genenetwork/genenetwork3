@@ -23,6 +23,6 @@ class TestMetadatAudit(TestCase):
                                    editor="Bonface",
                                    json_data=json.dumps({"a": "b"}))), 1)
             cursor.execute.assert_called_once_with(
-                "INSERT INTO metadata_audit ('dataset_id', "
-                "'editor', 'json_data') "
-                'VALUES (\'35\', \'Bonface\', \'{\\"a\\": \\"b\\"}\')')
+                "INSERT INTO metadata_audit (dataset_id, "
+                "editor, json_data) VALUES (%s, %s, %s)",
+                (35, 'Bonface', '{"a": "b"}'))
