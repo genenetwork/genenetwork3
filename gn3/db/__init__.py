@@ -1,7 +1,7 @@
 # pylint: disable=[R0902, R0903]
 """Module that exposes common db operations"""
 from typing import Optional, Dict, Any
-from dataclasses import dataclass, asdict, astuple
+from dataclasses import asdict, astuple
 from typing_extensions import Protocol
 from MySQLdb import escape_string
 
@@ -74,6 +74,22 @@ def fetchone(conn: Any,
         cursor.execute(sql)
         return DATACLASSMAP[table](*cursor.fetchone())
 
+
+def insert(conn: Any,
+           table: str,
+           data: Dataclass) -> Optional[int]:
+    """Run an INSERT into a table"""
+    dict_ = {k: v for k, v in asdict(data).items()
+             if v is not None and k in TABLEMAP[table]}
+    sql = f"INSERT INTO {table} ("
+    sql += ", ".join(f"{k}" for k in dict_.keys())
+    sql += ") VALUES ("
+    sql += ", ".join("%s" for _ in dict_.keys())
+    sql += ")"
+    with conn.cursor() as cursor:
+        cursor.execute(sql, tuple(dict_.values()))
+        conn.commit()
+        return cursor.rowcount
 
 def diff_from_dict(old: Dict, new: Dict) -> Dict:
     """Construct a new dict with a specific structure that contains the difference
