@@ -10,9 +10,9 @@ from typing import Optional
 @dataclass(frozen=True)
 class MetadataAudit:
     """Data Type that represents a Phenotype"""
-    dataset_id: int
-    editor: str
-    json_data: str
+    dataset_id: Optional[int] = None
+    editor: Optional[str] = None
+    json_data: Optional[str] = None
     time_stamp: Optional[str] = None
 
 
