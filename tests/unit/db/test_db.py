@@ -8,8 +8,8 @@ from gn3.db import diff_from_dict
 from gn3.db.phenotypes import Phenotype
 
 
-class TestPhenotypes(TestCase):
-    """Test cases for fetching chromosomes"""
+class TestCrudMethods(TestCase):
+    """Test cases for CRUD methods"""
 
     def test_update_phenotype_with_no_data(self):
         """Test that a phenotype is updated correctly if an empty Phenotype dataclass
