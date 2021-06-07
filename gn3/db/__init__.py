@@ -1,7 +1,7 @@
 # pylint: disable=[R0902, R0903]
 """Module that exposes common db operations"""
 from dataclasses import asdict, astuple
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional, Generator
 from typing_extensions import Protocol
 
 from gn3.db.metadata_audit import MetadataAudit
@@ -75,6 +75,24 @@ def fetchone(conn: Any,
     with conn.cursor() as cursor:
         cursor.execute(sql, tuple(where_.values()))
         return DATACLASSMAP[table](*cursor.fetchone())
+
+
+def fetchall(conn: Any,
+             table: str,
+             where: Optional[Dataclass]) -> Optional[Generator]:
+    """Run a SELECT on a table. Returns all the results as a tuple!"""
+    if not any(astuple(where)):
+        return None
+    where_ = {k: v for k, v in asdict(where).items()
+              if v is not None and k in TABLEMAP[table]}
+    sql = f"SELECT * FROM {table} "
+    if where:
+        sql += "WHERE "
+        sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
+                            "%s" for k in where_.keys())
+    with conn.cursor() as cursor:
+        cursor.execute(sql, tuple(where_.values()))
+        return (DATACLASSMAP[table](*record) for record in cursor.fetchall())
 
 
 def insert(conn: Any,
