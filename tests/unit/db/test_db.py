@@ -10,6 +10,7 @@ from gn3.db.phenotypes import Phenotype
 
 class TestPhenotypes(TestCase):
     """Test cases for fetching chromosomes"""
+
     def test_update_phenotype_with_no_data(self):
         """Test that a phenotype is updated correctly if an empty Phenotype dataclass
         is provided
