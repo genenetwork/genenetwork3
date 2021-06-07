@@ -23,6 +23,6 @@ metadata_audit_mapping = {
     "id_": "id",
     "dataset_id": "dataset_id",
     "editor": "editor",
-    "json_data": "json_data",
+    "json_data": "json_diff_data",
     "time_stamp": "time_stamp",
 }
