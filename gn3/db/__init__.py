@@ -65,12 +65,12 @@ def fetchone(conn: Any,
     """Run a SELECT on a table. Returns only one result!"""
     if not any(astuple(where)):
         return None
-    where_ = {k: v for k, v in asdict(where).items()
+    where_ = {TABLEMAP[table].get(k): v for k, v in asdict(where).items()
               if v is not None and k in TABLEMAP[table]}
     sql = f"SELECT * FROM {table} "
     if where:
         sql += "WHERE "
-        sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
+        sql += " AND ".join(f"{k} = "
                             "%s" for k in where_.keys())
     with conn.cursor() as cursor:
         cursor.execute(sql, tuple(where_.values()))
@@ -83,12 +83,12 @@ def fetchall(conn: Any,
     """Run a SELECT on a table. Returns all the results as a tuple!"""
     if not any(astuple(where)):
         return None
-    where_ = {k: v for k, v in asdict(where).items()
+    where_ = {TABLEMAP[table].get(k): v for k, v in asdict(where).items()
               if v is not None and k in TABLEMAP[table]}
     sql = f"SELECT * FROM {table} "
     if where:
         sql += "WHERE "
-        sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
+        sql += " AND ".join(f"{k} = "
                             "%s" for k in where_.keys())
     with conn.cursor() as cursor:
         cursor.execute(sql, tuple(where_.values()))
@@ -99,7 +99,7 @@ def insert(conn: Any,
            table: str,
            data: Dataclass) -> Optional[int]:
     """Run an INSERT into a table"""
-    dict_ = {k: v for k, v in asdict(data).items()
+    dict_ = {TABLEMAP[table].get(k): v for k, v in asdict(data).items()
              if v is not None and k in TABLEMAP[table]}
     sql = f"INSERT INTO {table} ("
     sql += ", ".join(f"{k}" for k in dict_.keys())
