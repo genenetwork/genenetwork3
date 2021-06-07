@@ -1,7 +1,7 @@
 # pylint: disable=[R0902, R0903]
 """Module that exposes common db operations"""
-from typing import Optional, Dict, Any
 from dataclasses import asdict, astuple
+from typing import Optional, Dict, Any
 from typing_extensions import Protocol
 
 from gn3.db.metadata_audit import MetadataAudit
@@ -11,8 +11,8 @@ from gn3.db.phenotypes import Publication
 
 from gn3.db.metadata_audit import metadata_audit_mapping
 from gn3.db.phenotypes import phenotype_mapping
-from gn3.db.phenotypes import publish_x_ref_mapping
 from gn3.db.phenotypes import publication_mapping
+from gn3.db.phenotypes import publish_x_ref_mapping
 
 
 TABLEMAP = {
