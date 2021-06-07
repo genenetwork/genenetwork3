@@ -61,16 +61,17 @@ def update(conn: Any,
 
 def fetchone(conn: Any,
              table: str,
-             where: Dataclass) -> Optional[Dataclass]:
+             where: Optional[Dataclass]) -> Optional[Dataclass]:
     """Run a SELECT on a table. Returns only one result!"""
     if not any(astuple(where)):
         return None
     where_ = {k: v for k, v in asdict(where).items()
               if v is not None and k in TABLEMAP[table]}
     sql = f"SELECT * FROM {table} "
-    sql += "WHERE "
-    sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
-                        "%s" for k in where_.keys())
+    if where:
+        sql += "WHERE "
+        sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
+                            "%s" for k in where_.keys())
     with conn.cursor() as cursor:
         cursor.execute(sql, tuple(where_.values()))
         return DATACLASSMAP[table](*cursor.fetchone())
