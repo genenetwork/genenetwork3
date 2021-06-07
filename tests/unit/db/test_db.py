@@ -74,15 +74,14 @@ class TestCrudMethods(TestCase):
         db_mock = mock.MagicMock()
         with db_mock.cursor() as cursor:
             test_data = (
-                35, "Rob", ('{"pages": '
-                            '{"old": "5099-5109", '
-                            '"new": "5099-5110"}, '
-                            '"month": {"old": "July", '
-                            '"new": "June"}, '
-                            '"year": {"old": "2001", '
-                            '"new": "2002"}}'),
-                "2021-06-04 09:01:05"
-            )
+                1, 35, "Rob", ('{"pages": '
+                               '{"old": "5099-5109", '
+                               '"new": "5099-5110"}, '
+                               '"month": {"old": "July", '
+                               '"new": "June"}, '
+                               '"year": {"old": "2001", '
+                               '"new": "2002"}}'),
+                "2021-06-04 09:01:05")
             cursor.fetchall.return_value = (test_data,)
             metadata = list(fetchall(db_mock,
                                      "metadata_audit",
