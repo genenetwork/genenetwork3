@@ -20,10 +20,10 @@
 -- This table stores data on diffs when editing a Published dataset's data
 CREATE TABLE metadata_audit (
     PRIMARY KEY (id),
-    id         INTEGER       AUTO_INCREMENT            NOT NULL,
-    dataset_id INTEGER                                 NOT NULL,
-    editor     VARCHAR(255)                            NOT NULL,
-    json_data  VARCHAR(2048)                           NOT NULL,
-    time_stamp timestamp     DEFAULT CURRENT_TIMESTAMP NOT NULL,
-               CHECK (JSON_VALID(json_data))
+    id              INTEGER       AUTO_INCREMENT            NOT NULL,
+    dataset_id      INTEGER                                 NOT NULL,
+    editor          VARCHAR(255)                            NOT NULL,
+    json_diff_data  VARCHAR(2048)                           NOT NULL,
+    time_stamp      timestamp     DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CHECK (JSON_VALID(json_diff_data))
 );
