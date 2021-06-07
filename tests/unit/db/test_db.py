@@ -2,10 +2,12 @@
 from unittest import TestCase
 from unittest import mock
 
+from gn3.db import fetchall
 from gn3.db import fetchone
 from gn3.db import update
 from gn3.db import diff_from_dict
 from gn3.db.phenotypes import Phenotype
+from gn3.db.metadata_audit import MetadataAudit
 
 
 class TestCrudMethods(TestCase):
@@ -63,6 +65,35 @@ class TestCrudMethods(TestCase):
                              "Test pre-publication")
             cursor.execute.assert_called_once_with(
                 "SELECT * FROM Phenotype WHERE id = %s AND Owner = %s",
+                (35, 'Rob'))
+
+    def test_fetchall_metadataaudit(self):
+        """Test that multiple metadata_audit entries are fetched properly
+
+        """
+        db_mock = mock.MagicMock()
+        with db_mock.cursor() as cursor:
+            test_data = (
+                35, "Rob", ('{"pages": '
+                            '{"old": "5099-5109", '
+                            '"new": "5099-5110"}, '
+                            '"month": {"old": "July", '
+                            '"new": "June"}, '
+                            '"year": {"old": "2001", '
+                            '"new": "2002"}}'),
+                "2021-06-04 09:01:05"
+            )
+            cursor.fetchall.return_value = (test_data,)
+            metadata = list(fetchall(db_mock,
+                                     "metadata_audit",
+                                     where=MetadataAudit(dataset_id=35,
+                                                         editor="Rob")))[0]
+            self.assertEqual(metadata.dataset_id, 35)
+            self.assertEqual(metadata.time_stamp,
+                             "2021-06-04 09:01:05")
+            cursor.execute.assert_called_once_with(
+                ("SELECT * FROM metadata_audit WHERE "
+                 "dataset_id = %s AND editor = %s"),
                 (35, 'Rob'))
 
     def test_diff_from_dict(self):
