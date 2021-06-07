@@ -10,6 +10,7 @@ from typing import Optional
 @dataclass(frozen=True)
 class MetadataAudit:
     """Data Type that represents a Phenotype"""
+    id_: Optional[int] = None
     dataset_id: Optional[int] = None
     editor: Optional[str] = None
     json_data: Optional[str] = None
@@ -19,6 +20,7 @@ class MetadataAudit:
 # Mapping from the MetadataAudit dataclass to the actual column names in the
 # database
 metadata_audit_mapping = {
+    "id_": "id",
     "dataset_id": "dataset_id",
     "editor": "editor",
     "json_data": "json_data",
