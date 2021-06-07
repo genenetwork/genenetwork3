@@ -23,7 +23,7 @@ TABLEMAP = {
 }
 
 DATACLASSMAP = {
-    "MetadataAudit": MetadataAudit,
+    "metadata_audit": MetadataAudit,
     "Phenotype": Phenotype,
     "PublishXRef": PublishXRef,
     "Publication": Publication,
