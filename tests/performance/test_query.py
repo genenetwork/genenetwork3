@@ -6,6 +6,7 @@ import sys
 from inspect import getmembers
 from inspect import isfunction
 
+from typing import Optional
 from functools import wraps
 from gn3.db_utils import database_connector
 
@@ -25,9 +26,12 @@ def timer(func):
     return wrapper_time
 
 
-def query_executor(query, fetch_all=True):
+def query_executor(query: str,
+                   dataset_name: Optional[str] = "dataset_name",
+                   fetch_all: bool = True):
     """function to execute a query"""
     conn, _ = database_connector()
+    print(f"Performance tests for {dataset_name}")
 
     with conn:
         cursor = conn.cursor()
@@ -38,7 +42,7 @@ def query_executor(query, fetch_all=True):
         return cursor.fetchone()
 
 
-def fetch_probeset_query(dataset_name):
+def fetch_probeset_query(dataset_name: str):
     """contains queries for datasets"""
 
     query = """SELECT * from ProbeSetData
@@ -75,7 +79,7 @@ def perf_hc_m2_dataset():
 
     query = fetch_probeset_query("HC_M2_0606_P")
 
-    _results = query_executor(query)
+    _results = query_executor(query, "HC_M2_0606_P")
 
     return {}
 
@@ -85,21 +89,24 @@ def perf_umutaffyexon_dataset():
     """largest dataset in gn"""
 
     query = fetch_probeset_query("UMUTAffyExon_0209_RMA")
-    _results = query_executor(query)
+    _results = query_executor(query, "UMUTAffyExon_0209_RMA")
     return {}
 
 
 def fetch_perf_functions():
     """function to filter all functions strwith perf_"""
-    name_func_dict = {name: obj for name, obj in
+    name_func_dict = {name: func_obj for name, func_obj in
                       getmembers(sys.modules[__name__], isfunction)if isfunction(
-                          obj) and obj.__module__ == __name__ and name.startswith('perf_')}
+                          func_obj)
+                      and func_obj.__module__ == __name__ and name.startswith('perf_')}
 
     return name_func_dict
 
 
 def fetch_cmd_args():
-    """function to fetch cmd args"""
+    """function to fetch cmd args\
+    for example python file.py perf_hc_m2_dataset\
+    output [perf_hc_m2_dataset obj]"""
     cmd_args = sys.argv[1:]
 
     name_func_dict = fetch_perf_functions()
@@ -115,5 +122,5 @@ def fetch_cmd_args():
 
 if __name__ == '__main__':
     func_list = fetch_cmd_args()
-    for call_func in func_list:
-        call_func()
+    for func in func_list:
+        func()
