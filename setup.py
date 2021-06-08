@@ -30,6 +30,7 @@ setup(author='Bonface M. K.',
           'gn3.api',
           'gn3.computations',
           'gn3.db',
+          'tests'
       ],
       url='https://github.com/genenetwork/genenetwork3',
       version='0.1')
