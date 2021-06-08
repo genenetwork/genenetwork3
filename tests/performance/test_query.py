@@ -31,7 +31,7 @@ def query_executor(query: str,
                    fetch_all: bool = True):
     """function to execute a query"""
     conn, _ = database_connector()
-    print(f"Performance tests for {dataset_name}")
+    print(f"Performance test for {dataset_name}")
 
     with conn:
         cursor = conn.cursor()
@@ -122,5 +122,5 @@ def fetch_cmd_args():
 
 if __name__ == '__main__':
     func_list = fetch_cmd_args()
-    for func in func_list:
-        func()
+    for func_obj in func_list:
+        func_obj()
