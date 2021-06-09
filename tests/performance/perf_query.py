@@ -6,7 +6,6 @@ import sys
 from inspect import getmembers
 from inspect import isfunction
 
-from typing import Optional
 from functools import wraps
 from gn3.db_utils import database_connector
 
@@ -67,8 +66,7 @@ def perf_hc_m2_dataset():
     dataset_name = "HC_M2_0606_P"
     print(f"Performance test for {dataset_name}")
 
-    query_executor(fetch_probeset_query(dataset_name=dataset_name),
-                   dataset_name=dataset_name)
+    query_executor(fetch_probeset_query(dataset_name=dataset_name))
 
 
 @timer
@@ -77,8 +75,7 @@ def perf_umutaffyexon_dataset():
 
     dataset_name = "UMUTAffyExon_0209_RMA"
     print(f"Performance test for {dataset_name}")
-    query_executor(fetch_probeset_query(dataset_name=dataset_name),
-                   dataset_name=dataset_name)
+    query_executor(fetch_probeset_query(dataset_name=dataset_name))
 
 
 def fetch_perf_functions():
