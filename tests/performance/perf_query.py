@@ -27,7 +27,6 @@ def timer(func):
 
 
 def query_executor(query: str,
-                   dataset_name: Optional[str] = "dataset_name",
                    fetch_all: bool = True):
     """function to execute a query"""
     conn, _ = database_connector()
