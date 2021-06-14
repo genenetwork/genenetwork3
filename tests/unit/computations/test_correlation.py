@@ -98,12 +98,14 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, expected_results)
 
-    def test_bicor(self):
+    @mock.patch("gn3.computations.correlations.call_biweight_script")
+    def test_bicor(self, mock_biweight):
         """Test for doing biweight mid correlation """
+        mock_biweight.return_value = (1.0, 0.0)
 
         results = do_bicor(x_val=[1, 2, 3], y_val=[4, 5, 6])
 
-        self.assertEqual(results, (0.0, 0.0)
+        self.assertEqual(results, (1.0, 0.0)
                          )
 
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
