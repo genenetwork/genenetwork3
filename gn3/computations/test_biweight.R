@@ -8,16 +8,16 @@ test_that("sum of vector", {
 
 
 test_that("biweight results"),{
-	vec_1 = c(1,2,3,4)
-	vec_2 = c(1,2,3,4)
+	vec_1 <- c(1,2,3,4)
+	vec_2 <- c(1,2,3,4)
 
-	results = BiweightMidCorrelation(vec_1,vec_2)
+	results <- BiweightMidCorrelation(vec_1,vec_2)
 	expect_equal(c(1.0,0.0),results)
 }
 
 
 test_that("parsing args "),{
-	my_args = c("1 2 3 4","5 6 7 8")
+	my_args <- c("1 2 3 4","5 6 7 8")
 	results <- ParseArgs(my_args)
 
 	expect_equal(results[1],c(1,2,3,4))

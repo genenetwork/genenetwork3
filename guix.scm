@@ -89,7 +89,7 @@
                        ("r-qtl" ,r-qtl)
                        ("r-testthat" ,r-testthat)
                        ("r-optparse" ,r-optparse)
-                       ; ("r-wgcna" ,r-wgcna)
+                       ("r-wgcna" ,r-wgcna)
                        ))
   (build-system python-build-system)
   (home-page "https://github.com/genenetwork/genenetwork3")
