@@ -7,9 +7,6 @@ test_that("sum of vector", {
 })
 
 
-
-test
-
 test_that("biweight results"),{
 	vec_1 = c(1,2,3,4)
 	vec_2 = c(1,2,3,4)
