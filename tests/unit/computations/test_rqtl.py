@@ -31,7 +31,7 @@ class TestRqtl(unittest.TestCase):
                                   "output_file":
                                   "my-hash1my-hash2my-hash2-output.json",
                                   "rqtl_cmd": (
-                                      "rqtl-wrapper "
+                                      "Rscript rqtl-wrapper "
                                       "--g genofile --p phenofile "
                                       "--model normal --method hk "
                                       "--nperm 1000 --scale Mb "
