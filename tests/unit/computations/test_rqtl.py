@@ -29,7 +29,7 @@ class TestRqtl(unittest.TestCase):
                                   "interval"
                               ]), {
                                   "output_file":
-                                  "my-hash1my-hash2my-hash2-output.json",
+                                  "my-hash1my-hash2my-hash2-output.csv",
                                   "rqtl_cmd": (
                                       "Rscript rqtl-wrapper "
                                       "--g genofile --p phenofile "
