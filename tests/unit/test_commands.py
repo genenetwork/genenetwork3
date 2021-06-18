@@ -59,24 +59,23 @@ class TestCommands(unittest.TestCase):
         self.assertEqual(
             compose_rqtl_cmd(rqtl_wrapper_cmd="rqtl-wrapper",
                              rqtl_wrapper_kwargs={
-                                 "g": "genofile",
-                                 "p": "phenofile",
-                                 "model": "normal",
-                                 "method": "hk",
-                                 "nperm": 1000,
+                                 "g": "the_genofile",
+                                 "p": "the_phenofile",
+                                 "model": "np",
+                                 "method": "ehk",
+                                 "nperm": 2000,
                                  "scale": "Mb",
-                                 "control": "rs123456"
+                                 "control": "rs234567"
                              },
                              rqtl_wrapper_bool_kwargs=[
-                                 "addcovar",
-                                 "interval"
+                                 "addcovar"
                              ]),
             ("rqtl-wrapper "
-             "--g genofile --p phenofile "
-             "--model normal --method hk "
-             "--nperm 1000 --scale Mb "
-             "--control rs123456 "
-             "--addcovar --interval")
+             "--g the_genofile --p the_phenofile "
+             "--model np --method ehk "
+             "--nperm 2000 --scale Mb "
+             "--control rs234567 "
+             "--addcovar")
         )
 
     def test_queue_cmd_exception_raised_when_redis_is_down(self):
