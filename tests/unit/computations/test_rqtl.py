@@ -36,6 +36,7 @@ class TestRqtl(unittest.TestCase):
                                       "--model normal --method hk "
                                       "--nperm 1000 --scale Mb "
                                       "--control rs123456 "
+                                      "--filename my-hash1my-hash2my-hash2-output.csv "
                                       "--addcovar --interval"
                                   )
                               })
