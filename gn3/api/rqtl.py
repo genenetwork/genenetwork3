@@ -6,7 +6,6 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.commands import run_cmd
 from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_output, process_perm_output
 from gn3.computations.gemma import do_paths_exist
 
@@ -45,13 +44,15 @@ run the rqtl_wrapper script and return the results as JSON
     )
 
     rqtl_output = {}
-    if not os.path.isfile(os.path.join(current_app.config.get("TMPDIR"), "output", rqtl_cmd.get('output_file'))):
+    if not os.path.isfile(os.path.join(current_app.config.get("TMPDIR"),
+                                       "output", rqtl_cmd.get('output_file'))):
         os.system(rqtl_cmd.get('rqtl_cmd'))
 
     rqtl_output['results'] = process_rqtl_output(rqtl_cmd.get('output_file'))
 
     rqtl_output['results'] = process_rqtl_output(rqtl_cmd.get('output_file'))
     if int(rqtl_kwargs['nperm']) > 0:
-        rqtl_output['perm_results'], rqtl_output['suggestive'], rqtl_output['significant'] = process_perm_output(rqtl_cmd.get('output_file'))
+        rqtl_output['perm_results'], rqtl_output['suggestive'], rqtl_output['significant'] = \
+        process_perm_output(rqtl_cmd.get('output_file'))
 
     return jsonify(rqtl_output)
