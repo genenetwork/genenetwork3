@@ -70,7 +70,7 @@ class TestCommands(unittest.TestCase):
                              rqtl_wrapper_bool_kwargs=[
                                  "addcovar"
                              ]),
-            ("rqtl-wrapper "
+            ("Rscript rqtl-wrapper "
              "--g the_genofile --p the_phenofile "
              "--model np --method ehk "
              "--nperm 2000 --scale Mb "
