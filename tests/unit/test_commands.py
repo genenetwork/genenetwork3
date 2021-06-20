@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Callable
 from unittest import mock
 from gn3.commands import compose_gemma_cmd
+from gn3.commands import compose_rqtl_cmd
 from gn3.commands import queue_cmd
 from gn3.commands import run_cmd
 from gn3.exceptions import RedisConnectionError
@@ -52,6 +53,30 @@ class TestCommands(unittest.TestCase):
              "-g /tmp/genofile.txt "
              "-p /tmp/gf13Ad0tRX/phenofile.txt"
              " -gk"))
+
+    def test_compose_rqtl_cmd(self):
+        """Test that the R/qtl cmd is composed correctly"""
+        self.assertEqual(
+            compose_rqtl_cmd(rqtl_wrapper_cmd="rqtl-wrapper",
+                             rqtl_wrapper_kwargs={
+                                 "g": "the_genofile",
+                                 "p": "the_phenofile",
+                                 "model": "np",
+                                 "method": "ehk",
+                                 "nperm": 2000,
+                                 "scale": "Mb",
+                                 "control": "rs234567"
+                             },
+                             rqtl_wrapper_bool_kwargs=[
+                                 "addcovar"
+                             ]),
+            ("Rscript rqtl-wrapper "
+             "--g the_genofile --p the_phenofile "
+             "--model np --method ehk "
+             "--nperm 2000 --scale Mb "
+             "--control rs234567 "
+             "--addcovar")
+        )
 
     def test_queue_cmd_exception_raised_when_redis_is_down(self):
         """Test that the correct error is raised when Redis is unavailable"""

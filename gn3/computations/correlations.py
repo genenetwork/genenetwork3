@@ -69,8 +69,8 @@ pearson,spearman and biweight mid correlation return value is rho and p_value
         "spearman": scipy.stats.spearmanr
     }
     use_corr_method = corr_mapping.get(corr_method, "spearman")
-    corr_coeffient, p_val = use_corr_method(primary_values, target_values)
-    return (corr_coeffient, p_val)
+    corr_coefficient, p_val = use_corr_method(primary_values, target_values)
+    return (corr_coefficient, p_val)
 
 
 def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
@@ -85,13 +85,13 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
 
     if num_overlap > 5:
 
-        (corr_coeffient, p_value) =\
+        (corr_coefficient, p_value) =\
             compute_corr_coeff_p_value(primary_values=sanitized_traits_vals,
                                        target_values=sanitized_target_vals,
                                        corr_method=corr_method)
 
-        if corr_coeffient is not None:
-            return (trait_name, corr_coeffient, p_value, num_overlap)
+        if corr_coefficient is not None:
+            return (trait_name, corr_coefficient, p_value, num_overlap)
     return None
 
 
@@ -145,10 +145,10 @@ def compute_all_sample_correlation(this_trait,
 
         for sample_correlation in results:
             if sample_correlation is not None:
-                (trait_name, corr_coeffient, p_value,
+                (trait_name, corr_coefficient, p_value,
                  num_overlap) = sample_correlation
                 corr_result = {
-                    "corr_coeffient": corr_coeffient,
+                    "corr_coefficient": corr_coefficient,
                     "p_value": p_value,
                     "num_overlap": num_overlap
                 }
@@ -156,7 +156,7 @@ def compute_all_sample_correlation(this_trait,
                 corr_results.append({trait_name: corr_result})
     return sorted(
         corr_results,
-        key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coeffient"]))
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coefficient"]))
 
 
 def benchmark_compute_all_sample(this_trait,
@@ -179,12 +179,12 @@ def benchmark_compute_all_sample(this_trait,
             trait_vals=this_vals,
             target_samples_vals=target_vals)
         if sample_correlation is not None:
-            (trait_name, corr_coeffient,
+            (trait_name, corr_coefficient,
              p_value, num_overlap) = sample_correlation
         else:
             continue
         corr_result = {
-            "corr_coeffient": corr_coeffient,
+            "corr_coefficient": corr_coefficient,
             "p_value": p_value,
             "num_overlap": num_overlap
         }
@@ -200,20 +200,20 @@ def tissue_correlation_for_trait(
         compute_corr_p_value: Callable = compute_corr_coeff_p_value) -> dict:
     """Given a primary tissue values for a trait and the target tissues values
     compute the correlation_cooeff and p value the input required are arrays
-    output -> List containing Dicts with corr_coefficient value,P_value and
+    output -> List containing Dicts with corr_coefficient value, P_value and
     also the tissue numbers is len(primary) == len(target)
 
     """
 
     # ax :todo assertion that length one one target tissue ==primary_tissue
 
-    (tissue_corr_coeffient,
+    (tissue_corr_coefficient,
      p_value) = compute_corr_p_value(primary_values=primary_tissue_vals,
                                      target_values=target_tissues_values,
                                      corr_method=corr_method)
 
     tiss_corr_result = {trait_id: {
-        "tissue_corr": tissue_corr_coeffient,
+        "tissue_corr": tissue_corr_coefficient,
         "tissue_number": len(primary_tissue_vals),
         "tissue_p_val": p_value}}
 
