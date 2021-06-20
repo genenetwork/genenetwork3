@@ -1,20 +1,17 @@
-
-
-"""module contains script to call biweight mid\
-correlation in R"""
+"""module contains script to call biweight midcorrelation in R"""
 import subprocess
-import os
-from pathlib import Path
+
 from typing import List
+from typing import Tuple
 
-FILE_PATH = os.path.join(Path(__file__).parent.absolute(), "biweight.R")
+from gn3.settings import BIWEIGHT_RSCRIPT
 
 
-def call_biweight_script(trait_vals: List,
-                         target_vals: List,
-                         path_to_script: str = FILE_PATH,
-                         command: str = "Rscript"
-                         ):
+def calculate_biweight_corr(trait_vals: List,
+                            target_vals: List,
+                            path_to_script: str = BIWEIGHT_RSCRIPT,
+                            command: str = "Rscript"
+                            ) -> Tuple[float, float]:
     '''biweight function'''
 
     args_1 = ' '.join(str(trait_val) for trait_val in trait_vals)
@@ -23,4 +20,6 @@ def call_biweight_script(trait_vals: List,
 
     results = subprocess.check_output(cmd, universal_newlines=True)
 
-    return tuple([float(y) for y in results.split()])
+    (corr_coeff, p_val) = tuple([float(y) for y in results.split()])
+
+    return (corr_coeff, p_val)

@@ -7,7 +7,7 @@ from typing import Optional
 from typing import Callable
 
 import scipy.stats
-from gn3.computations.biweight import call_biweight_script
+from gn3.computations.biweight import calculate_biweight_corr
 
 
 def map_shared_keys_to_values(target_sample_keys: List,
@@ -102,11 +102,10 @@ package :not packaged in guix
     """
 
     try:
-        results = call_biweight_script(x_val, y_val)
+        results = calculate_biweight_corr(x_val, y_val)
+        return results
     except Exception as error:
         raise error
-
-    return results
 
 
 def filter_shared_sample_keys(this_samplelist,
