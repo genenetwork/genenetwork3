@@ -12,7 +12,7 @@ def calculate_biweight_corr(trait_vals: List,
                             path_to_script: str = BIWEIGHT_RSCRIPT,
                             command: str = "Rscript"
                             ) -> Tuple[float, float]:
-    '''biweight function'''
+    """biweight function"""
 
     args_1 = ' '.join(str(trait_val) for trait_val in trait_vals)
     args_2 = ' '.join(str(target_val) for target_val in target_vals)
