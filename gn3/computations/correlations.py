@@ -7,6 +7,7 @@ from typing import Optional
 from typing import Callable
 
 import scipy.stats
+from gn3.computations.biweight import calculate_biweight_corr
 
 
 def map_shared_keys_to_values(target_sample_keys: List,
@@ -99,8 +100,12 @@ def do_bicor(x_val, y_val) -> Tuple[float, float]:
 package :not packaged in guix
 
     """
-    x_val, y_val = 0, 0
-    return (x_val, y_val)
+
+    try:
+        results = calculate_biweight_corr(x_val, y_val)
+        return results
+    except Exception as error:
+        raise error
 
 
 def filter_shared_sample_keys(this_samplelist,

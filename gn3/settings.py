@@ -14,9 +14,13 @@ TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
 RQTL_WRAPPER = "rqtl_wrapper.R"
 
 # SQL confs
-SQL_URI = os.environ.get("SQL_URI", "mysql://webqtlout:webqtlout@localhost/db_webqtl")
+SQL_URI = os.environ.get(
+    "SQL_URI", "mysql://webqtlout:webqtlout@localhost/db_webqtl")
 SECRET_KEY = "password"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 # gn2 results only used in fetching dataset info
 
 GN2_BASE_URL = "http://www.genenetwork.org/"
+
+# biweight script
+BIWEIGHT_RSCRIPT = "~/genenetwork3/script/calculate_biweight.R"
