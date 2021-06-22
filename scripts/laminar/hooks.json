@@ -1,0 +1,38 @@
+[
+    {
+        "id": "run-pylint",
+        "execute-command": "$HOME/CI/genenetwork3/scripts/laminar/gn3-lint.sh",
+        "command-working-directory": "$HOME",
+        "response-message": "Running linter...",
+        "trigger-rule":
+        {
+            "and":
+            [
+                {
+                    "match":
+                    {
+                        "type": "payload-hash-sha1",
+                        "secret": "Tc7wIOob,O^u",
+                        "parameter":
+                        {
+                            "source": "header",
+                            "name": "X-Hub-Signature"
+                        }
+                    }
+                },
+                {
+                    "match":
+                    {
+                        "type": "value",
+                        "value": "refs/heads/master",
+                        "parameter":
+                        {
+                            "source": "payload",
+                            "name": "ref"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+]
