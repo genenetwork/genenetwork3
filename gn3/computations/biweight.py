@@ -23,5 +23,5 @@ def calculate_biweight_corr(trait_vals: List,
         (corr_coeff, p_val) = tuple(
             [float(y.strip()) for y in results.split()])
         return (corr_coeff, p_val)
-    except Exception as e:
-        raise e
+    except Exception as error:
+        raise error
