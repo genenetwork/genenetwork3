@@ -23,4 +23,4 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 GN2_BASE_URL = "http://www.genenetwork.org/"
 
 # biweight script
-BIWEIGHT_RSCRIPT = "~/genenetwork3/script/calculate_biweight.R"
+BIWEIGHT_RSCRIPT = "~/genenetwork3/scripts/calculate_biweight.R"

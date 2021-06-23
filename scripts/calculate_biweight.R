@@ -13,7 +13,7 @@ ParseArgs <- function(args){
 }
 BiweightMidCorrelation <- function(trait_val,target_val){
 
-    results <- bicorAndPvalue(c(trait_val),c(target_val))
+    results <-bicorAndPvalue(as.numeric(unlist(trait_val)),as.numeric(unlist(target_val)))
     return ((c(c(results$bicor)[1],c(results$p)[1])))
 
 }
@@ -39,4 +39,5 @@ test_that("parsing args "),{
 
 parsed_values <- ParseArgs(arg_values)
 
-cat((BiweightMidCorrelation(parsed_values[1],parsed_values[2])))
+
+cat(BiweightMidCorrelation(parsed_values[1],parsed_values[2]))

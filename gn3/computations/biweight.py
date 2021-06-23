@@ -19,7 +19,9 @@ def calculate_biweight_corr(trait_vals: List,
     cmd = [command, path_to_script] + [args_1] + [args_2]
 
     results = subprocess.check_output(cmd, universal_newlines=True)
-
-    (corr_coeff, p_val) = tuple([float(y) for y in results.split()])
-
-    return (corr_coeff, p_val)
+    try:
+        (corr_coeff, p_val) = tuple(
+            [float(y.strip()) for y in results.split()])
+        return (corr_coeff, p_val)
+    except Exception as e:
+        raise e
