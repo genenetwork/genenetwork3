@@ -70,6 +70,7 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
+                       ("diffutils" ,diffutils)
                        ("gemma-wrapper" ,gemma-wrapper)
                        ("python" ,python-wrapper)
                        ("python-bcrypt" ,python-bcrypt)
