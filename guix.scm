@@ -85,7 +85,6 @@
                        ("python-scipy" ,python-scipy)
                        ("python-sqlalchemy-stubs" ,python-sqlalchemy-stubs)
                        ("r" ,r)
-                       ; ("r-ctl" ,r-ctl)
                        ("r-qtl" ,r-qtl)
                        ("r-optparse" ,r-optparse)
                        ("r-stringi" ,r-stringi)
