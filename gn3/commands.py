@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 from uuid import uuid4
 from redis.client import Redis  # Used only in type hinting
 
@@ -74,7 +75,7 @@ Returns the name of the specific redis hash for the specific task.
     return unique_id
 
 
-def run_cmd(cmd: str, success_codes: List = [0]) -> Dict:
+def run_cmd(cmd: str, success_codes: Tuple = (0,)) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
     results = subprocess.run(cmd, capture_output=True, shell=True,
                              check=False)
