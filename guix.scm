@@ -31,6 +31,7 @@
  (gnu packages databases)
  (gnu packages statistics)
  (gnu packages bioconductor)
+ (gnu packages machine-learning)
  (gnu packages python)
  (gnu packages python-check)
  (gnu packages python-crypto)

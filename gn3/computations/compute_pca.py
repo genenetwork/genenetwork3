@@ -1,5 +1,8 @@
 """module contains code for computing pca using sklearn"""
 
+from typing import Dict
+from typing import List
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,25 +11,26 @@ from sklearn.decomposition import PCA
 from sklearn import preprocessing
 
 
-def create_dataframe(traits_data, traits, strain_names):
-    # compute pca for samples and pca
-
-    traits_sample_dicts = {}
+def create_dataframe(traits_data: Dict[str, List[float]],
+                     traits: List[str],
+                     strain_names: List[str]):
+    """create dt for col samples and rows as traits"""
 
     data = pd.DataFrame(columns=strain_names, index=traits)
     for trait in data.index:
-        data.loc[gene, sample_names[0], sample_names[-1]
-                 ] = traits_sample_dicts[traits]
+        data.loc[trait, strain_names[0], strain_names[-1]
+                 ] = traits_data[trait]
 
     return data
 
 
-def compute_the_pca(m):
+def compute_the_pca(data, transform: bool = True):
     """function to compute pca"""
 
     pca = PCA()
 
-    if tranform is True:
+    if transform is True:
+        # transform the matrix
         # e.g where samples are columns and traits are values
         scaled_data = preprocessing.scale(data.T)
 
@@ -40,30 +44,32 @@ def compute_the_pca(m):
 
     pca_data = pca.transform(scaled_data)
 
+    return (pca, pca_data)
 
-def get_trait_loading_scores(pca_data, traits=None):
+
+def get_trait_loading_scores(pca, traits=List[str]):
     """get the loadinng scores for first pca"""
 
     loading_scores = pd.Series(pca.components_[0], index=traits)
 
     # loading scores valu??---->
 
-
-
     return loading_scores
 
 
-def plot_pca(pca_data, sample_names):
+def plot_pca(pca, pca_data, strain_names: List[str]):
     """plot the pca not sure if needed"""
-    perc_var = np.round(pca.explained_variance_ratio_*100,decimals=1)
 
-    labels = ["PC" +str(x) for x in range(1,len(per_var)+1)]
+    perc_var = np.round(pca.explained_variance_ratio_*100, decimals=1)
+    # get variance of labels
 
-    pca_df = pd.DataFrame(pca_data, index=sample_names, columns=labels)
+    labels = ["PC" + str(x) for x in range(1, len(perc_var)+1)]
+
+    pca_df = pd.DataFrame(pca_data, index=strain_names, columns=labels)
 
     plt.scatter(pca_df.PC1, pca_df.PC2)
     for sample in pca_df.index:
-    plt.annotate(sample, (pca_df.PC1.loc[sample], pca_df.PC2.loc[sample]))
+        plt.annotate(sample, (pca_df.PC1.loc[sample], pca_df.PC2.loc[sample]))
 
     plt.title("")
 
