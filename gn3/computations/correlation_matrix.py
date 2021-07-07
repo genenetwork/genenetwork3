@@ -1,14 +1,12 @@
 """module contains code for computing pca using sklearn"""
 
-from typing import Dict
-from typing import List
-
-
 import numpy as np
 from numpy import linalg
 
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
+
+import scipy.stats as stats
 
 
 def compute_the_pca(data, transform: bool = True):
@@ -44,13 +42,13 @@ def compute_pca2(matrix):
 
     pca_data = pca.transform(scaled_data)
 
+    perc_var = np.round(pca.explained_variance_ratio_*100, decimals=1)
     _labels = ["PC" + str(x) for x in range(1, len(perc_var)+1)]
-    _perc_var = np.round(pca.explained_variance_ratio_*100, decimals=1)
     return (pca, pca_data)
 
 
 def compute_zscores(trait_data_arrays):
-    """compue zscores of trait data arrays"""
+    """compute zscores of trait data arrays"""
     data = np.array(trait_data_arrays)
 
     zscores = stats.zscore(data, axis=1)
@@ -58,14 +56,13 @@ def compute_zscores(trait_data_arrays):
     return zscores
 
 
-
-def compute_eigens():
+def compute_eigens(matrix):
     """compute eigen values and vectors sort by eigen values"""
-    eigen_values, eigen_vectors = linalg.eig(np.random.random((3,3)))
+    eigen_values, eigen_vectors = linalg.eig(matrix)
 
-    idx  = eigen_values.argsort()[::-1]
-    eigen_values = eigenValues[idx]
+    idx = eigen_values.argsort()[::-1]
+    eigen_values = eigen_values[idx]
 
-    eigen_vectors = eigenVectors[:,idx]
+    eigen_vectors = eigen_vectors[:, idx]
 
-    return (eigen_values,eigen_vectors)
+    return (eigen_values, eigen_vectors)
