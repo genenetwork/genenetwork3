@@ -21,6 +21,3 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 # gn2 results only used in fetching dataset info
 
 GN2_BASE_URL = "http://www.genenetwork.org/"
-
-# biweight script
-BIWEIGHT_RSCRIPT = "~/genenetwork3/scripts/calculate_biweight.R"
