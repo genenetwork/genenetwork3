@@ -7,7 +7,7 @@ from typing import Optional
 from typing import Callable
 
 import scipy.stats
-from gn3.computations.biweight import calculate_biweight_corr
+import pingouin as pg
 
 
 def map_shared_keys_to_values(target_sample_keys: List,
@@ -95,17 +95,20 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
     return None
 
 
-def do_bicor(x_val, y_val) -> Tuple[float, float]:
-    """Not implemented method for doing biweight mid correlation use astropy stats
-package :not packaged in guix
+def do_bicor(x_vals, y_vals) -> Tuple[float, float]:
+    """input x, yarray_likefunction 
+    to compute biweight mid correlation
 
     """
 
-    try:
-        results = calculate_biweight_corr(x_val, y_val)
-        return results
-    except Exception as error:
-        raise error
+    results = pg.corr(x_vals, y_vals,
+                      method="bicor").round(3)
+
+    corr_coeff = results["r"].values[0]
+
+    p_val = results["p-val"].values[0]
+
+    return (corr_coeff, p_val)
 
 
 def filter_shared_sample_keys(this_samplelist,
