@@ -1,7 +1,7 @@
 # pylint: disable=[R0902, R0903]
 """Module that exposes common db operations"""
 from dataclasses import asdict, astuple
-from typing import Any, Dict, Optional, Generator
+from typing import Any, Dict, List, Optional, Generator
 from typing_extensions import Protocol
 
 from gn3.db.metadata_audit import MetadataAudit
@@ -66,13 +66,18 @@ def update(conn: Any,
 
 def fetchone(conn: Any,
              table: str,
-             where: Optional[Dataclass]) -> Optional[Dataclass]:
+             where: Optional[Dataclass],
+             columns: Optional[List[str]] = "*") -> Optional[Dataclass]:
     """Run a SELECT on a table. Returns only one result!"""
     if not any(astuple(where)):
         return None
     where_ = {TABLEMAP[table].get(k): v for k, v in asdict(where).items()
               if v is not None and k in TABLEMAP[table]}
-    sql = f"SELECT * FROM {table} "
+    sql = ""
+    if columns != "*":
+        sql = f"SELECT {', '.join(columns)} FROM {table} "
+    else:
+        sql = f"SELECT * FROM {table} "
     if where:
         sql += "WHERE "
         sql += " AND ".join(f"{k} = "
@@ -84,13 +89,18 @@ def fetchone(conn: Any,
 
 def fetchall(conn: Any,
              table: str,
-             where: Optional[Dataclass]) -> Optional[Generator]:
+             where: Optional[Dataclass],
+             columns: Optional[List[str]] = "*") -> Optional[Generator]:
     """Run a SELECT on a table. Returns all the results as a tuple!"""
     if not any(astuple(where)):
         return None
     where_ = {TABLEMAP[table].get(k): v for k, v in asdict(where).items()
               if v is not None and k in TABLEMAP[table]}
-    sql = f"SELECT * FROM {table} "
+    sql = ""
+    if columns != "*":
+        sql = f"SELECT {', '.join(columns)} FROM {table} "
+    else:
+        sql = f"SELECT * FROM {table} "
     if where:
         sql += "WHERE "
         sql += " AND ".join(f"{k} = "
