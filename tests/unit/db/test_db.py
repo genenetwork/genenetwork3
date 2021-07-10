@@ -96,6 +96,7 @@ class TestCrudMethods(TestCase):
                  "dataset_id = %s AND editor = %s"),
                 (35, 'Rob'))
 
+    # pylint: disable=R0201
     def test_probeset_called_with_right_columns(self):
         """Given a columns argument, test that the correct sql query is
         constructed"""

@@ -110,7 +110,7 @@ class Probeset:
     description: Optional[str] = None
     probe_target_description: Optional[str] = None
     chr_: Optional[str] = None
-    mb: Optional[float] = None
+    mb: Optional[float] = None  # pylint: disable=C0103
     alias: Optional[str] = None
     geneid: Optional[str] = None
     homologeneid: Optional[str] = None
