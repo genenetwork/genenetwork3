@@ -1,7 +1,7 @@
 # pylint: disable=[R0902, R0903]
 """Module that exposes common db operations"""
 from dataclasses import asdict, astuple
-from typing import Any, Dict, List, Optional, Generator
+from typing import Any, Dict, List, Optional, Generator, Union
 from typing_extensions import Protocol
 
 from gn3.db.metadata_audit import MetadataAudit
@@ -67,7 +67,7 @@ def update(conn: Any,
 def fetchone(conn: Any,
              table: str,
              where: Optional[Dataclass],
-             columns: Optional[List[str]] = "*") -> Optional[Dataclass]:
+             columns: Union[str, List[str]] = "*") -> Optional[Dataclass]:
     """Run a SELECT on a table. Returns only one result!"""
     if not any(astuple(where)):
         return None
@@ -90,7 +90,7 @@ def fetchone(conn: Any,
 def fetchall(conn: Any,
              table: str,
              where: Optional[Dataclass],
-             columns: Optional[List[str]] = "*") -> Optional[Generator]:
+             columns: Union[str, List[str]] = "*") -> Optional[Generator]:
     """Run a SELECT on a table. Returns all the results as a tuple!"""
     if not any(astuple(where)):
         return None
