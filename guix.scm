@@ -71,6 +71,7 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
+                       ("diffutils" ,diffutils)
                        ("gemma-wrapper" ,gemma-wrapper)
                        ("python" ,python-wrapper)
                        ("python-bcrypt" ,python-bcrypt)
@@ -86,7 +87,6 @@
                        ("python-scipy" ,python-scipy)
                        ("python-sqlalchemy-stubs" ,python-sqlalchemy-stubs)
                        ("r" ,r)
-                       ; ("r-ctl" ,r-ctl)
                        ("r-qtl" ,r-qtl)
                        ("r-optparse" ,r-optparse)
                        ("r-stringi" ,r-stringi)

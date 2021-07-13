@@ -7,6 +7,7 @@ from gn3.db import fetchone
 from gn3.db import update
 from gn3.db import diff_from_dict
 from gn3.db.phenotypes import Phenotype
+from gn3.db.phenotypes import Probeset
 from gn3.db.metadata_audit import MetadataAudit
 
 
@@ -94,6 +95,22 @@ class TestCrudMethods(TestCase):
                 ("SELECT * FROM metadata_audit WHERE "
                  "dataset_id = %s AND editor = %s"),
                 (35, 'Rob'))
+
+    # pylint: disable=R0201
+    def test_probeset_called_with_right_columns(self):
+        """Given a columns argument, test that the correct sql query is
+        constructed"""
+        db_mock = mock.MagicMock()
+        with db_mock.cursor() as cursor:
+            cursor.fetchall.return_value = None
+            fetchone(db_mock,
+                     "ProbeSet",
+                     where=Probeset(name="1446112_at"),
+                     columns=["OMIM", "Probe_set_target_region"])
+            cursor.execute.assert_called_once_with(
+                "SELECT OMIM, Probe_set_target_region FROM ProbeSet WHERE "
+                "Name = %s",
+                ("1446112_at",))
 
     def test_diff_from_dict(self):
         """Test that a correct diff is generated"""

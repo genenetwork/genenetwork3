@@ -149,3 +149,4 @@ class TestCommands(unittest.TestCase):
         """Test that an incorrect cmd is processed correctly"""
         result = run_cmd("echoo test")
         self.assertEqual(127, result.get("code"))
+        self.assertIn("not found", result.get("output"))
