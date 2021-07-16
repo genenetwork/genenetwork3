@@ -105,7 +105,7 @@ def fetch_sample_datas(target_samples: List,
 def get_pair_samples():
     """fetch pair samples to compute correlation"""
 
-    sample_datas = []
+    _sample_datas = []
 
     return False
 
@@ -114,15 +114,14 @@ def compute_row_matrix(sample_datas):
     """function to compute correlation for trait to create row"""
 
     # expected inputs [[targ1,target2],[targ3,target4]]
+
+    # xtodo add lowest overlap
     is_spearman = False
-
-    trait_name = "a12_at"
-
     pca_corr_row = []
 
     corr_row = []
 
-    for pair_samples in sample_datas:
+    for (target_trait, pair_samples) in sample_datas:
 
         (trait_vals, target_vals) = (pair_samples)
 
@@ -134,19 +133,19 @@ def compute_row_matrix(sample_datas):
             pca_corr_row.append(0)
 
         pearson_r, pearson_p = compute_corr_coeff_p_value(
-            filtered_trait_vals, filtered_target_vals,"pearson")
+            filtered_trait_vals, filtered_target_vals, "pearson")
 
         if is_spearman:
-            (sample_r, sample_p) = compute_corr_coeff_p_value(
+            (sample_r, _sample_p) = compute_corr_coeff_p_value(
                 filtered_trait_vals, filtered_target_vals, "spearman")
         else:
-            (sample_r, sample_p) = (pearson_r, pearson_p)
+            (sample_r, _sample_p) = (pearson_r, pearson_p)
             if sample_r > 0.999:
                 is_spearman = True
 
-        corr_row.append([trait_name, sample_r, num_overlap])
+        corr_row.append([target_trait, sample_r, num_overlap])
         pca_corr_row.append(pearson_r)
 
         # normalize the values
 
-    return [corr_row,pca_corr_row]
+    return [corr_row, pca_corr_row]
