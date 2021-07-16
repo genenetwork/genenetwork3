@@ -3,6 +3,7 @@
 import unittest
 from types import SimpleNamespace
 from gn3.computations.correlation_matrix import fetch_sample_datas
+from gn3.computations.correlation_matrix import compute_row_matrix
 
 
 class TestCorrelationMatrix(unittest.TestCase):
@@ -41,3 +42,11 @@ class TestCorrelationMatrix(unittest.TestCase):
 
         self.assertEqual(results, (expected_this_trait_vals,
                                    expected_target_trait_vals))
+
+    def test_compute_row_matrix(self):
+        """Lower left cells list Pearson product-moment correlations;
+        upper right cells list Spearman rank order correlations"""
+        sample_datas = [[[1,2,3],[4,5,6]]]
+        results = compute_row_matrix(sample_datas)
+
+        self.assertFalse(results)
