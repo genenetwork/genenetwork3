@@ -94,7 +94,7 @@
                        ("r-testthat" ,r-testthat)
                        ("r-wgcna" ,r-wgcna)
                        ("python-matplotlib" ,python-matplotlib)
-                       ("python-pandas" ,python-pandas)
+                       ("python-pingouin" ,python-pingouin)
                        ("python-scikit-learn" ,python-scikit-learn)
                        ))
   (build-system python-build-system)
