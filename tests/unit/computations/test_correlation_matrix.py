@@ -1,6 +1,8 @@
 """module contains unittest for correlatiom matrix"""
 
 import unittest
+from unittest import mock
+
 from types import SimpleNamespace
 from gn3.computations.correlation_matrix import fetch_sample_datas
 from gn3.computations.correlation_matrix import compute_row_matrix
@@ -43,10 +45,20 @@ class TestCorrelationMatrix(unittest.TestCase):
         self.assertEqual(results, (expected_this_trait_vals,
                                    expected_target_trait_vals))
 
-    def test_compute_row_matrix(self):
+    @mock.patch("gn3.computations.correlation_matrix.compute_corr_coeff_p_value")
+    @mock.patch("gn3.computations.correlation_matrix.normalize_values")
+    def test_compute_row_matrix(self, mock_normalize_vals, mock_corr_computation):
         """Lower left cells list Pearson product-moment correlations;
         upper right cells list Spearman rank order correlations"""
-        sample_datas = [[[1,2,3],[4,5,6]]]
+
+        mock_normalize_vals.side_effect = [
+            ([1, 2, 3], [4, 5, 6], 3), ([4.1, 3.2, 1.3], [4.7, 0, 1.2], 3)]
+        mock_corr_computation.side_effect = [(0.99, 0.5), (0.510, 3)]
+        sample_datas = [("123_at", [[1, 2, 3], [4, 5, 6]]),
+                        ("124_at", [[4.1, 3.2, 1.3], [4.7, 0, 1.2]])]
         results = compute_row_matrix(sample_datas)
 
-        self.assertFalse(results)
+        corr_row = [["123_at", 0.99, 3], ["124_at", 0.51, 3]]
+        pca_row = [0.99, 0.51]
+
+        self.assertEqual(results, [corr_row, pca_row])
