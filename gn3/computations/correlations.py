@@ -74,7 +74,7 @@ pearson,spearman and biweight mid correlation return value is rho and p_value
 
 
 def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
-                                 target_samples_vals) -> Optional[
+                                 target_samples_vals, num_overlap_limit=5) -> Optional[
                                      Tuple[str, float, float, int]]:
     """Given a primary trait values and target trait values calculate the
     correlation coeff and p value
@@ -83,7 +83,7 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
     (sanitized_traits_vals, sanitized_target_vals,
      num_overlap) = normalize_values(trait_vals, target_samples_vals)
 
-    if num_overlap > 5:
+    if num_overlap > num_overlap_limit:
 
         (corr_coefficient, p_value) =\
             compute_corr_coeff_p_value(primary_values=sanitized_traits_vals,
@@ -92,18 +92,17 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
 
         if corr_coefficient is not None:
             return (trait_name, corr_coefficient, p_value, num_overlap)
+
     return None
 
 
 def do_bicor(x_vals, y_vals) -> Tuple[float, float]:
-    """input x, yarray_likefunction 
-    to compute biweight mid correlation
+    """input x, yarray_likefunction  to compute biweight mid correlation
 
     """
 
     results = pg.corr(x_vals, y_vals,
-                      method="bicor").round(3)
-
+                      method="bicor")
     corr_coeff = results["r"].values[0]
 
     p_val = results["p-val"].values[0]
