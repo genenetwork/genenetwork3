@@ -11,6 +11,9 @@ from sklearn import preprocessing
 
 import scipy.stats as stats
 
+from gn3.computations.correlations import compute_corr_coeff_p_value
+from gn3.computations.correlations import normalize_values
+
 
 def compute_the_pca(data, transform: bool = True):
     """function to compute pca"""
@@ -97,3 +100,53 @@ def fetch_sample_datas(target_samples: List,
 
     return (this_trait_vals, target_trait_vals)
     #
+
+
+def get_pair_samples():
+    """fetch pair samples to compute correlation"""
+
+    sample_datas = []
+
+    return False
+
+
+def compute_row_matrix(sample_datas):
+    """function to compute correlation for trait to create row"""
+
+    # expected inputs [[targ1,target2],[targ3,target4]]
+    is_spearman = False
+
+    trait_name = "a12_at"
+
+    pca_corr_row = []
+
+    corr_row = []
+
+    for pair_samples in sample_datas:
+
+        (trait_vals, target_vals) = (pair_samples)
+
+        (filtered_trait_vals, filtered_target_vals,
+         num_overlap) = normalize_values(trait_vals, target_vals)
+
+        if num_overlap < 2:
+            corr_row.append([target_trait, 0, num_overlap])
+            pca_corr_row.append(0)
+
+        pearson_r, pearson_p = compute_corr_coeff_p_value(
+            filtered_trait_vals, filtered_target_vals,"pearson")
+
+        if is_spearman:
+            (sample_r, sample_p) = compute_corr_coeff_p_value(
+                filtered_trait_vals, filtered_target_vals, "spearman")
+        else:
+            (sample_r, sample_p) = (pearson_r, pearson_p)
+            if sample_r > 0.999:
+                is_spearman = True
+
+        corr_row.append([trait_name, sample_r, num_overlap])
+        pca_corr_row.append(pearson_r)
+
+        # normalize the values
+
+    return [corr_row,pca_corr_row]
