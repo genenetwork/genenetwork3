@@ -102,12 +102,48 @@ def fetch_sample_datas(target_samples: List,
     #
 
 
-def get_pair_samples():
+def get_row_input(trait_list_db):
     """fetch pair samples to compute correlation"""
 
     _sample_datas = []
 
     return False
+
+
+def compute_corr_matrix(trait_lists: List) -> Tuple[List, List]:
+    """code for generating the correlation matrix"""
+    corr_results = []
+    pca_results = []
+
+    for trait_db in trait_lists:
+        this_trait = trait_db[0]
+        this_dataset = trait_db[1]
+
+        # fetch required inputs for each
+
+        this_trait_data = this_trait.data
+
+        corr_row_input = []
+
+        for target_db in trait_lists:
+            target_trait = target_db[0]
+            target_dataset = target_db[1]
+
+            # get required sample datas
+            # split this function too doing to much
+
+            target_trait_data = target_trait.data
+
+            corr_input = (target_trait, (this_trait_data, target_trait_data))
+
+            corr_row_input.append(corr_input)
+
+        pca_row_results, corr_row_results = compute_row_matrix(
+            sample_datas=corr_row_input)
+        corr_results.append(corr_row_results)
+        pca_results.append(pca_row_results)
+
+    return (corr_results, pca_results)
 
 
 def compute_row_matrix(sample_datas):
@@ -149,3 +185,9 @@ def compute_row_matrix(sample_datas):
         # normalize the values
 
     return [corr_row, pca_corr_row]
+
+
+def fetch_corr_inputs(trait_lists: List):
+    """function to get required corr inputs and parse them"""
+
+    return []
