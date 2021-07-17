@@ -4,8 +4,11 @@ import unittest
 from unittest import mock
 
 from types import SimpleNamespace
+
 from gn3.computations.correlation_matrix import fetch_sample_datas
 from gn3.computations.correlation_matrix import compute_row_matrix
+from gn3.computations.correlation_matrix import compute_corr_matrix
+from gn3.computations.correlation_matrix import fetch_corr_inputs
 
 
 class TestCorrelationMatrix(unittest.TestCase):
@@ -62,3 +65,21 @@ class TestCorrelationMatrix(unittest.TestCase):
         pca_row = [0.99, 0.51]
 
         self.assertEqual(results, [corr_row, pca_row])
+
+    def test_compute_matrix(self):
+        """tests for generating matrixs and pca's"""
+        dataset = SimpleNamespace(name="dataset_1")
+        generate_traits = [(SimpleNamespace(data=list(range(5))), dataset)
+                           for i in range(5)]
+
+        results = compute_corr_matrix(generate_traits)
+
+        self.assertEqual(results, [])
+
+    def test_fetch_corr_inputs(self):
+        """test for function that fetches corr matrix inputs"""
+
+        results = fetch_corr_inputs(trait_lists=[])
+        # involves calling methods from gn2
+
+        self.assertEqual(results, [])
