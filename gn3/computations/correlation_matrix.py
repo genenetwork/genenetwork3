@@ -74,6 +74,24 @@ def compute_sort_eigens(matrix):
     return (eigen_values, eigen_vectors)
 
 
+def get_scree_plot_data(pca_obj):
+    """get scree plot data for generating plot x=x_vals,y = perc_var"""
+
+    perc_var = np.round(pca_obj.explained_variance_ratio_*100, decimals=1)
+    x_vals = list(range(1, len(perc_var)+1))
+
+    data = {
+
+        "title": "Scree Plot",
+        "ylabel": "Percentage  of Total variance %",
+        "x_vals": x_vals,
+        "y_vals": perc_var
+
+    }
+
+    return data
+
+
 def fetch_sample_datas(target_samples: List,
                        target_sample_data: dict,
                        this_samples_data: dict) ->Tuple[List[float], List[float]]:
