@@ -1,4 +1,5 @@
 """module contains unittest for correlatiom matrix"""
+import numpy as np
 
 import unittest
 from unittest import mock
@@ -9,6 +10,7 @@ from gn3.computations.correlation_matrix import fetch_sample_datas
 from gn3.computations.correlation_matrix import compute_row_matrix
 from gn3.computations.correlation_matrix import compute_corr_matrix
 from gn3.computations.correlation_matrix import fetch_corr_inputs
+from gn3.computations.correlation_matrix import get_scree_plot_data
 
 
 class TestCorrelationMatrix(unittest.TestCase):
@@ -83,3 +85,26 @@ class TestCorrelationMatrix(unittest.TestCase):
         # involves calling methods from gn2
 
         self.assertEqual(results, [])
+
+    def test_get_scree_plot_data(self):
+        """test for gettign scree plot data"""
+
+        pca_obj = mock.Mock()
+        pca_obj.explained_variance_ratio_ = np.array([0.75, 0.2, 0.05])
+
+        results = get_scree_plot_data(pca_obj)
+
+        # xtodo fix cmp for numpy array
+
+        results["y_vals"] = list(results["y_vals"])
+
+        expected_data = {
+
+            "title": "Scree Plot",
+            "ylabel": "Percentage  of Total variance %",
+            "x_vals": [1, 2, 3],
+            "y_vals": [75.0, 20.0, 5.0]
+
+        }
+
+        self.assertEqual(results, expected_data)
