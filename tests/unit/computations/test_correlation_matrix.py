@@ -1,10 +1,10 @@
 """module contains unittest for correlatiom matrix"""
-import numpy as np
 
 import unittest
 from unittest import mock
 
 from types import SimpleNamespace
+import numpy as np
 
 from gn3.computations.correlation_matrix import fetch_sample_datas
 from gn3.computations.correlation_matrix import compute_row_matrix
@@ -70,13 +70,15 @@ class TestCorrelationMatrix(unittest.TestCase):
 
     def test_compute_matrix(self):
         """tests for generating matrixs and pca's"""
+
+        #pylint disable=no-self-use
         dataset = SimpleNamespace(name="dataset_1")
         generate_traits = [(SimpleNamespace(data=list(range(5))), dataset)
                            for i in range(5)]
 
         _results = compute_corr_matrix(generate_traits)
 
-        # self.assertEqual(results, [])
+        _no_self_use = self #xtodo
 
     def test_fetch_corr_inputs(self):
         """test for function that fetches corr matrix inputs"""
