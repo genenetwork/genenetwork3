@@ -1,5 +1,6 @@
 """module contains code for computing pca using sklearn"""
 
+import datetime
 from typing import List
 from typing import Tuple
 
@@ -87,6 +88,22 @@ def get_scree_plot_data(pca_obj):
     }
 
 
+def process_factor_loadings(pca_obj, trait_list):
+    """
+    fetch loading for each trait i.e
+    trait_a:pca_1_load,pca_2_load ... ,
+    trait_b:......
+    """
+    # xtodo try to fetch for each trait
+
+    loadings = pca_obj.components_
+
+    target_columns = 3 if len(trait_list) > 2 else 2
+    traits_loadings = list(loadings.T)
+
+    return [list(trait_loading[:target_columns]) for trait_loading in traits_loadings]
+
+
 def fetch_sample_datas(target_samples: List,
                        target_sample_data: dict,
                        this_samples_data: dict) ->Tuple[List[float], List[float]]:
@@ -117,33 +134,27 @@ def compute_corr_matrix(trait_lists: List) -> Tuple[List, List]:
     corr_results = []
     pearson_results = []
 
-    for trait_db in trait_lists:
-        this_trait = trait_db[0]
-        _this_dataset = trait_db[1]
+    for (this_trait, this_dataset) in trait_lists:
+        _this_db_samples = this_dataset.group.all_samples_ordered()
 
         # fetch required samples (fetch sample data) inputs for each
 
         this_trait_data = this_trait.data
 
         corr_row_input = []
-        # n*n ????c
+        for (target_trait, target_dataset) in trait_lists:
 
-        for target_db in trait_lists:
-            target_trait = target_db[0]
-            _target_dataset = target_db[1]
+            target_db_samples = target_dataset.group.all_samples_ordered()
+            results = fetch_sample_datas(target_samples=target_db_samples,
+                                         target_sample_data=target_trait.data,
+                                         this_samples_data=this_trait_data)
 
-            # get required sample datas
-            # split this function too doing to much
+            corr_row_input.append((target_trait, results))
 
-            target_trait_data = target_trait.data
-
-            corr_input = (target_trait, (this_trait_data, target_trait_data))
-
-            corr_row_input.append(corr_input)
-
-        pca_row_results, corr_row_results = compute_row_matrix(
+        corr_row_results, pca_row_results = compute_row_matrix(
             sample_datas=corr_row_input)
         corr_results.append(corr_row_results)
+        # correlation matrix for pca'''
         pearson_results.append(pca_row_results)
 
     return (corr_results, pearson_results)
@@ -190,15 +201,10 @@ def compute_row_matrix(sample_datas):
     return [corr_row, pca_corr_row]
 
 
-def fetch_corr_inputs(trait_lists: List):
-    """function to get required corr inputs and parse them"""
-
-    _results = trait_lists
-
-    return []
-
-
-def generate_pca_traits(pca_traits, temp_dataset, this_group_name, shared_samples_list):
+def generate_pca_traits(pca_traits,
+                        temp_dataset,
+                        this_group_name,
+                        shared_samples_list):
     """function to generate pca traits and temp vals"""
 
     pca_trait_dict = {}
@@ -210,20 +216,20 @@ def generate_pca_traits(pca_traits, temp_dataset, this_group_name, shared_sample
         pointer = 0
         for sample in temp_dataset.group.all_samples_ordered():
             if sample in shared_samples_list:
-                sample_vals.append(str(pca_trait_val[pointer]))
+                sample_vals.append(str(pca_trait[pointer]))
                 pointer += 1
             else:
                 sample_vals.append("x")
 
         sample_vals = " ".join(sample_vals)
 
-        pca_trait_ids[trait_id] = sample_vals
+        pca_trait_dict[trait_id] = sample_vals
     return pca_trait_dict
 
 
-def cache_pca_traits(redis_instance, pca_traits_dict, exp_time):
+def cache_pca_traits(redis_instance, pca_trait_dict, exp_time):
     """cache pca trait temp results """
 
     for (trait, trait_vals) in pca_trait_dict:
-        redis_instance.set(trait, trait_vals, exp_time=ex)
+        redis_instance.set(trait, trait_vals, exp_time=exp_time)
     return True
