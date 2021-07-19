@@ -9,7 +9,6 @@ import numpy as np
 from gn3.computations.correlation_matrix import fetch_sample_datas
 from gn3.computations.correlation_matrix import compute_row_matrix
 from gn3.computations.correlation_matrix import compute_corr_matrix
-from gn3.computations.correlation_matrix import fetch_corr_inputs
 from gn3.computations.correlation_matrix import get_scree_plot_data
 from gn3.computations.correlation_matrix import generate_pca_traits
 
@@ -81,14 +80,6 @@ class TestCorrelationMatrix(unittest.TestCase):
 
         _no_self_use = self  # xtodo
 
-    def test_fetch_corr_inputs(self):
-        """test for function that fetches corr matrix inputs"""
-
-        results = fetch_corr_inputs(trait_lists=[])
-        # involves calling methods from gn2
-
-        self.assertEqual(results, [])
-
     def test_get_scree_plot_data(self):
         """test for gettign scree plot data"""
 
@@ -114,7 +105,7 @@ class TestCorrelationMatrix(unittest.TestCase):
 
         # xtodo
 
-        expected_results = {
+        _expected_results = {
             "pca1_x1": "1 x  2.2 x 3 4",
             "pca2_x1": "3.4 x 2,.1 3.0 4.5"
         }
