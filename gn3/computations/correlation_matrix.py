@@ -80,16 +80,11 @@ def get_scree_plot_data(pca_obj):
     perc_var = np.round(pca_obj.explained_variance_ratio_*100, decimals=1)
     x_vals = list(range(1, len(perc_var)+1))
 
-    data = {
+    return {
 
-        "title": "Scree Plot",
-        "ylabel": "Percentage  of Total variance %",
         "x_vals": x_vals,
         "y_vals": perc_var
-
     }
-
-    return data
 
 
 def fetch_sample_datas(target_samples: List,
@@ -201,3 +196,8 @@ def fetch_corr_inputs(trait_lists: List):
     _results = trait_lists
 
     return []
+
+
+def generate_table_of_real():
+    """table of real dot pd z_scores*eigen_vectors
+    used to create temp datasets"""

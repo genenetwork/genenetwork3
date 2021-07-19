@@ -71,14 +71,14 @@ class TestCorrelationMatrix(unittest.TestCase):
     def test_compute_matrix(self):
         """tests for generating matrixs and pca's"""
 
-        #pylint disable=no-self-use
+        # pylint disable=no-self-use
         dataset = SimpleNamespace(name="dataset_1")
         generate_traits = [(SimpleNamespace(data=list(range(5))), dataset)
                            for i in range(5)]
 
         _results = compute_corr_matrix(generate_traits)
 
-        _no_self_use = self #xtodo
+        _no_self_use = self  # xtodo
 
     def test_fetch_corr_inputs(self):
         """test for function that fetches corr matrix inputs"""
@@ -101,9 +101,6 @@ class TestCorrelationMatrix(unittest.TestCase):
         results["y_vals"] = list(results["y_vals"])
 
         expected_data = {
-
-            "title": "Scree Plot",
-            "ylabel": "Percentage  of Total variance %",
             "x_vals": [1, 2, 3],
             "y_vals": [75.0, 20.0, 5.0]
 
