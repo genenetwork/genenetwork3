@@ -198,6 +198,32 @@ def fetch_corr_inputs(trait_lists: List):
     return []
 
 
-def generate_table_of_real():
-    """table of real dot pd z_scores*eigen_vectors
-    used to create temp datasets"""
+def generate_pca_traits(pca_traits, temp_dataset, this_group_name, shared_samples_list):
+    """function to generate pca traits and temp vals"""
+
+    pca_trait_dict = {}
+    temp_dataset.group.get_samplelist()
+    for i, pca_trait in enumerate(pca_traits):
+        trait_id = "PCA" + str(i + 1) + "_" + temp_dataset.group.species + "_" + \
+            this_group_name + "_" + datetime.datetime.now().strftime("%m%d%H%M%S")
+        sample_vals = []
+        pointer = 0
+        for sample in temp_dataset.group.all_samples_ordered():
+            if sample in shared_samples_list:
+                sample_vals.append(str(pca_trait_val[pointer]))
+                pointer += 1
+            else:
+                sample_vals.append("x")
+
+        sample_vals = " ".join(sample_vals)
+
+        pca_trait_ids[trait_id] = sample_vals
+    return pca_trait_dict
+
+
+def cache_pca_traits(redis_instance, pca_traits_dict, exp_time):
+    """cache pca trait temp results """
+
+    for (trait, trait_vals) in pca_trait_dict:
+        redis_instance.set(trait, trait_vals, exp_time=ex)
+    return True

@@ -11,6 +11,7 @@ from gn3.computations.correlation_matrix import compute_row_matrix
 from gn3.computations.correlation_matrix import compute_corr_matrix
 from gn3.computations.correlation_matrix import fetch_corr_inputs
 from gn3.computations.correlation_matrix import get_scree_plot_data
+from gn3.computations.correlation_matrix import generate_pca_traits
 
 
 class TestCorrelationMatrix(unittest.TestCase):
@@ -107,3 +108,21 @@ class TestCorrelationMatrix(unittest.TestCase):
         }
 
         self.assertEqual(results, expected_data)
+
+    def test_generate_pca_traits(self):
+        """test for generating temp pca traits data"""
+
+        # xtodo
+
+        expected_results = {
+            "pca1_x1": "1 x  2.2 x 3 4",
+            "pca2_x1": "3.4 x 2,.1 3.0 4.5"
+        }
+
+        pca_traits = []
+        temp_dataset = mock.Mock()
+        temp_dataset.group.species = "Human"
+        temp_dataset.group.get_samplelist.return_value = []
+        results = generate_pca_traits(pca_traits, temp_dataset, "BXD", [])
+
+        self.assertEqual(results, {})
