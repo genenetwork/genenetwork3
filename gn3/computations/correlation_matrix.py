@@ -230,6 +230,6 @@ def generate_pca_traits(pca_traits,
 def cache_pca_traits(redis_instance, pca_trait_dict, exp_time):
     """cache pca trait temp results """
 
-    for (trait, trait_vals) in pca_trait_dict:
-        redis_instance.set(trait, trait_vals, exp_time=exp_time)
+    for (trait, trait_vals) in pca_trait_dict.items():
+        redis_instance.set(trait, trait_vals, ex=exp_time)
     return True
