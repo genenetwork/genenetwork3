@@ -88,6 +88,21 @@ def get_scree_plot_data(pca_obj):
     }
 
 
+def export_scree_plot_html(data: dict):
+    """function to generate and export scree  plot
+    should probably make endpoint for this """
+
+    # add different color to markers
+    fig = px.line(x=data["x_vals"], y=data["y_vals"],
+                  title="Scree Plot",
+                  labels=dict(x="PCA Components",
+                              y="Percent of total variance %"))
+
+    generated_html = fig.to_html(full_html=False)
+
+    return generated_html
+
+
 def process_factor_loadings(pca_obj, trait_list):
     """
     fetch loading for each trait i.e
