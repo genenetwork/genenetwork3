@@ -1,3 +1,5 @@
+from functools import partial
+
 class LengthError(BaseException):
     pass
 
@@ -77,3 +79,9 @@ This description should be updated once the form/type of 'distance' identified."
         return min(map(lambda j_new: nearest(lists, i, j_new), j))
     elif type(j) == int and is_list_or_tuple(i):
         return min(map(lambda i_new: nearest(lists, i_new, j), i))
+    elif is_list_or_tuple(i) and is_list_or_tuple(j):
+        partial_i = map(lambda x:partial(nearest, lists, x), i[:-1])
+        ns = list(map(lambda f, x: f(x), partial_i, j[:1]))
+        return min(ns)
+    else:
+        raise ValueError("member values (i or j) should be lists/tuples of integers or integers")

@@ -184,3 +184,19 @@ class TestSlink(TestCase):
                     expected_distance=ed):
                 self.assertEqual(nearest(md, ml, mc), ed)
                 self.assertEqual(nearest(md, mc, ml), ed)
+
+    def test_given_2_lists_or_tuples_of_members_distances_nearest_returns_shortest_distance(self):
+        for md, ml, mc, ed in [
+                [[[0,9,3,6,11],[9,0,7,5,10],[3,7,0,9,2],[6,5,9,0,8],[11,10,2,8,0]],
+                 [0,1,2,3,4],[0,1,2,3,4],0],
+                [[[0,9,3,6,11],[9,0,7,5,10],[3,7,0,9,2],[6,5,9,0,8],[11,10,2,8,0]],
+                 [0,1],[3,4],6],
+                [[[0,9,3,6,11],[9,0,7,5,10],[3,7,0,9,2],[6,5,9,0,8],[11,10,2,8,0]],
+                 [0,1],[2,3,4],3],
+                [[[0,9,3,6,11],[9,0,7,5,10],[3,7,0,9,2],[6,5,9,0,8],[11,10,2,8,0]],
+                 [0,2],[3,4],6]]:
+            with self.subTest(
+                    members_distances=md, members_list=ml, member_coordinate=mc,
+                    expected_distance=ed):
+                self.assertEqual(nearest(md, ml, mc), ed)
+                self.assertEqual(nearest(md, mc, ml), ed)
