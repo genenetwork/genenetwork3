@@ -20,6 +20,13 @@ def raise_valueerror_if_lists_empty(lists):
         raise ValueError("List/Tuple should NOT be empty!")
 
 def nearest(lists, i, j):
+    """Computes some form of distance.
+This is 'copied' over from genenetwork1, from https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L42-L64.
+
+This description should be updated once the form/type of 'distance' identified."""
+
+    #### Guard Functions: Should we do this a different way? ####
     raise_valueerror_if_data_is_not_lists_or_tuples(lists)
     raise_valueerror_if_lists_empty(lists)
+    #### END: Guard Functions ####
     return None
