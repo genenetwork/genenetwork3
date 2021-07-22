@@ -71,3 +71,5 @@ This description should be updated once the form/type of 'distance' identified."
     raise_valueerror_on_negative_distances(lists)
     #### END: Guard Functions ####
     return None
+    if type(i) == int and type(j) == int: # From member i to member j
+        return lists[i][j]

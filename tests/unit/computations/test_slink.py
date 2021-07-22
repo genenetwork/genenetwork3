@@ -65,9 +65,10 @@ class TestSlink(TestCase):
                 with self.assertRaises(ValueError, msg="Distances should be positive."):
                     nearest(lst, 1, 1)
 
-    def test_nearest_with_expected(self):
-        # Give this test a better name
-        # The lists in this tests are taken from:
+    def test_nearest_returns_shortest_distance_given_coordinates_to_both_group_members(self):
+        # This test is named wrong - at least I think it is, from the expected results
+        # This tests distance when both `i`, and `j` are integers
+        # We still need to add tests for when (either one/both) (is/are) not (an) integer(s)
         # https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L39-L40
         for lst, i, j, expected in [[[[0,9,3,6,11],[9,0,7,5,10],[3,7,0,9,2],[6,5,9,0,8],[11,10,2,8,0]],
                                      0,0,0],
