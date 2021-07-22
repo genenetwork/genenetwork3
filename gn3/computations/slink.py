@@ -19,6 +19,12 @@ def raise_valueerror_if_lists_empty(lists):
     if (empty(lists)) or not all(map(lambda x: not empty(x), lists)):
         raise ValueError("List/Tuple should NOT be empty!")
 
+def raise_lengtherror_if_child_lists_are_not_same_as_parent(lists):
+    def len_is_same_as_parent(lst):
+        return len(lst) == len(lists)
+    if not all(map(len_is_same_as_parent, lists)):
+        raise LengthError("All children lists should be same length as the parent.")
+
 def nearest(lists, i, j):
     """Computes some form of distance.
 This is 'copied' over from genenetwork1, from https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L42-L64.
@@ -28,5 +34,6 @@ This description should be updated once the form/type of 'distance' identified."
     #### Guard Functions: Should we do this a different way? ####
     raise_valueerror_if_data_is_not_lists_or_tuples(lists)
     raise_valueerror_if_lists_empty(lists)
+    raise_lengtherror_if_child_lists_are_not_same_as_parent(lists)
     #### END: Guard Functions ####
     return None
