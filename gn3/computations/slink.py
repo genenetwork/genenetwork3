@@ -70,6 +70,9 @@ This description should be updated once the form/type of 'distance' identified."
     raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists)
     raise_valueerror_on_negative_distances(lists)
     #### END: Guard Functions ####
-    return None
     if type(i) == int and type(j) == int: # From member i to member j
         return lists[i][j]
+    elif type(i) == int and (type(j) in [list, tuple]):
+        return min(map(lambda j_new: nearest(lists, i, j_new), j))
+    elif type(j) == int and (type(i) in [list, tuple]):
+        return min(map(lambda i_new: nearest(lists, i_new, j), i))
