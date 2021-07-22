@@ -35,8 +35,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(LengthError):
                     nearest(lst, 1, 1)
 
-    def test_nearest_expects_exception_if_there_is_no_zero_at_childs_list_index_corresponding_to_its_index_in_parent(self):
-        # I don't like the name of this test. Make the name clearer
+    def test_nearest_expects_exception_if_distance_of_child_from_itself_is_not_zero(self):
         for lst in [[[1]],
                     [[1,2],[3,4]],
                     [1,0,0],[0,0,5],[0,3,4],
