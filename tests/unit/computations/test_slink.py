@@ -55,15 +55,14 @@ class TestSlink(TestCase):
     def test_nearest_expects_zero_or_positive_distances(self):
         # Based on:
         # https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L87-L89
-        for lst in [[[0,1,2,3],[1,0,3,4],[2,3,0,5],[3,4,5,0]],
-                    [[0,-1,2,3],[-1,0,3,4],[2,3,0,5],[3,4,5,0]],
+        for lst in [[[0,-1,2,3],[-1,0,3,4],[2,3,0,5],[3,4,5,0]],
                     [[0,1,-2,3],[1,0,3,4],[-2,3,0,5],[3,4,5,0]],
                     [[0,1,2,3],[1,0,-3,4],[2,-3,0,5],[3,4,5,0]],
                     [[0,1,2,-3],[1,0,3,4],[2,3,0,5],[-3,4,5,0]],
                     [[0,1,2,3],[1,0,3,-4],[2,3,0,5],[3,-4,5,0]],
                     [[0,1,2,3],[1,0,3,4],[2,3,0,-5],[3,4,-5,0]]]:
             with self.subTest(lst=lst):
-                with self.assertRaises(ValueError, msg="Got an unexpected negative value!"):
+                with self.assertRaises(ValueError, msg="Distances should be positive."):
                     nearest(lst, 1, 1)
 
     def test_nearest_with_expected(self):

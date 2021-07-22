@@ -46,6 +46,16 @@ If the two distances are different, throw an exception."""
                      "should be the same in both directions.").format(
                          lists[i][j], lists[j][i]))
 
+def raise_valueerror_on_negative_distances(lists):
+    """Check that distances between 'somethings' are all positive, otherwise,
+raise an exception."""
+    def zero_or_positive(val):
+        return val >= 0;
+    # flatten lists
+    flattened = [distance for child in lists for distance in child]
+    if not all(map(zero_or_positive, flattened)):
+        raise ValueError("Distances should be positive.")
+
 def nearest(lists, i, j):
     """Computes some form of distance.
 This is 'copied' over from genenetwork1, from https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L42-L64.
@@ -58,5 +68,6 @@ This description should be updated once the form/type of 'distance' identified."
     raise_lengtherror_if_child_lists_are_not_same_as_parent(lists)
     raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists)
     raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists)
+    raise_valueerror_on_negative_distances(lists)
     #### END: Guard Functions ####
     return None
