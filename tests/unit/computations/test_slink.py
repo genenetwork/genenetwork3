@@ -44,7 +44,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(ValueError):
                     nearest(lst, 1, 1)
 
-    def test_nearest_expects_exception_if_value_at_index_j_in_list_i_does_not_equals_value_at_index_i_in_list_j(self):
+    def test_nearest_expects_exception_if_distance_from_child_a_to_child_b_is_not_distance_from_child_b_to_child_a(self):
         for lst in [[[0,1],[2,0]],
                     [[0,1,2],[1,0,3],[9,7,0]],
                     [[0,1,2,3],[7,0,2,3],[2,3,0,1],[8,9,5,0]]]:
@@ -56,12 +56,12 @@ class TestSlink(TestCase):
         # Based on:
         # https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L87-L89
         for lst in [[[0,1,2,3],[1,0,3,4],[2,3,0,5],[3,4,5,0]],
-                    [[0,1,2,3],[-1,0,3,4],[2,3,0,5],[3,4,5,0]],
-                    [[0,1,2,3],[1,0,3,4],[-2,3,0,5],[3,4,5,0]],
-                    [[0,1,2,3],[1,0,3,4],[2,-3,0,5],[3,4,5,0]],
-                    [[0,1,2,3],[1,0,3,4],[2,3,0,5],[-3,4,5,0]],
-                    [[0,1,2,3],[1,0,3,4],[2,3,0,5],[3,-4,5,0]],
-                    [[0,1,2,3],[1,0,3,4],[2,3,0,5],[3,4,-5,0]]]:
+                    [[0,-1,2,3],[-1,0,3,4],[2,3,0,5],[3,4,5,0]],
+                    [[0,1,-2,3],[1,0,3,4],[-2,3,0,5],[3,4,5,0]],
+                    [[0,1,2,3],[1,0,-3,4],[2,-3,0,5],[3,4,5,0]],
+                    [[0,1,2,-3],[1,0,3,4],[2,3,0,5],[-3,4,5,0]],
+                    [[0,1,2,3],[1,0,3,-4],[2,3,0,5],[3,-4,5,0]],
+                    [[0,1,2,3],[1,0,3,4],[2,3,0,-5],[3,4,-5,0]]]:
             with self.subTest(lst=lst):
                 with self.assertRaises(ValueError, msg="Got an unexpected negative value!"):
                     nearest(lst, 1, 1)

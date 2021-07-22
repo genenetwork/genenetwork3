@@ -35,6 +35,17 @@ def raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists):
     if not all(map(distance_is_zero, children_distances)):
         raise ValueError("Distance of each child list/tuple from itself should be zero!")
 
+def raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists):
+    """Check that the distance from A to B, is the same as the distance from B to A.
+If the two distances are different, throw an exception."""
+    for i in range(len(lists)):
+        for j in range(len(lists)):
+            if lists[i][j] != lists[j][i]:
+                raise MirrorError(
+                    ("Distance from one child({}) to the other ({}) "
+                     "should be the same in both directions.").format(
+                         lists[i][j], lists[j][i]))
+
 def nearest(lists, i, j):
     """Computes some form of distance.
 This is 'copied' over from genenetwork1, from https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L42-L64.
@@ -46,5 +57,6 @@ This description should be updated once the form/type of 'distance' identified."
     raise_valueerror_if_lists_empty(lists)
     raise_lengtherror_if_child_lists_are_not_same_as_parent(lists)
     raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists)
+    raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists)
     #### END: Guard Functions ####
     return None
