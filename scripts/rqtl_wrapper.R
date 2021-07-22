@@ -11,6 +11,7 @@ option_list = list(
   make_option(c("-c", "--addcovar"), action="store_true", default=NULL, help="Use covariates (included as extra columns in the phenotype input file)"),
   make_option(c("--model"), type="character", default="normal", help="Mapping Model - Normal or Non-Parametric"),
   make_option(c("--method"), type="character", default="hk", help="Mapping Method - hk (Haley Knott), ehk (Extended Haley Knott), mr (Marker Regression), em (Expectation-Maximization), imp (Imputation)"),
+  make_option(c("--pairscan"), action="store_true", default=NULL, help="Run Pair Scan - the R/qtl function scantwo"),
   make_option(c("-i", "--interval"), action="store_true", default=NULL, help="Use interval mapping"),
   make_option(c("--nperm"), type="integer", default=0, help="Number of permutations"),
   make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata (stored as final column/vector in phenotype input file)"),
