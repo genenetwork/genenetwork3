@@ -108,9 +108,9 @@ def nearest(lists, i, j):
     if type(i) == int and type(j) == int: # From member i to member j
         return lists[i][j]
     elif type(i) == int and __is_list_or_tuple(j):
-        return min(map(lambda j_new: nearest(lists, i, j_new), j))
+        return min(map(lambda j_new: nearest(lists, i, j_new), j[:-1]))
     elif type(j) == int and __is_list_or_tuple(i):
-        return min(map(lambda i_new: nearest(lists, i_new, j), i))
+        return min(map(lambda i_new: nearest(lists, i_new, j), i[:-1]))
     elif __is_list_or_tuple(i) and __is_list_or_tuple(j):
         partial_i = map(lambda x:partial(nearest, lists, x), i[:-1])
         ns = list(map(lambda f, x: f(x), partial_i, j[:1]))
