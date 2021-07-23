@@ -2,6 +2,7 @@
 import unittest
 from unittest import TestCase
 
+from gn3.computations.slink import slink
 from gn3.computations.slink import nearest
 from gn3.computations.slink import LengthError
 from gn3.computations.slink import MirrorError
@@ -200,3 +201,8 @@ class TestSlink(TestCase):
                     expected_distance=ed):
                 self.assertEqual(nearest(md, ml, mc), ed)
                 self.assertEqual(nearest(md, mc, ml), ed)
+
+    def test_slink_wrong_data_returns_empty_list(self):
+        for data in [1, "test", [], 2.945, nearest]:
+            with self.subTest(data=data):
+                self.assertEqual(slink(data), [])

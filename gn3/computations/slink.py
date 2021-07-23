@@ -6,6 +6,7 @@ FUNCTIONS:
 slink:
     TODO: Describe what the function does...
 """
+import logging
 from functools import partial
 
 class LengthError(BaseException):
@@ -116,3 +117,14 @@ def nearest(lists, i, j):
         return min(ns)
     else:
         raise ValueError("member values (i or j) should be lists/tuples of integers or integers")
+
+def slink(lists):
+    """
+    """
+    try:
+        nearest(lists, 1, 2)
+    except Exception as e:
+        # TODO: Look into making the logging log output to the system's
+        #    configured logger(s)
+        logging.warning("Exception: {}, {}".format(type(e), e))
+        return []
