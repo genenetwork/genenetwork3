@@ -1,3 +1,11 @@
+"""
+DESCRIPTION:
+    TODO: Add a description for the module
+
+FUNCTIONS:
+slink:
+    TODO: Describe what the function does...
+"""
 from functools import partial
 
 class LengthError(BaseException):
@@ -6,29 +14,29 @@ class LengthError(BaseException):
 class MirrorError(BaseException):
     pass
 
-def is_list_or_tuple(item):
+def __is_list_or_tuple(item):
     return type(item) in [list, tuple]
 
-def raise_valueerror_if_data_is_not_lists_or_tuples(lists):
+def __raise_valueerror_if_data_is_not_lists_or_tuples(lists):
     """Check that `lists` is a list of lists: If not, raise an exception."""
 
-    if (not is_list_or_tuple(lists)) or (not all(map(is_list_or_tuple, lists))):
+    if (not __is_list_or_tuple(lists)) or (not all(map(__is_list_or_tuple, lists))):
         raise ValueError("Expected list or tuple")
 
-def raise_valueerror_if_lists_empty(lists):
+def __raise_valueerror_if_lists_empty(lists):
     """Check that the list and its direct children are not empty."""
     def empty(lst):
         return len(lst) == 0
     if (empty(lists)) or not all(map(lambda x: not empty(x), lists)):
         raise ValueError("List/Tuple should NOT be empty!")
 
-def raise_lengtherror_if_child_lists_are_not_same_as_parent(lists):
+def __raise_lengtherror_if_child_lists_are_not_same_as_parent(lists):
     def len_is_same_as_parent(lst):
         return len(lst) == len(lists)
     if not all(map(len_is_same_as_parent, lists)):
         raise LengthError("All children lists should be same length as the parent.")
 
-def raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists):
+def __raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists):
     def get_child_distance(child):
         idx = lists.index(child)
         return lists[idx][idx]
@@ -38,7 +46,7 @@ def raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists):
     if not all(map(distance_is_zero, children_distances)):
         raise ValueError("Distance of each child list/tuple from itself should be zero!")
 
-def raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists):
+def __raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists):
     """Check that the distance from A to B, is the same as the distance from B to A.
 If the two distances are different, throw an exception."""
     for i in range(len(lists)):
@@ -49,7 +57,7 @@ If the two distances are different, throw an exception."""
                      "should be the same in both directions.").format(
                          lists[i][j], lists[j][i]))
 
-def raise_valueerror_on_negative_distances(lists):
+def __raise_valueerror_on_negative_distances(lists):
     """Check that distances between 'somethings' are all positive, otherwise,
 raise an exception."""
     def zero_or_positive(val):
@@ -89,20 +97,20 @@ def nearest(lists, i, j):
         in `j`."""
 
     #### Guard Functions: Should we do this a different way? ####
-    raise_valueerror_if_data_is_not_lists_or_tuples(lists)
-    raise_valueerror_if_lists_empty(lists)
-    raise_lengtherror_if_child_lists_are_not_same_as_parent(lists)
-    raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists)
-    raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists)
-    raise_valueerror_on_negative_distances(lists)
+    __raise_valueerror_if_data_is_not_lists_or_tuples(lists)
+    __raise_valueerror_if_lists_empty(lists)
+    __raise_lengtherror_if_child_lists_are_not_same_as_parent(lists)
+    __raise_valueerror_if_child_list_distance_from_itself_is_not_zero(lists)
+    __raise_mirrorerror_of_distances_one_way_are_not_same_other_way(lists)
+    __raise_valueerror_on_negative_distances(lists)
     #### END: Guard Functions ####
     if type(i) == int and type(j) == int: # From member i to member j
         return lists[i][j]
-    elif type(i) == int and is_list_or_tuple(j):
+    elif type(i) == int and __is_list_or_tuple(j):
         return min(map(lambda j_new: nearest(lists, i, j_new), j))
-    elif type(j) == int and is_list_or_tuple(i):
+    elif type(j) == int and __is_list_or_tuple(i):
         return min(map(lambda i_new: nearest(lists, i_new, j), i))
-    elif is_list_or_tuple(i) and is_list_or_tuple(j):
+    elif __is_list_or_tuple(i) and __is_list_or_tuple(j):
         partial_i = map(lambda x:partial(nearest, lists, x), i[:-1])
         ns = list(map(lambda f, x: f(x), partial_i, j[:1]))
         return min(ns)
