@@ -115,9 +115,9 @@ def nearest(lists, i, j):
     elif type(j) == int and __is_list_or_tuple(i):
         return min(map(lambda i_new: nearest(lists, i_new, j), i[:-1]))
     elif __is_list_or_tuple(i) and __is_list_or_tuple(j):
-        partial_i = map(lambda x:partial(nearest, lists, x), i[:-1])
-        ns = list(map(lambda f, x: f(x), partial_i, j[:1]))
-        return min(ns)
+        coordinate_pairs = __flatten_list_of_lists(
+            [[(itemi, itemj) for itemj in j[:-1]] for itemi in i[:-1]])
+        return min(map(lambda x: nearest(lists, x[0], x[1]), coordinate_pairs))
     else:
         raise ValueError("member values (i or j) should be lists/tuples of integers or integers")
 
