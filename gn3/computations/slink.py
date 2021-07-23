@@ -64,9 +64,12 @@ raise an exception."""
     def zero_or_positive(val):
         return val >= 0;
     # flatten lists
-    flattened = [distance for child in lists for distance in child]
+    flattened = __flatten_list_of_lists(lists)
     if not all(map(zero_or_positive, flattened)):
         raise ValueError("Distances should be positive.")
+
+def __flatten_list_of_lists(parent):
+    return [item for child in parent for item in child]
 
 def nearest(lists, i, j):
     """
