@@ -60,10 +60,33 @@ raise an exception."""
         raise ValueError("Distances should be positive.")
 
 def nearest(lists, i, j):
-    """Computes some form of distance.
-This is 'copied' over from genenetwork1, from https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L42-L64.
+    """
+    Computes shortest distance between member(s) in `i` and member(s) in `j`.
 
-This description should be updated once the form/type of 'distance' identified."""
+    Description:
+    This is 'copied' over from genenetwork1, from https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/slink.py#L42-L64.
+
+    This description should be updated to better describe what 'member' means in
+    the context where the function is used.
+
+    Parameters:
+    lists (list of lists of distances): Represents a list of members and their
+        distances from each other.
+        Each inner list represents the distances the member at that coordinate
+        is from other members in the list: for example, a member at index 0 with
+        the values [0, 9, 1, 7] indicates that the member is:
+        - 0 units of distance away from itself
+        - 9 units of distance away from member at coordinate 1
+        - 1 unit of distance away from member at coordinate 2
+        - 7 units of distance away from member at coordinate 3
+    i (int or list of ints): Represents the coordinate of a member, or a list of
+        coordinates of members on the `lists` list.
+    j (int or list of ints): Represents the coordinate of a member, or a list of
+        coordinates of members on the `lists` list.
+
+    Returns:
+    int: Represents the shortest distance between member(s) in `i` and member(s)
+        in `j`."""
 
     #### Guard Functions: Should we do this a different way? ####
     raise_valueerror_if_data_is_not_lists_or_tuples(lists)
