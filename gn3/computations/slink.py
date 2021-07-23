@@ -123,9 +123,55 @@ def nearest(lists, i, j):
 
 def slink(lists):
     """
+    DESCRIPTION:
+    TODO: Not quite sure what this function does. Work through the code with a
+        fine tooth comb, once we understand the context of its use, so as to
+        give a better description
+
+        The name of the function does not clearly establish what the function
+        does either, meaning, once that is established, the function should be
+        renamed to give the user an idea of what it does without necessarily
+        reading through a ton of code.
+
+        We should also look into refactoring the function to reduce/eliminate
+        the multiple levels of nested-loops and conditionals
+
+    PARAMETERS:
+    lists (list of lists of numbers): Give this a better name.
+        Each item of this list is a list of coordinates of the members in the
+        group.
+        What 'member' and 'group' in this context means, is not yet established.
     """
     try:
-        nearest(lists, 1, 2)
+        size = len(lists)
+        listindex = range(size)
+        listindexcopy = list(range(size))
+        listscopy = [[item for item in child] for child in lists]
+        initSize = size
+        candidate = []
+        while initSize >2:
+            mindist = 1e10
+            for i in range(initSize):
+                for j in range(i+1,initSize):
+                    if listscopy[i][j] < mindist:
+                        mindist =  listscopy[i][j]
+                        candidate=[[i,j]]
+                    elif listscopy[i][j] == mindist:
+                        mindist =  listscopy[i][j]
+                        candidate.append([i,j])
+                    else:
+                        pass
+            newmem = (listindexcopy[candidate[0][0]],listindexcopy[candidate[0][1]],mindist)
+            listindexcopy.pop(candidate[0][1])
+            listindexcopy[candidate[0][0]] = newmem
+
+            initSize -= 1
+            for i in range(initSize):
+                for j in range(i+1,initSize):
+                    listscopy[i][j] = nearest(lists,listindexcopy[i],listindexcopy[j])
+                    listscopy[j][i] = listscopy[i][j]
+        listindexcopy.append(nearest(lists,listindexcopy[0],listindexcopy[1]))
+        return listindexcopy
     except Exception as e:
         # TODO: Look into making the logging log output to the system's
         #    configured logger(s)

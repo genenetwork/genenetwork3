@@ -207,3 +207,14 @@ class TestSlink(TestCase):
         for data in [1, "test", [], 2.945, nearest, [0]]:
             with self.subTest(data=data):
                 self.assertEqual(slink(data), [])
+
+    def test_slink_with_data(self):
+        for data, expected in [
+                [[[0,9],[9,0]],[0,1,9]],
+                [[[0,9,3],[9,0,7],[3,7,0]],[(0,2,3),1,7]],
+                [[[0,9,3,6],[9,0,7,5],[3,7,0,9],[6,5,9,0]],[(0,2,3),(1,3,5),6]],
+                [[[0,9,3,6,11],[9,0,7,5,10],[3,7,0,9,2],[6,5,9,0,8],
+                  [11,10,2,8,0]],
+                 [(0,(2,4,2),3),(1,3,5),6]]]:
+            with self.subTest(data=data):
+                self.assertEqual(slink(data), expected)
