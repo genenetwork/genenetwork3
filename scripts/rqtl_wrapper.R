@@ -175,6 +175,9 @@ cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file, type
 if (!is.null(opt$interval)) {
   verbose_print('Calculating genotype probabilities with interval mapping\n')
   cross_object <- calc.genoprob(cross_object, step=5, stepwidth="max")
+} else if (!is.null(opt$pairscan)) {
+  verbose_print('Calculating genotype probabilities with interval mapping\n')
+  cross_object <- calc.genoprob(cross_object, step=20)
 } else {
   verbose_print('Calculating genotype probabilities\n')
   cross_object <- calc.genoprob(cross_object)
@@ -189,6 +192,7 @@ if (type == "4-way") {
 # Pull covariates out of cross object, if they exist
 covars <- c() # Holds the covariates which should be passed to R/qtl
 if (!is.null(opt$addcovar)) {
+  verbose_print('Pulling covariates out of cross object\n')
   # If perm strata are being used, it'll be included as the final column in the phenotype file
   if (!is.null(opt$pstrata)) {
     covar_names = trait_names[2:(length(trait_names)-1)]
@@ -224,14 +228,26 @@ if (!is.null(opt$addcovar)) {
 # Pull permutation strata out of cross object, if it is being used
 perm_strata = vector()
 if (!is.null(opt$pstrata)) {
+  verbose_print('Pulling permutation strata out of cross object\n')
   strata_col = trait_names[length(trait_names)]
   perm_strata <- pull.pheno(cross_object, strata_col)
 }
 
 # If a marker name is supplied as covariate, get its vector of values and add them as a covariate
 if (!is.null(opt$control)) {
+  verbose_print('Creating marker covariates and binding them to covariates vector\n')
   marker_covars = create_marker_covars(cross_object, opt$control)
   covars <- cbind(covars, marker_covars)
+}
+
+if (!is.null(opt$pairscan)) {
+  scan_func <- function(...){
+    scantwo(...)
+  }
+} else {
+  scan_func <- function(...){
+    scanone(...)
+  }
 }
 
 # Calculate permutations
@@ -244,19 +260,19 @@ if (opt$nperm > 0) {
 
   if (!is.null(opt$addcovar) || !is.null(opt$control)){
     if (!is.null(opt$pstrata)) {
-      verbose_print('Running ', opt$nperm, ' permutations with cofactors and strata\n')
-      perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
+      verbose_print('Running permutations with cofactors and strata\n')
+      perm_results = scan_func(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
     } else {
-      verbose_print('Running ', opt$nperm, ' permutations with cofactors\n')
-      perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, model=opt$model, method=opt$method)
+      verbose_print('Running permutations with cofactors\n')
+      perm_results = scan_func(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, model=opt$model, method=opt$method)
     }
   } else {
     if (!is.null(opt$pstrata)) {
-      verbose_print('Running ', opt$nperm, ' permutations with strata\n')
-      perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
+      verbose_print('Running permutations with strata\n')
+      perm_results = scan_func(cross_object, pheno.col=1, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
     } else {
-      verbose_print('Running ', opt$nperm, ' permutations\n')
-      perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, model=opt$model, method=opt$method)
+      verbose_print('Running permutations\n')
+      perm_results = scan_func(cross_object, pheno.col=1, n.perm=opt$nperm, model=opt$model, method=opt$method)
     }
   }
   write.csv(perm_results, perm_out_file)
@@ -269,11 +285,11 @@ if (!is.null(opt$filename)){
 }
 
 if (!is.null(opt$addcovar) || !is.null(opt$control)){
-  verbose_print('Running scanone with cofactors\n')
-  qtl_results = scanone(cross_object, pheno.col=1, addcovar=covars, model=opt$model, method=opt$method)
+  verbose_print('Running scan with cofactors\n')
+  qtl_results = scan_func(cross_object, pheno.col=1, addcovar=covars, model=opt$model, method=opt$method)
 } else {
-  verbose_print('Running scanone\n')
-  qtl_results = scanone(cross_object, pheno.col=1, model=opt$model, method=opt$method)
+  verbose_print('Running scan\n')
+  qtl_results = scan_func(cross_object, pheno.col=1, model=opt$model, method=opt$method)
 }
 
 #QTL main effects on adjusted longevity
