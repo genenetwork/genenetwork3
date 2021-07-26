@@ -68,6 +68,7 @@ class TestCorrelationMatrix(unittest.TestCase):
 
         self.assertEqual(results, [corr_row, pca_row])
 
+    @unittest.skip("Test needs to be refactored ")
     def test_compute_matrix(self):
         """tests for generating matrixs and pca's"""
 
