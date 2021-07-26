@@ -47,7 +47,7 @@ output filename generated from a hash of the genotype and phenotype files
     }
 
 
-def process_rqtl_output(file_name: str) -> List:
+def process_rqtl_mapping(file_name: str) -> List:
     """Given an output file name, read in R/qtl results and return
     a List of marker objects
 
@@ -80,6 +80,21 @@ def process_rqtl_output(file_name: str) -> List:
 
     return marker_obs
 
+def process_rqtl_pairscan(file_name: str) -> List:
+    """Given an output file name, read in R/qtl pair-scan results and return
+    a List of Lists representing the matrix of results
+
+    """
+    results = []
+    with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
+                           "output", file_name), "r") as the_file:
+        for i, line in enumerate(the_file):
+            if i == 0: # Skip first line
+                continue
+            line_items = line.split(",")
+            results.append(line_items[1:]) # Append all but first item in line
+
+    return results
 
 def process_perm_output(file_name: str):
     """Given base filename, read in R/qtl permutation output and calculate
