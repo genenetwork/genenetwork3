@@ -26,4 +26,4 @@ CREATE TABLE metadata_audit (
     json_diff_data  VARCHAR(2048)                           NOT NULL,
     time_stamp      timestamp     DEFAULT CURRENT_TIMESTAMP NOT NULL,
                     CHECK (JSON_VALID(json_diff_data))
-);
+) CHARACTER SET 'utf8mb4';
