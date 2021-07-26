@@ -18,12 +18,8 @@ from gn3.computations.correlations import normalize_values
 
 def compute_the_pca(data, transform: bool = True):
     """function to compute pca"""
-
     pca = PCA()
-
     if transform is True:
-        # transform the matrix
-        # e.g where samples are columns and traits are rows
         scaled_data = preprocessing.scale(data.T)
 
     else:
@@ -45,7 +41,6 @@ def compute_pca2(matrix):
     pca = PCA()
     scaled_data = preprocessing.scale(matrix)
     pca.fit(scaled_data)
-    # generate coordinates
 
     pca_data = pca.transform(scaled_data)
 
@@ -88,28 +83,12 @@ def get_scree_plot_data(pca_obj):
     }
 
 
-def export_scree_plot_html(data: dict):
-    """function to generate and export scree  plot
-    should probably make endpoint for this """
-
-    # add different color to markers
-    fig = px.line(x=data["x_vals"], y=data["y_vals"],
-                  title="Scree Plot",
-                  labels=dict(x="PCA Components",
-                              y="Percent of total variance %"))
-
-    generated_html = fig.to_html(full_html=False)
-
-    return generated_html
-
-
 def process_factor_loadings(pca_obj, trait_list):
     """
     fetch loading for each trait i.e
     trait_a:pca_1_load,pca_2_load ... ,
     trait_b:......
     """
-    # xtodo try to fetch for each trait
 
     loadings = pca_obj.components_
 
@@ -123,11 +102,6 @@ def fetch_sample_datas(target_samples: List,
                        target_sample_data: dict,
                        this_samples_data: dict) ->Tuple[List[float], List[float]]:
     """get shared sample data xtodo refactor to use correlation"""
-
-    # xtodo refactor correlation signature in /computation/correlation
-
-    # intenal of tsamples = ["BXD1","BXD2","BXD3"]
-    # internal representaito of sample data is {"bxd":obj(val),bxd:obj(val)}
 
     target_trait_vals = []
     this_trait_vals = []
@@ -152,8 +126,6 @@ def compute_corr_matrix(trait_lists: List) -> Tuple[List, List]:
     for (this_trait, this_dataset) in trait_lists:
         _this_db_samples = this_dataset.group.all_samples_ordered()
 
-        # fetch required samples (fetch sample data) inputs for each
-
         this_trait_data = this_trait.data
 
         corr_row_input = []
@@ -169,7 +141,6 @@ def compute_corr_matrix(trait_lists: List) -> Tuple[List, List]:
         corr_row_results, pca_row_results = compute_row_matrix(
             sample_datas=corr_row_input)
         corr_results.append(corr_row_results)
-        # correlation matrix for pca'''
         pearson_results.append(pca_row_results)
 
     return (corr_results, pearson_results)
@@ -177,8 +148,6 @@ def compute_corr_matrix(trait_lists: List) -> Tuple[List, List]:
 
 def compute_row_matrix(sample_datas):
     """function to compute correlation for trait to create row"""
-
-    # expected inputs [[targ1,target2],[targ3,target4]]
 
     # xtodo add lowest overlap
     is_spearman = False
@@ -211,8 +180,6 @@ def compute_row_matrix(sample_datas):
         corr_row.append([target_trait, sample_r, num_overlap])
         pca_corr_row.append(pearson_r)
 
-        # normalize the values
-
     return [corr_row, pca_corr_row]
 
 
@@ -244,6 +211,7 @@ def generate_pca_traits(pca_traits,
 
 def cache_pca_traits(redis_instance, pca_trait_dict, exp_time):
     """cache pca trait temp results """
+    # xtodo
 
     for (trait, trait_vals) in pca_trait_dict.items():
         redis_instance.set(trait, trait_vals, ex=exp_time)
