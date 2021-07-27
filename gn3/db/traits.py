@@ -18,10 +18,15 @@ def get_trait_csv_sample_data(conn: Any,
            "PublishData.Id = PublishXRef.DataId AND "
            "PublishXRef.Id = %s AND PublishXRef.PhenotypeId = %s "
            "AND PublishData.StrainId = Strain.Id Order BY Strain.Name")
-    csv_data = ["Strain Id, Publish Data Id,Strain Name,Value,SE,Count"]
+    csv_data = ["Strain Id,Strain Name,Value,SE,Count"]
+    publishdata_id = ""
     with conn.cursor() as cursor:
         cursor.execute(sql, (trait_name, phenotype_id,))
         for record in cursor.fetchall():
-            csv_data.append(",".join([str(val) if val else "x"
-                                      for val in record]))
-    return "\n".join(csv_data)
+            (strain_id, publishdata_id,
+             strain_name, value, error, count) = record
+            csv_data.append(
+                ",".join([str(val) if val else "x"
+                          for val in (strain_id, strain_name,
+                                      value, error, count)]))
+    return f"# Publish Data Id: {publishdata_id}\n\n" + "\n".join(csv_data)
