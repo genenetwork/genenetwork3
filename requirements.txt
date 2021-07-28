@@ -33,3 +33,4 @@ urllib3==1.26.4
 varint==1.0.2
 Werkzeug==1.0.1
 wrapt==1.12.1
+pingouin==0.3.12
