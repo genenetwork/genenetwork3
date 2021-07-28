@@ -90,3 +90,21 @@ def insert_publication(pubmed_id: int, publication: Optional[Dict],
                          ", ".join(['%s'] * len(publication))))
         with conn.cursor() as cursor:
             cursor.execute(insert_query, tuple(publication.values()))
+
+def retrieve_probeset_trait_name(threshold, name, connection):
+    """
+    Retrieve the name for a Probeset trait
+
+    This is extracted from the `webqtlDataset.retrieveName` function,
+    specifically the section dealing with 'ProbeSet' type traits
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlDataset.py#L140-154"""
+    query = (
+        'SELECT Id, Name, FullName, ShortName, DataScale '
+        'FROM ProbeSetFreeze '
+        'WHERE '
+        'public > %(threshold)s '
+        'AND '
+        '(Name = %(name)s OR FullName = %(name)s OR ShortName = %(name)s)')
+    with connection.cursor() as cursor:
+        cursor.execute(query, {"threshold": threshold, "name": name})
+        return cursor.fetchone()
