@@ -1,4 +1,5 @@
 """module contains code for correlations"""
+import math
 import multiprocessing
 
 from typing import List
@@ -90,7 +91,7 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
                                        target_values=sanitized_target_vals,
                                        corr_method=corr_method)
 
-        if corr_coefficient is not None:
+        if corr_coefficient is not None and not math.isnan(corr_coefficient):
             return (trait_name, corr_coefficient, p_value, num_overlap)
     return None
 
