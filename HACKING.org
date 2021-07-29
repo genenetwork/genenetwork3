@@ -1,0 +1,8 @@
+* Introduction
+
+We are getting away from GitHub CI, and hosting our own CI servers. From GitHub, once a person makes a push, we'll be using [[https://github.com/adnanh/webhook][webhook]] to initiate laminar.
+
+
+First install laminar (use the appropriate binary):
+
+: wget https://github.com/adnanh/webhook/releases/download/2.8.0/webhook-linux-amd64.tar.gz && tar xf webhook-linux-amd64.tar.gz

@@ -1,7 +1,7 @@
 # pylint: disable=[R0902, R0903]
 """Module that exposes common db operations"""
 from dataclasses import asdict, astuple
-from typing import Any, Dict, List, Optional, Generator, Union
+from typing import Any, Dict, List, Optional, Generator, Tuple, Union
 from typing_extensions import Protocol
 
 from gn3.db.metadata_audit import MetadataAudit
