@@ -7,6 +7,10 @@ slink:
     TODO: Describe what the function does...
 """
 import logging
+from typing import List, Tuple, Union, Sequence
+
+NumType = Union[int, float]
+SeqOfNums = Sequence[NumType]
 
 class LengthError(BaseException):
     """Raised whenever child lists/tuples are not the same length as the parent
@@ -73,7 +77,10 @@ raise an exception."""
 def __flatten_list_of_lists(parent):
     return [item for child in parent for item in child]
 
-def nearest(lists, i, j):
+# i and j are Union[SeqOfNums, NumType], but that leads to errors where the
+# values of i or j are indexed, since the NumType type is not indexable.
+# I don't know how to type this so that it does not fail on running `mypy .`
+def nearest(lists: Sequence[SeqOfNums], i, j) -> NumType:
     """
     Computes shortest distance between member(s) in `i` and member(s) in `j`.
 
@@ -126,6 +133,10 @@ def nearest(lists, i, j):
 
     raise ValueError("member values (i or j) should be lists/tuples of integers or integers")
 
+# `lists` here could be Sequence[SeqOfNums], but that leads to errors I do not
+# understand down the line
+# Might have to re-implement the function especially since the errors are thrown
+# where `listindexcopy` is involved
 def slink(lists):
     """
     DESCRIPTION:
