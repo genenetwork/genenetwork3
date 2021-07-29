@@ -64,20 +64,6 @@ def update(conn: Any,
         return cursor.rowcount
 
 
-def update_raw(conn: Any, table: str,
-               set_: List[Tuple[str, Any]],
-               where: Tuple[str, Tuple]):
-    """Run a generic raw statement"""
-    sql = f"UPDATE {table} SET "
-    sql += ", ".join([f"{k} = '%s'" for k, v in set_])
-    sql += f" WHERE {where[0]}"
-    with conn.cursor() as cursor:
-        cursor.execute(sql,
-                       tuple(v for _, v in set_) + where[1])
-        conn.commit()
-        return cursor.rowcount
-
-
 def fetchone(conn: Any,
              table: str,
              where: Optional[Dataclass],

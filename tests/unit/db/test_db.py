@@ -5,7 +5,6 @@ from unittest import mock
 from gn3.db import fetchall
 from gn3.db import fetchone
 from gn3.db import update
-from gn3.db import update_raw
 from gn3.db import diff_from_dict
 from gn3.db.phenotypes import Phenotype
 from gn3.db.phenotypes import Probeset
@@ -119,21 +118,3 @@ class TestCrudMethods(TestCase):
                                         {"id": 2, "data": "b"}),
                          {"id": {"old": 1, "new": 2},
                           "data": {"old": "a", "new": "b"}})
-
-    def test_update_raw(self):
-        """Test a raw update query"""
-        db_mock = mock.MagicMock()
-        with db_mock.cursor() as cursor:
-            type(cursor).rowcount = 1
-            self.assertEqual(update_raw(
-                conn=db_mock,
-                table="PublishData",
-                set_=[("value", 1)],
-                where=("StrainId = '%s' AND DataId = '%s'",
-                       (2, 8967049))),
-                             1)
-            cursor.execute.assert_called_once_with(
-                "UPDATE PublishData SET "
-                "value = '%s' WHERE "
-                "StrainId = '%s' AND DataId = '%s'",
-                (1, 2, 8967049))
