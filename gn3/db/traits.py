@@ -91,7 +91,8 @@ def insert_publication(pubmed_id: int, publication: Optional[Dict],
         with conn.cursor() as cursor:
             cursor.execute(insert_query, tuple(publication.values()))
 
-def retrieve_trait_dataset_name(trait_type, threshold, name, connection):
+def retrieve_trait_dataset_name(
+        trait_type: str, threshold: int, name: str, connection: Any):
     """
     Retrieve the name of a trait given the trait's name
 
@@ -136,7 +137,7 @@ PUBLISH_TRAIT_INFO_QUERY = (
     "PublishXRef.InbredSetId = PublishFreeze.InbredSetId AND "
     "PublishFreeze.Id =%(trait_dataset_id)s")
 
-def retrieve_publish_trait_info(trait_data_source, conn):
+def retrieve_publish_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     """Retrieve trait information for type `Publish` traits.
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L399-L421"""
@@ -170,7 +171,7 @@ PROBESET_TRAIT_INFO_QUERY = (
     "ProbeSetFreeze.Name = %(trait_dataset_name)s AND "
     "ProbeSet.Name = %(trait_name)s")
 
-def retrieve_probeset_trait_info(trait_data_source, conn):
+def retrieve_probeset_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     """Retrieve trait information for type `ProbeSet` traits.
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L424-L435"""
@@ -192,7 +193,7 @@ GENO_TRAIT_INFO_QUERY = (
     "GenoXRef.GenoFreezeId = GenoFreeze.Id AND GenoXRef.GenoId = Geno.Id AND "
     "GenoFreeze.Name = %(trait_dataset_name)s AND Geno.Name = %(trait_name)s")
 
-def retrieve_geno_trait_info(trait_data_source, conn):
+def retrieve_geno_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     """Retrieve trait information for type `Geno` traits.
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L438-L449"""
@@ -209,7 +210,7 @@ TEMP_TRAIT_INFO_QUERY = (
     "SELECT name, description FROM Temp "
     "WHERE Name = %(trait_name)s")
 
-def retrieve_temp_trait_info(trait_data_source, conn):
+def retrieve_temp_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     """Retrieve trait information for type `Temp` traits.
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L450-452"""
@@ -223,7 +224,8 @@ def retrieve_temp_trait_info(trait_data_source, conn):
         return cursor.fetchone()
 
 def retrieve_trait_info(
-        trait_type, trait_name, trait_dataset_id, trait_dataset_name, conn):
+        trait_type: str, trait_name: str, trait_dataset_id: int,
+        trait_dataset_name: str, conn: Any):
     """Retrieves the trait information.
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L397-L456
