@@ -1,5 +1,6 @@
 """This class contains functions relating to trait data manipulation"""
 from typing import Any, Dict, Union
+from gn3.function_helpers import compose
 
 
 def get_trait_csv_sample_data(conn: Any,
@@ -135,8 +136,7 @@ def retrieve_publish_trait_info(trait_data_source: Dict[str, Any], conn: Any):
         "Phenotype.Id = PublishXRef.PhenotypeId AND "
         "Publication.Id = PublishXRef.PublicationId AND "
         "PublishXRef.InbredSetId = PublishFreeze.InbredSetId AND "
-        "PublishFreeze.Id =%(trait_dataset_id)s").format(
-            columns = columns)
+        "PublishFreeze.Id =%(trait_dataset_id)s").format(columns=columns)
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -144,7 +144,17 @@ def retrieve_publish_trait_info(trait_data_source: Dict[str, Any], conn: Any):
                 k:v for k, v in trait_data_source.items()
                 if k in ["trait_name", "trait_dataset_id"]
             })
-        return dict(zip((k.lower() for k in keys), cursor.fetchone()))
+        return dict(zip([k.lower() for k in keys], cursor.fetchone()))
+
+def set_confidential_field(trait_info):
+    """Post processing function for 'Publish' trait types.
+
+    It sets the value for the 'confidential' key."""
+    return {
+        **trait_info,
+        "confidential": 1 if (
+            trait_info.get("pre_publication_description", None)
+            and not trait_info.get("pubmed_id", None)) else 0}
 
 def retrieve_probeset_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     """Retrieve trait information for type `ProbeSet` traits.
@@ -168,7 +178,7 @@ def retrieve_probeset_trait_info(trait_data_source: Dict[str, Any], conn: Any):
         "ProbeSetXRef.ProbeSetId = ProbeSet.Id AND "
         "ProbeSetFreeze.Name = %(trait_dataset_name)s AND "
         "ProbeSet.Name = %(trait_name)s").format(
-            columns = ", ".join(["ProbeSet.{}".format(x) for x in keys]))
+            columns=", ".join(["ProbeSet.{}".format(x) for x in keys]))
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -192,7 +202,7 @@ def retrieve_geno_trait_info(trait_data_source: Dict[str, Any], conn: Any):
         "GenoXRef.GenoFreezeId = GenoFreeze.Id AND GenoXRef.GenoId = Geno.Id AND "
         "GenoFreeze.Name = %(trait_dataset_name)s AND "
         "Geno.Name = %(trait_name)s").format(
-            columns = ", ".join(["Geno.{}".format(x) for x in keys]))
+            columns=", ".join(["Geno.{}".format(x) for x in keys]))
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -209,7 +219,7 @@ def retrieve_temp_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     keys = ("name", "description")
     query = (
         "SELECT {columns} FROM Temp "
-        "WHERE Name = %(trait_name)s").format(columns = ", ".join(keys))
+        "WHERE Name = %(trait_name)s").format(columns=", ".join(keys))
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -219,9 +229,53 @@ def retrieve_temp_trait_info(trait_data_source: Dict[str, Any], conn: Any):
             })
         return dict(zip(keys, cursor.fetchone()))
 
+def set_haveinfo_field(trait_info):
+    """
+    Common postprocessing function for all trait types.
+
+    Sets the value for the 'haveinfo' field."""
+    return {**trait_info, "haveinfo": 1 if trait_info else 0}
+
+def set_homologene_id_field_probeset(trait_info, conn):
+    """
+    Postprocessing function for 'ProbeSet' traits.
+
+    Sets the value for the 'homologene' key.
+    """
+    query = (
+        "SELECT HomologeneId FROM Homologene, Species, InbredSet"
+        " WHERE Homologene.GeneId = %(geneid)s AND InbredSet.Name = %(riset)s"
+        " AND InbredSet.SpeciesId = Species.Id AND"
+        " Species.TaxonomyId = Homologene.TaxonomyId")
+    with conn.cursor() as cursor:
+        cursor.execute(
+            query,
+            {
+                k:v for k, v in trait_info.items()
+                if k in ["geneid", "riset"]
+            })
+        res = cursor.fetchone()
+        if res:
+            return {**trait_info, "homologeneid": res[0]}
+    return {**trait_info, "homologeneid": None}
+
+def set_homologene_id_field(trait_info, conn):
+    """
+    Common postprocessing function for all trait types.
+
+    Sets the value for the 'homologene' key."""
+    set_to_null = lambda ti: {**ti, "homologeneid": None}
+    functions_table = {
+        "Temp": set_to_null,
+        "Geno": set_to_null,
+        "Publish": set_to_null,
+        "ProbeSet": lambda ti: set_homologene_id_field_probeset(ti, conn)
+    }
+    return functions_table[trait_info["type"]](trait_info)
+
 def retrieve_trait_info(
         trait_type: str, trait_name: str, trait_dataset_id: int,
-        trait_dataset_name: str, conn: Any, QTL = None):
+        trait_dataset_name: str, conn: Any, QTL=None):
     """Retrieves the trait information.
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L397-L456
@@ -234,7 +288,24 @@ def retrieve_trait_info(
         "Geno": retrieve_geno_trait_info,
         "Temp": retrieve_temp_trait_info
     }
-    return trait_info_function_table[trait_type](
+
+    common_post_processing_fn = compose(
+        lambda ti: set_homologene_id_field(ti, conn),
+        lambda ti: {"type": trait_type, **ti},
+        set_haveinfo_field)
+
+    trait_post_processing_functions_table = {
+        "Publish": compose(set_confidential_field, common_post_processing_fn),
+        "ProbeSet": compose(common_post_processing_fn),
+        "Geno": common_post_processing_fn,
+        "Temp": common_post_processing_fn
+    }
+
+    retrieve_info = compose(
+        trait_post_processing_functions_table[trait_type],
+        trait_info_function_table[trait_type])
+
+    return retrieve_info(
         {
             "trait_name": trait_name,
             "trait_dataset_id": trait_dataset_id,
