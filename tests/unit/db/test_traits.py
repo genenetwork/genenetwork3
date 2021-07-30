@@ -1,11 +1,6 @@
 """Tests for gn3/db/traits.py"""
 from unittest import mock, TestCase
 from gn3.db.traits import (
-    GENO_TRAIT_INFO_QUERY,
-    TEMP_TRAIT_INFO_QUERY,
-    PUBLISH_TRAIT_INFO_QUERY,
-    PROBESET_TRAIT_INFO_QUERY)
-from gn3.db.traits import (
     retrieve_trait_info,
     retrieve_geno_trait_info,
     retrieve_temp_trait_info,
@@ -13,7 +8,6 @@ from gn3.db.traits import (
     retrieve_publish_trait_info,
     retrieve_probeset_trait_info,
     update_sample_data)
-
 
 class TestTraitsDBFunctions(TestCase):
     "Test cases for traits functions"
@@ -54,12 +48,32 @@ class TestTraitsDBFunctions(TestCase):
             trait_source = {
                 "trait_name": "PublishTraitName", "trait_dataset_id": 1}
             self.assertEqual(
-                retrieve_publish_trait_info(
-                    trait_source,
-                    db_mock),
-                tuple())
+                retrieve_publish_trait_info(trait_source, db_mock), {})
             cursor.execute.assert_called_once_with(
-                PUBLISH_TRAIT_INFO_QUERY, trait_source)
+                ("SELECT "
+                 "PublishXRef.Id, Publication.PubMed_ID,"
+                 " Phenotype.Pre_publication_description,"
+                 " Phenotype.Post_publication_description,"
+                 " Phenotype.Original_description,"
+                 " Phenotype.Pre_publication_abbreviation,"
+                 " Phenotype.Post_publication_abbreviation,"
+                 " Phenotype.Lab_code, Phenotype.Submitter, Phenotype.Owner,"
+                 " Phenotype.Authorized_Users,"
+                 " CAST(Publication.Authors AS BINARY),"
+                 " Publication.Title, Publication.Abstract,"
+                 " Publication.Journal,"
+                 " Publication.Volume, Publication.Pages, Publication.Month,"
+                 " Publication.Year, PublishXRef.Sequence, Phenotype.Units,"
+                 " PublishXRef.comments"
+                 " FROM"
+                 " PublishXRef, Publication, Phenotype, PublishFreeze"
+                 " WHERE"
+                 " PublishXRef.Id = %(trait_name)s "
+                 " AND Phenotype.Id = PublishXRef.PhenotypeId"
+                 " AND Publication.Id = PublishXRef.PublicationId"
+                 " AND PublishXRef.InbredSetId = PublishFreeze.InbredSetId"
+                 " AND PublishFreeze.Id =%(trait_dataset_id)s"),
+                trait_source)
 
     def test_retrieve_probeset_trait_info(self):
         """Test retrieval of type `Probeset` traits."""
@@ -70,9 +84,31 @@ class TestTraitsDBFunctions(TestCase):
                 "trait_name": "ProbeSetTraitName",
                 "trait_dataset_name": "ProbeSetDatasetTraitName"}
             self.assertEqual(
-                retrieve_probeset_trait_info(trait_source, db_mock), tuple())
+                retrieve_probeset_trait_info(trait_source, db_mock), {})
             cursor.execute.assert_called_once_with(
-                PROBESET_TRAIT_INFO_QUERY, trait_source)
+                (
+                    "SELECT "
+                    "ProbeSet.name, ProbeSet.symbol, ProbeSet.description, "
+                    "ProbeSet.probe_target_description, ProbeSet.chr, "
+                    "ProbeSet.mb, ProbeSet.alias, ProbeSet.geneid, "
+                    "ProbeSet.genbankid, ProbeSet.unigeneid, ProbeSet.omim, "
+                    "ProbeSet.refseq_transcriptid, ProbeSet.blatseq, "
+                    "ProbeSet.targetseq, ProbeSet.chipid, ProbeSet.comments, "
+                    "ProbeSet.strand_probe, ProbeSet.strand_gene, "
+                    "ProbeSet.probe_set_target_region, ProbeSet.proteinid, "
+                    "ProbeSet.probe_set_specificity, "
+                    "ProbeSet.probe_set_blat_score, "
+                    "ProbeSet.probe_set_blat_mb_start, "
+                    "ProbeSet.probe_set_blat_mb_end, "
+                    "ProbeSet.probe_set_strand, ProbeSet.probe_set_note_by_rw, "
+                    "ProbeSet.flag "
+                    "FROM "
+                    "ProbeSet, ProbeSetFreeze, ProbeSetXRef "
+                    "WHERE "
+                    "ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id "
+                    "AND ProbeSetXRef.ProbeSetId = ProbeSet.Id "
+                    "AND ProbeSetFreeze.Name = %(trait_dataset_name)s "
+                    "AND ProbeSet.Name = %(trait_name)s"), trait_source)
 
     def test_retrieve_geno_trait_info(self):
         """Test retrieval of type `Geno` traits."""
@@ -83,9 +119,19 @@ class TestTraitsDBFunctions(TestCase):
                 "trait_name": "GenoTraitName",
                 "trait_dataset_name": "GenoDatasetTraitName"}
             self.assertEqual(
-                retrieve_geno_trait_info(trait_source, db_mock), tuple())
+                retrieve_geno_trait_info(trait_source, db_mock), {})
             cursor.execute.assert_called_once_with(
-                GENO_TRAIT_INFO_QUERY, trait_source)
+                (
+                    "SELECT "
+                    "Geno.name, Geno.chr, Geno.mb, Geno.source2, Geno.sequence "
+                    "FROM "
+                    "Geno, GenoFreeze, GenoXRef "
+                    "WHERE "
+                    "GenoXRef.GenoFreezeId = GenoFreeze.Id "
+                    "AND GenoXRef.GenoId = Geno.Id "
+                    "AND GenoFreeze.Name = %(trait_dataset_name)s "
+                    "AND Geno.Name = %(trait_name)s"),
+                trait_source)
 
     def test_retrieve_temp_trait_info(self):
         """Test retrieval of type `Temp` traits."""
@@ -94,9 +140,10 @@ class TestTraitsDBFunctions(TestCase):
             cursor.fetchone.return_value = tuple()
             trait_source = {"trait_name": "TempTraitName"}
             self.assertEqual(
-                retrieve_temp_trait_info(trait_source, db_mock), tuple())
+                retrieve_temp_trait_info(trait_source, db_mock), {})
             cursor.execute.assert_called_once_with(
-                TEMP_TRAIT_INFO_QUERY, trait_source)
+                "SELECT name, description FROM Temp WHERE Name = %(trait_name)s",
+                trait_source)
 
     def test_retrieve_trait_info(self):
         """Test that information on traits is retrieved as appropriate."""
@@ -113,7 +160,7 @@ class TestTraitsDBFunctions(TestCase):
                         retrieve_trait_info(
                             trait_type, trait_name, trait_dataset_id,
                             trait_dataset_name, db_mock),
-                        tuple())
+                        {})
 
     def test_update_sample_data(self):
         """Test that the SQL queries when calling update_sample_data are called with
