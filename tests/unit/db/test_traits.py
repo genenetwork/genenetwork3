@@ -68,7 +68,7 @@ class TestTraitsDBFunctions(TestCase):
                  " FROM"
                  " PublishXRef, Publication, Phenotype, PublishFreeze"
                  " WHERE"
-                 " PublishXRef.Id = %(trait_name)s "
+                 " PublishXRef.Id = %(trait_name)s"
                  " AND Phenotype.Id = PublishXRef.PhenotypeId"
                  " AND Publication.Id = PublishXRef.PublicationId"
                  " AND PublishXRef.InbredSetId = PublishFreeze.InbredSetId"
