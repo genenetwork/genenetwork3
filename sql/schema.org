@@ -24,3 +24,16 @@ migrating the database.
    Foreign keys?
 ** OrderId
    Foreign keys?
+
+* Strain
+** Id
+   Primary key
+** Name
+   Name of the strain
+** Name2
+   A second name. For most rows, this is the same as Name. Why is this
+   necessary?
+** SpeciesId
+   Foreign key into the Species table
+** Symbol
+** Alias
