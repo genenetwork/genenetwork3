@@ -176,7 +176,7 @@ if (!is.null(opt$interval)) {
   verbose_print('Calculating genotype probabilities with interval mapping\n')
   cross_object <- calc.genoprob(cross_object, step=5, stepwidth="max")
 } else if (!is.null(opt$pairscan)) {
-  verbose_print('Calculating genotype probabilities with interval mapping\n')
+  verbose_print('Calculating genotype probabilities for pair-scan\n')
   cross_object <- calc.genoprob(cross_object, step=10)
 } else {
   verbose_print('Calculating genotype probabilities\n')
@@ -340,7 +340,9 @@ if (type == "4-way") {
 
 verbose_print('Writing results to CSV file\n')
 if (!is.null(opt$pairscan)) {
+  map_out_file = file.path(opt$outdir, paste("MAP_", opt$filename, sep = "" ))
   write.csv(qtl_results[1], out_file)
+  write.csv(qtl_results[2], map_out_file)
 } else {
   write.csv(qtl_results, out_file)
 }
