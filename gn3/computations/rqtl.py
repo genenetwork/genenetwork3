@@ -82,19 +82,96 @@ def process_rqtl_mapping(file_name: str) -> List:
 
 def process_rqtl_pairscan(file_name: str) -> List:
     """Given an output file name, read in R/qtl pair-scan results and return
-    a List of Lists representing the matrix of results
+    a list of both the JSON needed for the d3panels figure and a list of results
+    to be used when generating the results table (which will include marker names)
 
     """
-    results = []
+
+    figure_data = pairscan_results_for_figure(file_name)
+    table_data = pairscan_results_for_table(file_name)
+
+    return [figure_data, table_data]
+
+def pairscan_for_figure(file_name: str) -> Dict:
+    """Given an output file name, read in R/qtl pair-scan results and return
+    the JSON needed for the d3panels figure
+
+    """
+    figure_data = {}
+
+    # Open the file with the actual results, written as a list of lists
     with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
                            "output", file_name), "r") as the_file:
+        lod_results = []
         for i, line in enumerate(the_file):
             if i == 0: # Skip first line
                 continue
-            line_items = line.split(",")
-            results.append(line_items[1:]) # Append all but first item in line
+            line_items = [item.rstrip('\n') for item in line.split(",")]
+            lod_results.append(line_items[1:]) # Append all but first item in line
+        figure_data['lod'] = lod_results
 
-    return results
+    # Open the map file with the list of markers/pseudomarkers and their positions
+    with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
+                           "output", "MAP_" + file_name), "r") as the_file:
+        chr_list = []
+        pos_list = []
+        for i, line in enumerate(the_file):
+            if i == 0: # Skip first line
+                continue
+            line_items = [item.rstrip('\n') for item in line.split(",")]
+            chr_list.append(line_items[1])
+            pos_list.append(line_items[2])
+        figure_data['chr'] = chr_list
+        figure_data['pos'] = pos_list
+
+    return figure_data
+
+
+def pairscan_for_table(file_name: str) -> List:
+    """Given an output file name, read in R/qtl pair-scan results and return
+    a list of results to be used when generating the results table (which will include marker names)
+
+    """
+    table_data = []
+
+    # Open the map file with the list of markers/pseudomarkers and create list of marker obs
+    with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
+                           "output", "MAP_" + file_name), "r") as the_file:
+        marker_list = []
+        for i, line in enumerate(the_file.readlines()[1:]):
+            line_items = [item.rstrip('\n') for item in line.split(",")]
+            this_marker = {
+                'name': line_items[0],
+                'chr': line_items[1][1:-1], # Strip quotes from beginning and end of chr string
+                'pos': line_items[2]
+            }
+
+            marker_list.append(this_marker)
+
+    # Open the file with the actual results and write the results as
+    # they will be displayed in the results table
+    with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
+                           "output", file_name), "r") as the_file:
+        for i, line in enumerate(the_file.readlines()[1:]):
+            marker_1 = marker_list[i]
+            line_items = [item.rstrip('\n') for item in line.split(",")]
+            for j, item in enumerate(line_items[1:]):
+                marker_2 = marker_list[j]
+                try:
+                    lod_score = f"{float(item):.3f}"
+                except:
+                    lod_score = f"{item}"
+                this_line = {
+                    'marker1': f"{marker_1['name']}",
+                    'pos1': f"Chr {marker_1['chr']} @ {float(marker_1['pos']):.1f} cM",
+                    'lod': lod_score,
+                    'marker2': f"{marker_2['name']}",
+                    'pos2': f"Chr {marker_2['chr']} @ {float(marker_2['pos']):.1f} cM"
+                }
+            table_data.append(this_line)
+
+    return table_data
+
 
 def process_perm_output(file_name: str):
     """Given base filename, read in R/qtl permutation output and calculate
