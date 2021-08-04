@@ -1,0 +1,39 @@
+#+TITLE: GeneNetwork Database Schema
+
+This is an attempt to reverse engineer and understand the schema of the
+GeneNetwork database. The goal is to prune redundant tables, fields, etc. and
+arrive at a simplified schema. This simplified schema will be useful when
+migrating the database.
+
+* Species
+** Id
+   Primary key
+** SpeciesId
+   Looks like a redundant key referred to as a foreign key from many other
+   tables. This field should be replaced by Id.
+** SpeciesName
+   Common name of the species. This field can be replaced by MenuName.
+** Name
+   Downcased common name used as key for the species in dictionaries
+** MenuName
+   Name in the Species dropdown menu. This is the SpeciesName, but sometimes
+   with the reference genome identifier mentioned in brackets.
+** FullName
+   Binomial name of the species
+** TaxonomyId
+   Foreign keys?
+** OrderId
+   Foreign keys?
+
+* Strain
+** Id
+   Primary key
+** Name
+   Name of the strain
+** Name2
+   A second name. For most rows, this is the same as Name. Why is this
+   necessary?
+** SpeciesId
+   Foreign key into the Species table
+** Symbol
+** Alias
