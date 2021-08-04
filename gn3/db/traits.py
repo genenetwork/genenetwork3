@@ -160,11 +160,14 @@ def set_confidential_field(trait_info):
     """Post processing function for 'Publish' trait types.
 
     It sets the value for the 'confidential' key."""
-    return {
-        **trait_info,
-        "confidential": 1 if (
-            trait_info.get("pre_publication_description", None)
-            and not trait_info.get("pubmed_id", None)) else 0}
+    if trait_info["type"] == "Publish":
+        return {
+            **trait_info,
+            "confidential": 1 if (
+                trait_info.get("pre_publication_description", None)
+                and not trait_info.get("pubmed_id", None)) else 0}
+    else:
+        return trait_info
 
 def retrieve_probeset_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     """Retrieve trait information for type `ProbeSet` traits.
