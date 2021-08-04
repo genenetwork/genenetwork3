@@ -14,13 +14,15 @@ class TestTraitsDBFunctions(TestCase):
 
     def test_retrieve_trait_dataset_name(self):
         """Test that the function is called correctly."""
-        for trait_type, thresh, trait_dataset_name, columns in [
+        for trait_type, thresh, trait_dataset_name, columns, table in [
                 ["ProbeSet", 9, "testName",
-                 "Id, Name, FullName, ShortName, DataScale"],
-                ["Geno", 3, "genoTraitName", "Id, Name, FullName, ShortName"],
+                 "Id, Name, FullName, ShortName, DataScale", "ProbeSetFreeze"],
+                ["Geno", 3, "genoTraitName", "Id, Name, FullName, ShortName",
+                 "GenoFreeze"],
                 ["Publish", 6, "publishTraitName",
-                 "Id, Name, FullName, ShortName"],
-                ["Temp", 4, "tempTraitName", "Id, Name, FullName, ShortName"]]:
+                 "Id, Name, FullName, ShortName", "PublishFreeze"],
+                ["Temp", 4, "tempTraitName", "Id, Name, FullName, ShortName",
+                 "TempFreeze"]]:
             db_mock = mock.MagicMock()
             with self.subTest(trait_type=trait_type):
                 with db_mock.cursor() as cursor:
@@ -33,12 +35,13 @@ class TestTraitsDBFunctions(TestCase):
                         ("testName", "testNameFull", "testNameShort",
                          "dataScale"))
                     cursor.execute.assert_called_once_with(
-                        "SELECT {cols} "
-                        "FROM {ttype}Freeze "
+                        "SELECT %(columns)s "
+                        "FROM %(table)s "
                         "WHERE public > %(threshold)s AND "
                         "(Name = %(name)s OR FullName = %(name)s OR ShortName = %(name)s)".format(
                             cols=columns, ttype=trait_type),
-                        {"threshold": thresh, "name": trait_dataset_name})
+                        {"threshold": thresh, "name": trait_dataset_name,
+                         "table": table, "columns": columns})
 
     def test_retrieve_publish_trait_info(self):
         """Test retrieval of type `Publish` traits."""
@@ -147,11 +150,16 @@ class TestTraitsDBFunctions(TestCase):
 
     def test_retrieve_trait_info(self):
         """Test that information on traits is retrieved as appropriate."""
-        for trait_type, trait_name, trait_dataset_id, trait_dataset_name, in [
-                ["Publish", "PublishTraitName", 1, "PublishDatasetTraitName"],
-                ["ProbeSet", "ProbeSetTraitName", 2, "ProbeSetDatasetTraitName"],
-                ["Geno", "GenoTraitName", 3, "GenoDatasetTraitName"],
-                ["Temp", "TempTraitName", 4, "TempDatasetTraitName"]]:
+        for trait_type, trait_name, trait_dataset_id, trait_dataset_name, expected in [
+                ["Publish", "PublishTraitName", 1, "PublishDatasetTraitName",
+                 {"haveinfo": 0, "homologeneid": None, "type": "Publish",
+                  "confidential": 0}],
+                ["ProbeSet", "ProbeSetTraitName", 2, "ProbeSetDatasetTraitName",
+                 {"haveinfo": 0, "homologeneid": None, "type": "ProbeSet"}],
+                ["Geno", "GenoTraitName", 3, "GenoDatasetTraitName",
+                 {"haveinfo": 0, "homologeneid": None, "type": "Geno"}],
+                ["Temp", "TempTraitName", 4, "TempDatasetTraitName",
+                 {"haveinfo": 0, "homologeneid": None, "type": "Temp"}]]:
             db_mock = mock.MagicMock()
             with self.subTest(trait_type=trait_type):
                 with db_mock.cursor() as cursor:
@@ -160,7 +168,7 @@ class TestTraitsDBFunctions(TestCase):
                         retrieve_trait_info(
                             trait_type, trait_name, trait_dataset_id,
                             trait_dataset_name, db_mock),
-                        {})
+                        expected)
 
     def test_update_sample_data(self):
         """Test that the SQL queries when calling update_sample_data are called with
