@@ -286,6 +286,62 @@ def set_homologene_id_field(trait_info, conn):
     }
     return functions_table[trait_info["type"]](trait_info)
 
+def set_geno_riset_fields(name, conn):
+    """
+    Retrieve the RISet, and RISetID values for various Geno trait types.
+    """
+    query = (
+        "SELECT InbredSet.Name, InbredSet.Id "
+        "FROM InbredSet, GenoFreeze "
+        "WHERE GenoFreeze.InbredSetId = InbredSet.Id "
+        "AND GenoFreeze.Name = %(name)s")
+    with conn.cursor() as cursor:
+        return cursor.execute(query, {"name": name})
+
+def set_publish_riset_fields(name, conn):
+    """
+    Retrieve the RISet, and RISetID values for various Publish trait types.
+    """
+    query = (
+        "SELECT InbredSet.Name, InbredSet.Id "
+        "FROM InbredSet, PublishFreeze "
+        "WHERE PublishFreeze.InbredSetId = InbredSet.Id "
+        "AND PublishFreeze.Name = %(name)s")
+    with conn.cursor() as cursor:
+        return cursor.execute(query, {"name": name})
+
+def set_probeset_riset_fields(name, conn):
+    """
+    Retrieve the RISet, and RISetID values for various ProbeSet trait types.
+    """
+    query = (
+        "SELECT InbredSet.Name, InbredSet.Id "
+        "FROM InbredSet, ProbeSetFreeze, ProbeFreeze "
+        "WHERE ProbeFreeze.InbredSetId = InbredSet.Id "
+        "AND ProbeFreeze.Id = ProbeSetFreeze.ProbeFreezeId "
+        "AND ProbeSetFreeze.Name = %(name)s")
+    with conn.cursor() as cursor:
+        return cursor.execute(query, {"name": name})
+
+def set_riset_fields(trait_info, conn):
+    """
+    Retrieve the RISet, and RISetID values for various trait types.
+    """
+    riset_functions_map = {
+        "Temp": lambda ti, con: (None, None),
+        "Geno": set_geno_riset_fields,
+        "Publish": set_publish_riset_fields,
+        "ProbeSet": set_probeset_riset_fields
+    }
+    if not trait_info.get("haveinfo", None):
+        return trait_info
+
+    riset, riid = riset_functions_map[trait_info["type"]](
+        trait_info["name"], conn)
+    return {
+        **trait_info, "risetid": riid,
+        "riset": "BXD" if riset == "BXD300" else riset}
+
 def retrieve_trait_info(
         trait_type: str, trait_name: str, trait_dataset_id: int,
         trait_dataset_name: str, conn: Any, QTL=None):
@@ -303,6 +359,7 @@ def retrieve_trait_info(
     }
 
     common_post_processing_fn = compose(
+        lambda ti: set_riset_fields(ti, conn),
         lambda ti: set_homologene_id_field(ti, conn),
         lambda ti: {"type": trait_type, **ti},
         set_haveinfo_field)

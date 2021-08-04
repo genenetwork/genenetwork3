@@ -1,13 +1,17 @@
 """Tests for gn3/db/traits.py"""
 from unittest import mock, TestCase
 from gn3.db.traits import (
+    set_riset_fields,
     set_haveinfo_field,
     update_sample_data,
     retrieve_trait_info,
+    set_geno_riset_fields,
     set_confidential_field,
     set_homologene_id_field,
     retrieve_geno_trait_info,
     retrieve_temp_trait_info,
+    set_publish_riset_fields,
+    set_probeset_riset_fields,
     retrieve_trait_dataset_name,
     retrieve_publish_trait_info,
     retrieve_probeset_trait_info)
@@ -233,3 +237,104 @@ class TestTraitsDBFunctions(TestCase):
             with self.subTest(trait_info=trait_info, expected=expected):
                 self.assertEqual(
                     set_confidential_field(trait_info), expected)
+
+    def test_set_geno_riset_fields(self):
+        """
+        Test that the `riset` and `riset_id` fields are retrieved appropriately
+        for the 'Geno' trait type.
+        """
+        for trait_name, expected in [
+                ["testGenoName", ()]]:
+            db_mock = mock.MagicMock()
+            with self.subTest(trait_name=trait_name, expected=expected):
+                with db_mock.cursor() as cursor:
+                    cursor.execute.return_value = ()
+                    self.assertEqual(
+                        set_geno_riset_fields(trait_name, db_mock), expected)
+                    cursor.execute.assert_called_once_with(
+                        (
+                            "SELECT InbredSet.Name, InbredSet.Id"
+                            " FROM InbredSet, GenoFreeze"
+                            " WHERE GenoFreeze.InbredSetId = InbredSet.Id"
+                            " AND GenoFreeze.Name = %(name)s"),
+                        {"name": trait_name})
+
+
+    def test_set_publish_riset_fields(self):
+        """
+        Test that the `riset` and `riset_id` fields are retrieved appropriately
+        for the 'Publish' trait type.
+        """
+        for trait_name, expected in [
+                ["testPublishName", ()]]:
+            db_mock = mock.MagicMock()
+            with self.subTest(trait_name=trait_name, expected=expected):
+                with db_mock.cursor() as cursor:
+                    cursor.execute.return_value = ()
+                    self.assertEqual(
+                        set_publish_riset_fields(trait_name, db_mock), expected)
+                    cursor.execute.assert_called_once_with(
+                        (
+                            "SELECT InbredSet.Name, InbredSet.Id"
+                            " FROM InbredSet, PublishFreeze"
+                            " WHERE PublishFreeze.InbredSetId = InbredSet.Id"
+                            " AND PublishFreeze.Name = %(name)s"),
+                        {"name": trait_name})
+
+
+    def test_set_probeset_riset_fields(self):
+        """
+        Test that the `riset` and `riset_id` fields are retrieved appropriately
+        for the 'ProbeSet' trait type.
+        """
+        for trait_name, expected in [
+                ["testProbeSetName", ()]]:
+            db_mock = mock.MagicMock()
+            with self.subTest(trait_name=trait_name, expected=expected):
+                with db_mock.cursor() as cursor:
+                    cursor.execute.return_value = ()
+                    self.assertEqual(
+                        set_probeset_riset_fields(trait_name, db_mock), expected)
+                    cursor.execute.assert_called_once_with(
+                        (
+                            "SELECT InbredSet.Name, InbredSet.Id"
+                            " FROM InbredSet, ProbeSetFreeze, ProbeFreeze"
+                            " WHERE ProbeFreeze.InbredSetId = InbredSet.Id"
+                            " AND ProbeFreeze.Id = ProbeSetFreeze.ProbeFreezeId"
+                            " AND ProbeSetFreeze.Name = %(name)s"),
+                        {"name": trait_name})
+
+    def test_set_riset_fields(self):
+        """
+        Test that the riset fields are set up correctly for the different trait
+        types.
+        """
+        for trait_info, expected in [
+                [{}, {}],
+                [{"haveinfo": 0, "type": "Publish"},
+                 {"haveinfo": 0, "type": "Publish"}],
+                [{"haveinfo": 0, "type": "ProbeSet"},
+                 {"haveinfo": 0, "type": "ProbeSet"}],
+                [{"haveinfo": 0, "type": "Geno"},
+                 {"haveinfo": 0, "type": "Geno"}],
+                [{"haveinfo": 0, "type": "Temp"},
+                 {"haveinfo": 0, "type": "Temp"}],
+                [{"haveinfo": 1, "type": "Publish", "name": "test"},
+                 {"haveinfo": 1, "type": "Publish", "name": "test",
+                  "riset": "riset_name", "risetid": 0}],
+                [{"haveinfo": 1, "type": "ProbeSet", "name": "test"},
+                 {"haveinfo": 1, "type": "ProbeSet", "name": "test",
+                  "riset": "riset_name", "risetid": 0}],
+                [{"haveinfo": 1, "type": "Geno", "name": "test"},
+                 {"haveinfo": 1, "type": "Geno", "name": "test",
+                  "riset": "riset_name", "risetid": 0}],
+                [{"haveinfo": 1, "type": "Temp", "name": "test"},
+                 {"haveinfo": 1, "type": "Temp", "name": "test", "riset": None,
+                  "risetid": None}]
+        ]:
+            db_mock = mock.MagicMock()
+            with self.subTest(trait_info=trait_info, expected=expected):
+                with db_mock.cursor() as cursor:
+                    cursor.execute.return_value = ("riset_name", 0)
+                    self.assertEqual(
+                        set_riset_fields(trait_info, db_mock), expected)
