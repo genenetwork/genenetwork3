@@ -77,7 +77,6 @@ def update_sample_data(conn: Any,
     return (updated_strains, updated_published_data,
             updated_se_data, updated_n_strains)
 
-
 def retrieve_trait_dataset_name(
         trait_type: str, threshold: int, name: str, connection: Any):
     """
@@ -87,18 +86,29 @@ def retrieve_trait_dataset_name(
     implemented at
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlDataset.py#L140-L169
     """
+    table_map = {
+        "ProbeSet": "ProbeSetFreeze",
+        "Publish": "PublishFreeze",
+        "Geno": "GenoFreeze",
+        "Temp": "TempFreeze"}
     columns = "Id, Name, FullName, ShortName{}".format(
         ", DataScale" if trait_type == "ProbeSet" else "")
     query = (
-        "SELECT {columns} "
-        "FROM {trait_type}Freeze "
+        "SELECT %(columns)s "
+        "FROM %(table)s "
         "WHERE "
         "public > %(threshold)s "
         "AND "
-        "(Name = %(name)s OR FullName = %(name)s OR ShortName = %(name)s)").format(
-            columns=columns, trait_type=trait_type)
+        "(Name = %(name)s OR FullName = %(name)s OR ShortName = %(name)s)")
     with connection.cursor() as cursor:
-        cursor.execute(query, {"threshold": threshold, "name": name})
+        cursor.execute(
+            query,
+            {
+                "table": table_map[trait_type],
+                "columns": columns,
+                "threshold": threshold,
+                "name": name
+            })
         return cursor.fetchone()
 
 
