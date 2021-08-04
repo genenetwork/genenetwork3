@@ -87,8 +87,8 @@ def process_rqtl_pairscan(file_name: str) -> List:
 
     """
 
-    figure_data = pairscan_results_for_figure(file_name)
-    table_data = pairscan_results_for_table(file_name)
+    figure_data = pairscan_for_figure(file_name)
+    table_data = pairscan_for_table(file_name)
 
     return [figure_data, table_data]
 
