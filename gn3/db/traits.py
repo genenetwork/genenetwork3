@@ -166,8 +166,7 @@ def set_confidential_field(trait_info):
             "confidential": 1 if (
                 trait_info.get("pre_publication_description", None)
                 and not trait_info.get("pubmed_id", None)) else 0}
-    else:
-        return trait_info
+    return trait_info
 
 def retrieve_probeset_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     """Retrieve trait information for type `ProbeSet` traits.
@@ -344,13 +343,14 @@ def set_riset_fields(trait_info, conn):
 
 def retrieve_trait_info(
         trait_type: str, trait_name: str, trait_dataset_id: int,
-        trait_dataset_name: str, conn: Any, QTL=None):
+        trait_dataset_name: str, conn: Any, qtl=None):
     """Retrieves the trait information.
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L397-L456
 
     This function, or the dependent functions, might be incomplete as they are
     currently."""
+    # pylint: disable=[R0913]
     trait_info_function_table = {
         "Publish": retrieve_publish_trait_info,
         "ProbeSet": retrieve_probeset_trait_info,

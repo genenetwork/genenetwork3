@@ -207,6 +207,7 @@ class TestTraitsDBFunctions(TestCase):
             )
 
     def test_set_haveinfo_field(self):
+        """Test that the `haveinfo` field is set up correctly"""
         for trait_info, expected in [
                 [{}, {"haveinfo": 0}],
                 [{"k1": "v1"}, {"k1": "v1", "haveinfo": 1}]]:
@@ -214,6 +215,7 @@ class TestTraitsDBFunctions(TestCase):
                 self.assertEqual(set_haveinfo_field(trait_info), expected)
 
     def test_set_homologene_id_field(self):
+        """Test that the `homologene_id` field is set up correctly"""
         for trait_info, expected in [
                 [{"type": "Publish"},
                  {"type": "Publish", "homologeneid": None}],
@@ -229,6 +231,7 @@ class TestTraitsDBFunctions(TestCase):
                         set_homologene_id_field(trait_info, db_mock), expected)
 
     def test_set_confidential_field(self):
+        """Test that the `confidential` field is set up correctly"""
         for trait_info, expected in [
                 [{"type": "Publish"}, {"type": "Publish", "confidential": 0}],
                 [{"type": "ProbeSet"}, {"type": "ProbeSet"}],
