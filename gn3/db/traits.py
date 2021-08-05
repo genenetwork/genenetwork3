@@ -5,7 +5,7 @@ from typing import Any, Dict, Union
 def get_trait_csv_sample_data(conn: Any,
                               trait_name: int, phenotype_id: int):
     """Fetch a trait and return it as a csv string"""
-    sql = ("SELECT  Strain.Id, PublishData.Id, Strain.Name, "
+    sql = ("SELECT DISTINCT Strain.Id, PublishData.Id, Strain.Name, "
            "PublishData.value, "
            "PublishSE.error, NStrain.count FROM "
            "(PublishData, Strain, PublishXRef, PublishFreeze) "
