@@ -341,8 +341,18 @@ def set_riset_fields(trait_info, conn):
         **trait_info, "risetid": riid,
         "riset": "BXD" if riset == "BXD300" else riset}
 
+def build_trait_name(trait_fullname):
+    name_parts = trait_fullname.split("::")
+    assert len(name_parts) >= 2, "Name format error"
+    return {
+        "trait_db": name_parts[0],
+        "trait_fullname": trait_fullname,
+        "trait_name": name_parts[1],
+        "cellid": name_parts[2] if len(name_parts) == 3 else ""
+    }
+
 def retrieve_trait_info(
-        trait_type: str, trait_name: str, trait_dataset_id: int,
+        trait_type: str, trait_full_name: str, trait_dataset_id: int,
         trait_dataset_name: str, conn: Any, qtl=None):
     """Retrieves the trait information.
 
@@ -351,6 +361,7 @@ def retrieve_trait_info(
     This function, or the dependent functions, might be incomplete as they are
     currently."""
     # pylint: disable=[R0913]
+    trait = build_trait_name(trait_full_name)
     trait_info_function_table = {
         "Publish": retrieve_publish_trait_info,
         "ProbeSet": retrieve_probeset_trait_info,
@@ -362,6 +373,7 @@ def retrieve_trait_info(
         lambda ti: set_riset_fields(ti, conn),
         lambda ti: set_homologene_id_field(ti, conn),
         lambda ti: {"type": trait_type, **ti},
+        lambda ti: {**ti, **trait},
         set_haveinfo_field)
 
     trait_post_processing_functions_table = {
@@ -377,7 +389,7 @@ def retrieve_trait_info(
 
     return retrieve_info(
         {
-            "trait_name": trait_name,
+            "trait_name": trait["trait_name"],
             "trait_dataset_id": trait_dataset_id,
             "trait_dataset_name":trait_dataset_name
         },

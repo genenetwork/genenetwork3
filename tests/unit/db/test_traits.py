@@ -1,6 +1,7 @@
 """Tests for gn3/db/traits.py"""
 from unittest import mock, TestCase
 from gn3.db.traits import (
+    build_trait_name,
     set_riset_fields,
     set_haveinfo_field,
     update_sample_data,
@@ -155,18 +156,47 @@ class TestTraitsDBFunctions(TestCase):
                 "SELECT name, description FROM Temp WHERE Name = %(trait_name)s",
                 trait_source)
 
+    def test_build_trait_name_with_good_fullnames(self):
+        for fullname, expected in [
+                ["testdb::testname",
+                 {"trait_db": "testdb", "trait_name": "testname", "cellid": "",
+                  "trait_fullname": "testdb::testname"}],
+                ["testdb::testname::testcell",
+                 {"trait_db": "testdb", "trait_name": "testname",
+                  "cellid": "testcell",
+                  "trait_fullname": "testdb::testname::testcell"}]]:
+            with self.subTest(fullname=fullname):
+                self.assertEqual(build_trait_name(fullname), expected)
+
+    def test_build_trait_name_with_bad_fullnames(self):
+        for fullname in ["", "test", "test:test"]:
+            with self.subTest(fullname=fullname):
+                with self.assertRaises(AssertionError, msg="Name format error"):
+                    build_trait_name(fullname)
+
     def test_retrieve_trait_info(self):
         """Test that information on traits is retrieved as appropriate."""
         for trait_type, trait_name, trait_dataset_id, trait_dataset_name, expected in [
-                ["Publish", "PublishTraitName", 1, "PublishDatasetTraitName",
+                ["Publish", "pubDb::PublishTraitName::pubCell", 1,
+                 "PublishDatasetTraitName",
                  {"haveinfo": 0, "homologeneid": None, "type": "Publish",
-                  "confidential": 0}],
-                ["ProbeSet", "ProbeSetTraitName", 2, "ProbeSetDatasetTraitName",
-                 {"haveinfo": 0, "homologeneid": None, "type": "ProbeSet"}],
-                ["Geno", "GenoTraitName", 3, "GenoDatasetTraitName",
-                 {"haveinfo": 0, "homologeneid": None, "type": "Geno"}],
-                ["Temp", "TempTraitName", 4, "TempDatasetTraitName",
-                 {"haveinfo": 0, "homologeneid": None, "type": "Temp"}]]:
+                  "confidential": 0, "trait_db": "pubDb",
+                  "trait_name": "PublishTraitName", "cellid": "pubCell",
+                  "trait_fullname": "pubDb::PublishTraitName::pubCell"}],
+                ["ProbeSet", "prbDb::ProbeSetTraitName::prbCell", 2,
+                 "ProbeSetDatasetTraitName",
+                 {"haveinfo": 0, "homologeneid": None, "type": "ProbeSet",
+                  "trait_fullname": "prbDb::ProbeSetTraitName::prbCell",
+                  "trait_db": "prbDb", "trait_name": "ProbeSetTraitName",
+                  "cellid": "prbCell"}],
+                ["Geno", "genDb::GenoTraitName", 3, "GenoDatasetTraitName",
+                 {"haveinfo": 0, "homologeneid": None, "type": "Geno",
+                  "trait_fullname": "genDb::GenoTraitName", "trait_db": "genDb",
+                  "trait_name": "GenoTraitName", "cellid": ""}],
+                ["Temp", "tmpDb::TempTraitName", 4, "TempDatasetTraitName",
+                 {"haveinfo": 0, "homologeneid": None, "type": "Temp",
+                  "trait_fullname": "tmpDb::TempTraitName", "trait_db": "tmpDb",
+                  "trait_name": "TempTraitName", "cellid": ""}]]:
             db_mock = mock.MagicMock()
             with self.subTest(trait_type=trait_type):
                 with db_mock.cursor() as cursor:
