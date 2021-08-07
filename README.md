@@ -11,7 +11,7 @@ Simply load up the environment (for development purposes):
 guix environment --load=guix.scm
 ```
 
-Also, make sure you have the *guix-bioinformatics* channel set up.
+Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
 
 ```bash
 env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --load=guix.scm
@@ -22,8 +22,20 @@ python3
 Better run a proper container
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --load=guix.scm 
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --load=guix.scm
 ```
+
+If you get a Guix error, such as `ice-9/boot-9.scm:1669:16: In procedure raise-exception:
+error: python-sqlalchemy-stubs: unbound variable` it typically means an update to guix latest is required (i.e., guix pull):
+
+```
+guix pull
+source ~/.config/guix/current/etc/profile
+```
+
+and try again.
+
+See also instructions in [.guix.scm](.guix.scm).
 
 #### Running Tests
 
@@ -71,7 +83,7 @@ virtualenv --python python3 venv
 
 ```bash
 # The --ignore-installed flag forces packages to
-# get installed in the venv even if they existed 
+# get installed in the venv even if they existed
 # in the global env
 pip install -r requirements.txt --ignore-installed
 ```
