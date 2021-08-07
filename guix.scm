@@ -82,8 +82,9 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
-                       ("gemma-wrapper" ,gemma-wrapper)
                        ("csvdiff" ,go-github-com-aswinkarthik-csvdiff)
+                       ("gemma-wrapper" ,gemma-wrapper)
+                       ("gunicorn" ,gunicorn)
                        ("python" ,python-wrapper)
                        ("python-bcrypt" ,python-bcrypt)
                        ("python-flask" ,python-flask)

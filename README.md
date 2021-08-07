@@ -61,10 +61,31 @@ mypy .
 
 #### Running the flask app
 
-To spin up the server:
+To spin up the server on its own (for development):
 
 ```bash
 env FLASK_DEBUG=1 FLASK_APP="main.py" flask run --port=8080
+```
+
+And test with
+
+```
+curl localhost:8080/api/version
+"1.0"
+```
+
+To run with gunicorn
+
+```
+gunicorn --bind 0.0.0.0:8080 wsgi:app
+```
+
+consider the following options for development `--bind 0.0.0.0:$SERVER_PORT --workers=1 --timeout 180 --reload wsgi`.
+
+And for the scalable production version run
+
+```
+gunicorn --bind 0.0.0.0:8080 --workers 8 --keep-alive 6000 --max-requests 10 --max-requests-jitter 5 --timeout 1200 wsgi:app
 ```
 
 ##### Using python-pip
