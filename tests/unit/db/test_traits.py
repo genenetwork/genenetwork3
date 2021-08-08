@@ -142,25 +142,13 @@ class TestTraitsDBFunctions(TestCase):
         """Test that information on traits is retrieved as appropriate."""
         for trait_type, threshold, trait_fullname, expected in [
                 ["Publish", 9, "pubDb::PublishTraitName::pubCell",
-                 {"haveinfo": 0, "homologeneid": None, "type": "Publish",
-                  "confidential": 0, "db": {"dataset_name": "pubDb"},
-                  "trait_name": "PublishTraitName", "cellid": "pubCell",
-                  "trait_fullname": "pubDb::PublishTraitName::pubCell"}],
+                 {"haveinfo": 0}],
                 ["ProbeSet", 5, "prbDb::ProbeSetTraitName::prbCell",
-                 {"haveinfo": 0, "homologeneid": None, "type": "ProbeSet",
-                  "trait_fullname": "prbDb::ProbeSetTraitName::prbCell",
-                  "db": {"dataset_name": "prbDb"},
-                  "trait_name": "ProbeSetTraitName", "cellid": "prbCell"}],
+                 {"haveinfo": 0}],
                 ["Geno", 12, "genDb::GenoTraitName",
-                 {"haveinfo": 0, "homologeneid": None, "type": "Geno",
-                  "trait_fullname": "genDb::GenoTraitName",
-                  "db": {"dataset_name": "genDb"},
-                  "trait_name": "GenoTraitName", "cellid": ""}],
+                 {"haveinfo": 0}],
                 ["Temp", 6, "tmpDb::TempTraitName",
-                 {"haveinfo": 0, "homologeneid": None, "type": "Temp",
-                  "trait_fullname": "tmpDb::TempTraitName",
-                  "db": {"dataset_name": "tmpDb"},
-                  "trait_name": "TempTraitName", "cellid": ""}]]:
+                 {"haveinfo": 0}]]:
             db_mock = mock.MagicMock()
             with self.subTest(trait_type=trait_type):
                 with db_mock.cursor() as cursor:
