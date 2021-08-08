@@ -11,6 +11,9 @@ from gn3.commands import run_cmd
 
 general = Blueprint("general", __name__)
 
+@general.route("/version")
+def version():
+  return jsonify("1.0")
 
 @general.route("/metadata/upload/", methods=["POST"],
                strict_slashes=False)

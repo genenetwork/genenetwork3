@@ -17,6 +17,17 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with genenetwork3. If not, see https://www.gnu.org/licenses/.
 
+;; To use this file to build HEAD of gemma:
+;;
+;;   env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ guix build -f guix.scm
+;;
+;; After checking out the git repo
+;;   cd ~ ; git clone https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics
+;;
+;; To get a development container (e.g., run in emacs shell).
+;;
+;;   env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ guix environment -C -l guix.scm
+
 (use-modules
  (srfi srfi-1)
  (srfi srfi-26)
@@ -71,8 +82,9 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
-                       ("gemma-wrapper" ,gemma-wrapper)
                        ("csvdiff" ,go-github-com-aswinkarthik-csvdiff)
+                       ("gemma-wrapper" ,gemma-wrapper)
+                       ("gunicorn" ,gunicorn)
                        ("python" ,python-wrapper)
                        ("python-bcrypt" ,python-bcrypt)
                        ("python-flask" ,python-flask)
