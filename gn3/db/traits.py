@@ -338,8 +338,7 @@ def retrieve_trait_info(
         lambda ti: load_qtl_info(qtl, trait_type, ti, conn),
         lambda ti: set_homologene_id_field(trait_type, ti, conn),
         lambda ti: {"trait_type": trait_type, **ti},
-        lambda ti: {**trait, **ti},
-        set_haveinfo_field)
+        lambda ti: {**trait, **ti})
 
     trait_post_processing_functions_table = {
         "Publish": compose(
@@ -353,8 +352,7 @@ def retrieve_trait_info(
     }
 
     retrieve_info = compose(
-        trait_post_processing_functions_table[trait_type],
-        trait_info_function_table[trait_type])
+        set_haveinfo_field, trait_info_function_table[trait_type])
 
     trait_dataset = retrieve_trait_dataset(trait_type, trait, threshold, conn)
     trait_info = retrieve_info(
@@ -364,8 +362,10 @@ def retrieve_trait_info(
             "trait_dataset_name": trait_dataset["dataset_name"]
         },
         conn)
-    return {
-        **trait_info,
-        "db": {**trait["db"], **trait_dataset},
-        "riset": trait_dataset["riset"]
-    }
+    if trait_info["haveinfo"]:
+        return {
+            **trait_post_processing_functions_table[trait_type](trait_info),
+            "db": {**trait["db"], **trait_dataset},
+            "riset": trait_dataset["riset"]
+        }
+    return trait_info
