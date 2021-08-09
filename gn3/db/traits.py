@@ -326,10 +326,23 @@ def build_trait_name(trait_fullname):
     """
     Initialises the trait's name, and other values from the search data provided
     """
+    def dataset_type(dset_name):
+        if dset_name.find('Temp') >= 0:
+            return "Temp"
+        if dset_name.find('Geno') >= 0:
+            return "Geno"
+        if dset_name.find('Publish') >= 0:
+            return "Publish"
+        return "ProbeSet"
+
     name_parts = trait_fullname.split("::")
     assert len(name_parts) >= 2, "Name format error"
+    dataset_name = name_parts[0]
+    dataset_type = dataset_type(dataset_name)
     return {
-        "db": {"dataset_name": name_parts[0]},
+        "db": {
+            "dataset_name": dataset_name,
+            "dataset_type": dataset_type},
         "trait_fullname": trait_fullname,
         "trait_name": name_parts[1],
         "cellid": name_parts[2] if len(name_parts) == 3 else ""
@@ -357,7 +370,7 @@ def retrieve_probeset_sequence(trait, conn):
         return {**trait, "sequence": seq[0] if seq else ""}
 
 def retrieve_trait_info(
-        trait_type: str, threshold: int, trait_full_name: str, conn: Any,
+        threshold: int, trait_full_name: str, conn: Any,
         qtl=None):
     """Retrieves the trait information.
 
@@ -366,6 +379,7 @@ def retrieve_trait_info(
     This function, or the dependent functions, might be incomplete as they are
     currently."""
     trait = build_trait_name(trait_full_name)
+    trait_dataset_type = trait["db"]["dataset_type"]
     trait_info_function_table = {
         "Publish": retrieve_publish_trait_info,
         "ProbeSet": retrieve_probeset_trait_info,
@@ -374,14 +388,14 @@ def retrieve_trait_info(
     }
 
     common_post_processing_fn = compose(
-        lambda ti: load_qtl_info(qtl, trait_type, ti, conn),
-        lambda ti: set_homologene_id_field(trait_type, ti, conn),
-        lambda ti: {"trait_type": trait_type, **ti},
+        lambda ti: load_qtl_info(qtl, trait_dataset_type, ti, conn),
+        lambda ti: set_homologene_id_field(trait_dataset_type, ti, conn),
+        lambda ti: {"trait_type": trait_dataset_type, **ti},
         lambda ti: {**trait, **ti})
 
     trait_post_processing_functions_table = {
         "Publish": compose(
-            lambda ti: set_confidential_field(trait_type, ti),
+            lambda ti: set_confidential_field(trait_dataset_type, ti),
             common_post_processing_fn),
         "ProbeSet": compose(
             lambda ti: retrieve_probeset_sequence(ti, conn),
@@ -391,9 +405,10 @@ def retrieve_trait_info(
     }
 
     retrieve_info = compose(
-        set_haveinfo_field, trait_info_function_table[trait_type])
+        set_haveinfo_field, trait_info_function_table[trait_dataset_type])
 
-    trait_dataset = retrieve_trait_dataset(trait_type, trait, threshold, conn)
+    trait_dataset = retrieve_trait_dataset(
+        trait_dataset_type, trait, threshold, conn)
     trait_info = retrieve_info(
         {
             "trait_name": trait["trait_name"],
@@ -403,7 +418,7 @@ def retrieve_trait_info(
         conn)
     if trait_info["haveinfo"]:
         return {
-            **trait_post_processing_functions_table[trait_type](trait_info),
+            **trait_post_processing_functions_table[trait_dataset_type](trait_info),
             "db": {**trait["db"], **trait_dataset},
             "riset": trait_dataset["riset"]
         }

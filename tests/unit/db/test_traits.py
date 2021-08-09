@@ -126,11 +126,12 @@ class TestTraitsDBFunctions(TestCase):
         """
         for fullname, expected in [
                 ["testdb::testname",
-                 {"db": {"dataset_name": "testdb"}, "trait_name": "testname",
-                  "cellid": "", "trait_fullname": "testdb::testname"}],
+                 {"db": {"dataset_name": "testdb", "dataset_type": "ProbeSet"},
+                  "trait_name": "testname", "cellid": "",
+                  "trait_fullname": "testdb::testname"}],
                 ["testdb::testname::testcell",
-                 {"db": {"dataset_name": "testdb"}, "trait_name": "testname",
-                  "cellid": "testcell",
+                 {"db": {"dataset_name": "testdb", "dataset_type": "ProbeSet"},
+                  "trait_name": "testname", "cellid": "testcell",
                   "trait_fullname": "testdb::testname::testcell"}]]:
             with self.subTest(fullname=fullname):
                 self.assertEqual(build_trait_name(fullname), expected)
@@ -146,22 +147,18 @@ class TestTraitsDBFunctions(TestCase):
 
     def test_retrieve_trait_info(self):
         """Test that information on traits is retrieved as appropriate."""
-        for trait_type, threshold, trait_fullname, expected in [
-                ["Publish", 9, "pubDb::PublishTraitName::pubCell",
-                 {"haveinfo": 0}],
-                ["ProbeSet", 5, "prbDb::ProbeSetTraitName::prbCell",
-                 {"haveinfo": 0}],
-                ["Geno", 12, "genDb::GenoTraitName",
-                 {"haveinfo": 0}],
-                ["Temp", 6, "tmpDb::TempTraitName",
-                 {"haveinfo": 0}]]:
+        for threshold, trait_fullname, expected in [
+                [9, "pubDb::PublishTraitName::pubCell", {"haveinfo": 0}],
+                [5, "prbDb::ProbeSetTraitName::prbCell", {"haveinfo": 0}],
+                [12, "genDb::GenoTraitName", {"haveinfo": 0}],
+                [6, "tmpDb::TempTraitName", {"haveinfo": 0}]]:
             db_mock = mock.MagicMock()
-            with self.subTest(trait_type=trait_type):
+            with self.subTest(trait_fullname=trait_fullname):
                 with db_mock.cursor() as cursor:
                     cursor.fetchone.return_value = tuple()
                     self.assertEqual(
                         retrieve_trait_info(
-                            trait_type, threshold, trait_fullname, db_mock),
+                            threshold, trait_fullname, db_mock),
                         expected)
 
     def test_update_sample_data(self):
