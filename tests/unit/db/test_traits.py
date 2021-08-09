@@ -121,6 +121,9 @@ class TestTraitsDBFunctions(TestCase):
                 trait_source)
 
     def test_build_trait_name_with_good_fullnames(self):
+        """
+        Check that the name is built correctly.
+        """
         for fullname, expected in [
                 ["testdb::testname",
                  {"db": {"dataset_name": "testdb"}, "trait_name": "testname",
@@ -133,6 +136,9 @@ class TestTraitsDBFunctions(TestCase):
                 self.assertEqual(build_trait_name(fullname), expected)
 
     def test_build_trait_name_with_bad_fullnames(self):
+        """
+        Check that an exception is raised if the full name format is wrong.
+        """
         for fullname in ["", "test", "test:test"]:
             with self.subTest(fullname=fullname):
                 with self.assertRaises(AssertionError, msg="Name format error"):

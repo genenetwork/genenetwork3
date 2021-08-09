@@ -1,7 +1,13 @@
-from typing import Any, Dict, Union
+"""
+This module contains functions relating to specific trait dataset manipulation
+"""
+from typing import Any
 
 def retrieve_probeset_trait_dataset_name(
         threshold: int, name: str, connection: Any):
+    """
+    Get the ID, DataScale and various name formats for a `ProbeSet` trait.
+    """
     query = (
         "SELECT Id, Name, FullName, ShortName, DataScale "
         "FROM ProbeSetFreeze "
@@ -21,7 +27,11 @@ def retrieve_probeset_trait_dataset_name(
              "dataset_shortname", "dataset_datascale"],
             cursor.fetchone))
 
-def retrieve_publish_trait_dataset_name(threshold: int, name: str, connection: Any):
+def retrieve_publish_trait_dataset_name(
+        threshold: int, name: str, connection: Any):
+    """
+    Get the ID, DataScale and various name formats for a `Publish` trait.
+    """
     query = (
         "SELECT Id, Name, FullName, ShortName "
         "FROM PublishFreeze "
@@ -41,7 +51,11 @@ def retrieve_publish_trait_dataset_name(threshold: int, name: str, connection: A
              "dataset_shortname"],
             cursor.fetchone))
 
-def retrieve_geno_trait_dataset_name(threshold: int, name: str, connection: Any):
+def retrieve_geno_trait_dataset_name(
+        threshold: int, name: str, connection: Any):
+    """
+    Get the ID, DataScale and various name formats for a `Geno` trait.
+    """
     query = (
         "SELECT Id, Name, FullName, ShortName "
         "FROM GenoFreeze "
@@ -61,7 +75,11 @@ def retrieve_geno_trait_dataset_name(threshold: int, name: str, connection: Any)
              "dataset_shortname"],
             cursor.fetchone))
 
-def retrieve_temp_trait_dataset_name(threshold: int, name: str, connection: Any):
+def retrieve_temp_trait_dataset_name(
+        threshold: int, name: str, connection: Any):
+    """
+    Get the ID, DataScale and various name formats for a `Temp` trait.
+    """
     query = (
         "SELECT Id, Name, FullName, ShortName "
         "FROM TempFreeze "
@@ -145,6 +163,9 @@ def retrieve_probeset_riset_fields(name, conn):
     return {}
 
 def retrieve_temp_riset_fields(name, conn):
+    """
+    Retrieve the RISet, and RISetID values for `Temp` trait types.
+    """
     query = (
         "SELECT InbredSet.Name, InbredSet.Id "
         "FROM InbredSet, Temp "
@@ -179,6 +200,10 @@ def retrieve_riset_fields(trait_type, trait_name, dataset_info, conn):
     }
 
 def retrieve_temp_trait_dataset():
+    """
+    Retrieve the dataset that relates to `Temp` traits
+    """
+    # pylint: disable=[C0330]
     return {
         "searchfield": ["name", "description"],
         "disfield": ["name", "description"],
@@ -189,28 +214,40 @@ def retrieve_temp_trait_dataset():
     }
 
 def retrieve_geno_trait_dataset():
+    """
+    Retrieve the dataset that relates to `Geno` traits
+    """
+    # pylint: disable=[C0330]
     return {
-        "searchfield": ["name","chr"],
-	"disfield": ["name","chr","mb", "source2", "sequence"],
+        "searchfield": ["name", "chr"],
+	"disfield": ["name", "chr", "mb", "source2", "sequence"],
 	"type": "Geno"
     }
 
 def retrieve_publish_trait_dataset():
+    """
+    Retrieve the dataset that relates to `Publish` traits
+    """
+    # pylint: disable=[C0330]
     return {
         "searchfield": [
             "name", "post_publication_description", "abstract", "title",
             "authors"],
         "disfield": [
-            "name","pubmed_id", "pre_publication_description",
-            "post_publication_description", "original_description", 
+            "name", "pubmed_id", "pre_publication_description",
+            "post_publication_description", "original_description",
 	    "pre_publication_abbreviation", "post_publication_abbreviation",
 	    "lab_code", "submitter", "owner", "authorized_users",
-	    "authors","title","abstract", "journal","volume","pages","month",
-	    "year","sequence", "units", "comments"],
+	    "authors", "title", "abstract", "journal", "volume", "pages",
+            "month", "year", "sequence", "units", "comments"],
         "type": "Publish"
     }
 
 def retrieve_probeset_trait_dataset():
+    """
+    Retrieve the dataset that relates to `ProbeSet` traits
+    """
+    # pylint: disable=[C0330]
     return {
         "searchfield": [
             "name", "description", "probe_target_description", "symbol",
@@ -228,6 +265,9 @@ def retrieve_probeset_trait_dataset():
     }
 
 def retrieve_trait_dataset(trait_type, trait, threshold, conn):
+    """
+    Retrieve the dataset that relates to a specific trait.
+    """
     dataset_fns = {
         "Temp": retrieve_temp_trait_dataset,
         "Geno": retrieve_geno_trait_dataset,
@@ -238,8 +278,8 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
         "dataset_id": None,
         "dataset_name": trait["db"]["dataset_name"],
         **retrieve_dataset_name(
-        trait_type, threshold, trait["trait_name"], trait["db"]["dataset_name"],
-        conn)
+            trait_type, threshold, trait["trait_name"],
+            trait["db"]["dataset_name"], conn)
     }
     riset = retrieve_riset_fields(
         trait_type, trait["trait_name"], dataset_name_info, conn)

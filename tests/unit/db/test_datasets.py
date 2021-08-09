@@ -1,3 +1,5 @@
+"""Tests for gn3/db/datasets.py"""
+
 from unittest import mock, TestCase
 from gn3.db.datasets import (
     retrieve_dataset_name,
@@ -7,6 +9,7 @@ from gn3.db.datasets import (
     retrieve_probeset_riset_fields)
 
 class TestDatasetsDBFunctions(TestCase):
+    """Test cases for datasets functions."""
 
     def test_retrieve_dataset_name(self):
         """Test that the function is called correctly."""
@@ -34,7 +37,7 @@ class TestDatasetsDBFunctions(TestCase):
                         "(Name = %(name)s "
                         "OR FullName = %(name)s "
                         "OR ShortName = %(name)s)".format(
-                            table=table, cols=columns, ttype=trait_type),
+                            table=table, cols=columns),
                         {"threshold": thresh, "name": dataset_name})
 
     def test_retrieve_probeset_riset_fields(self):

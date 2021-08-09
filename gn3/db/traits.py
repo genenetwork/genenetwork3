@@ -43,6 +43,7 @@ def update_sample_data(conn: Any,
                        count: Union[int, str]):
     """Given the right parameters, update sample-data from the relevant
     table."""
+    # pylint: disable=[R0913, R0914]
     STRAIN_ID_SQL: str = "UPDATE Strain SET Name = %s WHERE Id = %s"
     PUBLISH_DATA_SQL: str = ("UPDATE PublishData SET value = %s "
                              "WHERE StrainId = %s AND Id = %s")
@@ -252,6 +253,9 @@ def set_homologene_id_field(trait_type, trait_info, conn):
     return functions_table[trait_type](trait_info)
 
 def load_publish_qtl_info(trait_info, conn):
+    """
+    Load extra QTL information for `Publish` traits
+    """
     query = (
         "SELECT PublishXRef.Locus, PublishXRef.LRS, PublishXRef.additive "
         "FROM PublishXRef, PublishFreeze "
@@ -264,6 +268,9 @@ def load_publish_qtl_info(trait_info, conn):
     return {"locus": "", "lrs": "", "additive": ""}
 
 def load_probeset_qtl_info(trait_info, conn):
+    """
+    Load extra QTL information for `ProbeSet` traits
+    """
     query = (
         "SELECT ProbeSetXRef.Locus, ProbeSetXRef.LRS, ProbeSetXRef.pValue, "
         "ProbeSetXRef.mean, ProbeSetXRef.additive "
@@ -278,6 +285,22 @@ def load_probeset_qtl_info(trait_info, conn):
     return {"locus": "", "lrs": "", "pvalue": "", "mean": "", "additive": ""}
 
 def load_qtl_info(qtl, trait_type, trait_info, conn):
+    """
+    Load extra QTL information for traits
+
+    DESCRIPTION:
+    Migrated from
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L500-L534
+
+    PARAMETERS:
+    qtl: boolean
+    trait_type: string
+      The type of the trait in consideration
+    trait_info: map/dictionary
+      A dictionary of the trait's key-value pairs
+    conn:
+      A database connection object
+    """
     if not qtl:
         return trait_info
     qtl_info_functions = {
@@ -290,6 +313,9 @@ def load_qtl_info(qtl, trait_type, trait_info, conn):
     return qtl_info_functions[trait_type](trait_info, conn)
 
 def build_trait_name(trait_fullname):
+    """
+    Initialises the trait's name, and other values from the search data provided
+    """
     name_parts = trait_fullname.split("::")
     assert len(name_parts) >= 2, "Name format error"
     return {
@@ -300,6 +326,9 @@ def build_trait_name(trait_fullname):
     }
 
 def retrieve_probeset_sequence(trait, conn):
+    """
+    Retrieve a 'ProbeSet' trait's sequence information
+    """
     query = (
         "SELECT ProbeSet.BlatSeq "
         "FROM ProbeSet, ProbeSetFreeze, ProbeSetXRef "
