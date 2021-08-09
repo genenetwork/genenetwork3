@@ -263,7 +263,12 @@ def load_publish_qtl_info(trait_info, conn):
         "AND PublishXRef.InbredSetId = PublishFreeze.InbredSetId "
         "AND PublishFreeze.Id = %(dataset_id)s")
     with conn.cursor() as cursor:
-        cursor.execute()
+        cursor.execute(
+            query,
+            {
+                "trait_name": trait_info["trait_name"],
+                "dataset_id": trait_info["db"]["dataset_id"]
+            })
         return dict(zip(["locus", "lrs", "additive"], cursor.fetchone()))
     return {"locus": "", "lrs": "", "additive": ""}
 
@@ -279,7 +284,12 @@ def load_probeset_qtl_info(trait_info, conn):
         " AND ProbeSet.Name = %(trait_name)s "
         "AND ProbeSetXRef.ProbeSetFreezeId = %(dataset_id)s")
     with conn.cursor() as cursor:
-        cursor.execute()
+        cursor.execute(
+            query,
+            {
+                "trait_name": trait_info["trait_name"],
+                "dataset_id": trait_info["db"]["dataset_id"]
+            })
         return dict(zip(
             ["locus", "lrs", "pvalue", "mean", "additive"], cursor.fetchone()))
     return {"locus": "", "lrs": "", "pvalue": "", "mean": "", "additive": ""}
@@ -307,7 +317,7 @@ def load_qtl_info(qtl, trait_type, trait_info, conn):
         "Publish": load_publish_qtl_info,
         "ProbeSet": load_probeset_qtl_info
     }
-    if trait_inf["name"] not in qtl_info_functions.keys():
+    if trait_info["name"] not in qtl_info_functions.keys():
         return trait_info
 
     return qtl_info_functions[trait_type](trait_info, conn)
