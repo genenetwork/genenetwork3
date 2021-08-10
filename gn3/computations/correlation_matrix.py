@@ -28,6 +28,18 @@ def compute_pca(matrix):
     return (pca, pca_data)
 
 
+def fetch_plots_data(pca_obj):
+    """function to fetch required data for various plots"""
+
+    (pca_obj, pca_scatter_data) = compute_pca(matrix)
+
+    return {
+        "Scree_plot_data": get_scree_plot_data(pca_obj),
+        "Factor_loading": pca_obj.components_,
+        "scatter_data": pca_scatter_data
+    }
+
+
 def compute_zscores(trait_data_arrays):
     """compute zscores of trait data arrays"""
     data = np.array(trait_data_arrays)
@@ -60,7 +72,6 @@ def get_scree_plot_data(pca_obj):
         "x_vals": x_vals,
         "y_vals": perc_var.tolist()
     }
-
 
 
 def fetch_sample_datas(target_samples: List,
