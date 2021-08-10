@@ -16,36 +16,15 @@ from gn3.computations.correlations import compute_corr_coeff_p_value
 from gn3.computations.correlations import normalize_values
 
 
-def compute_the_pca(data, transform: bool = True):
-    """function to compute pca"""
-    pca = PCA()
-    if transform is True:
-        scaled_data = preprocessing.scale(data.T)
-
-    else:
-        scaled_data = preprocessing.scale(data)
-
-    # compute loading score and variaton of each pc
-
-    # generate coordinates for pca graph if needd
-    pca.fit(scaled_data)
-
-    pca_data = pca.transform(scaled_data)
-
-    return (pca, pca_data)
-
-
-def compute_pca2(matrix):
-    """compute the pca"""
+def compute_pca(matrix):
+    """compute principal component analyis"""
 
     pca = PCA()
+
     scaled_data = preprocessing.scale(matrix)
     pca.fit(scaled_data)
-
+    # generates coordinated based on the loading_scores and scaled data
     pca_data = pca.transform(scaled_data)
-
-    perc_var = np.round(pca.explained_variance_ratio_*100, decimals=1)
-    _labels = ["PC" + str(x) for x in range(1, len(perc_var)+1)]
     return (pca, pca_data)
 
 
@@ -62,7 +41,6 @@ def compute_sort_eigens(matrix):
     """compute eigen values and vectors sort by eigen values"""
 
     eigen_values, eigen_vectors = linalg.eig(matrix)
-
     idx = eigen_values.argsort()[::-1]
     eigen_values = eigen_values[idx]
 
@@ -74,28 +52,15 @@ def get_scree_plot_data(pca_obj):
     """get scree plot data for generating plot x=x_vals,y = perc_var"""
 
     perc_var = np.round(pca_obj.explained_variance_ratio_*100, decimals=1)
-    x_vals = list(range(1, len(perc_var)+1))
+
+    x_vals = [f"PC{val}" for val in list(range(1, len(perc_var)+1))]
 
     return {
 
         "x_vals": x_vals,
-        "y_vals": perc_var
+        "y_vals": perc_var.tolist()
     }
 
-
-def process_factor_loadings(pca_obj, trait_list):
-    """
-    fetch loading for each trait i.e
-    trait_a:pca_1_load,pca_2_load ... ,
-    trait_b:......
-    """
-
-    loadings = pca_obj.components_
-
-    target_columns = 3 if len(trait_list) > 2 else 2
-    traits_loadings = list(loadings.T)
-
-    return [list(trait_loading[:target_columns]) for trait_loading in traits_loadings]
 
 
 def fetch_sample_datas(target_samples: List,
@@ -213,6 +178,9 @@ def cache_pca_traits(redis_instance, pca_trait_dict, exp_time):
     """cache pca trait temp results """
     # xtodo
 
-    for (trait, trait_vals) in pca_trait_dict.items():
-        redis_instance.set(trait, trait_vals, ex=exp_time)
-    return True
+    try:
+        for (trait, trait_vals) in pca_trait_dict.items():
+            redis_instance.set(trait, trait_vals, ex=exp_time)
+
+    except Exception as error:
+        raise error

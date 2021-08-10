@@ -406,6 +406,8 @@ def compute_tissue_correlation(primary_tissue_dict: dict,
         processed_values.append(
             (primary_tissue_vals, target_tissue_vals, corr_method, trait_id))
 
+    # bug use compute_all_tissue_correlation
+
     with multiprocessing.Pool(4) as pool:
         results = pool.starmap(
             tissue_correlation_for_trait, processed_values)
