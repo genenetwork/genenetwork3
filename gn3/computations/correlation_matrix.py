@@ -24,19 +24,19 @@ def compute_pca(matrix):
     scaled_data = preprocessing.scale(matrix)
     pca.fit(scaled_data)
     # generates coordinated based on the loading_scores and scaled data
-    pca_data = pca.transform(scaled_data)
-    return (pca, pca_data)
+    pca_scores = pca.transform(scaled_data)
+    return (pca, pca_scores)
 
 
 def fetch_plots_data(pca_obj):
     """function to fetch required data for various plots"""
 
-    (pca_obj, pca_scatter_data) = compute_pca(matrix)
+    (pca_obj, pca_scores) = compute_pca(matrix)
 
     return {
         "Scree_plot_data": get_scree_plot_data(pca_obj),
         "Factor_loading": pca_obj.components_,
-        "scatter_data": pca_scatter_data
+        "scatter_data": pca_scores
     }
 
 
