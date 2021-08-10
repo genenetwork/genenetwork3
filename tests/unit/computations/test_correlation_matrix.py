@@ -94,7 +94,7 @@ class TestCorrelationMatrix(unittest.TestCase):
         results["y_vals"] = list(results["y_vals"])
 
         expected_data = {
-            "x_vals": [1, 2, 3],
+            "x_vals": ['PC1', 'PC2', 'PC3'],
             "y_vals": [75.0, 20.0, 5.0]
 
         }
