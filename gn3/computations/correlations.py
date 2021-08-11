@@ -124,11 +124,12 @@ def filter_shared_sample_keys(this_samplelist,
     return (this_vals, target_vals)
 
 
-def compute_all_sample_correlation(this_trait,
-                                   target_dataset,
-                                   corr_method="pearson") -> List:
+def speed_compute_all_sample_correlation(this_trait,
+                                         target_dataset,
+                                         corr_method="pearson") -> List:
     """Given a trait data sample-list and target__datasets compute all sample
     correlation
+    this functions uses multiprocessing if not use the normal fun
 
     """
     # xtodo fix trait_name currently returning single one
@@ -160,9 +161,9 @@ def compute_all_sample_correlation(this_trait,
         key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coefficient"]))
 
 
-def benchmark_compute_all_sample(this_trait,
-                                 target_dataset,
-                                 corr_method="pearson") -> List:
+def compute_all_sample_correlation(this_trait,
+                                   target_dataset,
+                                   corr_method="pearson") -> List:
     """Temp function to benchmark with compute_all_sample_r alternative to
     compute_all_sample_r where we use multiprocessing
 
@@ -174,6 +175,7 @@ def benchmark_compute_all_sample(this_trait,
         target_trait_data = target_trait["trait_sample_data"]
         this_vals, target_vals = filter_shared_sample_keys(
             this_trait_samples, target_trait_data)
+
         sample_correlation = compute_sample_r_correlation(
             trait_name=trait_name,
             corr_method=corr_method,
@@ -190,7 +192,9 @@ def benchmark_compute_all_sample(this_trait,
             "num_overlap": num_overlap
         }
         corr_results.append({trait_name: corr_result})
-    return corr_results
+    return sorted(
+        corr_results,
+        key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coefficient"]))
 
 
 def tissue_correlation_for_trait(
