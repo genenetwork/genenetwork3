@@ -119,7 +119,7 @@ def pairscan_for_figure(file_name: str) -> Dict:
             if i == 0: # Skip first line
                 continue
             line_items = [item.rstrip('\n') for item in line.split(",")]
-            chr_list.append(line_items[1])
+            chr_list.append(line_items[1][1:-1])
             pos_list.append(line_items[2])
         figure_data['chr'] = chr_list
         figure_data['pos'] = pos_list
