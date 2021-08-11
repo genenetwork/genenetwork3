@@ -340,7 +340,7 @@ def compute_all_lit_correlation(conn, trait_lists: List,
     return sorted_lit_results
 
 
-def compute_all_tissue_correlation(primary_tissue_dict: dict,
+def compute_tissue_correlation(primary_tissue_dict: dict,
                                    target_tissues_data: dict,
                                    corr_method: str):
     """Function acts as an abstraction for tissue_correlation_for_trait\
@@ -386,9 +386,9 @@ def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> Lis
     return traits_tissue_vals
 
 
-def compute_tissue_correlation(primary_tissue_dict: dict,
-                               target_tissues_data: dict,
-                               corr_method: str):
+def speed_compute_tissue_correlation(primary_tissue_dict: dict,
+                                     target_tissues_data: dict,
+                                     corr_method: str):
     """Experimental function that uses multiprocessing for computing tissue
     correlation
 

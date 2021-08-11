@@ -80,7 +80,7 @@ class CorrelationIntegrationTest(TestCase):
         self.assertEqual(mock_compute_corr.call_count, 1)
         self.assertEqual(response.status_code, 200)
 
-    @mock.patch("gn3.api.correlation.compute_all_tissue_correlation")
+    @mock.patch("gn3.api.correlation.compute_tissue_correlation")
     def test_tissue_correlation(self, mock_tissue_corr):
         """Test api/correlation/tissue_corr/{corr_method}"""
         mock_tissue_corr.return_value = {}

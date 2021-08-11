@@ -15,7 +15,7 @@ from gn3.computations.correlations import fetch_lit_correlation_data
 from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
 from gn3.computations.correlations import compute_all_lit_correlation
-from gn3.computations.correlations import compute_all_tissue_correlation
+from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.computations.correlations import process_trait_symbol_dict
 from gn3.computations.correlations2 import compute_correlation
@@ -416,7 +416,7 @@ class TestCorrelation(TestCase):
                             {"1418702_a_at":
                              {"tissue_corr": -0.5, "tissue_p_val": 0.9, "tissue_number": 3}}]
 
-        results = compute_all_tissue_correlation(
+        results = compute_tissue_correlation(
             primary_tissue_dict=primary_tissue_dict,
             target_tissues_data=target_tissue_data,
             corr_method="pearson")
