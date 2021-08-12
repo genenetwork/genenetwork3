@@ -3,12 +3,15 @@ This module will contain functions to be used in computation of the data used to
 generate various kinds of heatmaps.
 """
 
+from functools import reduce
+from typing import Any, Dict, Sequence
 from gn3.computations.slink import slink
+from gn3.db.traits import retrieve_trait_data, retrieve_trait_info
 from gn3.computations.correlations2 import compute_correlation
 
 def export_trait_data(
-        trait_data: dict, strainlist: Sequence[str], dtype: str="val",
-        var_exists: bool=False, n_exists: bool=False):
+        trait_data: dict, strainlist: Sequence[str], dtype: str = "val",
+        var_exists: bool = False, n_exists: bool = False):
     """
     Export data according to `strainlist`. Mostly used in calculating
     correlations.
