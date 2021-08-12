@@ -57,26 +57,24 @@ def export_trait_data(
         return tuple(sample_data)
 
     def __exporter(accumulator, strain):
-        if tdata.has_key(strain):
+        # pylint: disable=[R0911]
+        if trait_data.has_key(strain):
             if dtype == "val":
-                return accumulator + (tdata[strain]["val"], )
+                return accumulator + (trait_data[strain]["val"], )
             if dtype == "var":
-                return accumulator + (tdata[strain]["var"], )
+                return accumulator + (trait_data[strain]["var"], )
             if dtype == "N":
-                return tdata[strain]["ndata"]
+                return trait_data[strain]["ndata"]
             if dtype == "all":
-                return accumulator + __export_all_types(
-                    accumulator, tdata, strain)
-            else:
-                raise KeyError("Type `%s` is incorrect" % dtype)
-        else:
-            if var_exists and n_exists:
-                return accumulator + (None, None, None)
-            if var_exists or n_exists:
-                return accumulator + (None, None)
-            return accumulator + (None,)
+                return accumulator + __export_all_types(trait_data, strain)
+            raise KeyError("Type `%s` is incorrect" % dtype)
+        if var_exists and n_exists:
+            return accumulator + (None, None, None)
+        if var_exists or n_exists:
+            return accumulator + (None, None)
+        return accumulator + (None,)
 
-    return reduce(__exporter(strain), strainlist, tuple())
+    return reduce(__exporter, strainlist, tuple())
 
 def trait_display_name(trait: Dict):
     """
@@ -96,12 +94,11 @@ def trait_display_name(trait: Dict):
             return "%s::%s" % (
                 trait["db"]["displayname"],
                 desc[:desc.index('entered')].strip())
-        else:
-            prefix = "%s::%s" % (
-                trait["db"]["dataset_name"], trait["trait_name"])
-            if trait["cellid"]:
-                return "%s::%s" % (prefix, trait["cellid"])
-            return prefix
+        prefix = "%s::%s" % (
+            trait["db"]["dataset_name"], trait["trait_name"])
+        if trait["cellid"]:
+            return "%s::%s" % (prefix, trait["cellid"])
+        return prefix
     return trait["description"]
 
 def cluster_traits(traits_data_list: Sequence[Dict]):
@@ -114,21 +111,21 @@ def cluster_traits(traits_data_list: Sequence[Dict]):
     """
     def __compute_corr(tdata_i, tdata_j):
         if tdata_j[0] < tdata_i[0]:
-            corr, nOverlap = compute_correlation(tdata_i, tdata_j)
+            corr_vals = compute_correlation(tdata_i, tdata_j)
+            corr = corr_vals[0]
             if (1 - corr) < 0:
                 return 0.0
             return 1 - corr
         return 0.0
 
     def __cluster(tdata_i):
-        res2 = tuple(
-            __compute_corr(tdata_i, tdata_j) for tdata_j in enumerate(traits))
+        return tuple(
+            __compute_corr(tdata_i, tdata_j)
+            for tdata_j in enumerate(traits_data_list))
 
     return tuple(__cluster(tdata_i) for tdata_i in enumerate(traits_data_list))
 
-def heatmap_data(
-        fd, search_result, conn: Any, colorScheme=None, userPrivilege=None,
-        userName=None):
+def heatmap_data(formd, search_result, conn: Any):
     """
     heatmap function
 
@@ -144,13 +141,17 @@ def heatmap_data(
     PARAMETERS:
     TODO: Elaborate on the parameters here...
     """
-    cluster_checked = fd.formdata.getvalue("clusterCheck", "")
-    strainlist = [strain for strain in fd.strainlist if strain not in fd.parlist]
-    genotype = fd.genotype
+    threshold = 0 # webqtlConfig.PUBLICTHRESH
+    cluster_checked = formd.formdata.getvalue("clusterCheck", "")
+    strainlist = [
+        strain for strain in formd.strainlist if strain not in formd.parlist]
+    genotype = formd.genotype
 
     def __retrieve_traitlist_and_datalist(threshold, fullname):
         trait = retrieve_trait_info(threshold, fullname, conn)
-        return (trait, export_trait_data(retrieve_trait_data(trait), strainlist))
+        return (
+            trait,
+            export_trait_data(retrieve_trait_data(trait, conn), strainlist))
 
     traits_details = [
         __retrieve_traitlist_and_datalist(threshold, fullname)
@@ -159,18 +160,18 @@ def heatmap_data(
     traits_data_list = map(lambda x: x[1], traits_details)
 
     return {
-        "target_description_checked": fd.formdata.getvalue(
+        "target_description_checked": formd.formdata.getvalue(
             "targetDescriptionCheck", ""),
         "cluster_checked": cluster_checked,
         "slink_data": (
-            slink(cluster_traits(traits_list, strainlist))
-            if cluster_checked else False)
-        "sessionfile": fd.formdata.getvalue("session"),
+            slink(cluster_traits(traits_data_list))
+            if cluster_checked else False),
+        "sessionfile": formd.formdata.getvalue("session"),
         "genotype": genotype,
-        "nLoci": sum(map(lambda x: len(x), genotype))
+        "nLoci": sum(map(len, genotype)),
         "strainlist": strainlist,
-        "ppolar": fd.ppolar,
-        "mpolar":fd.mpolar,
-        "traits_list": traits_list
+        "ppolar": formd.ppolar,
+        "mpolar":formd.mpolar,
+        "traits_list": traits_list,
         "traits_data_list": traits_data_list
     }
