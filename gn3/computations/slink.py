@@ -7,7 +7,7 @@ slink:
     TODO: Describe what the function does...
 """
 import logging
-from typing import List, Tuple, Union, Sequence
+from typing import Union, Sequence
 
 NumType = Union[int, float]
 SeqOfNums = Sequence[NumType]
