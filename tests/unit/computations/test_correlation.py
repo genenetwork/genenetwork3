@@ -1,5 +1,4 @@
 """Module contains the tests for correlation"""
-import unittest
 from unittest import TestCase
 from unittest import mock
 
@@ -16,7 +15,7 @@ from gn3.computations.correlations import fetch_lit_correlation_data
 from gn3.computations.correlations import query_formatter
 from gn3.computations.correlations import map_to_mouse_gene_id
 from gn3.computations.correlations import compute_all_lit_correlation
-from gn3.computations.correlations import compute_all_tissue_correlation
+from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.computations.correlations import process_trait_symbol_dict
 from gn3.computations.correlations2 import compute_correlation
@@ -173,7 +172,6 @@ class TestCorrelation(TestCase):
         self.assertEqual(results, (filtered_this_samplelist,
                                    filtered_target_samplelist))
 
-    @unittest.skip("Test needs to be refactored ")
     @mock.patch("gn3.computations.correlations.compute_sample_r_correlation")
     @mock.patch("gn3.computations.correlations.filter_shared_sample_keys")
     def test_compute_all_sample(self, filter_shared_samples, sample_r_corr):
@@ -181,7 +179,7 @@ class TestCorrelation(TestCase):
 
         filter_shared_samples.return_value = (["1.23", "6.565", "6.456"], [
             "6.266", "6.565", "6.456"])
-        sample_r_corr.return_value = ([-1.0, 0.9, 6])
+        sample_r_corr.return_value = (["1419792_at", -1.0, 0.9, 6])
 
         this_trait_data = {
             "trait_id": "1455376_at",
@@ -204,13 +202,14 @@ class TestCorrelation(TestCase):
             }
         ]
 
-        sample_all_results = [{"1419792_at": {"corr_coeffient": -1.0,
+        sample_all_results = [{"1419792_at": {"corr_coefficient": -1.0,
                                               "p_value": 0.9,
                                               "num_overlap": 6}}]
 
         self.assertEqual(compute_all_sample_correlation(
             this_trait=this_trait_data, target_dataset=traits_dataset), sample_all_results)
         sample_r_corr.assert_called_once_with(
+            trait_name='1419792_at',
             corr_method="pearson", trait_vals=['1.23', '6.565', '6.456'],
             target_samples_vals=['6.266', '6.565', '6.456'])
         filter_shared_samples.assert_called_once_with(
@@ -417,7 +416,7 @@ class TestCorrelation(TestCase):
                             {"1418702_a_at":
                              {"tissue_corr": -0.5, "tissue_p_val": 0.9, "tissue_number": 3}}]
 
-        results = compute_all_tissue_correlation(
+        results = compute_tissue_correlation(
             primary_tissue_dict=primary_tissue_dict,
             target_tissues_data=target_tissue_data,
             corr_method="pearson")
@@ -491,4 +490,5 @@ class TestCorrelation(TestCase):
                  [None, None, None, None, 2, None, None, 3, None, None],
                  (0.0, 2)]]:
             with self.subTest(dbdata=dbdata, userdata=userdata):
-                self.assertEqual(compute_correlation(dbdata, userdata), expected)
+                self.assertEqual(compute_correlation(
+                    dbdata, userdata), expected)
