@@ -341,8 +341,8 @@ def compute_all_lit_correlation(conn, trait_lists: List,
 
 
 def compute_tissue_correlation(primary_tissue_dict: dict,
-                                   target_tissues_data: dict,
-                                   corr_method: str):
+                               target_tissues_data: dict,
+                               corr_method: str):
     """Function acts as an abstraction for tissue_correlation_for_trait\
     required input are target tissue object and primary tissue trait\
     target tissues data contains the trait_symbol_dict and symbol_tissue_vals

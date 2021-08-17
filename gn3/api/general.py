@@ -13,7 +13,8 @@ general = Blueprint("general", __name__)
 
 @general.route("/version")
 def version():
-  return jsonify("1.0")
+    """Get API version."""
+    return jsonify("1.0")
 
 @general.route("/metadata/upload/", methods=["POST"],
                strict_slashes=False)

@@ -79,7 +79,7 @@ def compute_tissue_corr(corr_method="pearson"):
     target_tissues_dict = tissue_input_data["target_tissues_dict"]
 
     results = compute_tissue_correlation(primary_tissue_dict=primary_tissue_dict,
-                                             target_tissues_data=target_tissues_dict,
-                                             corr_method=corr_method)
+                                         target_tissues_data=target_tissues_dict,
+                                         corr_method=corr_method)
 
     return jsonify(results)
