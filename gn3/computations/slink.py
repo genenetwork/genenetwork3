@@ -161,7 +161,7 @@ def slink(lists):
     try:
         size = len(lists)
         listindexcopy = list(range(size))
-        listscopy = [child[:] for child in lists]
+        listscopy = [list(child[:]) for child in lists]
         init_size = size
         candidate = []
         while init_size > 2:
