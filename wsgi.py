@@ -1,8 +1,10 @@
+"""
+WSGI application entry-point.
+"""
 # import main
+from gn3.app import create_app
 
 print("STARTING WSGI APP")
-
-from gn3.app import create_app
 
 app = create_app()
 
