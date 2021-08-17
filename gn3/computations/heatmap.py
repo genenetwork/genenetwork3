@@ -110,13 +110,13 @@ def cluster_traits(traits_data_list: Sequence[Dict]):
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/Heatmap.py#L138-L162
     """
     def __compute_corr(tdata_i, tdata_j):
-        if tdata_j[0] < tdata_i[0]:
-            corr_vals = compute_correlation(tdata_i, tdata_j)
-            corr = corr_vals[0]
-            if (1 - corr) < 0:
-                return 0.0
-            return 1 - corr
-        return 0.0
+        if tdata_i[0] == tdata_j[0]:
+            return 0.0
+        corr_vals = compute_correlation(tdata_i[1], tdata_j[1])
+        corr = corr_vals[0]
+        if (1 - corr) < 0:
+            return 0.0
+        return 1 - corr
 
     def __cluster(tdata_i):
         return tuple(
