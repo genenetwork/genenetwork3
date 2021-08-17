@@ -34,11 +34,11 @@ def export_trait_data(
     """
     def __export_all_types(tdata, strain):
         sample_data = []
-        if tdata[strain]["val"]:
-            sample_data.append(tdata[strain]["val"])
+        if tdata[strain]["value"]:
+            sample_data.append(tdata[strain]["value"])
             if var_exists:
-                if tdata[strain].var:
-                    sample_data.append(tdata[strain]["var"])
+                if tdata[strain]["variance"]:
+                    sample_data.append(tdata[strain]["variance"])
                 else:
                     sample_data.append(None)
             if n_exists:
@@ -58,15 +58,15 @@ def export_trait_data(
 
     def __exporter(accumulator, strain):
         # pylint: disable=[R0911]
-        if trait_data.has_key(strain):
+        if strain in trait_data["data"]:
             if dtype == "val":
-                return accumulator + (trait_data[strain]["val"], )
+                return accumulator + (trait_data["data"][strain]["value"], )
             if dtype == "var":
-                return accumulator + (trait_data[strain]["var"], )
+                return accumulator + (trait_data["data"][strain]["variance"], )
             if dtype == "N":
-                return trait_data[strain]["ndata"]
+                return accumulator + (trait_data["data"][strain]["ndata"], )
             if dtype == "all":
-                return accumulator + __export_all_types(trait_data, strain)
+                return accumulator + __export_all_types(trait_data["data"], strain)
             raise KeyError("Type `%s` is incorrect" % dtype)
         if var_exists and n_exists:
             return accumulator + (None, None, None)
