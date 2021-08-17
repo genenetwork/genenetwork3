@@ -418,9 +418,9 @@ def retrieve_trait_info(
         conn)
     if trait_info["haveinfo"]:
         return {
-            **trait_post_processing_functions_table[trait_dataset_type](trait_info),
-            "db": {**trait["db"], **trait_dataset},
-            "riset": trait_dataset["riset"]
+            **trait_post_processing_functions_table[trait_dataset_type](
+                {**trait_info, "riset": trait_dataset["riset"]}),
+            "db": {**trait["db"], **trait_dataset}
         }
     return trait_info
 
