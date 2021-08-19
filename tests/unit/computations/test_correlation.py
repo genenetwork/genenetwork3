@@ -406,10 +406,10 @@ class TestCorrelation(TestCase):
         target_tissue_data = {"trait_symbol_dict": target_trait_symbol,
                               "symbol_tissue_vals_dict": target_symbol_tissue_vals}
 
-        mock_tissue_corr.side_effect = [{"tissue_corr": -0.5, "tissue_p_val": 0.9,
-                                         "tissue_number": 3},
-                                        {"tissue_corr": 1.11, "tissue_p_val": 0.2,
-                                         "tissue_number": 3}]
+        mock_tissue_corr.side_effect = [{"1418702_a_at": {"tissue_corr": -0.5, "tissue_p_val": 0.9,
+                                                          "tissue_number": 3}},
+                                        {"1412_at": {"tissue_corr": 1.11, "tissue_p_val": 0.2,
+                                                     "tissue_number": 3}}]
 
         expected_results = [{"1412_at":
                              {"tissue_corr": 1.11, "tissue_p_val": 0.2, "tissue_number": 3}},
