@@ -362,8 +362,7 @@ def compute_tissue_correlation(primary_tissue_dict: dict,
             target_tissues_values=target_tissue_vals,
             trait_id=trait_id,
             corr_method=corr_method)
-        tissue_result_dict = {trait_id: tissue_result}
-        tissues_results.append(tissue_result_dict)
+        tissues_results.append(tissue_result)
     return sorted(
         tissues_results,
         key=lambda trait_name: -abs(list(trait_name.values())[0]["tissue_corr"]))
