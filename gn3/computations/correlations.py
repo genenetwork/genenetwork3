@@ -125,8 +125,8 @@ def filter_shared_sample_keys(this_samplelist,
 
 
 def fast_compute_all_sample_correlation(this_trait,
-                                         target_dataset,
-                                         corr_method="pearson") -> List:
+                                        target_dataset,
+                                        corr_method="pearson") -> List:
     """Given a trait data sample-list and target__datasets compute all sample
     correlation
     this functions uses multiprocessing if not use the normal fun
@@ -386,8 +386,8 @@ def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> Lis
 
 
 def fast_compute_tissue_correlation(primary_tissue_dict: dict,
-                                     target_tissues_data: dict,
-                                     corr_method: str):
+                                    target_tissues_data: dict,
+                                    corr_method: str):
     """Experimental function that uses multiprocessing for computing tissue
     correlation
 
