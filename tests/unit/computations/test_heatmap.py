@@ -1,6 +1,9 @@
 """Module contains tests for gn3.computations.heatmap"""
 from unittest import TestCase
-from gn3.computations.heatmap import cluster_traits, export_trait_data
+from gn3.computations.heatmap import (
+    cluster_traits,
+    export_trait_data,
+    compute_heatmap_order)
 
 strainlist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
 trait_data = {
@@ -33,6 +36,16 @@ trait_data = {
         "C3H/HeJ": {"strain_name": "C3H/HeJ", "value": 7.42795, "variance": None, "ndata": None},
         "C57BL/6J": {"strain_name": "C57BL/6J", "value": 7.50606, "variance": None, "ndata": None},
         "DBA/2J": {"strain_name": "DBA/2J", "value": 7.72588, "variance": None, "ndata": None}}}
+
+slinked = (
+    (((0, 2, 0.16381088984330505),
+      ((1, 7, 0.06024619831474998), 5, 0.19179284676938602),
+      0.20337048635536847),
+     9,
+     0.23451785425383564),
+    ((3, (6, 8, 0.2140799896286565), 0.25879514152086425),
+     4, 0.8968250491499363),
+    0.9313185954797953)
 
 class TestHeatmap(TestCase):
     """Class for testing heatmap computation functions"""
@@ -141,3 +154,13 @@ class TestHeatmap(TestCase):
               0.9313185954797953, 1.1683723389247052, 0.23451785425383564,
               1.7413442197913358, 0.33370067057028485, 1.3256191648260216,
               0.0)))
+
+    def test_compute_heatmap_order(self):
+        """Test the orders."""
+        for xoff, expected in [
+                (40, ((60, 9), (60, 4))),
+                (30, ((50, 9), (50, 4))),
+                (20, ((40, 9), (40, 4)))]:
+            with self.subTest(xoffset=xoff):
+                self.assertEqual(
+                    compute_heatmap_order(slinked, xoffset=xoff), expected)

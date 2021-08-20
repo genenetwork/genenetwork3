@@ -175,3 +175,31 @@ def heatmap_data(formd, search_result, conn: Any):
         "traits_list": traits_list,
         "traits_data_list": traits_data_list
     }
+
+def compute_heatmap_order(
+        slink_data, xoffset: int = 40, neworder: tuple = tuple()):
+    """
+    Compute the data used for drawing the heatmap proper from `slink_data`.
+
+    This function tries to reproduce the creation and update of the `neworder`
+    variable in
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/Heatmap.py#L120
+    and in the `web.webqtl.heatmap.Heatmap.draw` function in GN1
+    """
+    d_1 = (0, 0, 0) # returned from self.draw in lines 391 and 399. This is just a placeholder
+
+    def __order_maker(norder, slnk_dt):
+        print("norder:{}, slnk_dt:{}".format(norder, slnk_dt))
+        if isinstance(slnk_dt[0], int) and isinstance(slnk_dt[1], int):
+            return norder + (
+                (xoffset+20, slnk_dt[0]), (xoffset + 40, slnk_dt[1]))
+
+        if isinstance(slnk_dt[0], int):
+            return norder + ((xoffset + 20, slnk_dt[0]), )
+
+        if isinstance(slnk_dt[1], int):
+            return norder + ((xoffset + d_1[0] + 20, slnk_dt[1]), )
+
+        return __order_maker(__order_maker(norder, slnk_dt[0]), slnk_dt[1])
+
+    return __order_maker(neworder, slink_data)
