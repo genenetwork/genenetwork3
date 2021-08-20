@@ -156,8 +156,8 @@ def heatmap_data(formd, search_result, conn: Any):
     traits_details = [
         __retrieve_traitlist_and_datalist(threshold, fullname)
         for fullname in search_result]
-    traits_list = map(lambda x: x[0], traits_details)
-    traits_data_list = map(lambda x: x[1], traits_details)
+    traits_list = tuple(x[0] for x in traits_details)
+    traits_data_list = tuple(x[1] for x in traits_details)
 
     return {
         "target_description_checked": formd.formdata.getvalue(
