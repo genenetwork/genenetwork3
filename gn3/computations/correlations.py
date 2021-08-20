@@ -124,9 +124,9 @@ def filter_shared_sample_keys(this_samplelist,
     return (this_vals, target_vals)
 
 
-def speed_compute_all_sample_correlation(this_trait,
-                                         target_dataset,
-                                         corr_method="pearson") -> List:
+def fast_compute_all_sample_correlation(this_trait,
+                                        target_dataset,
+                                        corr_method="pearson") -> List:
     """Given a trait data sample-list and target__datasets compute all sample
     correlation
     this functions uses multiprocessing if not use the normal fun
@@ -362,8 +362,7 @@ def compute_tissue_correlation(primary_tissue_dict: dict,
             target_tissues_values=target_tissue_vals,
             trait_id=trait_id,
             corr_method=corr_method)
-        tissue_result_dict = {trait_id: tissue_result}
-        tissues_results.append(tissue_result_dict)
+        tissues_results.append(tissue_result)
     return sorted(
         tissues_results,
         key=lambda trait_name: -abs(list(trait_name.values())[0]["tissue_corr"]))
@@ -386,9 +385,9 @@ def process_trait_symbol_dict(trait_symbol_dict, symbol_tissue_vals_dict) -> Lis
     return traits_tissue_vals
 
 
-def speed_compute_tissue_correlation(primary_tissue_dict: dict,
-                                     target_tissues_data: dict,
-                                     corr_method: str):
+def fast_compute_tissue_correlation(primary_tissue_dict: dict,
+                                    target_tissues_data: dict,
+                                    corr_method: str):
     """Experimental function that uses multiprocessing for computing tissue
     correlation
 
