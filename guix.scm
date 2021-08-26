@@ -43,7 +43,7 @@
  (gnu packages databases)
  (gnu packages statistics)
  (gnu packages bioconductor)
- (gn packages golang)
+ (gnu packages golang)
  (gn packages genenetwork)
  (gnu packages python)
  (gnu packages python-check)
