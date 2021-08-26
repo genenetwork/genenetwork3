@@ -80,7 +80,7 @@ def process_rqtl_mapping(file_name: str) -> List:
 
     return marker_obs
 
-def process_rqtl_pairscan(file_name: str) -> List:
+def process_rqtl_pairscan(file_name: str, geno_file: str) -> List:
     """Given an output file name, read in R/qtl pair-scan results and return
     a list of both the JSON needed for the d3panels figure and a list of results
     to be used when generating the results table (which will include marker names)
@@ -88,7 +88,7 @@ def process_rqtl_pairscan(file_name: str) -> List:
     """
 
     figure_data = pairscan_for_figure(file_name)
-    table_data = pairscan_for_table(file_name)
+    table_data = pairscan_for_table(file_name, geno_file)
 
     return [figure_data, table_data]
 
@@ -127,7 +127,7 @@ def pairscan_for_figure(file_name: str) -> Dict:
     return figure_data
 
 
-def pairscan_for_table(file_name: str) -> List:
+def pairscan_for_table(file_name: str, geno_file: str) -> List:
     """Given an output file name, read in R/qtl pair-scan results and return
     a list of results to be used when generating the results table (which will include marker names)
 
