@@ -204,21 +204,28 @@ def compute_heatmap_order(
 
     return __order_maker(neworder, slink_data)
 
-def retrieve_strains_and_values(strainlist, trait_data):
+def retrieve_strains_and_values(orders, strainlist, traits_data_list):
     """
     Get the strains and their corresponding values from `strainlist` and
-    `trait_data`.
+    `traits_data_list`.
 
     This migrates the code in
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/Heatmap.py#L215-221
     """
-    def __strains_and_values(acc, i):
-        if trait_data[i] is None:
-            return acc
-        if len(acc) == 0:
-            return ((strainlist[i], ), (trait_data[i], ))
-        _strains = acc[0]
-        _vals = acc[1]
-        return (_strains + (strainlist[i], ), _vals + (trait_data[i], ))
-    return reduce(
-        __strains_and_values, range(len(strainlist)), (tuple(), tuple()))
+    # This feels nasty! There's a lot of mutation of values here, that might
+    # indicate something untoward in the design of this function and its
+    # dependents  ==>  Review
+    strains = []
+    values = []
+    rets = []
+    for order in orders:
+        temp_val = traits_data_list[order[1]]
+        for i in range(len(strainlist)):
+            if temp_val[i] != None:
+                strains.append(strainlist[i])
+                values.append(temp_val[i])
+        rets.append([order, strains[:], values[:]])
+        strains = []
+        values = []
+
+    return rets
