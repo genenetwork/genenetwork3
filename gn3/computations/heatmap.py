@@ -149,22 +149,22 @@ def heatmap_data(formd, search_result, conn: Any):
 
     def __retrieve_traitlist_and_datalist(threshold, fullname):
         trait = retrieve_trait_info(threshold, fullname, conn)
-        return (
-            trait,
-            export_trait_data(retrieve_trait_data(trait, conn), strainlist))
+        return (trait, retrieve_trait_data(trait, conn))
 
     traits_details = [
         __retrieve_traitlist_and_datalist(threshold, fullname)
         for fullname in search_result]
     traits_list = tuple(x[0] for x in traits_details)
-    traits_data_list = tuple(x[1] for x in traits_details)
+    traits_data_list = [x[1] for x in traits_details]
+    exported_traits_data_list = tuple(
+        export_trait_data(td, strainlist) for x in traits_data_list)
 
     return {
         "target_description_checked": formd.formdata.getvalue(
             "targetDescriptionCheck", ""),
         "cluster_checked": cluster_checked,
         "slink_data": (
-            slink(cluster_traits(traits_data_list))
+            slink(cluster_traits(exported_traits_data_list))
             if cluster_checked else False),
         "sessionfile": formd.formdata.getvalue("session"),
         "genotype": genotype,
@@ -173,7 +173,8 @@ def heatmap_data(formd, search_result, conn: Any):
         "ppolar": formd.ppolar,
         "mpolar":formd.mpolar,
         "traits_list": traits_list,
-        "traits_data_list": traits_data_list
+        "traits_data_list": traits_data_list,
+        "exported_traits_data_list": exported_traits_data_list
     }
 
 def compute_heatmap_order(
