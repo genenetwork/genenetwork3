@@ -3,7 +3,17 @@ GeneNetwork3 REST API for data science and machine  learning
 
 ## Installation
 
-#### Using guix
+#### GNU Guix packages
+
+Install GNU Guix - this can be done on every running Linux system.
+
+There are at least three ways to start GeneNetwork3 with GNU Guix:
+
+1. Create an environment with `guix environment`
+2. Create a container with `guix environment -C`
+3. Use a profile and shell settings with `source ~/opt/genenetwork3/etc/profile`
+
+#### Create an environment:
 
 Simply load up the environment (for development purposes):
 
@@ -19,23 +29,12 @@ python3
   import redis
 ```
 
-Better run a proper container
+#### Run a Guix container
 
 ```
 env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --load=guix.scm
 ```
 
-If you get a Guix error, such as `ice-9/boot-9.scm:1669:16: In procedure raise-exception:
-error: python-sqlalchemy-stubs: unbound variable` it typically means an update to guix latest is required (i.e., guix pull):
-
-```
-guix pull
-source ~/.config/guix/current/etc/profile
-```
-
-and try again.
-
-See also instructions in [.guix.scm](.guix.scm).
 
 #### Using a Guix profile (or rolling back)
 
@@ -61,7 +60,21 @@ set|grep store
 run tests, server etc...
 ```
 
-#### Running Tests
+#### Troubleshooting Guix packages
+
+If you get a Guix error, such as `ice-9/boot-9.scm:1669:16: In procedure raise-exception:
+error: python-sqlalchemy-stubs: unbound variable` it typically means an update to guix latest is required (i.e., guix pull):
+
+```
+guix pull
+source ~/.config/guix/current/etc/profile
+```
+
+and try again. Also make sure your ~/guix-bioinformatics is up to date.
+
+See also instructions in [.guix.scm](.guix.scm).
+
+## Running Tests
 
 (assuming you are in a guix container; otherwise use venv!)
 
@@ -83,7 +96,7 @@ Running mypy(type-checker):
 mypy .
 ```
 
-#### Running the flask app
+## Running the GN3 web service
 
 To spin up the server on its own (for development):
 
@@ -112,7 +125,7 @@ And for the scalable production version run
 gunicorn --bind 0.0.0.0:8080 --workers 8 --keep-alive 6000 --max-requests 10 --max-requests-jitter 5 --timeout 1200 wsgi:app
 ```
 
-##### Using python-pip
+## Using python-pip
 
 IMPORTANT NOTE: we do not recommend using pip tools, use Guix instead
 
