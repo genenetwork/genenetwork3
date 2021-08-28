@@ -167,7 +167,7 @@ if (!is.null(opt$addcovar)) {
   if (!is.null(opt$pstrata)) {
     covar_names = trait_names[3:length(trait_names) - 1]
   } else {
-    covar_names = trait_names[3:length(trait_names)]
+    covar_names = trait_names[2:length(trait_names)]
   }
   covars <- pull.pheno(cross_object, covar_names)
 }
