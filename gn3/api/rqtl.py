@@ -48,7 +48,7 @@ run the rqtl_wrapper script and return the results as JSON
                                        "output", rqtl_cmd.get('output_file'))):
         os.system(rqtl_cmd.get('rqtl_cmd'))
 
-    if "pairscan" in boolean_kwargs:
+    if "pairscan" in rqtl_bool_kwargs:
         rqtl_output['results'] = process_rqtl_pairscan(rqtl_cmd.get('output_file'), genofile)
     else:
         rqtl_output['results'] = process_rqtl_mapping(rqtl_cmd.get('output_file'))
