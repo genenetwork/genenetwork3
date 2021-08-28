@@ -37,6 +37,30 @@ and try again.
 
 See also instructions in [.guix.scm](.guix.scm).
 
+#### Using a Guix profile (or rolling back)
+
+Create a new profile with
+
+```
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix package -i genenetwork3 -p ~/opt/genenetwork3
+```
+
+and load the profile settings with
+
+```
+source ~/opt/genenetwork3/etc/profile
+start server...
+```
+
+Note that GN2 profiles include the GN3 profile (!). To roll genenetwork3 back you can use either in the same fashion (probably best to start a new shell first)
+
+```
+bash
+source ~/opt/genenetwork2-older-version/etc/profile
+set|grep store
+run tests, server etc...
+```
+
 #### Running Tests
 
 (assuming you are in a guix container; otherwise use venv!)
