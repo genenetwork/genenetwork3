@@ -24,7 +24,7 @@ def generate_traits_file(strains, trait_values, traits_filename):
     traits_filename: The tab-separated value to put the values in for
         computation of QTLs.
     """
-    header = "Traits\t{}\n".format("\t".join(strains))
+    header = "Trait\t{}\n".format("\t".join(strains))
     data = [header] + [
         "T{}\t{}\n".format(i+1, "\t".join([str(i) for i in t]))
         for i, t in enumerate(trait_values[:-1])] + [
