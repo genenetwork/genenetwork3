@@ -120,3 +120,24 @@ guix. To freeze dependencies:
 pip freeze --path venv/lib/python3.8/site-packages > requirements.txt
 
 ```
+
+## QTLReaper (rust-qtlreaper) and Trait Files
+
+To run QTL computations, this system makes use of the [rust-qtlreaper](https://github.com/chfi/rust-qtlreaper.git) utility.
+
+To do this, the system needs to export the trait data into a tab-separated file, that can then be passed to the utility using the `--traits` option. For more information about the available options, please [see the rust-qtlreaper](https://github.com/chfi/rust-qtlreaper.git) repository.
+
+### Traits File Format
+
+The traits file begins with a header row/line with the column headers. The first column in the file has the header **"Trait"**. Every other column has a header for one of the strains in consideration.
+
+Under the **"Trait"** column, the traits are numbered from **T1** to **T<n>** where **<n>** is the count of the total number of traits in consideration.
+
+As an example, you could end up with a trait file like the following:
+
+```txt
+Traits	BXD27	BXD32	DBA/2J	BXD21	...
+T1	10.5735	9.27408	9.48255	9.18253	...
+T2	6.4471	6.7191	5.98015	6.68051	...
+...
+```
