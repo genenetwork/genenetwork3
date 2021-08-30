@@ -230,11 +230,3 @@ def retrieve_strains_and_values(orders, strainlist, traits_data_list):
         values = []
 
     return rets
-
-def generate_traits_file(strains, trait_values, traits_filename):
-    header = "Traits\t{}\n".format("\t".join(strains))
-    data = [header] + [
-        "T{}\t{}\n".format(i+1, "\t".join([str(i) for i in t]))
-        for i,t in enumerate(trait_values)]
-    with open(traits_filename, "w") as outfile:
-        outfile.writelines(data)

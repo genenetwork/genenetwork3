@@ -7,16 +7,14 @@ Run with:
 
 replacing the variables in the angled brackets with the appropriate values
 """
-import random
-import string
 from gn3.computations.slink import slink
 from gn3.db_utils import database_connector
 from gn3.computations.heatmap import export_trait_data
 from gn3.db.traits import retrieve_trait_data, retrieve_trait_info
+from gn3.computations.qtlreaper import random_string, generate_traits_file
 from gn3.computations.heatmap import (
     cluster_traits,
     compute_heatmap_order,
-    generate_traits_file,
     retrieve_strains_and_values)
 
 TMPDIR = "tmp/qtltests"
@@ -35,11 +33,6 @@ def trait_fullnames():
         "UCLA_BXDBXH_CARTILAGE_V2::ILM4200064",
         "UCLA_BXDBXH_CARTILAGE_V2::ILM3140463"]
 
-def random_string(length):
-    return "".join(
-        random.choices(
-            string.ascii_letters + string.digits, k=length))
-
 def main():
     """entrypoint function"""
     conn = database_connector()[0]
@@ -56,7 +49,6 @@ def main():
     strains_and_values = retrieve_strains_and_values(
         orders, strains, exported_traits_data_list)
     strains_values = strains_and_values[0][1]
-    strains_values2 = strains_and_values[1][1]
     trait_values = [t[2] for t in strains_and_values]
     traits_filename = "{}/traits_test_file_{}.txt".format(
         TMPDIR, random_string(10))

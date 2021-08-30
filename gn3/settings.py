@@ -24,3 +24,6 @@ GN2_BASE_URL = "http://www.genenetwork.org/"
 
 # biweight script
 BIWEIGHT_RSCRIPT = "~/genenetwork3/scripts/calculate_biweight.R"
+
+# qtlreaper command
+REAPER_COMMAND = "{}/bin/qtlreaper".format(os.environ.get("GUIX_ENVIRONMENT"))
