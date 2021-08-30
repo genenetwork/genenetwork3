@@ -157,7 +157,7 @@ def heatmap_data(formd, search_result, conn: Any):
     traits_list = tuple(x[0] for x in traits_details)
     traits_data_list = [x[1] for x in traits_details]
     exported_traits_data_list = tuple(
-        export_trait_data(td, strainlist) for x in traits_data_list)
+        export_trait_data(td, strainlist) for td in traits_data_list)
 
     return {
         "target_description_checked": formd.formdata.getvalue(
@@ -190,7 +190,6 @@ def compute_heatmap_order(
     d_1 = (0, 0, 0) # returned from self.draw in lines 391 and 399. This is just a placeholder
 
     def __order_maker(norder, slnk_dt):
-        print("norder:{}, slnk_dt:{}".format(norder, slnk_dt))
         if isinstance(slnk_dt[0], int) and isinstance(slnk_dt[1], int):
             return norder + (
                 (xoffset+20, slnk_dt[0]), (xoffset + 40, slnk_dt[1]))
@@ -221,9 +220,9 @@ def retrieve_strains_and_values(orders, strainlist, traits_data_list):
     rets = []
     for order in orders:
         temp_val = traits_data_list[order[1]]
-        for i in range(len(strainlist)):
-            if temp_val[i] != None:
-                strains.append(strainlist[i])
+        for i, strain in enumerate(strainlist):
+            if temp_val[i] is not None:
+                strains.append(strain)
                 values.append(temp_val[i])
         rets.append([order, strains[:], values[:]])
         strains = []
