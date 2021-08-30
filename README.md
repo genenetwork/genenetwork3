@@ -14,7 +14,7 @@ guix environment --load=guix.scm
 Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
 
 ```bash
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --load=guix.scm
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --expose=$HOME/genotype_files/ --load=guix.scm
 python3
   import redis
 ```
@@ -22,7 +22,7 @@ python3
 Better run a proper container
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --load=guix.scm
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --expose=$HOME/genotype_files/ --load=guix.scm
 ```
 
 If you get a Guix error, such as `ice-9/boot-9.scm:1669:16: In procedure raise-exception:
@@ -120,6 +120,19 @@ guix. To freeze dependencies:
 pip freeze --path venv/lib/python3.8/site-packages > requirements.txt
 
 ```
+
+## Genotype Files
+
+You can get the genotype files from http://ipfs.genenetwork.org/ipfs/QmXQy3DAUWJuYxubLHLkPMNCEVq1oV7844xWG2d1GSPFPL and save them on your host machine at, say `$HOME/genotype_files` with something like:
+
+```bash
+$ mkdir -p $HOME/genotype_files
+$ cd $HOME/genotype_files
+$ yes | 7z x genotype_files.tar.7z
+$ tar xf genotype_files.tar
+```
+
+The `genotype_files.tar.7z` file seems to only contain the **BXD.geno** genotype file.
 
 ## QTLReaper (rust-qtlreaper) and Trait Files
 
