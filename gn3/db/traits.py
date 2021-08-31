@@ -1,4 +1,5 @@
 """This class contains functions relating to trait data manipulation"""
+from gn3.settings import TMPDIR
 from typing import Any, Dict, Union, Sequence
 from gn3.function_helpers import compose
 from gn3.db.datasets import retrieve_trait_dataset
@@ -666,3 +667,7 @@ def retrieve_trait_data(trait: dict, conn: Any, strainlist: Sequence[str] = tupl
                     {k:v for k, v in x.items() if x != "strain_name"}),
                 data))}
     return {}
+
+def generate_traits_filename(base_path: str = TMPDIR):
+    return "{}/traits_test_file_{}.txt".format(
+        os.path.abspath(base_path), random_string(10))
