@@ -6,6 +6,7 @@ generate various kinds of heatmaps.
 from functools import reduce
 from typing import Any, Dict, Sequence
 from gn3.computations.slink import slink
+from gn3.computations.qtlreaper import generate_traits_file
 from gn3.computations.correlations2 import compute_correlation
 from gn3.db.genotypes import build_genotype_file, load_genotype_samples
 from gn3.db.traits import (
@@ -155,14 +156,14 @@ def heatmap_data(traits_names, conn: Any):
         for fullname in traits_names]
     traits_list = tuple(x[0] for x in traits_details)
     traits_data_list = [x[1] for x in traits_details]
-    exported_traits_data_list = tuple(
-        export_trait_data(td, strainlist) for td in traits_data_list)
     genotype_filename = build_genotype_file(traits_list[0]["riset"])
     strainlist = load_genotype_samples(genotype_filename)
+    exported_traits_data_list = tuple(
+        export_trait_data(td, strainlist) for td in traits_data_list)
     slink_data = slink(cluster_traits(exported_traits_data_list))
     ordering_data = compute_heatmap_order(slink_data)
     strains_and_values = retrieve_strains_and_values(
-        orders, strainlist, exported_traits_data_list)
+        ordering_data, strainlist, exported_traits_data_list)
     strains_values = strains_and_values[0][1]
     trait_values = [t[2] for t in strains_and_values]
     traits_filename = generate_traits_filename()

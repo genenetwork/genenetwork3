@@ -3,16 +3,9 @@ This module contains functions to interact with the `qtlreaper` utility for
 computation of QTLs.
 """
 import os
-import random
-import string
 import subprocess
+from gn3.random import random_string
 from gn3.settings import TMPDIR, REAPER_COMMAND
-
-def random_string(length):
-    """Generate a random string of length `length`."""
-    return "".join(
-        random.choices(
-            string.ascii_letters + string.digits, k=length))
 
 def generate_traits_file(strains, trait_values, traits_filename):
     """
@@ -25,11 +18,13 @@ def generate_traits_file(strains, trait_values, traits_filename):
         computation of QTLs.
     """
     header = "Trait\t{}\n".format("\t".join(strains))
-    data = [header] + [
-        "T{}\t{}\n".format(i+1, "\t".join([str(i) for i in t]))
-        for i, t in enumerate(trait_values[:-1])] + [
-        "T{}\t{}".format(len(trait_values), "\t".join([str(i) for i in t]))
-        for t in trait_values[-1:]]
+    data = (
+        [header] +
+        ["T{}\t{}\n".format(i+1, "\t".join([str(i) for i in t]))
+         for i, t in enumerate(trait_values[:-1])] +
+        ["T{}\t{}".format(
+            len(trait_values), "\t".join([str(i) for i in t]))
+         for t in trait_values[-1:]])
     with open(traits_filename, "w") as outfile:
         outfile.writelines(data)
 
@@ -93,6 +88,9 @@ def run_reaper(
 
 
 def parse_reaper_main_results(results_file):
+    """
+    Parse the results file of running QTLReaper into a list of dicts.
+    """
     with open(results_file, "r") as infile:
         lines = infile.readlines()
 
@@ -104,6 +102,9 @@ def parse_reaper_main_results(results_file):
     return [dict(zip(header, __parse_line(line))) for line in lines[1:]]
 
 def parse_reaper_permutation_results(results_file):
+    """
+    Parse the results QTLReaper permutations into a list of values.
+    """
     with open(results_file, "r") as infile:
         lines = infile.readlines()
 

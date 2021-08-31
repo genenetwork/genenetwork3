@@ -1,5 +1,4 @@
 """Module contains tests for gn3.computations.qtlreaper"""
-import os
 from unittest import TestCase
 from gn3.computations.qtlreaper import (
     parse_reaper_main_results, parse_reaper_permutation_results)
@@ -8,6 +7,7 @@ class TestQTLReaper(TestCase):
     """Class for testing qtlreaper interface functions."""
 
     def test_parse_reaper_main_results(self):
+        """Test that the main results file is parsed correctly."""
         self.assertEqual(
             parse_reaper_main_results(
                 "tests/unit/computations/data/qtlreaper/main_output_sample.txt"),
@@ -65,9 +65,10 @@ class TestQTLReaper(TestCase):
             ])
 
     def test_parse_reaper_permutation_results(self):
+        """Test that the permutations results file is parsed correctly."""
         self.assertEqual(
             parse_reaper_permutation_results(
-            "tests/unit/computations/data/qtlreaper/permu_output_sample.txt"),
+                "tests/unit/computations/data/qtlreaper/permu_output_sample.txt"),
             [4.44174, 5.03825, 5.08167, 5.18119, 5.18578, 5.24563, 5.24619,
              5.24619, 5.27961, 5.28228, 5.43903, 5.50188, 5.51694, 5.56830,
              5.63874, 5.71346, 5.71936, 5.74275, 5.76764, 5.79815, 5.81671,
