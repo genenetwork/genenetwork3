@@ -167,7 +167,7 @@ if (!is.null(opt$addcovar)) {
   if (!is.null(opt$pstrata)) {
     covar_names = trait_names[3:length(trait_names) - 1]
   } else {
-    covar_names = trait_names[3:length(trait_names)]
+    covar_names = trait_names[2:length(trait_names)]
   }
   covars <- pull.pheno(cross_object, covar_names)
 }
@@ -195,18 +195,18 @@ if (opt$nperm > 0) {
 
   if (!is.null(opt$addcovar) || !is.null(opt$control)){
     if (!is.null(opt$pstrata)) {
-      verbose_print('Running permutations with cofactors and strata\n')
+      verbose_print('Running ', opt$nperm, ' permutations with cofactors and strata\n')
       perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
     } else {
-      verbose_print('Running permutations with cofactors\n')
+      verbose_print('Running ', opt$nperm, ' permutations with cofactors\n')
       perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, model=opt$model, method=opt$method)
     }
   } else {
     if (!is.null(opt$pstrata)) {
-      verbose_print('Running permutations with strata\n')
+      verbose_print('Running ', opt$nperm, ' permutations with strata\n')
       perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
     } else {
-      verbose_print('Running permutations\n')
+      verbose_print('Running ', opt$nperm, ' permutations\n')
       perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, model=opt$model, method=opt$method)
     }
   }
