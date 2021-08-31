@@ -168,11 +168,25 @@ class TestHeatmap(TestCase):
 
     def test_retrieve_strains_and_values(self):
         """Test retrieval of strains and values."""
-        for slist, tdata, expected in [
-                [["s1", "s2", "s3", "s4"], [9, None, 5, 4],
-                 (("s1", "s3", "s4"), (9, 5, 4))],
-                [["s1", "s2", "s3", "s4", "s5"], [6, None, None, 4, None],
-                 (("s1", "s4"), (6, 4))]]:
+        for orders, slist, tdata, expected in [
+                [
+                    [(60, 2)],
+                    ["s1", "s2", "s3", "s4"],
+                    [[2, 9, 6, None, 4],
+                     [7, 5, None, None, 4],
+                     [9, None, 5, 4, 7],
+                     [6, None, None, 4, None]],
+                    [[(60, 2), ["s1", "s3", "s4"], [9, 5, 4]]]
+                ],
+                [
+                    [(60, 3)],
+                    ["s1", "s2", "s3", "s4", "s5"],
+                    [[2, 9, 6, None, 4],
+                     [7, 5, None, None, 4],
+                     [9, None, 5, 4, 7],
+                     [6, None, None, 4, None]],
+                    [[(60, 3), ["s1", "s4"], [6, 4]]]
+                ]]:
             with self.subTest(strainlist=slist, traitdata=tdata):
                 self.assertEqual(
-                    retrieve_strains_and_values(slist, tdata), expected)
+                    retrieve_strains_and_values(orders, slist, tdata), expected)
