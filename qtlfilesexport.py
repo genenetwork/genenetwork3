@@ -9,6 +9,7 @@ replacing the variables in the angled brackets with the appropriate values
 """
 from gn3.computations.slink import slink
 from gn3.db_utils import database_connector
+from gn3.computations.qtlreaper import run_reaper
 from gn3.computations.heatmap import export_trait_data
 from gn3.db.traits import retrieve_trait_data, retrieve_trait_info
 from gn3.db.genotypes import build_genotype_file, load_genotype_samples
@@ -56,6 +57,12 @@ def main():
         TMPDIR, random_string(10))
     generate_traits_file(strains_values, trait_values, traits_filename)
     print("Generated file: {}".format(traits_filename))
+
+    main_output, permutations_output = run_reaper(
+        genotype_filename, traits_filename, separate_nperm_output=True)
+
+    print("Main output: {}, Permutation output: {}".format(
+        main_output, permutations_output))
 
 if __name__ == "__main__":
     main()

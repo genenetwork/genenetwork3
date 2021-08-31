@@ -42,7 +42,7 @@ def create_output_directory(path: str):
 
 def run_reaper(
         genotype_filename: str, traits_filename: str,
-        other_options: tuple = ("--n_permutations", 1000),
+        other_options: tuple = ("--n_permutations", "1000"),
         separate_nperm_output: bool = False,
         output_dir: str = TMPDIR):
     """
@@ -70,7 +70,7 @@ def run_reaper(
     The function will raise a `subprocess.CalledProcessError` exception in case
     of any errors running the `qtlreaper` command.
     """
-    create_output_directory(output_dir)
+    create_output_directory("{}/qtlreaper".format(output_dir))
     output_filename = "{}/qtlreaper/main_output_{}.txt".format(
         output_dir, random_string(10))
     output_list = ["--main_output", output_filename]
@@ -84,7 +84,9 @@ def run_reaper(
     command_list = [
         REAPER_COMMAND, "--geno", genotype_filename,
         *other_options, # this splices the `other_options` list here
-        "--traits", traits_filename, "--main_output", output_filename]
+        "--traits", traits_filename,
+        *output_list # this splices the `output_list` list here
+    ]
 
     subprocess.run(command_list, check=True)
     return (output_filename, permu_output_filename)
