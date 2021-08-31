@@ -90,3 +90,21 @@ def run_reaper(
 
     subprocess.run(command_list, check=True)
     return (output_filename, permu_output_filename)
+
+
+def parse_reaper_main_results(results_file):
+    with open(results_file, "r") as infile:
+        lines = infile.readlines()
+
+    def __parse_line(line):
+        items = line.strip().split("\t")
+        return items[0:2] + [float(item) for item in items[2:]]
+
+    header = lines[0].strip().split("\t")
+    return [dict(zip(header, __parse_line(line))) for line in lines[1:]]
+
+def parse_reaper_permutation_results(results_file):
+    with open(results_file, "r") as infile:
+        lines = infile.readlines()
+
+    return [float(line.strip()) for line in lines]
