@@ -27,3 +27,7 @@ BIWEIGHT_RSCRIPT = "~/genenetwork3/scripts/calculate_biweight.R"
 
 # qtlreaper command
 REAPER_COMMAND = "{}/bin/qtlreaper".format(os.environ.get("GUIX_ENVIRONMENT"))
+
+# genotype files
+GENOTYPE_FILES = os.environ.get(
+    "GENOTYPE_FILES", "{}/genotype_files/genotype".format(os.environ.get("HOME")))
