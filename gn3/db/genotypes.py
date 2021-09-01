@@ -67,3 +67,23 @@ def __load_genotype_samples_from_plink(genotype_filename: str):
     """
     genofile = open(genotype_filename)
     return [line.split(" ")[1] for line in genofile]
+
+def parse_genotype_labels(lines: list):
+    """
+    Parse label lines into usable genotype values
+
+    DESCRIPTION:
+    Reworks
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/utility/gen_geno_ob.py#L75-L93
+    """
+    acceptable_labels = ["name", "filler", "type", "mat", "pat", "het", "unk"]
+    def __parse_label(line):
+        label, value = [l.strip() for l in line[1:].split(":")]
+        if label not in acceptable_labels:
+            return None
+        if label == "name":
+            return ("group", value)
+        return (label, value)
+    return tuple(
+        item for item in (__parse_label(line) for line in lines)
+        if item is not None)
