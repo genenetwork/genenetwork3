@@ -87,3 +87,22 @@ def parse_genotype_labels(lines: list):
     return tuple(
         item for item in (__parse_label(line) for line in lines)
         if item is not None)
+
+def parse_genotype_header(line: str, parlist = tuple()):
+    """
+    Parse the genotype file header line
+
+    DESCRIPTION:
+    Reworks
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/utility/gen_geno_ob.py#L94-L114
+    """
+    items = [item.strip() for item in line.split("\t")]
+    Mbmap = "Mb" in items
+    prgy = ((parlist + tuple(items[4:])) if Mbmap
+            else (parlist + tuple(items[3:])))
+    return (
+        ("Mbmap", Mbmap),
+        ("cm_column", items.index("cM")),
+        ("mb_column", None if not Mbmap else items.index("Mb")),
+        ("prgy", prgy),
+        ("nprgy", len(prgy)))
