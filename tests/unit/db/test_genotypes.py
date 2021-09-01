@@ -1,7 +1,11 @@
 """Tests gn3.db.genotypes"""
 from unittest import TestCase
 from gn3.db.genotypes import (
-    parse_genotype_labels, parse_genotype_header, parse_genotype_data_line)
+    parse_genotype_file,
+    parse_genotype_labels,
+    parse_genotype_header,
+    parse_genotype_marker,
+    build_genotype_chromosomes)
 
 class TestGenotypes(TestCase):
     """Tests for functions in `gn3.db.genotypes`."""
@@ -69,5 +73,98 @@ class TestGenotypes(TestCase):
                   ("genotype", (-1, -1, 1, 0, 1, -1, "U", 1, -1, -1)))]]:
             with self.subTest(line = line):
                 self.assertEqual(
-                    parse_genotype_data_line(line, geno_obj, parlist),
+                    parse_genotype_marker(line, geno_obj, parlist),
                     expected)
+
+    def test_build_genotype_chromosomes(self):
+        """
+        Given `markers` and `geno_obj`, test that `build_genotype_chromosomes`
+        builds a sequence of chromosomes with the given markers ordered
+        according to the `chr` value."""
+        for markers, geno_obj, expected in [
+                [[(("chr", "1"), ("name", "rs31443144"), ("cM", 2.0),
+                   ("Mb", 3.0),
+                   ("genotype", (-1, -1, 1, 0, 1, -1, "U", 1, -1, -1))),
+                  (("chr", "2"), ("name", "rs31443144"), ("cM", 2.0),
+                   ("Mb", 3.0),
+                   ("genotype", (-1, -1, 1, 0, 1, -1, "U", 1, -1, -1)))],
+                 {"mat": "B", "pat": "D", "het": "H", "unk": "U",
+                  "cm_column": 2, "Mbmap": True, "mb_column": 3},
+                 ((("name", "1"), ("mb_exists", True), ("cm_column", 2),
+                   ("mb_column", 3),
+                   ("loci",
+                    ({"chr": "1", "name": "rs31443144", "cM": 2.0, "Mb": 3.0,
+                      "genotype": (-1, -1, 1, 0, 1, -1, "U", 1, -1, -1)},))),
+                  (("name", "2"), ("mb_exists", True), ("cm_column", 2),
+                   ("mb_column", 3),
+                   ("loci",
+                    ({"chr": "2", "name": "rs31443144", "cM": 2.0, "Mb": 3.0,
+                      "genotype": (-1, -1, 1, 0, 1, -1, "U", 1, -1, -1)},))))],
+                [[(("chr", "1"), ("name", "rs31443144"), ("cM", 2.0),
+                   ("Mb", None),
+                   ("genotype", (-1, 1, 1, 0, 1, -1, "U", 1, -1, -1)))],
+                 {"mat": "B", "pat": "D", "het": "H", "unk": "U",
+                  "cm_column": 2, "Mbmap": False, "mb_column": None},
+                 ((("name", "1"), ("mb_exists", False), ("cm_column", 2),
+                   ("mb_column", None),
+                   ("loci",
+                    ({"chr": "1", "name": "rs31443144", "cM": 2.0, "Mb": None,
+                      "genotype": (-1, 1, 1, 0, 1, -1, "U", 1, -1, -1)},))),)]]:
+            with self.subTest(markers = markers):
+                self.assertEqual(
+                    build_genotype_chromosomes(geno_obj, markers),
+                    expected)
+
+    def test_parse_genotype_file(self):
+        """Test the parsing of genotype files. """
+        self.assertEqual(
+            parse_genotype_file(
+                "tests/unit/db/data/genotypes/genotype_sample1.geno"),
+            {"group": "BXD",
+             "type": "riset",
+             "mat": "B",
+             "pat": "D",
+             "het": "H",
+             "unk": "U",
+             "Mbmap": True,
+             "cm_column": 2,
+             "mb_column": 3,
+             "prgy": ("BXD1", "BXD2", "BXD5", "BXD6", "BXD8", "BXD9"),
+             "nprgy": 6,
+             "chromosomes": (
+                 {"name": "1",
+                  "mb_exists": True,
+                  "cm_column": 2,
+                  "mb_column": 3,
+                  "loci": (
+                      {"chr": "1",
+                       "name": "rs31443144",
+                       "cM": 2.0,
+                       "Mb": 3.0,
+                       "genotype": (-1, -1, 1, 1, 1, -1)
+                       },
+                      {"chr": "1",
+                       "name": "rs6269442",
+                       "cM": 2.0,
+                       "Mb": 3.0,
+                       "genotype": (-1, -1, 1, 1, 0, "U")},
+                      {"chr": "1",
+                       "name": "rs32285189",
+                       "cM": 2.0,
+                       "Mb": 3.0,
+                       "genotype": (-1, "U", 1, 1, 1, -1)})},
+                 {"name": "2",
+                  "mb_exists": True,
+                  "cm_column": 2,
+                  "mb_column": 3,
+                  "loci": (
+                      {"chr": "2",
+                       "name": "rs31443144",
+                       "cM": 2.0,
+                       "Mb": 3.0,
+                       "genotype": (-1, -1, 1, 1, 1, -1)},
+                      {"chr": "2",
+                       "name": "rs6269442",
+                       "cM": 2.0,
+                       "Mb": 3.0,
+                       "genotype": (-1, -1, 1, 1, 0, "U")})})})

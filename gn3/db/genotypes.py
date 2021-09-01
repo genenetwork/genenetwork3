@@ -107,7 +107,7 @@ def parse_genotype_header(line: str, parlist = tuple()):
         ("prgy", prgy),
         ("nprgy", len(prgy)))
 
-def parse_genotype_data_line(line: str, geno_obj: dict, parlist: list):
+def parse_genotype_marker(line: str, geno_obj: dict, parlist: list):
     """
     Parse a data line in a genotype file
 
@@ -143,3 +143,39 @@ def parse_genotype_data_line(line: str, geno_obj: dict, parlist: list):
         ("cM", cM),
         ("Mb", float(geno_obj["mb_column"]) if geno_obj["Mbmap"] else None),
         ("genotype", genotype))
+
+def build_genotype_chromosomes(geno_obj, markers):
+    """
+    Build up the chromosomes from the given markers and partially built geno
+    object
+    """
+    mrks = [dict(marker) for marker in markers]
+    chr_names = {marker["chr"] for marker in mrks}
+    return tuple((
+        ("name", chr_name), ("mb_exists", geno_obj["Mbmap"]), ("cm_column", 2),
+        ("mb_column", geno_obj["mb_column"]),
+        ("loci", tuple(marker for marker in mrks if marker["chr"] == chr_name)))
+           for chr_name in sorted(chr_names))
+
+def parse_genotype_file(filename: str, parlist = tuple()):
+    """
+    Parse the provided genotype file into a usable pytho3 data structure.
+    """
+    with open(filename, "r") as infile:
+        contents = infile.readlines()
+
+    lines = tuple(line for line in contents if
+             ((not line.strip().startswith("#")) and
+              (not line.strip() == "")))
+    labels = parse_genotype_labels(
+        line for line in lines if line.startswith("@"))
+    data_lines = tuple(line for line in lines if not line.startswith("@"))
+    header = parse_genotype_header(data_lines[0], parlist)
+    geno_obj = dict(labels + header)
+    markers = tuple(
+        parse_genotype_marker(line, geno_obj, parlist)
+        for line in data_lines[1:])
+    chromosomes = tuple(
+        dict(chromosome) for chromosome in
+        build_genotype_chromosomes(geno_obj, markers))
+    return {**geno_obj, "chromosomes": chromosomes}
