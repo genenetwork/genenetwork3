@@ -106,3 +106,40 @@ def parse_genotype_header(line: str, parlist = tuple()):
         ("mb_column", None if not Mbmap else items.index("Mb")),
         ("prgy", prgy),
         ("nprgy", len(prgy)))
+
+def parse_genotype_data_line(line: str, geno_obj: dict, parlist: list):
+    """
+    Parse a data line in a genotype file
+
+    DESCRIPTION:
+    Reworks
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/utility/gen_geno_ob.py#L143-L190
+    """
+    marker_row = [item.strip() for item in line.split("\t")]
+    geno_table = {
+        geno_obj["mat"]: -1, geno_obj["pat"]: 1, geno_obj["het"]: 0,
+        geno_obj["unk"]: "U"
+    }
+    start_pos = 4 if geno_obj["Mbmap"] else 3
+    if len(parlist) > 0:
+        start_pos = start_pos + 2
+
+    alleles = marker_row[start_pos:]
+    genotype = tuple(
+        (geno_table[allele] if allele in geno_table.keys() else "U")
+        for allele in alleles)
+    if len(parlist) > 0:
+        genotype = (-1, 1) + genotype
+    try:
+        cM = float(geno_obj["cm_column"])
+    except:
+        if geno_obj["Mbmap"]:
+            cM = float(geno_obj["mb_column"])
+        else:
+            cM = 0
+    return (
+        ("chr", marker_row[0]),
+        ("name", marker_row[1]),
+        ("cM", cM),
+        ("Mb", float(geno_obj["mb_column"]) if geno_obj["Mbmap"] else None),
+        ("genotype", genotype))
