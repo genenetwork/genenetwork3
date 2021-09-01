@@ -88,7 +88,7 @@ def parse_genotype_labels(lines: list):
         item for item in (__parse_label(line) for line in lines)
         if item is not None)
 
-def parse_genotype_header(line: str, parlist = tuple()):
+def parse_genotype_header(line: str, parlist: tuple = tuple()):
     """
     Parse the genotype file header line
 
@@ -97,13 +97,13 @@ def parse_genotype_header(line: str, parlist = tuple()):
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/utility/gen_geno_ob.py#L94-L114
     """
     items = [item.strip() for item in line.split("\t")]
-    Mbmap = "Mb" in items
-    prgy = ((parlist + tuple(items[4:])) if Mbmap
+    mbmap = "Mb" in items
+    prgy = ((parlist + tuple(items[4:])) if mbmap
             else (parlist + tuple(items[3:])))
     return (
-        ("Mbmap", Mbmap),
+        ("Mbmap", mbmap),
         ("cm_column", items.index("cM")),
-        ("mb_column", None if not Mbmap else items.index("Mb")),
+        ("mb_column", None if not mbmap else items.index("Mb")),
         ("prgy", prgy),
         ("nprgy", len(prgy)))
 
@@ -131,16 +131,16 @@ def parse_genotype_marker(line: str, geno_obj: dict, parlist: list):
     if len(parlist) > 0:
         genotype = (-1, 1) + genotype
     try:
-        cM = float(geno_obj["cm_column"])
+        cm_val = float(geno_obj["cm_column"])
     except:
         if geno_obj["Mbmap"]:
-            cM = float(geno_obj["mb_column"])
+            cm_val = float(geno_obj["mb_column"])
         else:
-            cM = 0
+            cm_val = 0
     return (
         ("chr", marker_row[0]),
         ("name", marker_row[1]),
-        ("cM", cM),
+        ("cM", cm_val),
         ("Mb", float(geno_obj["mb_column"]) if geno_obj["Mbmap"] else None),
         ("genotype", genotype))
 
@@ -155,9 +155,9 @@ def build_genotype_chromosomes(geno_obj, markers):
         ("name", chr_name), ("mb_exists", geno_obj["Mbmap"]), ("cm_column", 2),
         ("mb_column", geno_obj["mb_column"]),
         ("loci", tuple(marker for marker in mrks if marker["chr"] == chr_name)))
-           for chr_name in sorted(chr_names))
+                 for chr_name in sorted(chr_names))
 
-def parse_genotype_file(filename: str, parlist = tuple()):
+def parse_genotype_file(filename: str, parlist: tuple = tuple()):
     """
     Parse the provided genotype file into a usable pytho3 data structure.
     """
@@ -165,16 +165,16 @@ def parse_genotype_file(filename: str, parlist = tuple()):
         contents = infile.readlines()
 
     lines = tuple(line for line in contents if
-             ((not line.strip().startswith("#")) and
-              (not line.strip() == "")))
+                  ((not line.strip().startswith("#")) and
+                   (not line.strip() == "")))
     labels = parse_genotype_labels(
-        line for line in lines if line.startswith("@"))
+        [line for line in lines if line.startswith("@")])
     data_lines = tuple(line for line in lines if not line.startswith("@"))
     header = parse_genotype_header(data_lines[0], parlist)
     geno_obj = dict(labels + header)
     markers = tuple(
-        parse_genotype_marker(line, geno_obj, parlist)
-        for line in data_lines[1:])
+        [parse_genotype_marker(line, geno_obj, parlist)
+        for line in data_lines[1:]])
     chromosomes = tuple(
         dict(chromosome) for chromosome in
         build_genotype_chromosomes(geno_obj, markers))

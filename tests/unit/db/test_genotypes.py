@@ -18,9 +18,9 @@ class TestGenotypes(TestCase):
                 "@type:test_type", "@mat:test_mat   \t", "@pat:test_pat ",
                 "@het: test_het ", "@unk: test_unk", "@other: test_other",
                 "@brrr: test_brrr "]),
-        (("group", "test_group"), ("filler", "test_filler"),
-         ("type", "test_type"), ("mat", "test_mat"), ("pat", "test_pat"),
-         ("het", "test_het"), ("unk", "test_unk")))
+            (("group", "test_group"), ("filler", "test_filler"),
+             ("type", "test_type"), ("mat", "test_mat"), ("pat", "test_pat"),
+             ("het", "test_het"), ("unk", "test_unk")))
 
     def test_parse_genotype_header(self):
         """Test that the genotype header is parsed correctly."""
@@ -71,7 +71,7 @@ class TestGenotypes(TestCase):
                  (("chr", "1"), ("name", "rs31443144"), ("cM", 2.0),
                   ("Mb", 3.0),
                   ("genotype", (-1, -1, 1, 0, 1, -1, "U", 1, -1, -1)))]]:
-            with self.subTest(line = line):
+            with self.subTest(line=line):
                 self.assertEqual(
                     parse_genotype_marker(line, geno_obj, parlist),
                     expected)
@@ -110,7 +110,7 @@ class TestGenotypes(TestCase):
                    ("loci",
                     ({"chr": "1", "name": "rs31443144", "cM": 2.0, "Mb": None,
                       "genotype": (-1, 1, 1, 0, 1, -1, "U", 1, -1, -1)},))),)]]:
-            with self.subTest(markers = markers):
+            with self.subTest(markers=markers):
                 self.assertEqual(
                     build_genotype_chromosomes(geno_obj, markers),
                     expected)
