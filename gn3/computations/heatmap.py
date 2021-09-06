@@ -30,7 +30,7 @@ def export_trait_data(
       The dictionary of key-value pairs representing a trait
     strainlist: (list)
       A list of strain names
-    type: (str)
+    dtype: (str)
       ... verify what this is ...
     var_exists: (bool)
       A flag indicating existence of variance
@@ -232,3 +232,50 @@ def retrieve_strains_and_values(orders, strainlist, traits_data_list):
         values = []
 
     return rets
+
+def nearest_marker_finder(genotype):
+    """
+    Returns a function to be used with `genotype` to compute the nearest marker
+    to the trait passed to the returned function.
+
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/Heatmap.py#L425-434
+    """
+    def __compute_distances(chromo, trait):
+        loci = chromo.get("loci", None)
+        if not loci:
+            return None
+        return tuple(
+            {
+                "name": locus["name"],
+                "distance": abs(locus["Mb"] - trait["mb"])
+            } for locus in loci)
+
+    def __finder(trait):
+        _chrs = tuple(
+            _chr for _chr in genotype["chromosomes"]
+            if str(_chr["name"]) == str(trait["chr"]))
+        if len(_chrs) == 0:
+            return None
+        distances = tuple(
+            distance for dists in
+            filter(
+                lambda x: x is not None,
+                (__compute_distances(_chr, trait) for _chr in _chrs))
+            for distance in dists)
+        nearest = min(distances, key=lambda d: d["distance"])
+        return nearest["name"]
+    return __finder
+
+def get_nearest_marker(traits_list, genotype):
+    """
+    Retrieves the nearest marker for each of the traits in the list.
+
+    DESCRIPTION:
+    This migrates the code in
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/Heatmap.py#L419-L438
+    """
+    if not genotype["Mbmap"]:
+        return [None] * len(trait_list)
+
+    marker_finder = nearest_marker_finder(genotype)
+    return [marker_finder(trait) for trait in traits_list]
