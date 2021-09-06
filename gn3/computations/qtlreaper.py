@@ -94,7 +94,7 @@ def parse_reaper_main_results(results_file):
     with open(results_file, "r") as infile:
         lines = infile.readlines()
 
-    def __parse_column_value(value):
+    def __parse_column_float_value(value):
         try:
             return float(value)
         except:
@@ -102,7 +102,8 @@ def parse_reaper_main_results(results_file):
 
     def __parse_line(line):
         items = line.strip().split("\t")
-        return items[0:2] + [__parse_column_value(item) for item in items[2:]]
+        return items[0:3] + [
+            __parse_column_float_value(item) for item in items[3:]]
 
     header = lines[0].strip().split("\t")
     return [dict(zip(header, __parse_line(line))) for line in lines[1:]]
