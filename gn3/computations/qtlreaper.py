@@ -86,6 +86,31 @@ def run_reaper(
     subprocess.run(command_list, check=True)
     return (output_filename, permu_output_filename)
 
+def organise_reaper_main_results(parsed_results):
+    def __organise_by_chromosome(chr_name, items):
+        chr_items = [item for item in items if item["Chr"] == chr_name]
+        return {
+            "Chr": str(chr_name),
+            "loci": [{
+                "Locus": locus["Locus"],
+                "cM": locus["cM"],
+                "Mb": locus["Mb"],
+                "LRS": locus["LRS"],
+                "Additive": locus["Additive"],
+                "pValue": locus["pValue"]
+            } for locus in chr_items]}
+
+    def __organise_by_id(identifier, items):
+        id_items = [item for item in items if item["ID"] == identifier]
+        unique_chromosomes = {item["Chr"] for item in id_items}
+        return {
+            "ID": identifier,
+            "chromosomes": [
+                __organise_by_chromosome(chromo, id_items)
+                for chromo in sorted(unique_chromosomes)]}
+
+    unique_ids = {res["ID"] for res in parsed_results}
+    return [__organise_by_id(_id, parsed_results) for _id in sorted(unique_ids)]
 
 def parse_reaper_main_results(results_file):
     """
