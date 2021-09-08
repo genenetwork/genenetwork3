@@ -86,11 +86,16 @@ def run_reaper(
     subprocess.run(command_list, check=True)
     return (output_filename, permu_output_filename)
 
+def chromosome_sorter_key_fn(val):
+    if isinstance(val, int):
+        return val
+    return ord(val)
+
 def organise_reaper_main_results(parsed_results):
     def __organise_by_chromosome(chr_name, items):
         chr_items = [item for item in items if item["Chr"] == chr_name]
         return {
-            "Chr": str(chr_name),
+            "Chr": chr_name,
             "loci": [{
                 "Locus": locus["Locus"],
                 "cM": locus["cM"],
@@ -125,9 +130,15 @@ def parse_reaper_main_results(results_file):
         except:
             return value
 
+    def __parse_column_int_value(value):
+        try:
+            return int(value)
+        except:
+            return value
+
     def __parse_line(line):
         items = line.strip().split("\t")
-        return items[0:3] + [
+        return items[0:2] + [__parse_column_int_value(items[2])] + [
             __parse_column_float_value(item) for item in items[3:]]
 
     header = lines[0].strip().split("\t")
