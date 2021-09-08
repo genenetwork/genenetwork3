@@ -20,9 +20,9 @@ def generate_traits_file(strains, trait_values, traits_filename):
     header = "Trait\t{}\n".format("\t".join(strains))
     data = (
         [header] +
-        ["T{}\t{}\n".format(i+1, "\t".join([str(i) for i in t]))
+        ["{}\t{}\n".format(i+1, "\t".join([str(i) for i in t]))
          for i, t in enumerate(trait_values[:-1])] +
-        ["T{}\t{}".format(
+        ["{}\t{}".format(
             len(trait_values), "\t".join([str(i) for i in t]))
          for t in trait_values[-1:]])
     with open(traits_filename, "w") as outfile:
