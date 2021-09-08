@@ -3,7 +3,7 @@ from unittest import TestCase
 from gn3.computations.heatmap import (
     cluster_traits,
     export_trait_data,
-    compute_heatmap_order,
+    compute_traits_order,
     retrieve_strains_and_values)
 
 strainlist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
@@ -158,13 +158,8 @@ class TestHeatmap(TestCase):
 
     def test_compute_heatmap_order(self):
         """Test the orders."""
-        for xoff, expected in [
-                (40, ((60, 9), (60, 4))),
-                (30, ((50, 9), (50, 4))),
-                (20, ((40, 9), (40, 4)))]:
-            with self.subTest(xoffset=xoff):
-                self.assertEqual(
-                    compute_heatmap_order(slinked, xoffset=xoff), expected)
+        self.assertEqual(
+            compute_traits_order(slinked), (0, 2, 1, 7, 5, 9, 3, 6, 8, 4))
 
     def test_retrieve_strains_and_values(self):
         """Test retrieval of strains and values."""

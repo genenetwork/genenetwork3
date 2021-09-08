@@ -180,28 +180,24 @@ def heatmap_data(traits_names, conn: Any):
         "traits_filename": traits_filename
     }
 
-def compute_heatmap_order(
-        slink_data, xoffset: int = 40, neworder: tuple = tuple()):
+def compute_traits_order(slink_data, neworder: tuple = tuple()):
     """
-    Compute the data used for drawing the heatmap proper from `slink_data`.
+    Compute the order of the traits for clustering from `slink_data`.
 
     This function tries to reproduce the creation and update of the `neworder`
     variable in
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/Heatmap.py#L120
     and in the `web.webqtl.heatmap.Heatmap.draw` function in GN1
     """
-    d_1 = (0, 0, 0) # returned from self.draw in lines 391 and 399. This is just a placeholder
-
     def __order_maker(norder, slnk_dt):
         if isinstance(slnk_dt[0], int) and isinstance(slnk_dt[1], int):
-            return norder + (
-                (xoffset+20, slnk_dt[0]), (xoffset + 40, slnk_dt[1]))
+            return norder + (slnk_dt[0], slnk_dt[1])
 
         if isinstance(slnk_dt[0], int):
-            return norder + ((xoffset + 20, slnk_dt[0]), )
+            return __order_maker((norder + (slnk_dt[0], )), slnk_dt[1])
 
         if isinstance(slnk_dt[1], int):
-            return norder + ((xoffset + d_1[0] + 20, slnk_dt[1]), )
+            return __order_maker(norder, slnk_dt[0]) + (slnk_dt[1], )
 
         return __order_maker(__order_maker(norder, slnk_dt[0]), slnk_dt[1])
 
@@ -222,7 +218,7 @@ def retrieve_strains_and_values(orders, strainlist, traits_data_list):
     values = []
     rets = []
     for order in orders:
-        temp_val = traits_data_list[order[1]]
+        temp_val = traits_data_list[order]
         for i, strain in enumerate(strainlist):
             if temp_val[i] is not None:
                 strains.append(strain)
