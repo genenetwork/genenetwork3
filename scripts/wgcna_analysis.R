@@ -33,9 +33,26 @@ dataExpr <- dataExpr[gsg$goodSamples, gsg$goodGenes]
 
 # choose softthreshhold (Calculate soft threshold if the user specified the)
 
-powers = c(c(1:10), seq(from = 12, to=20, by=2)) 
-sft = pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
+powers <- c(c(1:10), seq(from = 12, to=20, by=2)) 
+sft <- pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
 
+# pass user options
+network <- blockwiseModules(dataExpr,
+                  #similarity  matrix options
+                  corType = "pearson",
+                  #adjacency  matrix options
+
+                  power = sft$powerEstimate,
+                  networkType = "unsigned",
+                  #TOM options
+                  TOMtype =  "unsigned",
+
+                  #module indentification
+
+                  minmodulesSize = 30,
+                  deepSplit = 5,
+                  PamRespectsDendro = FALSE
+                )
 
 
 
