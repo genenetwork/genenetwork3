@@ -1,7 +1,9 @@
 # initial workspace setup
 
 library(WGCNA);
-stringsAsFactors = FALSE
+library(stringi);
+
+options(stringsAsFactors = FALSE);
 
 # load expression data **assumes csv format row(traits)(columns info+samples)
 
@@ -64,8 +66,18 @@ mergedColors = labels2colors(net$colors)
 # generate random name for png && save the image location
 
 
+genImageRandStr <- function(prefix){
 
-png("WGCNAoutput.png",width=1000,height=600,type='cairo-png')
+	randStr <- paste(prefix,stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
+
+	return(paste(randStr,".png",sep=""))
+}
+
+
+
+png(genImageRandStr,width=1000,height=600,type='cairo-png')
+
+
 
 plotDendroAndColors(network$dendrograms[[1]],mergedColors[net$blockGenes[[1]]],
 "Module colors",
