@@ -1,9 +1,13 @@
 # initial workspace setup
 
+
+# todo pass required input data here
 library(WGCNA);
 library(stringi);
 
 options(stringsAsFactors = FALSE);
+
+imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
 
 # load expression data **assumes csv format row(traits)(columns info+samples)
 
@@ -33,7 +37,7 @@ dataExpr <- dataExpr[gsg$goodSamples, gsg$goodGenes]
 
 # network constructions and modules
 
-# choose softthreshhold (Calculate soft threshold if the user specified the)
+# choose softthreshhold (Calculate soft threshold)
 
 powers <- c(c(1:10), seq(from = 12, to=20, by=2)) 
 sft <- pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
@@ -65,23 +69,17 @@ genImageRandStr <- function(prefix){
 	return(paste(randStr,".png",sep=""))
 }
 
+mergedColors <- labels2colors(net$colors)
 
-mergedColors = labels2colors(net$colors)
-
-png(genImageRandStr,width=1000,height=600,type='cairo-png')
+imageLoc <- file.path(imgDir,genImageRandStr("WGCNAoutput"))
 
 
+png(imageLoc,width=1000,height=600,type='cairo-png')
 
 plotDendroAndColors(network$dendrograms[[1]],mergedColors[net$blockGenes[[1]]],
 "Module colors",
 dendroLabels = FALSE, hang = 0.03,
 addGuide = TRUE, guideHang = 0.05)
-
-
-
-
-
-
 
 
 
