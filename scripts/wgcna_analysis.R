@@ -5,14 +5,11 @@ stringsAsFactors = FALSE
 
 # load expression data **assumes csv format row(traits)(columns info+samples)
 
-
 wgcnaRawData <- read.csv(file = "wgcna_data.csv")
 
 # transform expressionData
 
 dataExpr <- as.data.frame(t(wgcnaRawData));
-
-
 
 # data cleaning
 
@@ -31,6 +28,17 @@ printFlush(paste("Removing samples:", paste(rownames(datExpr0)[!gsg$goodSamples]
 # Remove the offending genes and samples from the data:
 dataExpr <- dataExpr[gsg$goodSamples, gsg$goodGenes]
 }
+
+# network constructions and modules
+
+# choose softthreshhold (Calculate soft threshold if the user specified the)
+
+powers = c(c(1:10), seq(from = 12, to=20, by=2)) 
+sft = pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
+
+
+
+
 
 
 
