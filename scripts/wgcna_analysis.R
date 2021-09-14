@@ -56,14 +56,6 @@ network <- blockwiseModules(dataExpr,
                   PamRespectsDendro = FALSE
                 )
 
-# plot dendro add color
-
-# Convert labels to colors for plotting
-mergedColors = labels2colors(net$colors)
-# Plot the dendrogram and the module colors underneath 
-
-
-# generate random name for png && save the image location
 
 
 genImageRandStr <- function(prefix){
@@ -74,6 +66,7 @@ genImageRandStr <- function(prefix){
 }
 
 
+mergedColors = labels2colors(net$colors)
 
 png(genImageRandStr,width=1000,height=600,type='cairo-png')
 
