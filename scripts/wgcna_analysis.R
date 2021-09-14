@@ -1,7 +1,3 @@
-# initial workspace setup
-
-
-# todo pass required input data here
 library(WGCNA);
 library(stringi);
 
@@ -11,15 +7,14 @@ imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
 
 # load expression data **assumes csv format row(traits)(columns info+samples)
 
-wgcnaRawData <- read.csv(file = "wgcna_data.csv")
+inputData <- read.csv(file = "wgcna_data.csv")
 
 # transform expressionData
 
-dataExpr <- as.data.frame(t(wgcnaRawData));
+dataExpr <- as.data.frame(t(inputData));
 
 # data cleaning
 
-# adopted from docs
 gsg = goodSamplesGenes(dataExpr, verbose = 3);
 
 
