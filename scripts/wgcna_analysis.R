@@ -54,6 +54,24 @@ network <- blockwiseModules(dataExpr,
                   PamRespectsDendro = FALSE
                 )
 
+# plot dendro add color
+
+# Convert labels to colors for plotting
+mergedColors = labels2colors(net$colors)
+# Plot the dendrogram and the module colors underneath 
+
+
+# generate random name for png && save the image location
+
+
+
+png("WGCNAoutput.png",width=1000,height=600,type='cairo-png')
+
+plotDendroAndColors(network$dendrograms[[1]],mergedColors[net$blockGenes[[1]]],
+"Module colors",
+dendroLabels = FALSE, hang = 0.03,
+addGuide = TRUE, guideHang = 0.05)
+
 
 
 
