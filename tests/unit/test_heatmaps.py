@@ -1,6 +1,6 @@
-"""Module contains tests for gn3.computations.heatmap"""
+"""Module contains tests for gn3.heatmaps.heatmaps"""
 from unittest import TestCase
-from gn3.computations.heatmap import (
+from gn3.heatmaps import (
     cluster_traits,
     export_trait_data,
     compute_traits_order,

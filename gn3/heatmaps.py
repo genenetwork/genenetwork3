@@ -275,3 +275,28 @@ def get_nearest_marker(traits_list, genotype):
 
     marker_finder = nearest_marker_finder(genotype)
     return [marker_finder(trait) for trait in traits_list]
+
+# # Grey + Blue + Red
+# def generate_heatmap():
+#     cols = 20
+#     y_axis = (["%s"%x for x in range(1, cols+1)][:-1] + ["X"]) #replace last item with x for now
+#     x_axis = heatmap_x_axis_names()
+#     data = generate_random_data(height=cols, width=len(x_axis))
+#     fig = px.imshow(
+#         data,
+#         x=x_axis,
+#         y=y_axis,
+#         width=500)
+#     fig.update_traces(xtype="array")
+#     fig.update_traces(ytype="array")
+#     # fig.update_traces(xgap=10)
+#     fig.update_xaxes(
+#         visible=True,
+#         title_text="Traits",
+#         title_font_size=16)
+#     fig.update_layout(
+#         coloraxis_colorscale=[
+#             [0.0, '#3B3B3B'], [0.4999999999999999, '#ABABAB'],
+#             [0.5, '#F5DE11'], [1.0, '#FF0D00']])
+#     fig.write_html("%s/%s"%(heatmap_dir, "test_image.html"))
+#     return fig
