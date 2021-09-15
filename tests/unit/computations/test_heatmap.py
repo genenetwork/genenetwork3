@@ -165,22 +165,22 @@ class TestHeatmap(TestCase):
         """Test retrieval of strains and values."""
         for orders, slist, tdata, expected in [
                 [
-                    [(60, 2)],
+                    [2],
                     ["s1", "s2", "s3", "s4"],
                     [[2, 9, 6, None, 4],
                      [7, 5, None, None, 4],
                      [9, None, 5, 4, 7],
                      [6, None, None, 4, None]],
-                    [[(60, 2), ["s1", "s3", "s4"], [9, 5, 4]]]
+                    [[2, ["s1", "s3", "s4"], [9, 5, 4]]]
                 ],
                 [
-                    [(60, 3)],
+                    [3],
                     ["s1", "s2", "s3", "s4", "s5"],
                     [[2, 9, 6, None, 4],
                      [7, 5, None, None, 4],
                      [9, None, 5, 4, 7],
                      [6, None, None, 4, None]],
-                    [[(60, 3), ["s1", "s4"], [6, 4]]]
+                    [[3, ["s1", "s4"], [6, 4]]]
                 ]]:
             with self.subTest(strainlist=slist, traitdata=tdata):
                 self.assertEqual(

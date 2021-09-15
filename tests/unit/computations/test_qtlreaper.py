@@ -15,52 +15,52 @@ class TestQTLReaper(TestCase):
                 "tests/unit/computations/data/qtlreaper/main_output_sample.txt"),
             [
                 {
-                    "ID": "T1", "Locus": "rs31443144", "Chr": "1", "cM": 1.500,
+                    "ID": "T1", "Locus": "rs31443144", "Chr": 1, "cM": 1.500,
                     "Mb": 3.010, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs6269442", "Chr": "1", "cM": 1.500,
+                    "ID": "T1", "Locus": "rs6269442", "Chr": 1, "cM": 1.500,
                     "Mb": 3.492, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs32285189", "Chr": "1", "cM": 1.630,
+                    "ID": "T1", "Locus": "rs32285189", "Chr": 1, "cM": 1.630,
                     "Mb": 3.511, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs258367496", "Chr": "1", "cM": 1.630,
+                    "ID": "T1", "Locus": "rs258367496", "Chr": 1, "cM": 1.630,
                     "Mb": 3.660, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs32430919", "Chr": "1", "cM": 1.750,
+                    "ID": "T1", "Locus": "rs32430919", "Chr": 1, "cM": 1.750,
                     "Mb": 3.777, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs36251697", "Chr": "1", "cM": 1.880,
+                    "ID": "T1", "Locus": "rs36251697", "Chr": 1, "cM": 1.880,
                     "Mb": 3.812, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs30658298", "Chr": "1", "cM": 2.010,
+                    "ID": "T1", "Locus": "rs30658298", "Chr": 1, "cM": 2.010,
                     "Mb": 4.431, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs51852623", "Chr": "1", "cM": 2.010,
+                    "ID": "T1", "Locus": "rs51852623", "Chr": 1, "cM": 2.010,
                     "Mb": 4.447, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs31879829", "Chr": "1", "cM": 2.140,
+                    "ID": "T1", "Locus": "rs31879829", "Chr": 1, "cM": 2.140,
                     "Mb": 4.519, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 },
                 {
-                    "ID": "T1", "Locus": "rs36742481", "Chr": "1", "cM": 2.140,
+                    "ID": "T1", "Locus": "rs36742481", "Chr": 1, "cM": 2.140,
                     "Mb": 4.776, "LRS": 0.500, "Additive": -0.074,
                     "pValue": 1.000
                 }
