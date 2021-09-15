@@ -1,3 +1,5 @@
+
+
 library(WGCNA);
 library(stringi);
 
@@ -6,6 +8,7 @@ options(stringsAsFactors = FALSE);
 imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
 
 # load expression data **assumes csv format row(traits)(columns info+samples)
+# pass the file_path as arg
 
 inputData <- read.csv(file = "wgcna_data.csv")
 
@@ -13,26 +16,29 @@ inputData <- read.csv(file = "wgcna_data.csv")
 
 dataExpr <- as.data.frame(t(inputData));
 
-# data cleaning
+## data cleaning
 
 gsg = goodSamplesGenes(dataExpr, verbose = 3);
 
-
+# https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/
 
 if (!gsg$allOK)
 {
-# Optionally, print the gene and sample names that were removed:
 if (sum(!gsg$goodGenes)>0)
-printFlush(paste("Removing genes:", paste(names(datExpr0)[!gsg$goodGenes], collapse = ", ")));
+printFlush(paste("Removing genes:", paste(names(dataExpr)[!gsg$goodGenes], collapse = ", ")));
 if (sum(!gsg$goodSamples)>0)
-printFlush(paste("Removing samples:", paste(rownames(datExpr0)[!gsg$goodSamples], collapse = ", ")));
+printFlush(paste("Removing samples:", paste(rownames(dataExpr)[!gsg$goodSamples], collapse = ", ")));
 # Remove the offending genes and samples from the data:
 dataExpr <- dataExpr[gsg$goodSamples, gsg$goodGenes]
 }
 
-# network constructions and modules
+## network constructions and modules
+
+# Allow multi-threading within WGCNA
+enableWGCNAThreads()
 
 # choose softthreshhold (Calculate soft threshold)
+# xtodo allow users to pass args
 
 powers <- c(c(1:10), seq(from = 12, to=20, by=2)) 
 sft <- pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
