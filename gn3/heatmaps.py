@@ -131,7 +131,7 @@ def cluster_traits(traits_data_list: Sequence[Dict]):
 
     return tuple(__cluster(tdata_i) for tdata_i in enumerate(traits_data_list))
 
-def heatmap_data(traits_names, conn: Any):
+def build_heatmap(traits_names, conn: Any):
     """
     heatmap function
 
@@ -148,27 +148,55 @@ def heatmap_data(traits_names, conn: Any):
     TODO: Elaborate on the parameters here...
     """
     threshold = 0 # webqtlConfig.PUBLICTHRESH
-    def __retrieve_traitlist_and_datalist(threshold, fullname):
-        trait = retrieve_trait_info(threshold, fullname, conn)
-        return (trait, retrieve_trait_data(trait, conn))
-
-    traits_details = [
-        __retrieve_traitlist_and_datalist(threshold, fullname)
-        for fullname in traits_names]
-    traits_list = tuple(x[0] for x in traits_details)
-    traits_data_list = [x[1] for x in traits_details]
-    genotype_filename = build_genotype_file(traits_list[0]["riset"])
-    strainlist = load_genotype_samples(genotype_filename)
-    exported_traits_data_list = tuple(
-        export_trait_data(td, strainlist) for td in traits_data_list)
-    slink_data = slink(cluster_traits(exported_traits_data_list))
-    ordering_data = compute_heatmap_order(slink_data)
+    traits = [
+        retrieve_trait_info(threshold, fullname, conn)
+        for fullname in trait_fullnames()]
+    traits_data_list = [retrieve_trait_data(t, conn) for t in traits]
+    genotype_filename = build_genotype_file(traits[0]["riset"])
+    genotype = parse_genotype_file(genotype_filename)
+    strains = load_genotype_samples(genotype_filename)
+    exported_traits_data_list = [
+        export_trait_data(td, strains) for td in traits_data_list]
+    slinked = slink(cluster_traits(exported_traits_data_list))
+    traits_order = compute_traits_order(slinked)
+    ordered_traits_names = [
+        traits[idx]["trait_fullname"] for idx in traits_order]
     strains_and_values = retrieve_strains_and_values(
-        ordering_data, strainlist, exported_traits_data_list)
-    strains_values = strains_and_values[0][1]
-    trait_values = [t[2] for t in strains_and_values]
-    traits_filename = generate_traits_filename()
-    generate_traits_file(strains_values, trait_values, traits_filename)
+        traits_order, strains, exported_traits_data_list)
+    traits_filename = "{}/traits_test_file_{}.txt".format(
+        TMPDIR, random_string(10))
+    generate_traits_file(
+        strains_and_values[0][1],
+        [t[2] for t in strains_and_values],
+        traits_filename)
+
+    main_output, permutations_output = run_reaper(
+        genotype_filename, traits_filename, separate_nperm_output=True)
+
+    qtlresults = parse_reaper_main_results(main_output)
+    permudata = parse_reaper_permutation_results(permutations_output)
+    organised = organise_reaper_main_results(qtlresults)
+
+    traits_ids = [# sort numerically, but retain the ids as strings
+        str(i) for i in sorted({int(row["ID"]) for row in qtlresults})]
+    chromosome_names = sorted(
+        {row["Chr"] for row in qtlresults}, key = chromosome_sorter_key_fn)
+    loci_names = sorted({row["Locus"] for row in qtlresults})
+    ordered_traits_names = {
+        res_id: trait for res_id, trait in
+        zip(traits_ids,
+            [traits[idx]["trait_fullname"] for idx in traits_order])}
+
+    return generate_clustered_heatmap(
+        process_traits_data_for_heatmap(
+            organised, traits_ids, chromosome_names),
+        "single_heatmap_{}".format(random_string(10)),
+        y_axis=tuple(
+            ordered_traits_names[traits_ids[order]]
+                for order in traits_order),
+        y_label="Traits",
+        x_axis=[chromo for chromo in chromosome_names],
+        x_label="Chromosomes")
 
     return {
         "slink_data": slink_data,
