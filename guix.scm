@@ -43,7 +43,6 @@
  (gnu packages databases)
  (gnu packages statistics)
  (gnu packages bioconductor)
- (gn packages golang)
  (gnu packages python)
  (gnu packages python-check)
  (gnu packages python-crypto)
@@ -83,7 +82,6 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
-                       ("csvdiff" ,go-github-com-aswinkarthik-csvdiff)
                        ("gemma-wrapper" ,gemma-wrapper)
                        ("gunicorn" ,gunicorn)
                        ("python" ,python-wrapper)
