@@ -276,6 +276,14 @@ def get_nearest_marker(traits_list, genotype):
     marker_finder = nearest_marker_finder(genotype)
     return [marker_finder(trait) for trait in traits_list]
 
+def get_lrs_from_chr(trait, chr_name):
+    chromosome = trait["chromosomes"].get(chr_name)
+    if chromosome:
+        return [
+            locus["LRS"] for locus in
+            sorted(chromosome["loci"], key=lambda loc: loc["Locus"])]
+    return [None]
+
 # # Grey + Blue + Red
 # def generate_heatmap():
 #     cols = 20

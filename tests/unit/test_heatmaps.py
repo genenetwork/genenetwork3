@@ -2,6 +2,7 @@
 from unittest import TestCase
 from gn3.heatmaps import (
     cluster_traits,
+    get_lrs_from_chr,
     export_trait_data,
     compute_traits_order,
     retrieve_strains_and_values)
@@ -185,3 +186,16 @@ class TestHeatmap(TestCase):
             with self.subTest(strainlist=slist, traitdata=tdata):
                 self.assertEqual(
                     retrieve_strains_and_values(orders, slist, tdata), expected)
+
+    def test_get_lrs_from_chr(self):
+        for trait, chromosome, expected in [
+                [{"chromosomes": {}}, 3, [None]],
+                [{"chromosomes": {3: {"loci": [
+                    {"Locus": "b", "LRS": 1.9},
+                    {"Locus": "a", "LRS": 13.2},
+                    {"Locus": "d", "LRS": 53.21},
+                    {"Locus": "c", "LRS": 2.22}]}}},
+                 3,
+                 [13.2, 1.9, 2.22, 53.21]]]:
+            with self.subTest(trait=trait, chromosome=chromosome):
+                self.assertEqual(get_lrs_from_chr(trait, chromosome), expected)
