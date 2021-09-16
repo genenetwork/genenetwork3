@@ -7,6 +7,7 @@ from flask import Flask
 from gn3.api.gemma import gemma
 from gn3.api.rqtl import rqtl
 from gn3.api.general import general
+from gn3.api.heatmaps import heatmaps
 from gn3.api.correlation import correlation
 from gn3.api.data_entry import data_entry
 
@@ -30,6 +31,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(general, url_prefix="/api/")
     app.register_blueprint(gemma, url_prefix="/api/gemma")
     app.register_blueprint(rqtl, url_prefix="/api/rqtl")
+    app.register_blueprint(heatmaps, url_prefix="/api/heatmaps")
     app.register_blueprint(correlation, url_prefix="/api/correlation")
     app.register_blueprint(data_entry, url_prefix="/api/dataentry")
     return app
