@@ -29,5 +29,9 @@ def compose_wgcna_cmd(rscript_path: str, temp_file_path: str):
 def call_wgcna_script(rscript_path: str, request_data: dict):
     """function to call wgcna script"""
     generated_file = dump_wgcna_data(request_data)
-    cmd = compose_gemma_cmd(rscript_path, generated_file)
-    run_cmd(cmd=cmd)
+    cmd = compose_wgcna_cmd(rscript_path, generated_file)
+
+    try:
+        return run_cmd(cmd)
+    except Exception as error:
+        raise error
