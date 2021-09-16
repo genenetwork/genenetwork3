@@ -160,7 +160,7 @@ def build_heatmap(traits_names, conn: Any):
     threshold = 0 # webqtlConfig.PUBLICTHRESH
     traits = [
         retrieve_trait_info(threshold, fullname, conn)
-        for fullname in trait_fullnames()]
+        for fullname in traits_names]
     traits_data_list = [retrieve_trait_data(t, conn) for t in traits]
     genotype_filename = build_genotype_file(traits[0]["riset"])
     genotype = parse_genotype_file(genotype_filename)
@@ -338,9 +338,9 @@ def process_traits_data_for_heatmap(data, trait_names, chromosome_names):
 def generate_clustered_heatmap(
         data, image_filename_prefix, x_axis = None, x_label: str = "",
         y_axis = None, y_label: str = "", output_dir: str = TMPDIR,
-        colorscale = [
-            [0.0, '#3B3B3B'], [0.4999999999999999, '#ABABAB'],
-            [0.5, '#F5DE11']], [1.0, '#FF0D00']):
+        colorscale = (
+            (0.0, '#3B3B3B'), (0.4999999999999999, '#ABABAB'),
+            (0.5, '#F5DE11'), (1.0, '#FF0D00'))):
     """
     Generate a dendrogram, and heatmaps for each chromosome, and put them all
     into one plot.
