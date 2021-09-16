@@ -9,6 +9,7 @@ from gn3.api.rqtl import rqtl
 from gn3.api.general import general
 from gn3.api.correlation import correlation
 from gn3.api.data_entry import data_entry
+from gn3.api.wgcna import wgcna
 
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
@@ -32,4 +33,5 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(rqtl, url_prefix="/api/rqtl")
     app.register_blueprint(correlation, url_prefix="/api/correlation")
     app.register_blueprint(data_entry, url_prefix="/api/dataentry")
+    app.register_blueprint(wgcna, url_prefix="/api/wgcna")
     return app
