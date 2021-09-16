@@ -5,15 +5,25 @@ generate various kinds of heatmaps.
 
 from functools import reduce
 from gn3.settings import TMPDIR
+import plotly.graph_objects as go
+from gn3.random import random_string
 from typing import Any, Dict, Sequence
 from gn3.computations.slink import slink
-from gn3.computations.qtlreaper import generate_traits_file
+from plotly.subplots import make_subplots
 from gn3.computations.correlations2 import compute_correlation
-from gn3.db.genotypes import build_genotype_file, load_genotype_samples
+from gn3.db.genotypes import (
+    build_genotype_file, load_genotype_samples, parse_genotype_file)
 from gn3.db.traits import (
     retrieve_trait_data,
     retrieve_trait_info,
     generate_traits_filename)
+from gn3.computations.qtlreaper import (
+    run_reaper,
+    generate_traits_file,
+    chromosome_sorter_key_fn,
+    parse_reaper_main_results,
+    organise_reaper_main_results,
+    parse_reaper_permutation_results)
 
 def export_trait_data(
         trait_data: dict, strainlist: Sequence[str], dtype: str = "val",
