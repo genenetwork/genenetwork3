@@ -20,9 +20,10 @@ def clustered_heatmaps():
     # stream the heatmap data somehow here.
     # Can plotly actually stream the figure data in a way that can be used on
     # remote end to display the image without necessarily being html?
-    return jsonify(
-        {
-            "query": heatmap_request,
-            "output_png": heatmap_fig.to_image(format="png"),
-            "output_svg": heatmap_fig.to_image(format="svg")
-        }), 200
+    # return jsonify(
+    #     {
+    #         "query": heatmap_request,
+    #         "output_png": heatmap_fig.to_image(format="png"),
+    #         "output_svg": heatmap_fig.to_image(format="svg")
+    #     }), 200
+    return jsonify({"output_filename": _heatmap_file}), 200
