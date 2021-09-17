@@ -77,6 +77,7 @@ class TestQTLReaper(TestCase):
              5.82775, 5.89659, 5.92117, 5.93396, 5.93396, 5.94957])
 
     def test_organise_reaper_main_results(self):
+        """Check that results are organised correctly."""
         self.assertEqual(
             organise_reaper_main_results([
                 {
@@ -135,7 +136,7 @@ class TestQTLReaper(TestCase):
                         1: {"Chr": 1,
                             "loci": [
                                 {
-                                    "Locus": "rs31443144",  "cM": 1.500, "Mb": 3.010,
+                                    "Locus": "rs31443144", "cM": 1.500, "Mb": 3.010,
                                     "LRS": 0.500, "Additive": -0.074, "pValue": 1.000
                                 },
                                 {

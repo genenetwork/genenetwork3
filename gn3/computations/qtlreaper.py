@@ -110,9 +110,10 @@ def organise_reaper_main_results(parsed_results):
         unique_chromosomes = {item["Chr"] for item in id_items}
         return {
             "ID": identifier,
-            "chromosomes": {_chr["Chr"]: _chr for _chr in [
-                __organise_by_chromosome(chromo, id_items)
-                for chromo in sorted(
+            "chromosomes": {
+                _chr["Chr"]: _chr for _chr in [
+                    __organise_by_chromosome(chromo, id_items)
+                    for chromo in sorted(
                         unique_chromosomes, key=chromosome_sorter_key_fn)]}}
 
     unique_ids = {res["ID"] for res in parsed_results}

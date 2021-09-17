@@ -3,13 +3,13 @@ This module will contain functions to be used in computation of the data used to
 generate various kinds of heatmaps.
 """
 
+from typing import Any, Dict, Sequence
 import numpy as np
 from functools import reduce
 from gn3.settings import TMPDIR
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
 from gn3.random import random_string
-from typing import Any, Dict, Sequence
 from gn3.computations.slink import slink
 from plotly.subplots import make_subplots
 from gn3.computations.correlations2 import compute_correlation
@@ -165,7 +165,7 @@ def build_heatmap(traits_names, conn: Any):
         for fullname in traits_names]
     traits_data_list = [retrieve_trait_data(t, conn) for t in traits]
     genotype_filename = build_genotype_file(traits[0]["riset"])
-    genotype = parse_genotype_file(genotype_filename)
+    # genotype = parse_genotype_file(genotype_filename)
     strains = load_genotype_samples(genotype_filename)
     exported_traits_data_list = [
         export_trait_data(td, strains) for td in traits_data_list]
@@ -183,22 +183,21 @@ def build_heatmap(traits_names, conn: Any):
         [t[2] for t in strains_and_values],
         traits_filename)
 
-    main_output, permutations_output = run_reaper(
+    main_output, _permutations_output = run_reaper(
         genotype_filename, traits_filename, separate_nperm_output=True)
 
     qtlresults = parse_reaper_main_results(main_output)
-    permudata = parse_reaper_permutation_results(permutations_output)
+    # permudata = parse_reaper_permutation_results(permutations_output)
     organised = organise_reaper_main_results(qtlresults)
 
     traits_ids = [# sort numerically, but retain the ids as strings
         str(i) for i in sorted({int(row["ID"]) for row in qtlresults})]
     chromosome_names = sorted(
-        {row["Chr"] for row in qtlresults}, key = chromosome_sorter_key_fn)
-    loci_names = sorted({row["Locus"] for row in qtlresults})
-    ordered_traits_names = {
-        res_id: trait for res_id, trait in
+        {row["Chr"] for row in qtlresults}, key=chromosome_sorter_key_fn)
+    # loci_names = sorted({row["Locus"] for row in qtlresults})
+    ordered_traits_names = dict(
         zip(traits_ids,
-            [traits[idx]["trait_fullname"] for idx in traits_order])}
+            [traits[idx]["trait_fullname"] for idx in traits_order]))
 
     return generate_clustered_heatmap(
         process_traits_data_for_heatmap(
@@ -207,21 +206,10 @@ def build_heatmap(traits_names, conn: Any):
         "single_heatmap_{}".format(random_string(10)),
         y_axis=tuple(
             ordered_traits_names[traits_ids[order]]
-                for order in traits_order),
+            for order in traits_order),
         y_label="Traits",
-        x_axis=[chromo for chromo in chromosome_names],
+        x_axis=chromosome_names,
         x_label="Chromosomes")
-
-    return {
-        "slink_data": slink_data,
-        "ordering_data": ordering_data,
-        "strainlist": strainlist,
-        "genotype_filename": genotype_filename,
-        "traits_list": traits_list,
-        "traits_data_list": traits_data_list,
-        "exported_traits_data_list": exported_traits_data_list,
-        "traits_filename": traits_filename
-    }
 
 def compute_traits_order(slink_data, neworder: tuple = tuple()):
     """
@@ -314,7 +302,7 @@ def get_nearest_marker(traits_list, genotype):
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/heatmap/Heatmap.py#L419-L438
     """
     if not genotype["Mbmap"]:
-        return [None] * len(trait_list)
+        return [None] * len(traits_list)
 
     marker_finder = nearest_marker_finder(genotype)
     return [marker_finder(trait) for trait in traits_list]
@@ -340,10 +328,10 @@ def process_traits_data_for_heatmap(data, trait_names, chromosome_names):
     return hdata
 
 def generate_clustered_heatmap(
-        data, clustering_data, image_filename_prefix, x_axis = None,
-        x_label: str = "", y_axis = None, y_label: str = "",
+        data, clustering_data, image_filename_prefix, x_axis=None,
+        x_label: str = "", y_axis=None, y_label: str = "",
         output_dir: str = TMPDIR,
-        colorscale = (
+        colorscale=(
             (0.0, '#5D5D5D'), (0.4999999999999999, '#ABABAB'),
             (0.5, '#F5DE11'), (1.0, '#FF0D00'))):
     """
@@ -357,15 +345,15 @@ def generate_clustered_heatmap(
         shared_yaxes="rows",
         horizontal_spacing=0.001,
         subplot_titles=["distance"] + x_axis,
-        figure = ff.create_dendrogram(
+        figure=ff.create_dendrogram(
             np.array(clustering_data), orientation="right", labels=y_axis))
     hms = [go.Heatmap(
         name=chromo,
-        y = y_axis,
-        z = data_array,
+        y=y_axis,
+        z=data_array,
         showscale=False) for chromo, data_array in zip(x_axis, data)]
-    for i, hm in enumerate(hms):
-        fig.add_trace(hm, row=1, col=(i + 2))
+    for i, heatmap in enumerate(hms):
+        fig.add_trace(heatmap, row=1, col=(i + 2))
 
     fig.update_layout(
         {
@@ -380,8 +368,8 @@ def generate_clustered_heatmap(
     x_axes_layouts = {
         "xaxis{}".format(i+1 if i > 0 else ""): {
             "mirror": False,
-            "showticklabels": True if i==0 else False,
-            "ticks": "outside" if i==0 else ""
+            "showticklabels": True if i == 0 else False,
+            "ticks": "outside" if i == 0 else ""
         }
         for i in range(num_cols)}
 

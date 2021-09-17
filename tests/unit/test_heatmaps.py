@@ -189,6 +189,7 @@ class TestHeatmap(TestCase):
                     retrieve_strains_and_values(orders, slist, tdata), expected)
 
     def test_get_lrs_from_chr(self):
+        """Check that function gets correct LRS values"""
         for trait, chromosome, expected in [
                 [{"chromosomes": {}}, 3, [None]],
                 [{"chromosomes": {3: {"loci": [
@@ -202,6 +203,7 @@ class TestHeatmap(TestCase):
                 self.assertEqual(get_lrs_from_chr(trait, chromosome), expected)
 
     def test_process_traits_data_for_heatmap(self):
+        """Check for correct processing of data for heatmap generation."""
         self.assertEqual(
             process_traits_data_for_heatmap(
                 {"1": {
@@ -210,7 +212,7 @@ class TestHeatmap(TestCase):
                         1: {"Chr": 1,
                             "loci": [
                                 {
-                                    "Locus": "rs31443144",  "cM": 1.500, "Mb": 3.010,
+                                    "Locus": "rs31443144", "cM": 1.500, "Mb": 3.010,
                                     "LRS": 0.500, "Additive": -0.074, "pValue": 1.000
                                 },
                                 {
@@ -257,7 +259,7 @@ class TestHeatmap(TestCase):
                          1: {"Chr": 1,
                              "loci": [
                                  {
-                                     "Locus": "rs31443144",  "cM": 1.500, "Mb": 3.010,
+                                     "Locus": "rs31443144", "cM": 1.500, "Mb": 3.010,
                                      "LRS": 0.500, "Additive": -0.074, "pValue": 1.000
                                  },
                                  {

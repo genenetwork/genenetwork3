@@ -174,7 +174,7 @@ def parse_genotype_file(filename: str, parlist: tuple = tuple()):
     geno_obj = dict(labels + header)
     markers = tuple(
         [parse_genotype_marker(line, geno_obj, parlist)
-        for line in data_lines[1:]])
+         for line in data_lines[1:]])
     chromosomes = tuple(
         dict(chromosome) for chromosome in
         build_genotype_chromosomes(geno_obj, markers))
