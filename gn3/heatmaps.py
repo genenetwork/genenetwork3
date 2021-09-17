@@ -344,7 +344,7 @@ def generate_clustered_heatmap(
         x_label: str = "", y_axis = None, y_label: str = "",
         output_dir: str = TMPDIR,
         colorscale = (
-            (0.0, '#3B3B3B'), (0.4999999999999999, '#ABABAB'),
+            (0.0, '#5D5D5D'), (0.4999999999999999, '#ABABAB'),
             (0.5, '#F5DE11'), (1.0, '#FF0D00'))):
     """
     Generate a dendrogram, and heatmaps for each chromosome, and put them all
@@ -367,6 +367,33 @@ def generate_clustered_heatmap(
     for i, hm in enumerate(hms):
         fig.add_trace(hm, row=1, col=(i + 2))
 
+    fig.update_layout(
+        {
+            "width": 1500,
+            "height": 800,
+            "xaxis": {
+                "mirror": False,
+                "showgrid": True
+            }
+        })
+
+    x_axes_layouts = {
+        "xaxis{}".format(i+1 if i > 0 else ""): {
+            "mirror": False,
+            "showticklabels": True if i==0 else False,
+            "ticks": "outside" if i==0 else ""
+        }
+        for i in range(num_cols)}
+
+    fig.update_layout(
+        {
+            "width": 4000,
+            "height": 800,
+            "yaxis": {
+                "mirror": False,
+                "ticks": ""
+            },
+            **x_axes_layouts})
     fig.update_traces(
         showlegend=False,
         colorscale=colorscale,
@@ -375,9 +402,6 @@ def generate_clustered_heatmap(
         showlegend=True,
         showscale=True,
         selector={"name": x_axis[-1]})
-    fig.update_layout(
-        coloraxis_colorscale=colorscale
-    )
     image_filename = "{}/{}.html".format(output_dir, image_filename_prefix)
     fig.write_html(image_filename)
     return image_filename, fig
