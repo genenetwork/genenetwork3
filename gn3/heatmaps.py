@@ -199,17 +199,26 @@ def build_heatmap(traits_names, conn: Any):
         zip(traits_ids,
             [traits[idx]["trait_fullname"] for idx in traits_order]))
 
-    return generate_clustered_heatmap(
-        process_traits_data_for_heatmap(
+    # return generate_clustered_heatmap(
+    #     process_traits_data_for_heatmap(
+    #         organised, traits_ids, chromosome_names),
+    #     clustered,
+    #     "single_heatmap_{}".format(random_string(10)),
+    #     y_axis=tuple(
+    #         ordered_traits_names[traits_ids[order]]
+    #         for order in traits_order),
+    #     y_label="Traits",
+    #     x_axis=chromosome_names,
+    #     x_label="Chromosomes")
+    return {
+        "clustering_data": clustered,
+        "heatmap_data": process_traits_data_for_heatmap(
             organised, traits_ids, chromosome_names),
-        clustered,
-        "single_heatmap_{}".format(random_string(10)),
-        y_axis=tuple(
+        "traits": tuple(
             ordered_traits_names[traits_ids[order]]
             for order in traits_order),
-        y_label="Traits",
-        x_axis=chromosome_names,
-        x_label="Chromosomes")
+        "chromosomes": chromosome_names
+    }
 
 def compute_traits_order(slink_data, neworder: tuple = tuple()):
     """

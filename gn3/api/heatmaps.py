@@ -15,15 +15,9 @@ def clustered_heatmaps():
             "message": "You need to provide at least one trait name."
         }), 400
     conn, _cursor = database_connector()
-    _heatmap_file, heatmap_fig = build_heatmap(traits_names, conn)
-
-    # stream the heatmap data somehow here.
-    # Can plotly actually stream the figure data in a way that can be used on
-    # remote end to display the image without necessarily being html?
-    # return jsonify(
-    #     {
-    #         "query": heatmap_request,
-    #         "output_png": heatmap_fig.to_image(format="png"),
-    #         "output_svg": heatmap_fig.to_image(format="svg")
-    #     }), 200
-    return jsonify({"output_filename": _heatmap_file}), 200
+    def setup_trait_fullname(trait):
+        name_parts = trait.split(":")
+        return "{dataset_name}::{trait_name}".format(
+            dataset_name=trait[1], trait_name=trait[0])
+    traits_fullnames = [parse_trait_fullname(trait) for trait in traits_names]
+    return jsonify(build_heatmap(traits_fullnames, conn)), 200
