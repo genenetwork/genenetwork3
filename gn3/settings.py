@@ -31,3 +31,15 @@ REAPER_COMMAND = "{}/bin/qtlreaper".format(os.environ.get("GUIX_ENVIRONMENT"))
 # genotype files
 GENOTYPE_FILES = os.environ.get(
     "GENOTYPE_FILES", "{}/genotype_files/genotype".format(os.environ.get("HOME")))
+
+# CROSS-ORIGIN SETUP
+CORS_ORIGINS = [
+    "http://localhost:*",
+    "http://127.0.0.1:*"
+]
+
+CORS_HEADERS = [
+    "Content-Type",
+    "Authorization",
+    "Access-Control-Allow-Credentials"
+]

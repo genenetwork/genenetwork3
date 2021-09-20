@@ -11,12 +11,19 @@ from gn3.api.heatmaps import heatmaps
 from gn3.api.correlation import correlation
 from gn3.api.data_entry import data_entry
 
+from flask_cors import CORS
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
     """Create a new flask object"""
     app = Flask(__name__)
     # Load default configuration
     app.config.from_object("gn3.settings")
+
+    CORS(
+        app,
+        origins=app.config["CORS_ORIGINS"],
+        allow_headers=app.config["CORS_HEADERS"],
+        supports_credentials=True, intercept_exceptions=False)
 
     # Load environment configuration
     if "GN3_CONF" in os.environ:

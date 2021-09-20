@@ -15,9 +15,9 @@ def clustered_heatmaps():
             "message": "You need to provide at least one trait name."
         }), 400
     conn, _cursor = database_connector()
-    def setup_trait_fullname(trait):
+    def parse_trait_fullname(trait):
         name_parts = trait.split(":")
         return "{dataset_name}::{trait_name}".format(
-            dataset_name=trait[1], trait_name=trait[0])
+            dataset_name=name_parts[1], trait_name=name_parts[0])
     traits_fullnames = [parse_trait_fullname(trait) for trait in traits_names]
     return jsonify(build_heatmap(traits_fullnames, conn)), 200
