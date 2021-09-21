@@ -101,6 +101,7 @@
                        ("r-optparse" ,r-optparse)
                        ("r-qtl" ,r-qtl)
                        ("r-stringi" ,r-stringi)
+                       ("r-wgcna" ,r-wgcna)
                        ("python-plotly" ,python-plotly)
                        ("python-pandas" ,python-pandas)))
   (build-system python-build-system)
