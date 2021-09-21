@@ -2,6 +2,7 @@
 from flask import Blueprint
 from flask import request
 from flask import current_app
+from flask import jsonify
 
 from gn3.computations.wgcna import call_wgcna_script
 
@@ -18,4 +19,4 @@ def run_wgcna():
 
     results = call_wgcna_script(wgcna_script, wgcna_data)
 
-    return results, 200
+    return jsonify(results), 200
