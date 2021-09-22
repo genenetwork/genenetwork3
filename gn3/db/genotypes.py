@@ -115,6 +115,7 @@ def parse_genotype_marker(line: str, geno_obj: dict, parlist: list):
     Reworks
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/utility/gen_geno_ob.py#L143-L190
     """
+    # pylint: disable=W0702
     marker_row = [item.strip() for item in line.split("\t")]
     geno_table = {
         geno_obj["mat"]: -1, geno_obj["pat"]: 1, geno_obj["het"]: 0,

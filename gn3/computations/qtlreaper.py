@@ -87,11 +87,17 @@ def run_reaper(
     return (output_filename, permu_output_filename)
 
 def chromosome_sorter_key_fn(val):
+    """
+    Useful for sorting the chromosomes
+    """
     if isinstance(val, int):
         return val
     return ord(val)
 
 def organise_reaper_main_results(parsed_results):
+    """
+    Provide the results of running reaper in a format that is easier to use.
+    """
     def __organise_by_chromosome(chr_name, items):
         chr_items = [item for item in items if item["Chr"] == chr_name]
         return {
@@ -129,12 +135,14 @@ def parse_reaper_main_results(results_file):
         lines = infile.readlines()
 
     def __parse_column_float_value(value):
+        # pylint: disable=W0702
         try:
             return float(value)
         except:
             return value
 
     def __parse_column_int_value(value):
+        # pylint: disable=W0702
         try:
             return int(value)
         except:

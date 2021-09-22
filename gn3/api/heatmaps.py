@@ -1,3 +1,7 @@
+"""
+Module to hold the entrypoint functions that generate heatmaps
+"""
+
 import io
 from flask import jsonify
 from flask import request
@@ -9,6 +13,10 @@ heatmaps = Blueprint("heatmaps", __name__)
 
 @heatmaps.route("/clustered", methods=("POST",))
 def clustered_heatmaps():
+    """
+    Parses the incoming data and responds with the JSON-serialized plotly figure
+    representing the clustered heatmap.
+    """
     heatmap_request = request.get_json()
     traits_names = heatmap_request.get("traits_names", tuple())
     if len(traits_names) < 2:

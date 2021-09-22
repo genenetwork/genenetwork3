@@ -3,29 +3,28 @@ This module will contain functions to be used in computation of the data used to
 generate various kinds of heatmaps.
 """
 
-from typing import Any, Dict, Sequence
-import numpy as np
 from functools import reduce
-from gn3.settings import TMPDIR
+from typing import Any, Dict, Sequence
+
+import numpy as np
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
+from plotly.subplots import make_subplots
+
+from gn3.settings import TMPDIR
 from gn3.random import random_string
 from gn3.computations.slink import slink
-from plotly.subplots import make_subplots
 from gn3.computations.correlations2 import compute_correlation
 from gn3.db.genotypes import (
-    build_genotype_file, load_genotype_samples, parse_genotype_file)
+    build_genotype_file, load_genotype_samples)
 from gn3.db.traits import (
-    retrieve_trait_data,
-    retrieve_trait_info,
-    generate_traits_filename)
+    retrieve_trait_data, retrieve_trait_info)
 from gn3.computations.qtlreaper import (
     run_reaper,
     generate_traits_file,
     chromosome_sorter_key_fn,
     parse_reaper_main_results,
-    organise_reaper_main_results,
-    parse_reaper_permutation_results)
+    organise_reaper_main_results)
 
 def export_trait_data(
         trait_data: dict, strainlist: Sequence[str], dtype: str = "val",
@@ -159,13 +158,13 @@ def build_heatmap(traits_names, conn: Any):
     PARAMETERS:
     TODO: Elaborate on the parameters here...
     """
+    # pylint: disable=[R0914]
     threshold = 0 # webqtlConfig.PUBLICTHRESH
     traits = [
         retrieve_trait_info(threshold, fullname, conn)
         for fullname in traits_names]
     traits_data_list = [retrieve_trait_data(t, conn) for t in traits]
     genotype_filename = build_genotype_file(traits[0]["riset"])
-    # genotype = parse_genotype_file(genotype_filename)
     strains = load_genotype_samples(genotype_filename)
     exported_traits_data_list = [
         export_trait_data(td, strains) for td in traits_data_list]
@@ -336,6 +335,7 @@ def generate_clustered_heatmap(
     Generate a dendrogram, and heatmaps for each chromosome, and put them all
     into one plot.
     """
+    # pylint: disable=[R0913, R0914]
     num_cols = 1 + len(x_axis)
     fig = make_subplots(
         rows=1,
@@ -359,14 +359,18 @@ def generate_clustered_heatmap(
             "height": 800,
             "xaxis": {
                 "mirror": False,
-                "showgrid": True
+                "showgrid": True,
+                "title": x_label
+            },
+            "yaxis": {
+                "title": y_label
             }
         })
 
     x_axes_layouts = {
         "xaxis{}".format(i+1 if i > 0 else ""): {
             "mirror": False,
-            "showticklabels": True if i == 0 else False,
+            "showticklabels": i == 0,
             "ticks": "outside" if i == 0 else ""
         }
         for i in range(num_cols)}

@@ -46,7 +46,7 @@ def update_sample_data(conn: Any,
                        count: Union[int, str]):
     """Given the right parameters, update sample-data from the relevant
     table."""
-    # pylint: disable=[R0913, R0914]
+    # pylint: disable=[R0913, R0914, C0103]
     STRAIN_ID_SQL: str = "UPDATE Strain SET Name = %s WHERE Id = %s"
     PUBLISH_DATA_SQL: str = ("UPDATE PublishData SET value = %s "
                              "WHERE StrainId = %s AND Id = %s")

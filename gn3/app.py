@@ -3,15 +3,16 @@ import os
 
 from typing import Dict
 from typing import Union
+
 from flask import Flask
+from flask_cors import CORS
+
 from gn3.api.gemma import gemma
 from gn3.api.rqtl import rqtl
 from gn3.api.general import general
 from gn3.api.heatmaps import heatmaps
 from gn3.api.correlation import correlation
 from gn3.api.data_entry import data_entry
-
-from flask_cors import CORS
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
     """Create a new flask object"""
