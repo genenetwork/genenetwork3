@@ -63,22 +63,22 @@ def update_sample_data(conn: Any,
     with conn.cursor() as cursor:
         # Update the Strains table
         cursor.execute(STRAIN_ID_SQL, (strain_name, strain_id))
-        updated_strains: int = cursor.rowcount
+        updated_strains = cursor.rowcount
         # Update the PublishData table
         cursor.execute(PUBLISH_DATA_SQL,
                        (None if value == "x" else value,
                         strain_id, publish_data_id))
-        updated_published_data: int = cursor.rowcount
+        updated_published_data = cursor.rowcount
         # Update the PublishSE table
         cursor.execute(PUBLISH_SE_SQL,
                        (None if error == "x" else error,
                         strain_id, publish_data_id))
-        updated_se_data: int = cursor.rowcount
+        updated_se_data = cursor.rowcount
         # Update the NStrain table
         cursor.execute(N_STRAIN_SQL,
                        (None if count == "x" else count,
                         strain_id, publish_data_id))
-        updated_n_strains: int = cursor.rowcount
+        updated_n_strains = cursor.rowcount
     return (updated_strains, updated_published_data,
             updated_se_data, updated_n_strains)
 

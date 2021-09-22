@@ -2,6 +2,8 @@
 
 import os
 import gzip
+from typing import Union, TextIO
+
 from gn3.settings import GENOTYPE_FILES
 
 def build_genotype_file(
@@ -44,17 +46,17 @@ def __load_genotype_samples_from_geno(genotype_filename: str):
     """
     gzipped_filename = "{}.gz".format(genotype_filename)
     if os.path.isfile(gzipped_filename):
-        genofile = gzip.open(gzipped_filename)
+        genofile: Union[TextIO, gzip.GzipFile] = gzip.open(gzipped_filename)
     else:
         genofile = open(genotype_filename)
 
     for row in genofile:
         line = row.strip()
-        if (not line) or (line.startswith(("#", "@"))):
+        if (not line) or (line.startswith(("#", "@"))): # type: ignore[arg-type]
             continue
         break
 
-    headers = line.split("\t")
+    headers = line.split("\t" ) # type: ignore[arg-type]
     if headers[3] == "Mb":
         return headers[4:]
     return headers[3:]
@@ -107,7 +109,7 @@ def parse_genotype_header(line: str, parlist: tuple = tuple()):
         ("prgy", prgy),
         ("nprgy", len(prgy)))
 
-def parse_genotype_marker(line: str, geno_obj: dict, parlist: list):
+def parse_genotype_marker(line: str, geno_obj: dict, parlist: tuple):
     """
     Parse a data line in a genotype file
 

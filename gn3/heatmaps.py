@@ -7,9 +7,9 @@ from functools import reduce
 from typing import Any, Dict, Sequence
 
 import numpy as np
-import plotly.graph_objects as go
-import plotly.figure_factory as ff
-from plotly.subplots import make_subplots
+import plotly.graph_objects as go # type: ignore
+import plotly.figure_factory as ff # type: ignore
+from plotly.subplots import make_subplots # type: ignore
 
 from gn3.settings import TMPDIR
 from gn3.random import random_string
@@ -171,8 +171,6 @@ def build_heatmap(traits_names, conn: Any):
     clustered = cluster_traits(exported_traits_data_list)
     slinked = slink(clustered)
     traits_order = compute_traits_order(slinked)
-    ordered_traits_names = [
-        traits[idx]["trait_fullname"] for idx in traits_order]
     strains_and_values = retrieve_strains_and_values(
         traits_order, strains, exported_traits_data_list)
     traits_filename = "{}/traits_test_file_{}.txt".format(

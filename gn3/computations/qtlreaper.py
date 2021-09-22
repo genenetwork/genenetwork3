@@ -4,6 +4,8 @@ computation of QTLs.
 """
 import os
 import subprocess
+from typing import Union
+
 from gn3.random import random_string
 from gn3.settings import TMPDIR, REAPER_COMMAND
 
@@ -70,9 +72,9 @@ def run_reaper(
         output_dir, random_string(10))
     output_list = ["--main_output", output_filename]
     if separate_nperm_output:
-        permu_output_filename = "{}/qtlreaper/permu_output_{}.txt".format(
+        permu_output_filename: Union[None, str] = "{}/qtlreaper/permu_output_{}.txt".format(
             output_dir, random_string(10))
-        output_list = output_list + ["--permu_output", permu_output_filename]
+        output_list = output_list + ["--permu_output", permu_output_filename] # type: ignore[list-item]
     else:
         permu_output_filename = None
 

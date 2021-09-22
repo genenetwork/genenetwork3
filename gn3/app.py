@@ -5,7 +5,7 @@ from typing import Dict
 from typing import Union
 
 from flask import Flask
-from flask_cors import CORS
+from flask_cors import CORS # type: ignore
 
 from gn3.api.gemma import gemma
 from gn3.api.rqtl import rqtl
