@@ -187,38 +187,27 @@ def build_heatmap(traits_names, conn: Any):
         genotype_filename, traits_filename, separate_nperm_output=True)
 
     qtlresults = parse_reaper_main_results(main_output)
-    # permudata = parse_reaper_permutation_results(permutations_output)
     organised = organise_reaper_main_results(qtlresults)
 
     traits_ids = [# sort numerically, but retain the ids as strings
         str(i) for i in sorted({int(row["ID"]) for row in qtlresults})]
     chromosome_names = sorted(
         {row["Chr"] for row in qtlresults}, key=chromosome_sorter_key_fn)
-    # loci_names = sorted({row["Locus"] for row in qtlresults})
     ordered_traits_names = dict(
         zip(traits_ids,
             [traits[idx]["trait_fullname"] for idx in traits_order]))
 
-    # return generate_clustered_heatmap(
-    #     process_traits_data_for_heatmap(
-    #         organised, traits_ids, chromosome_names),
-    #     clustered,
-    #     "single_heatmap_{}".format(random_string(10)),
-    #     y_axis=tuple(
-    #         ordered_traits_names[traits_ids[order]]
-    #         for order in traits_order),
-    #     y_label="Traits",
-    #     x_axis=chromosome_names,
-    #     x_label="Chromosomes")
-    return {
-        "clustering_data": clustered,
-        "heatmap_data": process_traits_data_for_heatmap(
+    return generate_clustered_heatmap(
+        process_traits_data_for_heatmap(
             organised, traits_ids, chromosome_names),
-        "traits": tuple(
+        clustered,
+        "single_heatmap_{}".format(random_string(10)),
+        y_axis=tuple(
             ordered_traits_names[traits_ids[order]]
             for order in traits_order),
-        "chromosomes": chromosome_names
-    }
+        y_label="Traits",
+        x_axis=chromosome_names,
+        x_label="Chromosomes")
 
 def compute_traits_order(slink_data, neworder: tuple = tuple()):
     """

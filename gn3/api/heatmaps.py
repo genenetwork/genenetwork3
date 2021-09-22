@@ -1,3 +1,4 @@
+import io
 from flask import jsonify
 from flask import request
 from flask import Blueprint
@@ -20,4 +21,9 @@ def clustered_heatmaps():
         return "{dataset_name}::{trait_name}".format(
             dataset_name=name_parts[1], trait_name=name_parts[0])
     traits_fullnames = [parse_trait_fullname(trait) for trait in traits_names]
-    return jsonify(build_heatmap(traits_fullnames, conn)), 200
+
+    with io.StringIO() as io_str:
+        _filename, figure = build_heatmap(traits_fullnames, conn)
+        figure.write_json(io_str)
+        fig_json = io_str.getvalue()
+    return fig_json, 200
