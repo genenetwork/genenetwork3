@@ -56,7 +56,7 @@ def __load_genotype_samples_from_geno(genotype_filename: str):
             continue
         break
 
-    headers = line.split("\t" ) # type: ignore[arg-type]
+    headers = line.split("\t") # type: ignore[arg-type]
     if headers[3] == "Mb":
         return headers[4:]
     return headers[3:]

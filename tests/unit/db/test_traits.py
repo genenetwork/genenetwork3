@@ -166,6 +166,7 @@ class TestTraitsDBFunctions(TestCase):
         the right calls.
 
         """
+        # pylint: disable=C0103
         db_mock = mock.MagicMock()
 
         STRAIN_ID_SQL: str = "UPDATE Strain SET Name = %s WHERE Id = %s"

@@ -74,7 +74,8 @@ def run_reaper(
     if separate_nperm_output:
         permu_output_filename: Union[None, str] = "{}/qtlreaper/permu_output_{}.txt".format(
             output_dir, random_string(10))
-        output_list = output_list + ["--permu_output", permu_output_filename] # type: ignore[list-item]
+        output_list = output_list + [
+            "--permu_output", permu_output_filename] # type: ignore[list-item]
     else:
         permu_output_filename = None
 
