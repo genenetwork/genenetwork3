@@ -62,13 +62,21 @@ enableWGCNAThreads()
 powers <- c(c(1:10), seq(from = 12, to=20, by=2)) 
 sft <- pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
 
+# check the power estimate
+
+if (is.na(sft$powerEstimate)){
+  powerEst = 1
+}else{
+  powerEst = sft$powerEstimate
+}
+
 # pass user options
 network <- blockwiseModules(dataExpr,
                   #similarity  matrix options
                   corType = corType,
                   #adjacency  matrix options
 
-                  power = 5,
+                  power = powerEst,
                   networkType = "unsigned",
                   #TOM options
                   TOMtype =  TOMtype,
