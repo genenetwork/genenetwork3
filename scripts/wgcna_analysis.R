@@ -53,6 +53,8 @@ dataExpr <- dataExpr[gsg$goodSamples, gsg$goodGenes]
 
 ## network constructions and modules
 
+names(dataExpr) = inputData$trait_names
+
 # Allow multi-threading within WGCNA
 enableWGCNAThreads()
 
@@ -82,6 +84,7 @@ network <- blockwiseModules(dataExpr,
                   TOMtype =  TOMtype,
 
                   #module indentification
+                  verbose = 3,
 
                   minmodulesSize = minModuleSize,
                   deepSplit = 3,
@@ -108,13 +111,14 @@ dendroLabels = FALSE, hang = 0.03,
 addGuide = TRUE, guideHang = 0.05)
 
 
-
-
-json_data <- list(input = inputData,output = list(ModEigens=network$MEs,soft_threshold=sft$fitIndices,
-  blockGenes =network$blockGenes[[1]],
-  net_colors =network$colors,
-  net_unmerged=network$unmergedColors,
-  imageLoc=imageLoc))
+json_data <- list(input = inputData,
+  output = list(ModEigens=network$MEs,
+   soft_threshold=sft$fitIndices,
+   blockGenes =network$blockGenes[[1]],
+   net_colors =network$colors,
+   power_used_for_analy=powerEst,
+   net_unmerged=network$unmergedColors,
+   imageLoc=imageLoc))
 
 json_data <- toJSON(json_data)
 
