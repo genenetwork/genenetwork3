@@ -20,19 +20,19 @@ if (length(args)==0) {
   json_file_path  = args[1]
 }
 
-results <- fromJSON(file = json_file_path)
+inputData <- fromJSON(file = json_file_path)
 
 
 # parse the json data input
 
-minModuleSize <-results$minModuleSize
+minModuleSize <-inputData$minModuleSize
 
-TOMtype <-results$TOMtype
+TOMtype <-inputData$TOMtype
 
-corType <-results$corType
+corType <-inputData$corType
 # 
 
-trait_sample_data <- do.call(rbind, results$trait_sample_data)
+trait_sample_data <- do.call(rbind, inputData$trait_sample_data)
 
 dataExpr <- data.frame(apply(trait_sample_data, 2, function(x) as.numeric(as.character(x))))
 # transform expressionData
@@ -102,12 +102,12 @@ addGuide = TRUE, guideHang = 0.05)
 
 
 
-json_data <- list(ModEigens=network$MEs,soft_threshold=sft$fitIndices,
+json_data <- list(input = inputData,output = list(ModEigens=network$MEs,soft_threshold=sft$fitIndices,
   blockGenes =network$blockGenes[[1]],
   net_colors =network$colors,
   net_unmerged=network$unmergedColors,
-  imageLoc=imageLoc)
+  imageLoc=imageLoc))
 
 json_data <- toJSON(json_data)
 
-write(json_data,"./output.json")
+write(json_data,file= json_file_path)
