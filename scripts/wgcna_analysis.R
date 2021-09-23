@@ -7,11 +7,20 @@ library(rjson)
 options(stringsAsFactors = FALSE);
 
 imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
-
 # load expression data **assumes from json files row(traits)(columns info+samples)
 # pass the file_path as arg
+# pass the file path to read json data
 
-results <- fromJSON(file = "file_path.json")
+args = commandArgs(trailingOnly=TRUE)
+
+if (length(args)==0) {
+  stop("Argument for the file location is requires", call.=FALSE)
+} else {
+  # default output file
+  json_file_path  = args[1]
+}
+
+results <- fromJSON(file = json_file_path)
 
 
 # parse the json data input
