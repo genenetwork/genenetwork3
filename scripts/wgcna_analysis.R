@@ -2,26 +2,29 @@
 
 library(WGCNA);
 library(stringi);
+library(rjson)
 
 options(stringsAsFactors = FALSE);
 
 imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
 
-# load expression data **assumes csv format row(traits)(columns info+samples)
+# load expression data **assumes from json files row(traits)(columns info+samples)
 # pass the file_path as arg
 
-inputData <- read.csv(file = "wgcna_data.csv")
+results <- fromJSON(file = "file_path.json")
 
+# trait_sample_data <- results$trait_sample_data
+trait_sample_data <- do.call(rbind, results$trait_sample_data)
+
+
+dataExpr <- data.frame(apply(trait_sample_data, 2, function(x) as.numeric(as.character(x))))
+# trait_sample_data <- as.data.frame(t(results$trait_sample_data))
 # transform expressionData
 
-dataExpr <- as.data.frame(t(inputData));
-
-## data cleaning
-
+dataExpr <- data.frame(t(dataExpr))
 gsg = goodSamplesGenes(dataExpr, verbose = 3);
 
 # https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/
-
 if (!gsg$allOK)
 {
 if (sum(!gsg$goodGenes)>0)
@@ -49,7 +52,7 @@ network <- blockwiseModules(dataExpr,
                   corType = "pearson",
                   #adjacency  matrix options
 
-                  power = sft$powerEstimate,
+                  power = 5,
                   networkType = "unsigned",
                   #TOM options
                   TOMtype =  "unsigned",
@@ -70,14 +73,13 @@ genImageRandStr <- function(prefix){
 	return(paste(randStr,".png",sep=""))
 }
 
-mergedColors <- labels2colors(net$colors)
+mergedColors <- labels2colors(network$colors)
 
 imageLoc <- file.path(imgDir,genImageRandStr("WGCNAoutput"))
 
-
 png(imageLoc,width=1000,height=600,type='cairo-png')
 
-plotDendroAndColors(network$dendrograms[[1]],mergedColors[net$blockGenes[[1]]],
+plotDendroAndColors(network$dendrograms[[1]],mergedColors[network$blockGenes[[1]]],
 "Module colors",
 dendroLabels = FALSE, hang = 0.03,
 addGuide = TRUE, guideHang = 0.05)
