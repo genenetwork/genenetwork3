@@ -13,12 +13,19 @@ imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
 
 results <- fromJSON(file = "file_path.json")
 
-# trait_sample_data <- results$trait_sample_data
+
+# parse the json data input
+
+minModuleSize <-results$minModuleSize
+
+TOMtype <-results$TOMtype
+
+corType <-results$corType
+# 
+
 trait_sample_data <- do.call(rbind, results$trait_sample_data)
 
-
 dataExpr <- data.frame(apply(trait_sample_data, 2, function(x) as.numeric(as.character(x))))
-# trait_sample_data <- as.data.frame(t(results$trait_sample_data))
 # transform expressionData
 
 dataExpr <- data.frame(t(dataExpr))
@@ -49,18 +56,18 @@ sft <- pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
 # pass user options
 network <- blockwiseModules(dataExpr,
                   #similarity  matrix options
-                  corType = "pearson",
+                  corType = corType,
                   #adjacency  matrix options
 
                   power = 5,
                   networkType = "unsigned",
                   #TOM options
-                  TOMtype =  "unsigned",
+                  TOMtype =  TOMtype,
 
                   #module indentification
 
-                  minmodulesSize = 30,
-                  deepSplit = 5,
+                  minmodulesSize = minModuleSize,
+                  deepSplit = 3,
                   PamRespectsDendro = FALSE
                 )
 
@@ -76,7 +83,7 @@ genImageRandStr <- function(prefix){
 mergedColors <- labels2colors(network$colors)
 
 imageLoc <- file.path(imgDir,genImageRandStr("WGCNAoutput"))
-
+imageLoc
 png(imageLoc,width=1000,height=600,type='cairo-png')
 
 plotDendroAndColors(network$dendrograms[[1]],mergedColors[network$blockGenes[[1]]],
