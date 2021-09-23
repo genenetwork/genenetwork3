@@ -44,6 +44,5 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
                 "data": json.load(outputfile),
                 **run_cmd_results
             }
-            # return json.load(outputfile)
     except Exception as error:
         raise error

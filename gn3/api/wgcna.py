@@ -19,4 +19,7 @@ def run_wgcna():
 
     results = call_wgcna_script(wgcna_script, wgcna_data)
 
+    if results.get("data") is None:
+        return jsonify(results), 401
+
     return jsonify(results), 200
