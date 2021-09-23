@@ -20,6 +20,8 @@ setup(author='Bonface M. K.',
           "requests==2.25.1"
           "scipy==1.6.0"
           "sqlalchemy-stubs==0.4"
+          "plotly==4.14.3"
+          "flask-cors==3.0.9"
       ],
       license='GPLV3',
       long_description=open('README.md').read(),
