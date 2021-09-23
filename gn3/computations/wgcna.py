@@ -22,7 +22,7 @@ def dump_wgcna_data(request_data: dict):
 
 def compose_wgcna_cmd(rscript_path: str, temp_file_path: str):
     """function to componse wgcna cmd"""
-    cmd = f"Rscript {rscript_path}  {temp_file_path}"
+    cmd = f"Rscript ./scripts/{rscript_path}  {temp_file_path}"
     return cmd
 
 
@@ -32,6 +32,9 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
     cmd = compose_wgcna_cmd(rscript_path, generated_file)
 
     try:
-        return run_cmd(cmd)
+
+        run_cmd(cmd)
+        with open(generated_file, "r") as outputfile:
+            return results
     except Exception as error:
         raise error
