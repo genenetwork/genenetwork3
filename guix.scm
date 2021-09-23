@@ -102,6 +102,7 @@
                        ("r-qtl" ,r-qtl)
                        ("r-stringi" ,r-stringi)
                        ("r-wgcna" ,r-wgcna)
+                       ("r-rjson" ,r-rjson)
                        ("python-plotly" ,python-plotly)
                        ("python-pandas" ,python-pandas)))
   (build-system python-build-system)
