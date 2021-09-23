@@ -1,7 +1,7 @@
 """Procedures related rqtl computations"""
 import os
 from bisect import bisect
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 
@@ -150,7 +150,7 @@ def pairscan_for_table(file_name: str, geno_file: str) -> List:
             marker_list.append(this_marker)
 
     # Get the list of original markers from the .geno file
-    original_markers = build_marker_pos_list(geno_file)
+    original_markers = build_marker_pos_dict(geno_file)
 
     # Open the file with the actual results and write the results as
     # they will be displayed in the results table
@@ -181,7 +181,7 @@ def pairscan_for_table(file_name: str, geno_file: str) -> List:
 
     return sorted(table_data, key = lambda i: float(i['lod']), reverse=True)[:500]
 
-def build_marker_pos_list(genotype_file):
+def build_marker_pos_dict(genotype_file: str) -> Dict:
     """
     Gets list of markers and their positions from .geno file
 
@@ -211,7 +211,7 @@ def build_marker_pos_list(genotype_file):
 
     return the_markers
 
-def find_nearest_marker(the_chr, the_pos, marker_list):
+def find_nearest_marker(the_chr: str, the_pos: str, marker_list: Dict) -> Tuple[str, str]:
     """
     Given a chromosome and position of a pseudomarker (from R/qtl pair-scan results),
     return the nearest real marker
@@ -227,7 +227,7 @@ def find_nearest_marker(the_chr, the_pos, marker_list):
 
     return proximal_marker, distal_marker
 
-def process_perm_output(file_name: str):
+def process_perm_output(file_name: str) -> Tuple[List, float, float]:
     """Given base filename, read in R/qtl permutation output and calculate
     suggestive and significant thresholds
 
