@@ -16,9 +16,7 @@ def generate_rqtl_cmd(rqtl_wrapper_cmd: str,
                       rqtl_wrapper_bool_kwargs: list) -> Dict:
     """Given the base rqtl_wrapper command and
 dict of keyword arguments, return the full rqtl_wrapper command and an
-output filename generated from a hash of the genotype and phenotype files
-
-    """
+output filename generated from a hash of the genotype and phenotype files"""
 
     # Generate a hash from contents of the genotype and phenotype files
     _hash = get_hash_of_files(
@@ -50,9 +48,7 @@ output filename generated from a hash of the genotype and phenotype files
 
 def process_rqtl_mapping(file_name: str) -> List:
     """Given an output file name, read in R/qtl results and return
-    a List of marker objects
-
-    """
+    a List of marker objects"""
     marker_obs = []
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
@@ -83,11 +79,8 @@ def process_rqtl_mapping(file_name: str) -> List:
 
 def process_rqtl_pairscan(file_name: str, geno_file: str) -> List:
     """Given an output file name, read in R/qtl pair-scan results and return
-    a list of both the JSON needed for the d3panels figure and a list of results
-    to be used when generating the results table (which will include marker names)
-
-    """
-
+a list of both the JSON needed for the d3panels figure and a list of results
+to be used when generating the results table (which will include marker names)"""
     figure_data = pairscan_for_figure(file_name)
     table_data = pairscan_for_table(file_name, geno_file)
 
@@ -95,9 +88,7 @@ def process_rqtl_pairscan(file_name: str, geno_file: str) -> List:
 
 def pairscan_for_figure(file_name: str) -> Dict:
     """Given an output file name, read in R/qtl pair-scan results and return
-    the JSON needed for the d3panels figure
-
-    """
+    the JSON needed for the d3panels figure"""
     figure_data = {}
 
     # Open the file with the actual results, written as a list of lists
@@ -129,9 +120,7 @@ def pairscan_for_figure(file_name: str) -> Dict:
 
 def pairscan_for_table(file_name: str, geno_file: str) -> List:
     """Given an output file name, read in R/qtl pair-scan results and return
-    a list of results to be used when generating the results table (which will include marker names)
-
-    """
+    a list of results to be used when generating the results table (which will include marker names)"""
     table_data = []
 
     # Open the map file with the list of markers/pseudomarkers and create list of marker obs
@@ -181,11 +170,9 @@ def pairscan_for_table(file_name: str, geno_file: str) -> List:
     return sorted(table_data, key = lambda i: float(i['lod']), reverse=True)[:500]
 
 def build_marker_pos_dict(genotype_file: str) -> Dict:
-    """
-    Gets list of markers and their positions from .geno file
+    """Gets list of markers and their positions from .geno file
 
-    Basically a pared-down version of parse_genotype_file for R/qtl pair-scan
-    """
+    Basically a pared-down version of parse_genotype_file for R/qtl pair-scan"""
 
     with open(genotype_file, "r") as infile:
         contents = infile.readlines()
@@ -211,10 +198,8 @@ def build_marker_pos_dict(genotype_file: str) -> Dict:
     return the_markers
 
 def find_nearest_marker(the_chr: str, the_pos: str, marker_list: Dict) -> Tuple[str, str]:
-    """
-    Given a chromosome and position of a pseudomarker (from R/qtl pair-scan results),
-    return the nearest real marker
-    """
+    """Given a chromosome and position of a pseudomarker (from R/qtl pair-scan results),
+    return the nearest real marker"""
 
     pos_list = [float(pos) for pos in marker_list[the_chr]]
 
@@ -228,9 +213,8 @@ def find_nearest_marker(the_chr: str, the_pos: str, marker_list: Dict) -> Tuple[
 
 def process_perm_output(file_name: str) -> Tuple[List, float, float]:
     """Given base filename, read in R/qtl permutation output and calculate
-    suggestive and significant thresholds
+    suggestive and significant thresholds"""
 
-    """
     perm_results = []
     with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
                            "output", "PERM_" + file_name), "r") as the_file:
