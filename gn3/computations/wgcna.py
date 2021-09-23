@@ -22,6 +22,7 @@ def dump_wgcna_data(request_data: dict):
 
 def compose_wgcna_cmd(rscript_path: str, temp_file_path: str):
     """function to componse wgcna cmd"""
+    # (todo):issue relative paths to abs paths
     cmd = f"Rscript ./scripts/{rscript_path}  {temp_file_path}"
     return cmd
 
@@ -33,8 +34,16 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
 
     try:
 
-        run_cmd(cmd)
+        run_cmd_results = run_cmd(cmd)
+
         with open(generated_file, "r") as outputfile:
-            return results
+
+            if run_cmd_results["code"] != 0:
+                return run_cmd_results
+            return {
+                "data": json.load(outputfile),
+                **run_cmd_results
+            }
+            # return json.load(outputfile)
     except Exception as error:
         raise error
