@@ -127,7 +127,6 @@ def pairscan_for_figure(file_name: str) -> Dict:
 
     return figure_data
 
-
 def pairscan_for_table(file_name: str, geno_file: str) -> List:
     """Given an output file name, read in R/qtl pair-scan results and return
     a list of results to be used when generating the results table (which will include marker names)
