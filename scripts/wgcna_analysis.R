@@ -14,7 +14,7 @@ imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0) {
-  stop("Argument for the file location is requires", call.=FALSE)
+  stop("Argument for the file location is required", call.=FALSE)
 } else {
   # default output file
   json_file_path  = args[1]
@@ -92,7 +92,6 @@ genImageRandStr <- function(prefix){
 mergedColors <- labels2colors(network$colors)
 
 imageLoc <- file.path(imgDir,genImageRandStr("WGCNAoutput"))
-imageLoc
 png(imageLoc,width=1000,height=600,type='cairo-png')
 
 plotDendroAndColors(network$dendrograms[[1]],mergedColors[network$blockGenes[[1]]],
@@ -102,3 +101,13 @@ addGuide = TRUE, guideHang = 0.05)
 
 
 
+
+json_data <- list(ModEigens=network$MEs,soft_threshold=sft$fitIndices,
+  blockGenes =network$blockGenes[[1]],
+  net_colors =network$colors,
+  net_unmerged=network$unmergedColors,
+  imageLoc=imageLoc)
+
+json_data <- toJSON(json_data)
+
+write(json_data,"./output.json")
