@@ -33,5 +33,5 @@ class WgcnaIntegrationTest(TestCase):
         response = self.app.post("/api/wgcna/run_wgcna",
                                  json=request_data, follow_redirects=True)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(response.get_json(), wgcna_api_data)

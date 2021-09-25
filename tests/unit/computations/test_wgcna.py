@@ -25,9 +25,9 @@ class TestWgcna(TestCase):
     def test_compose_wgcna_cmd(self):
         """test for composing wgcna cmd"""
         wgcna_cmd = compose_wgcna_cmd(
-            "/wgcna.r", "/tmp/wgcna.json")
+            "wgcna.r", "/tmp/wgcna.json")
         self.assertEqual(
-            wgcna_cmd, "Rscript /wgcna.r  /tmp/wgcna.json")
+            wgcna_cmd, "Rscript ./scripts/wgcna.r  /tmp/wgcna.json")
 
     @skip("to  update tests")
     def test_create_json_file(self):
