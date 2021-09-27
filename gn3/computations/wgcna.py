@@ -44,8 +44,8 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
                 "data": json.load(outputfile),
                 **run_cmd_results
             }
-    except Exception as error:
+    except FileNotFoundError:
         # relook  at handling errors gn3
         return {
-            "output": str(error)
+            "output": "output file not found"
         }
