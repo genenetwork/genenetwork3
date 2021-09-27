@@ -17,8 +17,7 @@ def clustered_heatmaps():
     Parses the incoming data and responds with the JSON-serialized plotly figure
     representing the clustered heatmap.
     """
-    heatmap_request = request.get_json()
-    traits_names = heatmap_request.get("traits_names", tuple())
+    traits_names = request.get_json().get("traits_names", tuple())
     if len(traits_names) < 2:
         return jsonify({
             "message": "You need to provide at least two trait names."
