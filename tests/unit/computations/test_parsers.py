@@ -15,7 +15,7 @@ class TestParsers(unittest.TestCase):
 
     def test_parse_genofile_with_existing_file(self):
         """Test that a genotype file is parsed correctly"""
-        strains = ["bxd1", "bxd2"]
+        samples = ["bxd1", "bxd2"]
         genotypes = [
             {"chr": "1", "locus": "rs31443144",
              "cm": "1.50", "mb": "3.010274",
@@ -51,4 +51,4 @@ class TestParsers(unittest.TestCase):
             "../test_data/genotype.txt"
         ))
         self.assertEqual(parse_genofile(
-            test_genotype_file), (strains, genotypes))
+            test_genotype_file), (samples, genotypes))

@@ -14,7 +14,7 @@ def parse_genofile(file_path: str) -> Tuple[List[str],
         'h': 0,
         'u': None,
     }
-    genotypes, strains = [], []
+    genotypes, samples = [], []
     with open(file_path, "r") as _genofile:
         for line in _genofile:
             line = line.strip()
@@ -22,8 +22,8 @@ def parse_genofile(file_path: str) -> Tuple[List[str],
                 continue
             cells = line.split()
             if line.startswith("Chr"):
-                strains = cells[4:]
-                strains = [strain.lower() for strain in strains]
+                samples = cells[4:]
+                samples = [sample.lower() for sample in samples]
                 continue
             values = [__map.get(value.lower(), None) for value in cells[4:]]
             genotype = {
@@ -32,7 +32,7 @@ def parse_genofile(file_path: str) -> Tuple[List[str],
                 "cm": cells[2],
                 "mb": cells[3],
                 "values":  values,
-                "dicvalues": dict(zip(strains, values)),
+                "dicvalues": dict(zip(samples, values)),
             }
             genotypes.append(genotype)
-        return strains, genotypes
+        return samples, genotypes
