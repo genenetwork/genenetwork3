@@ -34,7 +34,8 @@ def create_output_directory(path: str):
     """Create the output directory at `path` if it does not exist."""
     try:
         os.mkdir(path)
-    except OSError:
+    except FileExistsError:
+        # If the directory already exists, do nothing.
         pass
 
 def run_reaper(
