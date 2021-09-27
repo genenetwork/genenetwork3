@@ -5,41 +5,41 @@ from gn3.heatmaps import (
     get_lrs_from_chr,
     export_trait_data,
     compute_traits_order,
-    retrieve_strains_and_values,
+    retrieve_samples_and_values,
     process_traits_data_for_heatmap)
 from tests.unit.sample_test_data import organised_trait_1, organised_trait_2
 
-strainlist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
+samplelist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
 trait_data = {
     "mysqlid": 36688172,
     "data": {
-        "B6cC3-1": {"strain_name": "B6cC3-1", "value": 7.51879, "variance": None, "ndata": None},
-        "BXD1": {"strain_name": "BXD1", "value": 7.77141, "variance": None, "ndata": None},
-        "BXD12": {"strain_name": "BXD12", "value": 8.39265, "variance": None, "ndata": None},
-        "BXD16": {"strain_name": "BXD16", "value": 8.17443, "variance": None, "ndata": None},
-        "BXD19": {"strain_name": "BXD19", "value": 8.30401, "variance": None, "ndata": None},
-        "BXD2": {"strain_name": "BXD2", "value": 7.80944, "variance": None, "ndata": None},
-        "BXD21": {"strain_name": "BXD21", "value": 8.93809, "variance": None, "ndata": None},
-        "BXD24": {"strain_name": "BXD24", "value": 7.99415, "variance": None, "ndata": None},
-        "BXD27": {"strain_name": "BXD27", "value": 8.12177, "variance": None, "ndata": None},
-        "BXD28": {"strain_name": "BXD28", "value": 7.67688, "variance": None, "ndata": None},
-        "BXD32": {"strain_name": "BXD32", "value": 7.79062, "variance": None, "ndata": None},
-        "BXD39": {"strain_name": "BXD39", "value": 8.27641, "variance": None, "ndata": None},
-        "BXD40": {"strain_name": "BXD40", "value": 8.18012, "variance": None, "ndata": None},
-        "BXD42": {"strain_name": "BXD42", "value": 7.82433, "variance": None, "ndata": None},
-        "BXD6": {"strain_name": "BXD6", "value": 8.09718, "variance": None, "ndata": None},
-        "BXH14": {"strain_name": "BXH14", "value": 7.97475, "variance": None, "ndata": None},
-        "BXH19": {"strain_name": "BXH19", "value": 7.67223, "variance": None, "ndata": None},
-        "BXH2": {"strain_name": "BXH2", "value": 7.93622, "variance": None, "ndata": None},
-        "BXH22": {"strain_name": "BXH22", "value": 7.43692, "variance": None, "ndata": None},
-        "BXH4": {"strain_name": "BXH4", "value": 7.96336, "variance": None, "ndata": None},
-        "BXH6": {"strain_name": "BXH6", "value": 7.75132, "variance": None, "ndata": None},
-        "BXH7": {"strain_name": "BXH7", "value": 8.12927, "variance": None, "ndata": None},
-        "BXH8": {"strain_name": "BXH8", "value": 6.77338, "variance": None, "ndata": None},
-        "BXH9": {"strain_name": "BXH9", "value": 8.03836, "variance": None, "ndata": None},
-        "C3H/HeJ": {"strain_name": "C3H/HeJ", "value": 7.42795, "variance": None, "ndata": None},
-        "C57BL/6J": {"strain_name": "C57BL/6J", "value": 7.50606, "variance": None, "ndata": None},
-        "DBA/2J": {"strain_name": "DBA/2J", "value": 7.72588, "variance": None, "ndata": None}}}
+        "B6cC3-1": {"sample_name": "B6cC3-1", "value": 7.51879, "variance": None, "ndata": None},
+        "BXD1": {"sample_name": "BXD1", "value": 7.77141, "variance": None, "ndata": None},
+        "BXD12": {"sample_name": "BXD12", "value": 8.39265, "variance": None, "ndata": None},
+        "BXD16": {"sample_name": "BXD16", "value": 8.17443, "variance": None, "ndata": None},
+        "BXD19": {"sample_name": "BXD19", "value": 8.30401, "variance": None, "ndata": None},
+        "BXD2": {"sample_name": "BXD2", "value": 7.80944, "variance": None, "ndata": None},
+        "BXD21": {"sample_name": "BXD21", "value": 8.93809, "variance": None, "ndata": None},
+        "BXD24": {"sample_name": "BXD24", "value": 7.99415, "variance": None, "ndata": None},
+        "BXD27": {"sample_name": "BXD27", "value": 8.12177, "variance": None, "ndata": None},
+        "BXD28": {"sample_name": "BXD28", "value": 7.67688, "variance": None, "ndata": None},
+        "BXD32": {"sample_name": "BXD32", "value": 7.79062, "variance": None, "ndata": None},
+        "BXD39": {"sample_name": "BXD39", "value": 8.27641, "variance": None, "ndata": None},
+        "BXD40": {"sample_name": "BXD40", "value": 8.18012, "variance": None, "ndata": None},
+        "BXD42": {"sample_name": "BXD42", "value": 7.82433, "variance": None, "ndata": None},
+        "BXD6": {"sample_name": "BXD6", "value": 8.09718, "variance": None, "ndata": None},
+        "BXH14": {"sample_name": "BXH14", "value": 7.97475, "variance": None, "ndata": None},
+        "BXH19": {"sample_name": "BXH19", "value": 7.67223, "variance": None, "ndata": None},
+        "BXH2": {"sample_name": "BXH2", "value": 7.93622, "variance": None, "ndata": None},
+        "BXH22": {"sample_name": "BXH22", "value": 7.43692, "variance": None, "ndata": None},
+        "BXH4": {"sample_name": "BXH4", "value": 7.96336, "variance": None, "ndata": None},
+        "BXH6": {"sample_name": "BXH6", "value": 7.75132, "variance": None, "ndata": None},
+        "BXH7": {"sample_name": "BXH7", "value": 8.12927, "variance": None, "ndata": None},
+        "BXH8": {"sample_name": "BXH8", "value": 6.77338, "variance": None, "ndata": None},
+        "BXH9": {"sample_name": "BXH9", "value": 8.03836, "variance": None, "ndata": None},
+        "C3H/HeJ": {"sample_name": "C3H/HeJ", "value": 7.42795, "variance": None, "ndata": None},
+        "C57BL/6J": {"sample_name": "C57BL/6J", "value": 7.50606, "variance": None, "ndata": None},
+        "DBA/2J": {"sample_name": "DBA/2J", "value": 7.72588, "variance": None, "ndata": None}}}
 
 slinked = (
     (((0, 2, 0.16381088984330505),
@@ -66,7 +66,7 @@ class TestHeatmap(TestCase):
                 ["all", (7.51879, 7.77141, 8.39265, 8.17443, 8.30401, 7.80944)]]:
             with self.subTest(dtype=dtype):
                 self.assertEqual(
-                    export_trait_data(trait_data, strainlist, dtype=dtype),
+                    export_trait_data(trait_data, samplelist, dtype=dtype),
                     expected)
 
     def test_export_trait_data_dtype_all_flags(self):
@@ -106,7 +106,7 @@ class TestHeatmap(TestCase):
             with self.subTest(dtype=dtype, vflag=vflag, nflag=nflag):
                 self.assertEqual(
                     export_trait_data(
-                        trait_data, strainlist, dtype=dtype, var_exists=vflag,
+                        trait_data, samplelist, dtype=dtype, var_exists=vflag,
                         n_exists=nflag),
                     expected)
 
@@ -164,8 +164,8 @@ class TestHeatmap(TestCase):
         self.assertEqual(
             compute_traits_order(slinked), (0, 2, 1, 7, 5, 9, 3, 6, 8, 4))
 
-    def test_retrieve_strains_and_values(self):
-        """Test retrieval of strains and values."""
+    def test_retrieve_samples_and_values(self):
+        """Test retrieval of samples and values."""
         for orders, slist, tdata, expected in [
                 [
                     [2],
@@ -185,9 +185,9 @@ class TestHeatmap(TestCase):
                      [6, None, None, 4, None]],
                     [[3, ["s1", "s4"], [6, 4]]]
                 ]]:
-            with self.subTest(strainlist=slist, traitdata=tdata):
+            with self.subTest(samplelist=slist, traitdata=tdata):
                 self.assertEqual(
-                    retrieve_strains_and_values(orders, slist, tdata), expected)
+                    retrieve_samples_and_values(orders, slist, tdata), expected)
 
     def test_get_lrs_from_chr(self):
         """Check that function gets correct LRS values"""

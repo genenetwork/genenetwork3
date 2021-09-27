@@ -27,10 +27,10 @@ from gn3.computations.qtlreaper import (
     organise_reaper_main_results)
 
 def export_trait_data(
-        trait_data: dict, strainlist: Sequence[str], dtype: str = "val",
+        trait_data: dict, samplelist: Sequence[str], dtype: str = "val",
         var_exists: bool = False, n_exists: bool = False):
     """
-    Export data according to `strainlist`. Mostly used in calculating
+    Export data according to `samplelist`. Mostly used in calculating
     correlations.
 
     DESCRIPTION:
@@ -40,8 +40,8 @@ def export_trait_data(
     PARAMETERS
     trait: (dict)
       The dictionary of key-value pairs representing a trait
-    strainlist: (list)
-      A list of strain names
+    samplelist: (list)
+      A list of sample names
     dtype: (str)
       ... verify what this is ...
     var_exists: (bool)
@@ -49,18 +49,18 @@ def export_trait_data(
     n_exists: (bool)
       A flag indicating existence of ndata
     """
-    def __export_all_types(tdata, strain):
+    def __export_all_types(tdata, sample):
         sample_data = []
-        if tdata[strain]["value"]:
-            sample_data.append(tdata[strain]["value"])
+        if tdata[sample]["value"]:
+            sample_data.append(tdata[sample]["value"])
             if var_exists:
-                if tdata[strain]["variance"]:
-                    sample_data.append(tdata[strain]["variance"])
+                if tdata[sample]["variance"]:
+                    sample_data.append(tdata[sample]["variance"])
                 else:
                     sample_data.append(None)
             if n_exists:
-                if tdata[strain]["ndata"]:
-                    sample_data.append(tdata[strain]["ndata"])
+                if tdata[sample]["ndata"]:
+                    sample_data.append(tdata[sample]["ndata"])
                 else:
                     sample_data.append(None)
         else:
@@ -73,17 +73,17 @@ def export_trait_data(
 
         return tuple(sample_data)
 
-    def __exporter(accumulator, strain):
+    def __exporter(accumulator, sample):
         # pylint: disable=[R0911]
-        if strain in trait_data["data"]:
+        if sample in trait_data["data"]:
             if dtype == "val":
-                return accumulator + (trait_data["data"][strain]["value"], )
+                return accumulator + (trait_data["data"][sample]["value"], )
             if dtype == "var":
-                return accumulator + (trait_data["data"][strain]["variance"], )
+                return accumulator + (trait_data["data"][sample]["variance"], )
             if dtype == "N":
-                return accumulator + (trait_data["data"][strain]["ndata"], )
+                return accumulator + (trait_data["data"][sample]["ndata"], )
             if dtype == "all":
-                return accumulator + __export_all_types(trait_data["data"], strain)
+                return accumulator + __export_all_types(trait_data["data"], sample)
             raise KeyError("Type `%s` is incorrect" % dtype)
         if var_exists and n_exists:
             return accumulator + (None, None, None)
@@ -91,7 +91,7 @@ def export_trait_data(
             return accumulator + (None, None)
         return accumulator + (None,)
 
-    return reduce(__exporter, strainlist, tuple())
+    return reduce(__exporter, samplelist, tuple())
 
 def trait_display_name(trait: Dict):
     """
@@ -165,19 +165,19 @@ def build_heatmap(traits_names, conn: Any):
         for fullname in traits_names]
     traits_data_list = [retrieve_trait_data(t, conn) for t in traits]
     genotype_filename = build_genotype_file(traits[0]["riset"])
-    strains = load_genotype_samples(genotype_filename)
+    samples = load_genotype_samples(genotype_filename)
     exported_traits_data_list = [
-        export_trait_data(td, strains) for td in traits_data_list]
+        export_trait_data(td, samples) for td in traits_data_list]
     clustered = cluster_traits(exported_traits_data_list)
     slinked = slink(clustered)
     traits_order = compute_traits_order(slinked)
-    strains_and_values = retrieve_strains_and_values(
-        traits_order, strains, exported_traits_data_list)
+    samples_and_values = retrieve_samples_and_values(
+        traits_order, samples, exported_traits_data_list)
     traits_filename = "{}/traits_test_file_{}.txt".format(
         TMPDIR, random_string(10))
     generate_traits_file(
-        strains_and_values[0][1],
-        [t[2] for t in strains_and_values],
+        samples_and_values[0][1],
+        [t[2] for t in samples_and_values],
         traits_filename)
 
     main_output, _permutations_output = run_reaper(
@@ -229,9 +229,9 @@ def compute_traits_order(slink_data, neworder: tuple = tuple()):
 
     return __order_maker(neworder, slink_data)
 
-def retrieve_strains_and_values(orders, strainlist, traits_data_list):
+def retrieve_samples_and_values(orders, samplelist, traits_data_list):
     """
-    Get the strains and their corresponding values from `strainlist` and
+    Get the samples and their corresponding values from `samplelist` and
     `traits_data_list`.
 
     This migrates the code in
@@ -240,17 +240,17 @@ def retrieve_strains_and_values(orders, strainlist, traits_data_list):
     # This feels nasty! There's a lot of mutation of values here, that might
     # indicate something untoward in the design of this function and its
     # dependents  ==>  Review
-    strains = []
+    samples = []
     values = []
     rets = []
     for order in orders:
         temp_val = traits_data_list[order]
-        for i, strain in enumerate(strainlist):
+        for i, sample in enumerate(samplelist):
             if temp_val[i] is not None:
-                strains.append(strain)
+                samples.append(sample)
                 values.append(temp_val[i])
-        rets.append([order, strains[:], values[:]])
-        strains = []
+        rets.append([order, samples[:], values[:]])
+        samples = []
         values = []
 
     return rets

@@ -9,17 +9,17 @@ from typing import Union
 from gn3.random import random_string
 from gn3.settings import TMPDIR, REAPER_COMMAND
 
-def generate_traits_file(strains, trait_values, traits_filename):
+def generate_traits_file(samples, trait_values, traits_filename):
     """
     Generate a traits file for use with `qtlreaper`.
 
     PARAMETERS:
-    strains: A list of strains to use as the headers for the various columns.
-    trait_values: A list of lists of values for each trait and strain.
+    samples: A list of samples to use as the headers for the various columns.
+    trait_values: A list of lists of values for each trait and sample.
     traits_filename: The tab-separated value to put the values in for
         computation of QTLs.
     """
-    header = "Trait\t{}\n".format("\t".join(strains))
+    header = "Trait\t{}\n".format("\t".join(samples))
     data = (
         [header] +
         ["{}\t{}\n".format(i+1, "\t".join([str(i) for i in t]))

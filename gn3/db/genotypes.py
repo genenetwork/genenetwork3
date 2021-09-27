@@ -14,16 +14,16 @@ def build_genotype_file(
 
 def load_genotype_samples(genotype_filename: str, file_type: str = "geno"):
     """
-    Load sample of strains from genotype files.
+    Load sample of samples from genotype files.
 
     DESCRIPTION:
-    Traits can contain a varied number of strains, some of which do not exist in
+    Traits can contain a varied number of samples, some of which do not exist in
     certain genotypes. In order to compute QTLs, GEMMAs, etc, we need to ensure
-    to pick only those strains that exist in the genotype under consideration
+    to pick only those samples that exist in the genotype under consideration
     for the traits used in the computation.
 
     This function loads a list of samples from the genotype files for use in
-    filtering out unusable strains.
+    filtering out unusable samples.
 
 
     PARAMETERS:
