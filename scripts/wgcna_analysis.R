@@ -23,24 +23,14 @@ if (length(args)==0) {
 inputData <- fromJSON(file = json_file_path)
 
 
-# parse the json data input
-
-minModuleSize <-inputData$minModuleSize
-
-TOMtype <-inputData$TOMtype
-
-corType <-inputData$corType
-# 
-
 trait_sample_data <- do.call(rbind, inputData$trait_sample_data)
 
 dataExpr <- data.frame(apply(trait_sample_data, 2, function(x) as.numeric(as.character(x))))
 # transform expressionData
 
 dataExpr <- data.frame(t(dataExpr))
-gsg = goodSamplesGenes(dataExpr, verbose = 3);
+gsg = goodSamplesGenes(dataExpr, verbose = 3)
 
-# https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/
 if (!gsg$allOK)
 {
 if (sum(!gsg$goodGenes)>0)
@@ -75,18 +65,18 @@ if (is.na(sft$powerEstimate)){
 # pass user options
 network <- blockwiseModules(dataExpr,
                   #similarity  matrix options
-                  corType = corType,
+                  corType = inputData$corType,
                   #adjacency  matrix options
 
                   power = powerEst,
                   networkType = "unsigned",
                   #TOM options
-                  TOMtype =  TOMtype,
+                  TOMtype =  inputData$TOMtype,
 
                   #module indentification
                   verbose = 3,
 
-                  minmodulesSize = minModuleSize,
+                  minmodulesSize = inputData$minModuleSize,
                   deepSplit = 3,
                   PamRespectsDendro = FALSE
                 )
