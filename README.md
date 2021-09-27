@@ -24,7 +24,7 @@ guix environment --load=guix.scm
 Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
 
 ```bash
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --load=guix.scm
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --expose=$HOME/genotype_files/ --load=guix.scm
 python3
   import redis
 ```
@@ -32,7 +32,7 @@ python3
 #### Run a Guix container
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --load=guix.scm
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --expose=$HOME/genotype_files/ --load=guix.scm
 ```
 
 
@@ -157,3 +157,39 @@ guix. To freeze dependencies:
 pip freeze --path venv/lib/python3.8/site-packages > requirements.txt
 
 ```
+
+## Genotype Files
+
+You can get the genotype files from http://ipfs.genenetwork.org/ipfs/QmXQy3DAUWJuYxubLHLkPMNCEVq1oV7844xWG2d1GSPFPL and save them on your host machine at, say `$HOME/genotype_files` with something like:
+
+```bash
+$ mkdir -p $HOME/genotype_files
+$ cd $HOME/genotype_files
+$ yes | 7z x genotype_files.tar.7z
+$ tar xf genotype_files.tar
+```
+
+The `genotype_files.tar.7z` file seems to only contain the **BXD.geno** genotype file.
+
+## QTLReaper (rust-qtlreaper) and Trait Files
+
+To run QTL computations, this system makes use of the [rust-qtlreaper](https://github.com/chfi/rust-qtlreaper.git) utility.
+
+To do this, the system needs to export the trait data into a tab-separated file, that can then be passed to the utility using the `--traits` option. For more information about the available options, please [see the rust-qtlreaper](https://github.com/chfi/rust-qtlreaper.git) repository.
+
+### Traits File Format
+
+The traits file begins with a header row/line with the column headers. The first column in the file has the header **"Trait"**. Every other column has a header for one of the strains in consideration.
+
+Under the **"Trait"** column, the traits are numbered from **T1** to **T<n>** where **<n>** is the count of the total number of traits in consideration.
+
+As an example, you could end up with a trait file like the following:
+
+```txt
+Trait	BXD27	BXD32	DBA/2J	BXD21	...
+T1	10.5735	9.27408	9.48255	9.18253	...
+T2	6.4471	6.7191	5.98015	6.68051	...
+...
+```
+
+It is very important that the column header names for the strains correspond to the genotype file used.

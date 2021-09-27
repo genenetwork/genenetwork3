@@ -1,0 +1,23 @@
+# File name: genotype_sample for testing
+
+# Metadata: Please retain this header information with file.
+
+
+@name: BXD
+@type: riset
+@mat:     B
+@pat: D
+@het:H
+@unk: U
+
+
+
+
+
+
+Chr	Locus	cM	Mb	BXD1	BXD2	BXD5	BXD6	BXD8	BXD9
+1	rs31443144	1.50	3.010274	B	B	D	D	D	B
+1	rs6269442	1.50	3.492195	B	B	D	D	H	Y
+1	rs32285189	1.63	3.511204	B	U	D	D	D	B
+2	rs31443144	1.50	3.010274	B	B	D	D	D	B
+2	rs6269442	1.50	3.492195	B	B	D	D	H	Y
