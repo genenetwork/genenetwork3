@@ -1,5 +1,4 @@
 """module contains python code for wgcna"""
-from unittest import skip
 from unittest import TestCase
 from unittest import mock
 
@@ -14,8 +13,13 @@ class TestWgcna(TestCase):
     @mock.patch("gn3.computations.wgcna.run_cmd")
     @mock.patch("gn3.computations.wgcna.compose_wgcna_cmd")
     @mock.patch("gn3.computations.wgcna.dump_wgcna_data")
-    def test_call_wgcna_script(self, mock_dumping_data, mock_compose_wgcna, mock_run_cmd):
+    def test_call_wgcna_script(self,
+                               mock_dumping_data,
+                               mock_compose_wgcna,
+                               mock_run_cmd):
         """test for calling wgcna script"""
+
+        # pylint: disable = line-too-long
         mock_dumping_data.return_value = "/tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test.json"
 
         mock_compose_wgcna.return_value = "Rscript/GUIX_PATH/scripts/r_file.R /tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test.json"
@@ -67,7 +71,7 @@ class TestWgcna(TestCase):
 
         }
 
-        with mock.patch("builtins.open", mock.mock_open(read_data=json_output)) as mock_file:
+        with mock.patch("builtins.open", mock.mock_open(read_data=json_output)):
 
             mock_run_cmd.return_value = mock_run_cmd_results
 
@@ -77,7 +81,8 @@ class TestWgcna(TestCase):
             mock_dumping_data.assert_called_once_with(request_data)
 
             mock_compose_wgcna.assert_called_once_with(
-                "Rscript/GUIX_PATH/scripts/r_file.R", "/tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test.json")
+                "Rscript/GUIX_PATH/scripts/r_file.R",
+                "/tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test.json")
 
             mock_run_cmd.assert_called_once_with(
                 "Rscript/GUIX_PATH/scripts/r_file.R /tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test.json")
@@ -88,17 +93,19 @@ class TestWgcna(TestCase):
     @mock.patch("gn3.computations.wgcna.compose_wgcna_cmd")
     @mock.patch("gn3.computations.wgcna.dump_wgcna_data")
     def test_call_wgcna_script_fails(self, mock_dumping_data, mock_compose_wgcna, mock_run_cmd):
-        """test for calling wgcna script fails and generates the expected error"""
+        """test for calling wgcna script\
+        fails and generates the expected error"""
+        # pylint: disable = line-too-long,
         mock_dumping_data.return_value = "/tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test.json"
 
         mock_compose_wgcna.return_value = "Rscript/GUIX_PATH/scripts/r_file.R /tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test.json"
 
         expected_error = {
-            "code": 127,
+            "code": 2,
             "output": "could not read the json file"
         }
 
-        with mock.patch("builtins.open", mock.mock_open(read_data="")) as mock_file:
+        with mock.patch("builtins.open", mock.mock_open(read_data="")):
 
             mock_run_cmd.return_value = expected_error
             self.assertEqual(call_wgcna_script(
@@ -111,8 +118,9 @@ class TestWgcna(TestCase):
         self.assertEqual(
             wgcna_cmd, "Rscript ./scripts/wgcna.r  /tmp/wgcna.json")
 
-    @ skip("to  update tests")
-    def test_create_json_file(self):
+    @mock.patch("gn3.computations.wgcna.TMPDIR", "/tmp")
+    @mock.patch("gn3.computations.wgcna.uuid.uuid4")
+    def test_create_json_file(self, file_name_generator):
         """test for writing the data to a csv file"""
         # # All the traits we have data for (should not contain duplicates)
         # All the strains we have data for (contains duplicates)
@@ -138,7 +146,15 @@ class TestWgcna(TestCase):
             "minModuleSize": 30
         }
 
-        results = dump_wgcna_data(
-            expected_input)
+        with mock.patch("builtins.open", mock.mock_open()) as file_handler:
 
-        self.assertEqual(results, {})
+            file_name_generator.return_value = "facb73ff-7eef-4053-b6ea-e91d3a22a00c"
+
+            results = dump_wgcna_data(
+                expected_input)
+
+            file_handler.assert_called_once_with(
+                "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json", 'w')
+
+            self.assertEqual(
+                results, "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json")
