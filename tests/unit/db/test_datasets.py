@@ -3,10 +3,10 @@
 from unittest import mock, TestCase
 from gn3.db.datasets import (
     retrieve_dataset_name,
-    retrieve_riset_fields,
-    retrieve_geno_riset_fields,
-    retrieve_publish_riset_fields,
-    retrieve_probeset_riset_fields)
+    retrieve_group_fields,
+    retrieve_geno_group_fields,
+    retrieve_publish_group_fields,
+    retrieve_probeset_group_fields)
 
 class TestDatasetsDBFunctions(TestCase):
     """Test cases for datasets functions."""
@@ -40,9 +40,9 @@ class TestDatasetsDBFunctions(TestCase):
                             table=table, cols=columns),
                         {"threshold": thresh, "name": dataset_name})
 
-    def test_retrieve_probeset_riset_fields(self):
+    def test_retrieve_probeset_group_fields(self):
         """
-        Test that the `riset` and `riset_id` fields are retrieved appropriately
+        Test that the `group` and `group_id` fields are retrieved appropriately
         for the 'ProbeSet' trait type.
         """
         for trait_name, expected in [
@@ -52,7 +52,7 @@ class TestDatasetsDBFunctions(TestCase):
                 with db_mock.cursor() as cursor:
                     cursor.execute.return_value = ()
                     self.assertEqual(
-                        retrieve_probeset_riset_fields(trait_name, db_mock),
+                        retrieve_probeset_group_fields(trait_name, db_mock),
                         expected)
                     cursor.execute.assert_called_once_with(
                         (
@@ -63,34 +63,34 @@ class TestDatasetsDBFunctions(TestCase):
                             " AND ProbeSetFreeze.Name = %(name)s"),
                         {"name": trait_name})
 
-    def test_retrieve_riset_fields(self):
+    def test_retrieve_group_fields(self):
         """
-        Test that the riset fields are set up correctly for the different trait
+        Test that the group fields are set up correctly for the different trait
         types.
         """
         for trait_type, trait_name, dataset_info, expected in [
                 ["Publish", "pubTraitName01", {"dataset_name": "pubDBName01"},
-                 {"dataset_name": "pubDBName01", "riset": ""}],
+                 {"dataset_name": "pubDBName01", "group": ""}],
                 ["ProbeSet", "prbTraitName01", {"dataset_name": "prbDBName01"},
-                 {"dataset_name": "prbDBName01", "riset": ""}],
+                 {"dataset_name": "prbDBName01", "group": ""}],
                 ["Geno", "genoTraitName01", {"dataset_name": "genoDBName01"},
-                 {"dataset_name": "genoDBName01", "riset": ""}],
-                ["Temp", "tempTraitName01", {}, {"riset": ""}],
+                 {"dataset_name": "genoDBName01", "group": ""}],
+                ["Temp", "tempTraitName01", {}, {"group": ""}],
                 ]:
             db_mock = mock.MagicMock()
             with self.subTest(
                     trait_type=trait_type, trait_name=trait_name,
                     dataset_info=dataset_info):
                 with db_mock.cursor() as cursor:
-                    cursor.execute.return_value = ("riset_name", 0)
+                    cursor.execute.return_value = ("group_name", 0)
                     self.assertEqual(
-                        retrieve_riset_fields(
+                        retrieve_group_fields(
                             trait_type, trait_name, dataset_info, db_mock),
                         expected)
 
-    def test_retrieve_publish_riset_fields(self):
+    def test_retrieve_publish_group_fields(self):
         """
-        Test that the `riset` and `riset_id` fields are retrieved appropriately
+        Test that the `group` and `group_id` fields are retrieved appropriately
         for the 'Publish' trait type.
         """
         for trait_name, expected in [
@@ -100,7 +100,7 @@ class TestDatasetsDBFunctions(TestCase):
                 with db_mock.cursor() as cursor:
                     cursor.execute.return_value = ()
                     self.assertEqual(
-                        retrieve_publish_riset_fields(trait_name, db_mock),
+                        retrieve_publish_group_fields(trait_name, db_mock),
                         expected)
                     cursor.execute.assert_called_once_with(
                         (
@@ -110,9 +110,9 @@ class TestDatasetsDBFunctions(TestCase):
                             " AND PublishFreeze.Name = %(name)s"),
                         {"name": trait_name})
 
-    def test_retrieve_geno_riset_fields(self):
+    def test_retrieve_geno_group_fields(self):
         """
-        Test that the `riset` and `riset_id` fields are retrieved appropriately
+        Test that the `group` and `group_id` fields are retrieved appropriately
         for the 'Geno' trait type.
         """
         for trait_name, expected in [
@@ -122,7 +122,7 @@ class TestDatasetsDBFunctions(TestCase):
                 with db_mock.cursor() as cursor:
                     cursor.execute.return_value = ()
                     self.assertEqual(
-                        retrieve_geno_riset_fields(trait_name, db_mock),
+                        retrieve_geno_group_fields(trait_name, db_mock),
                         expected)
                     cursor.execute.assert_called_once_with(
                         (

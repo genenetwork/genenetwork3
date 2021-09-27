@@ -164,7 +164,7 @@ def build_heatmap(traits_names, conn: Any):
         retrieve_trait_info(threshold, fullname, conn)
         for fullname in traits_names]
     traits_data_list = [retrieve_trait_data(t, conn) for t in traits]
-    genotype_filename = build_genotype_file(traits[0]["riset"])
+    genotype_filename = build_genotype_file(traits[0]["group"])
     samples = load_genotype_samples(genotype_filename)
     exported_traits_data_list = [
         export_trait_data(td, samples) for td in traits_data_list]

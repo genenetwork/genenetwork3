@@ -226,7 +226,7 @@ def set_homologene_id_field_probeset(trait_info, conn):
     """
     query = (
         "SELECT HomologeneId FROM Homologene, Species, InbredSet"
-        " WHERE Homologene.GeneId = %(geneid)s AND InbredSet.Name = %(riset)s"
+        " WHERE Homologene.GeneId = %(geneid)s AND InbredSet.Name = %(group)s"
         " AND InbredSet.SpeciesId = Species.Id AND"
         " Species.TaxonomyId = Homologene.TaxonomyId")
     with conn.cursor() as cursor:
@@ -234,7 +234,7 @@ def set_homologene_id_field_probeset(trait_info, conn):
             query,
             {
                 k:v for k, v in trait_info.items()
-                if k in ["geneid", "riset"]
+                if k in ["geneid", "group"]
             })
         res = cursor.fetchone()
         if res:
@@ -422,7 +422,7 @@ def retrieve_trait_info(
     if trait_info["haveinfo"]:
         return {
             **trait_post_processing_functions_table[trait_dataset_type](
-                {**trait_info, "riset": trait_dataset["riset"]}),
+                {**trait_info, "group": trait_dataset["group"]}),
             "db": {**trait["db"], **trait_dataset}
         }
     return trait_info
@@ -449,14 +449,14 @@ def retrieve_temp_trait_data(trait_info: dict, conn: Any):
                 for row in cursor.fetchall()]
     return []
 
-def retrieve_species_id(riset, conn: Any):
+def retrieve_species_id(group, conn: Any):
     """
-    Retrieve a species id given the RISet value
+    Retrieve a species id given the Group value
     """
     with conn.cursor as cursor:
         cursor.execute(
-            "SELECT SpeciesId from InbredSet WHERE Name = %(riset)s",
-            {"riset": riset})
+            "SELECT SpeciesId from InbredSet WHERE Name = %(group)s",
+            {"group": group})
         return cursor.fetchone()[0]
     return None
 
@@ -482,7 +482,7 @@ def retrieve_geno_trait_data(trait_info: Dict, conn: Any):
             {"trait_name": trait_info["trait_name"],
              "dataset_name": trait_info["db"]["dataset_name"],
              "species_id": retrieve_species_id(
-                 trait_info["db"]["riset"], conn)})
+                 trait_info["db"]["group"], conn)})
         return [dict(zip(
             ["sample_name", "value", "se_error", "id"], row))
                 for row in cursor.fetchall()]
