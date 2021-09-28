@@ -4,7 +4,7 @@ generate various kinds of heatmaps.
 """
 
 from functools import reduce
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Union, Sequence
 
 import numpy as np
 import plotly.graph_objects as go # type: ignore
@@ -141,6 +141,32 @@ def cluster_traits(traits_data_list: Sequence[Dict]):
             for tdata_j in enumerate(traits_data_list))
 
     return tuple(__cluster(tdata_i) for tdata_i in enumerate(traits_data_list))
+
+def get_loci_names(
+        organised: dict,
+        chromosome_names: Sequence[str]) -> Sequence[Sequence[str]]:
+    """
+    Get the loci names organised by the same order as the `chromosome_names`.
+    """
+    def __get_trait_loci(accumulator, trait):
+        chrs = tuple(trait["chromosomes"].keys())
+        trait_loci = {
+            _chr: tuple(
+                locus["Locus"]
+                for locus in trait["chromosomes"][_chr]["loci"]
+            ) for _chr in chrs
+        }
+        return {
+            **accumulator,
+            **{
+                _chr: tuple(sorted(set(
+                    trait_loci[_chr] + accumulator.get(_chr, tuple()))))
+                for _chr in trait_loci.keys()
+            }
+        }
+    loci_dict: Dict[Union[str, int], Sequence[str]] = reduce(
+        __get_trait_loci, [v[1] for v in organised.items()], {})
+    return tuple(loci_dict[_chr] for _chr in chromosome_names)
 
 def build_heatmap(traits_names, conn: Any):
     """

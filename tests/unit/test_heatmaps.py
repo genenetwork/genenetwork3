@@ -2,6 +2,7 @@
 from unittest import TestCase
 from gn3.heatmaps import (
     cluster_traits,
+    get_loci_names,
     get_lrs_from_chr,
     export_trait_data,
     compute_traits_order,
@@ -214,3 +215,17 @@ class TestHeatmap(TestCase):
               [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]],
              [[0.5, 0.579, 0.5],
               [0.5, 0.5, 0.5]]])
+
+    def test_get_loci_names(self):
+        """Check that loci names are retrieved correctly."""
+        for organised, expected in (
+                (organised_trait_1,
+                 (("rs258367496", "rs30658298", "rs31443144", "rs32285189",
+                   "rs32430919", "rs36251697", "rs6269442"),
+                  ("rs31879829", "rs36742481", "rs51852623"))),
+                ({**organised_trait_1, **organised_trait_2},
+                 (("rs258367496", "rs30658298", "rs31443144", "rs32285189",
+                   "rs32430919", "rs36251697", "rs6269442"),
+                  ("rs31879829", "rs36742481", "rs51852623")))):
+            with self.subTest(organised=organised):
+                self.assertEqual(get_loci_names(organised, (1, 2)), expected)
