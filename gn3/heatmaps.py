@@ -326,9 +326,7 @@ def generate_clustered_heatmap(
         data, clustering_data, image_filename_prefix, x_axis=None,
         x_label: str = "", y_axis=None, y_label: str = "",
         output_dir: str = TMPDIR,
-        colorscale=(
-            (0.0, '#5D5D5D'), (0.4999999999999999, '#ABABAB'),
-            (0.5, '#F5DE11'), (1.0, '#FF0D00'))):
+        colorscale=((0.0, '#0000FF'), (0.5, '#00FF00'), (1.0, '#FF0000'))):
     """
     Generate a dendrogram, and heatmaps for each chromosome, and put them all
     into one plot.
