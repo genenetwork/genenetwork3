@@ -230,7 +230,8 @@ def build_heatmap(traits_names, conn: Any):
             for order in traits_order),
         y_label="Traits",
         x_axis=chromosome_names,
-        x_label="Chromosomes")
+        x_label="Chromosomes",
+        loci_names=get_loci_names(organised, chromosome_names))
 
 def compute_traits_order(slink_data, neworder: tuple = tuple()):
     """
@@ -351,6 +352,7 @@ def process_traits_data_for_heatmap(data, trait_names, chromosome_names):
 def generate_clustered_heatmap(
         data, clustering_data, image_filename_prefix, x_axis=None,
         x_label: str = "", y_axis=None, y_label: str = "",
+        loci_names: Sequence[Sequence[str]] = tuple(),
         output_dir: str = TMPDIR,
         colorscale=((0.0, '#0000FF'), (0.5, '#00FF00'), (1.0, '#FF0000'))):
     """
@@ -369,9 +371,12 @@ def generate_clustered_heatmap(
             np.array(clustering_data), orientation="right", labels=y_axis))
     hms = [go.Heatmap(
         name=chromo,
+        x=loci,
         y=y_axis,
         z=data_array,
-        showscale=False) for chromo, data_array in zip(x_axis, data)]
+        showscale=False)
+           for chromo, data_array, loci
+           in zip(x_axis, data, loci_names)]
     for i, heatmap in enumerate(hms):
         fig.add_trace(heatmap, row=1, col=(i + 2))
 
