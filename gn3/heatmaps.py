@@ -224,7 +224,6 @@ def build_heatmap(traits_names, conn: Any):
         process_traits_data_for_heatmap(
             organised, traits_ids, chromosome_names),
         clustered,
-        "single_heatmap_{}".format(random_string(10)),
         y_axis=tuple(
             ordered_traits_names[traits_ids[order]]
             for order in traits_order),
@@ -355,6 +354,9 @@ def generate_clustered_heatmap(
         loci_names: Sequence[Sequence[str]] = tuple(),
         output_dir: str = TMPDIR,
         colorscale=((0.0, '#0000FF'), (0.5, '#00FF00'), (1.0, '#FF0000'))):
+        data, clustering_data, x_axis=None, x_label: str = "", y_axis=None,
+        y_label: str = "", loci_names: Sequence[Sequence[str]] = tuple(),
+        colorscale=((0.0, '#0000FF'), (0.5, '#00FF00'), (1.0, '#FF0000'))):
     """
     Generate a dendrogram, and heatmaps for each chromosome, and put them all
     into one plot.
@@ -419,6 +421,4 @@ def generate_clustered_heatmap(
         showlegend=True,
         showscale=True,
         selector={"name": x_axis[-1]})
-    image_filename = "{}/{}.html".format(output_dir, image_filename_prefix)
-    fig.write_html(image_filename)
-    return image_filename, fig
+    return fig
