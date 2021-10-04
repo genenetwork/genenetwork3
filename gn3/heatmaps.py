@@ -372,7 +372,7 @@ def clustered_heatmap(
         cols=num_cols,
         shared_yaxes="rows",
         horizontal_spacing=0.001,
-        subplot_titles=["distance"] + x_axis_data,
+        subplot_titles=[x_axis["label"]] + x_axis_data,
         figure=ff.create_dendrogram(
             np.array(clustering_data), orientation="right", labels=y_axis_data))
     hms = [go.Heatmap(
@@ -393,7 +393,7 @@ def clustered_heatmap(
             "xaxis": {
                 "mirror": False,
                 "showgrid": True,
-                "title": x_axis["label"]
+                "title": "Distance"
             },
             "yaxis": {
                 "title": y_axis["label"]
