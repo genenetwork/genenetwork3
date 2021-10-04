@@ -84,7 +84,6 @@
                       #:recursive? #t
                       #:select? git-file?))
   (propagated-inputs `(("coreutils" ,coreutils)
-                       ("csvdiff" ,go-github-com-aswinkarthik-csvdiff)
                        ("gemma-wrapper" ,gemma-wrapper)
                        ("gunicorn" ,gunicorn)
                        ("python" ,python-wrapper)
@@ -104,6 +103,8 @@
                        ("r-optparse" ,r-optparse)
                        ("r-qtl" ,r-qtl)
                        ("r-stringi" ,r-stringi)
+                       ("r-wgcna" ,r-wgcna)
+                       ("r-rjson" ,r-rjson)
                        ("python-plotly" ,python-plotly)
                        ("python-pandas" ,python-pandas)
                        ("rust-qtlreaper" ,rust-qtlreaper)
