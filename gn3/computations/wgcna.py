@@ -33,8 +33,10 @@ def stream_cmd_output(socket, cmd: str):
     for line in iter(results.stdout.readline, b""):
         line = line.decode("utf-8").rstrip()
 
+        # xtodo  emit the data
 
-def process_image(image_loc: str) ->bytes:
+
+def process_image(image_loc: str) -> bytes:
     """encode the image"""
 
     try:
@@ -65,8 +67,9 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
         with open(generated_file, "r") as outputfile:
 
             output_file_data = json.load(outputfile)
-            output_file_data["image_data"] = process_image(
-                output_file_data["output"]["imageLoc"])
+            # json format only supports  unicode string// to get image data reconvert
+            output_file_data["output"]["image_data"] = process_image(
+                output_file_data["output"]["imageLoc"]).decode("ascii")
 
             if run_cmd_results["code"] != 0:
                 return run_cmd_results
