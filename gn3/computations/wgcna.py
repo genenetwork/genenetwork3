@@ -3,8 +3,9 @@
 import os
 import json
 import uuid
-from gn3.settings import TMPDIR
+import subprocess
 
+from gn3.settings import TMPDIR
 from gn3.commands import run_cmd
 
 
@@ -18,6 +19,16 @@ def dump_wgcna_data(request_data: dict):
         json.dump(request_data, output_file)
 
     return temp_file_path
+
+
+def stream_cmd_output(socket, cmd: str):
+    """function to stream in realtime"""
+    # xtodo  syncing and closing /edge cases
+
+    results = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    for line in iter(results.stdout.readline, b""):
+        line = line.decode("utf-8").rstrip()
 
 
 def compose_wgcna_cmd(rscript_path: str, temp_file_path: str):
