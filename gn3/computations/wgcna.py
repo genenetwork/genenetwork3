@@ -28,12 +28,18 @@ def stream_cmd_output(socket, cmd: str):
     """function to stream in realtime"""
     # xtodo  syncing and closing /edge cases
 
+    socket.emit("output", {"data", f"calling you script {cmd}"})
+
     results = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     for line in iter(results.stdout.readline, b""):
         line = line.decode("utf-8").rstrip()
 
-        # xtodo  emit the data
+        socket.emit("output",
+                    {"data": line})
+    # close above make sure  the process is closed
+
+    socket.emit("output", {"data": "parsing the output results"})
 
 
 def process_image(image_loc: str) -> bytes:
@@ -61,8 +67,6 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
     try:
 
         run_cmd_results = run_cmd(cmd)
-
-        print(run_cmd_results["output"])
 
         with open(generated_file, "r") as outputfile:
 
