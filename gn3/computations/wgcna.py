@@ -37,7 +37,7 @@ def stream_cmd_output(socket, cmd: str):
 
         socket.emit("output",
                     {"data": line})
-    # close above make sure  the process is closed
+    # wait for process to complete code
 
     socket.emit("output", {"data": "parsing the output results"})
 
@@ -48,7 +48,7 @@ def process_image(image_loc: str) -> bytes:
     try:
         with open(image_loc, "rb") as image_file:
             return base64.b64encode(image_file.read())
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         return b""
 
 
