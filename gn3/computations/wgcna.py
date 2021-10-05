@@ -65,7 +65,7 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
         with open(generated_file, "r") as outputfile:
 
             output_file_data = json.load(outputfile)
-            output_file_data["image_1"] = process_image(
+            output_file_data["image_data"] = process_image(
                 output_file_data["output"]["imageLoc"])
 
             if run_cmd_results["code"] != 0:
