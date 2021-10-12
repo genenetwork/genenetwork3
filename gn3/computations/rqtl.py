@@ -105,8 +105,8 @@ def pairscan_for_figure(file_name: str) -> Dict:
     # Open the map file with the list of markers/pseudomarkers and their positions
     with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
                            "output", "MAP_" + file_name), "r") as the_file:
-        chr_list = []
-        pos_list = []
+        chr_list = [] # type: List
+        pos_list = [] # type: List
         for i, line in enumerate(the_file):
             if i == 0: # Skip first line
                 continue
@@ -188,7 +188,7 @@ def build_marker_pos_dict(genotype_file: str) -> Dict:
     mb_exists = "Mb" in header_items
     pos_column = header_items.index("Mb") if mb_exists else header_items.index("cM")
 
-    the_markers = {}
+    the_markers = {"1": {}} # type: Dict[str, Dict]
     for line in lines[1:]: # The lines with markers
         line_items = line.split("\t")
         this_chr = line_items[0]
