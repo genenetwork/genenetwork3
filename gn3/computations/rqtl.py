@@ -118,16 +118,19 @@ def pairscan_for_figure(file_name: str) -> Dict:
 
     return figure_data
 
-def pairscan_for_table(file_name: str, geno_file: str) -> List:
-    """Given an output file name, read in R/qtl pair-scan results and return
-    a list of results to be used when generating the results table (which will include marker names)"""
-    table_data = []
 
-    # Open the map file with the list of markers/pseudomarkers and create list of marker obs
+def get_marker_list(map_file: str) -> List:
+    """
+    Open the map file with the list of markers/pseudomarkers and create list of marker obs
+
+    PARAMETERS:
+    map_file: The map file output by R/qtl containing marker/pseudomarker positions
+    """
+
+    marker_list = []
     with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
-                           "output", "MAP_" + file_name), "r") as the_file:
-        marker_list = []
-        for i, line in enumerate(the_file.readlines()[1:]):
+                           "output", map_file), "r") as map_fh:
+        for line in map_fh.readlines()[1:]:
             line_items = [item.rstrip('\n') for item in line.split(",")]
             this_marker = {
                 'name': line_items[0],
@@ -137,37 +140,72 @@ def pairscan_for_table(file_name: str, geno_file: str) -> List:
 
             marker_list.append(this_marker)
 
+    return marker_list
+
+def generate_table_rows(results_file: str, marker_list: List, original_markers: Dict) -> List:
+    """
+    Open the file with the actual R/qtl pair-scan results and write them as
+    they will be displayed in the results table
+
+    PARAMETERS:
+    results_file: The filename containing R/qtl pair-scan results
+    marker_list: List of marker/pseudomarker names/positions from results
+    original_markers: Dict of markers from the .geno file, for finding proximal/distal
+                      markers to each pseudomarker
+    """
+
+    table_data = []
+    with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
+                           "output", results_file), "r") as the_file:
+        for i, line in enumerate(the_file.readlines()[1:]):
+            marker_1 = marker_list[i]
+            marker_1['proximal'], marker_1['distal'] = find_nearest_marker(marker_1['chr'],
+                                                                           marker_1['pos'],
+                                                                           original_markers)
+            line_items = [item.rstrip('\n') for item in line.split(",")]
+            for j, item in enumerate(line_items[1:]):
+                marker_2 = marker_list[j]
+                marker_2['proximal'], marker_2['distal'] = find_nearest_marker(marker_2['chr'],
+                                                                               marker_2['pos'],
+                                                                               original_markers)
+                try:
+                    lod_score = f"{float(item):.3f}"
+                except ValueError:
+                    lod_score = f"{item}"
+
+                table_data.append({
+                    'proximal1': marker_1['proximal'],
+                    'distal1': marker_1['distal'],
+                    'pos1': f"Chr {marker_1['chr']} @ {float(marker_1['pos']):.1f} cM",
+                    'lod': lod_score,
+                    'proximal2': marker_2['proximal'],
+                    'distal2': marker_2['distal'],
+                    'pos2': f"Chr {marker_2['chr']} @ {float(marker_2['pos']):.1f} cM"
+                })
+
+    return table_data
+
+def pairscan_for_table(file_name: str, geno_file: str) -> List:
+    """
+    Read in R/qtl pair-scan results and return as List representing
+    table row contents
+
+    PARAMETERS:
+    file_name: The filename containing R/qtl pair-scan results
+    geno_file: Filename of the genotype file (used to get marker positions)
+    """
+
+    # Open the map file with the list of markers/pseudomarkers and create list of marker obs
+    marker_list = get_marker_list("MAP_" + file_name)
+
     # Get the list of original markers from the .geno file
     original_markers = build_marker_pos_dict(geno_file)
 
     # Open the file with the actual results and write the results as
     # they will be displayed in the results table
-    with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
-                           "output", file_name), "r") as the_file:
-        for i, line in enumerate(the_file.readlines()[1:]):
-            marker_1 = marker_list[i]
-            proximal1, distal1 = find_nearest_marker(marker_1['chr'], marker_1['pos'], original_markers)
-            line_items = [item.rstrip('\n') for item in line.split(",")]
-            for j, item in enumerate(line_items[1:]):
-                marker_2 = marker_list[j]
-                proximal2, distal2 = find_nearest_marker(marker_2['chr'], marker_2['pos'], original_markers)
-                try:
-                    lod_score = f"{float(item):.3f}"
-                except:
-                    lod_score = f"{item}"
-                this_line = {
-                    'proximal1': proximal1,
-                    'distal1': distal1,
-                    'pos1': f"Chr {marker_1['chr']} @ {float(marker_1['pos']):.1f} cM",
-                    'lod': lod_score,
-                    'proximal2': proximal2,
-                    'distal2': distal2,
-                    'pos2': f"Chr {marker_2['chr']} @ {float(marker_2['pos']):.1f} cM"
-                }
+    table_data = generate_table_rows(file_name, marker_list, original_markers)
 
-                table_data.append(this_line)
-
-    return sorted(table_data, key = lambda i: float(i['lod']), reverse=True)[:500]
+    return sorted(table_data, key=lambda i: float(i['lod']), reverse=True)[:500]
 
 def build_marker_pos_dict(genotype_file: str) -> Dict:
     """Gets list of markers and their positions from .geno file
