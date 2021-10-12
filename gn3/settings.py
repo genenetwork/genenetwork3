@@ -24,3 +24,24 @@ GN2_BASE_URL = "http://www.genenetwork.org/"
 
 # biweight script
 BIWEIGHT_RSCRIPT = "~/genenetwork3/scripts/calculate_biweight.R"
+
+# wgcna script
+WGCNA_RSCRIPT = "wgcna_analysis.R"
+# qtlreaper command
+REAPER_COMMAND = "{}/bin/qtlreaper".format(os.environ.get("GUIX_ENVIRONMENT"))
+
+# genotype files
+GENOTYPE_FILES = os.environ.get(
+    "GENOTYPE_FILES", "{}/genotype_files/genotype".format(os.environ.get("HOME")))
+
+# CROSS-ORIGIN SETUP
+CORS_ORIGINS = [
+    "http://localhost:*",
+    "http://127.0.0.1:*"
+]
+
+CORS_HEADERS = [
+    "Content-Type",
+    "Authorization",
+    "Access-Control-Allow-Credentials"
+]

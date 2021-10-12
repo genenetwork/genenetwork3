@@ -119,9 +119,9 @@ def retrieve_dataset_name(
     return fn_map[trait_type](threshold, dataset_name, conn)
 
 
-def retrieve_geno_riset_fields(name, conn):
+def retrieve_geno_group_fields(name, conn):
     """
-    Retrieve the RISet, and RISetID values for various Geno trait types.
+    Retrieve the Group, and GroupID values for various Geno trait types.
     """
     query = (
         "SELECT InbredSet.Name, InbredSet.Id "
@@ -130,12 +130,12 @@ def retrieve_geno_riset_fields(name, conn):
         "AND GenoFreeze.Name = %(name)s")
     with conn.cursor() as cursor:
         cursor.execute(query, {"name": name})
-        return dict(zip(["riset", "risetid"], cursor.fetchone()))
+        return dict(zip(["group", "groupid"], cursor.fetchone()))
     return {}
 
-def retrieve_publish_riset_fields(name, conn):
+def retrieve_publish_group_fields(name, conn):
     """
-    Retrieve the RISet, and RISetID values for various Publish trait types.
+    Retrieve the Group, and GroupID values for various Publish trait types.
     """
     query = (
         "SELECT InbredSet.Name, InbredSet.Id "
@@ -144,12 +144,12 @@ def retrieve_publish_riset_fields(name, conn):
         "AND PublishFreeze.Name = %(name)s")
     with conn.cursor() as cursor:
         cursor.execute(query, {"name": name})
-        return dict(zip(["riset", "risetid"], cursor.fetchone()))
+        return dict(zip(["group", "groupid"], cursor.fetchone()))
     return {}
 
-def retrieve_probeset_riset_fields(name, conn):
+def retrieve_probeset_group_fields(name, conn):
     """
-    Retrieve the RISet, and RISetID values for various ProbeSet trait types.
+    Retrieve the Group, and GroupID values for various ProbeSet trait types.
     """
     query = (
         "SELECT InbredSet.Name, InbredSet.Id "
@@ -159,12 +159,12 @@ def retrieve_probeset_riset_fields(name, conn):
         "AND ProbeSetFreeze.Name = %(name)s")
     with conn.cursor() as cursor:
         cursor.execute(query, {"name": name})
-        return dict(zip(["riset", "risetid"], cursor.fetchone()))
+        return dict(zip(["group", "groupid"], cursor.fetchone()))
     return {}
 
-def retrieve_temp_riset_fields(name, conn):
+def retrieve_temp_group_fields(name, conn):
     """
-    Retrieve the RISet, and RISetID values for `Temp` trait types.
+    Retrieve the Group, and GroupID values for `Temp` trait types.
     """
     query = (
         "SELECT InbredSet.Name, InbredSet.Id "
@@ -173,30 +173,30 @@ def retrieve_temp_riset_fields(name, conn):
         "AND Temp.Name = %(name)s")
     with conn.cursor() as cursor:
         cursor.execute(query, {"name": name})
-        return dict(zip(["riset", "risetid"], cursor.fetchone()))
+        return dict(zip(["group", "groupid"], cursor.fetchone()))
     return {}
 
-def retrieve_riset_fields(trait_type, trait_name, dataset_info, conn):
+def retrieve_group_fields(trait_type, trait_name, dataset_info, conn):
     """
-    Retrieve the RISet, and RISetID values for various trait types.
+    Retrieve the Group, and GroupID values for various trait types.
     """
-    riset_fns_map = {
-        "Geno": retrieve_geno_riset_fields,
-        "Publish": retrieve_publish_riset_fields,
-        "ProbeSet": retrieve_probeset_riset_fields
+    group_fns_map = {
+        "Geno": retrieve_geno_group_fields,
+        "Publish": retrieve_publish_group_fields,
+        "ProbeSet": retrieve_probeset_group_fields
     }
 
     if trait_type == "Temp":
-        riset_info = retrieve_temp_riset_fields(trait_name, conn)
+        group_info = retrieve_temp_group_fields(trait_name, conn)
     else:
-        riset_info = riset_fns_map[trait_type](dataset_info["dataset_name"], conn)
+        group_info = group_fns_map[trait_type](dataset_info["dataset_name"], conn)
 
     return {
         **dataset_info,
-        **riset_info,
-        "riset": (
-            "BXD" if riset_info.get("riset") == "BXD300"
-            else riset_info.get("riset", ""))
+        **group_info,
+        "group": (
+            "BXD" if group_info.get("group") == "BXD300"
+            else group_info.get("group", ""))
     }
 
 def retrieve_temp_trait_dataset():
@@ -281,11 +281,11 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
             trait_type, threshold, trait["trait_name"],
             trait["db"]["dataset_name"], conn)
     }
-    riset = retrieve_riset_fields(
+    group = retrieve_group_fields(
         trait_type, trait["trait_name"], dataset_name_info, conn)
     return {
         "display_name": dataset_name_info["dataset_name"],
         **dataset_name_info,
         **dataset_fns[trait_type](),
-        **riset
+        **group
     }

@@ -166,15 +166,19 @@ class TestTraitsDBFunctions(TestCase):
         the right calls.
 
         """
+        # pylint: disable=C0103
         db_mock = mock.MagicMock()
 
         STRAIN_ID_SQL: str = "UPDATE Strain SET Name = %s WHERE Id = %s"
-        PUBLISH_DATA_SQL: str = ("UPDATE PublishData SET value = %s "
-                                 "WHERE StrainId = %s AND Id = %s")
-        PUBLISH_SE_SQL: str = ("UPDATE PublishSE SET error = %s "
-                               "WHERE StrainId = %s AND DataId = %s")
-        N_STRAIN_SQL: str = ("UPDATE NStrain SET count = %s "
-                             "WHERE StrainId = %s AND DataId = %s")
+        PUBLISH_DATA_SQL: str = (
+            "UPDATE PublishData SET value = %s "
+            "WHERE StrainId = %s AND Id = %s")
+        PUBLISH_SE_SQL: str = (
+            "UPDATE PublishSE SET error = %s "
+            "WHERE StrainId = %s AND DataId = %s")
+        N_STRAIN_SQL: str = (
+            "UPDATE NStrain SET count = %s "
+            "WHERE StrainId = %s AND DataId = %s")
 
         with db_mock.cursor() as cursor:
             type(cursor).rowcount = 1
