@@ -100,6 +100,7 @@
                        ("python-redis" ,python-redis)
                        ("python-requests" ,python-requests)
                        ("python-scipy" ,python-scipy)
+                       ("python-flask-socketio" ,python-flask-socketio)
                        ("python-sqlalchemy-stubs"
                         ,python-sqlalchemy-stubs)
                        ("r-optparse" ,r-optparse)
