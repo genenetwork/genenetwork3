@@ -66,26 +66,25 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
     generated_file = dump_wgcna_data(request_data)
     cmd = compose_wgcna_cmd(rscript_path, generated_file)
 
-    stream_cmd_output(request_data, cmd)
+    # stream_cmd_output(request_data, cmd)  disable streaming of data
 
     try:
 
-        # run_cmd_results = run_cmd(cmd)
+        run_cmd_results = run_cmd(cmd)
 
         with open(generated_file, "r") as outputfile:
 
+            if run_cmd_results["code"] != 0:
+                return run_cmd_results
+
             output_file_data = json.load(outputfile)
-            # json format only supports  unicode string// to get image data reconvert
             output_file_data["output"]["image_data"] = process_image(
                 output_file_data["output"]["imageLoc"]).decode("ascii")
-            output_file_data["output"]["image_data2"] = process_image(
-                output_file_data["output"]["heatMap"]).decode("ascii")
+            # json format only supports  unicode string// to get image data reconvert
 
-            # if run_cmd_results["code"] != 0:
-            #     return run_cmd_results
             return {
                 "data": output_file_data,
-                "output": ""
+                **run_cmd_results
             }
     except FileNotFoundError:
         # relook  at handling errors gn3
