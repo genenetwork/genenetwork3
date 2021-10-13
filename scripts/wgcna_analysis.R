@@ -13,8 +13,6 @@ cat("Running the wgcna analysis script\n")
 # pass the file path to read json data
 
 
-
-
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0) {
@@ -100,6 +98,7 @@ genImageRandStr <- function(prefix){
 	return(paste(randStr,".png",sep=""))
 }
 
+
 mergedColors <- labels2colors(network$colors)
 
 imageLoc <- file.path(imgDir,genImageRandStr("WGCNAoutput"))
@@ -111,7 +110,7 @@ cat("Generating the CLuster  dendrogram\n")
 
 plotDendroAndColors(network$dendrograms[[1]],mergedColors[network$blockGenes[[1]]],
 "Module colors",
-dendroLabels = FALSE, hang = 0.03,
+dendroLabels = NULL, hang = 0.03,
 addGuide = TRUE, guideHang = 0.05)
 
 
