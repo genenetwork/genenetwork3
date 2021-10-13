@@ -6,6 +6,7 @@ import uuid
 import subprocess
 import base64
 
+
 from gn3.settings import TMPDIR
 from gn3.commands import run_cmd
 
@@ -24,22 +25,23 @@ def dump_wgcna_data(request_data: dict):
     return temp_file_path
 
 
-def stream_cmd_output(socket, cmd: str):
+def stream_cmd_output(request_data, cmd: str):
     """function to stream in realtime"""
     # xtodo  syncing and closing /edge cases
 
-    socket.emit("output", {"data", f"calling you script {cmd}"})
-
+    socketio.emit("output", {"data": f"calling you script {cmd}"},
+                  namespace="/", room=request_data["socket_id"])
     results = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     for line in iter(results.stdout.readline, b""):
+
         line = line.decode("utf-8").rstrip()
 
-        socket.emit("output",
-                    {"data": line})
-    # wait for process to complete code
+        socketio.emit("output",
+                      {"data": line}, namespace="/", room=request_data["socket_id"])
 
-    socket.emit("output", {"data": "parsing the output results"})
+    socketio.emit(
+        "output", {"data": "parsing the output results"}, namespace="/", room=request_data["socket_id"])
 
 
 def process_image(image_loc: str) -> bytes:
@@ -64,9 +66,11 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
     generated_file = dump_wgcna_data(request_data)
     cmd = compose_wgcna_cmd(rscript_path, generated_file)
 
+    stream_cmd_output(request_data, cmd)
+
     try:
 
-        run_cmd_results = run_cmd(cmd)
+        # run_cmd_results = run_cmd(cmd)
 
         with open(generated_file, "r") as outputfile:
 
@@ -74,12 +78,14 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
             # json format only supports  unicode string// to get image data reconvert
             output_file_data["output"]["image_data"] = process_image(
                 output_file_data["output"]["imageLoc"]).decode("ascii")
+            output_file_data["output"]["image_data2"] = process_image(
+                output_file_data["output"]["heatMap"]).decode("ascii")
 
-            if run_cmd_results["code"] != 0:
-                return run_cmd_results
+            # if run_cmd_results["code"] != 0:
+            #     return run_cmd_results
             return {
                 "data": output_file_data,
-                **run_cmd_results
+                "output": ""
             }
     except FileNotFoundError:
         # relook  at handling errors gn3
