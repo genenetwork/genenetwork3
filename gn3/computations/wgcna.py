@@ -25,7 +25,7 @@ def dump_wgcna_data(request_data: dict):
     return temp_file_path
 
 
-def stream_cmd_output(request_data, cmd: str):
+def stream_cmd_output(socketio, request_data, cmd: str):
     """function to stream in realtime"""
     # xtodo  syncing and closing /edge cases
 
@@ -41,7 +41,9 @@ def stream_cmd_output(request_data, cmd: str):
                       {"data": line}, namespace="/", room=request_data["socket_id"])
 
     socketio.emit(
-        "output", {"data": "parsing the output results"}, namespace="/", room=request_data["socket_id"])
+        "output", {"data":
+                   "parsing the output results"}, namespace="/",
+        room=request_data["socket_id"])
 
 
 def process_image(image_loc: str) -> bytes:
