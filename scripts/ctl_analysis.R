@@ -4,3 +4,13 @@ library(ctl)
 genotypes <- read.csv("genotypes.csv",row.names=1, header=FALSE, sep="\t")
 # The phenotypes.csv file containing individuals (rows) x traits (columns) measurements:
 traits <- read.csv("phenotypes.csv",row.names=1, header=FALSE, sep="\t")
+
+
+ctls <- CTLscan(geno,traits,strategy=input$strategy,
+	nperm=input$nperms,parametric =input$parametric,
+	nthreads=6,verbose=TRUE)
+
+
+# plots and ctl networks
+
+
