@@ -1,4 +1,7 @@
 library(ctl)
+library(rjson)
+
+options(stringsAsFactors = FALSE);
 
 # The genotypes.csv file containing the genotype matrix is stored individuals (rows) x genetic marker (columns):
 
@@ -8,16 +11,16 @@ if (length(args)==0) {
   stop("Argument for the geno and pheno file location is required", call.=FALSE)
 } else {
   # default output file
-  geno_file  = args[1]
-  pheno_file = args[2]
+  json_file_path = args[1]
 }
 
+# add validation for the files
+input <- fromJSON(file = json_file_path)
 
 
-
-genotypes <- read.csv(geno_file,row.names=1, header=FALSE, sep="\t")
+genotypes <- read.csv(input$geno_file,row.names=1, header=FALSE, sep="\t")
 # The phenotypes.csv file containing individuals (rows) x traits (columns) measurements:
-traits <- read.csv(pheno_file,row.names=1, header=FALSE, sep="\t")
+traits <- read.csv(input$pheno_file,row.names=1, header=FALSE, sep="\t")
 
 
 ctls <- CTLscan(geno,traits,strategy=input$strategy,
