@@ -9,6 +9,7 @@ option_list = list(
   make_option(c("-g", "--geno"), type="character", help=".geno file containing a dataset's genotypes"),
   make_option(c("-p", "--pheno"), type="character", help="File containing two columns - sample names and values"),
   make_option(c("-c", "--addcovar"), action="store_true", default=NULL, help="Use covariates (included as extra columns in the phenotype input file)"),
+  make_option(c("--covarstruct"), type="character", help="File detailing which covariates are categorical or numerical"),
   make_option(c("--model"), type="character", default="normal", help="Mapping Model - Normal or Non-Parametric"),
   make_option(c("--method"), type="character", default="hk", help="Mapping Method - hk (Haley Knott), ehk (Extended Haley Knott), mr (Marker Regression), em (Expectation-Maximization), imp (Imputation)"),
   make_option(c("-i", "--interval"), action="store_true", default=NULL, help="Use interval mapping"),
@@ -33,6 +34,20 @@ verbose_print <- function(...){
   }
 }
 
+adjustXprobs <- function(cross){
+  sex <- getsex(cross)$sex
+  pr <- cross$geno[["X"]]$prob
+  stopifnot(!is.null(pr), !is.null(sex))
+
+  for(i in 1:ncol(pr)) {
+      pr[sex==0,i,3:4] <- 0
+      pr[sex==1,i,1:2] <- 0
+      pr[,i,] <- pr[,i,]/rowSums(pr[,i,])
+  }
+  cross$geno[["X"]]$prob <- pr
+  invisible(cross)
+}
+
 if (is.null(opt$geno) || is.null(opt$pheno)){
   print_help(opt_parser)
   stop("Both a genotype and phenotype file must be provided.", call.=FALSE)
@@ -51,7 +66,7 @@ get_geno_code <- function(header, name = 'unk'){
   return(trim(strsplit(header[mat],':')[[1]][2]))
 }
 
-geno_to_csvr <- function(genotypes, trait_names, trait_vals, out, sex = NULL,
+geno_to_csvr <- function(genotypes, trait_names, trait_vals, out, type, sex = NULL,
                          mapping_scale = "Mb", verbose = FALSE){
   # Assume a geno header is not longer than 40 lines
   header = readLines(genotypes, 40)
@@ -148,8 +163,12 @@ for (i in 1:length(trait_names)) {
   trait_names[i] = paste("T_", this_trait, sep = "")
 }
 
+# Get type of genotypes, since it needs to be checked before calc.genoprob
+header = readLines(geno_file, 40)
+type <- get_geno_code(header, 'type')
+
 verbose_print('Generating cross object\n')
-cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file)
+cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file, type)
 
 # Calculate genotype probabilities
 if (!is.null(opt$interval)) {
@@ -160,16 +179,40 @@ if (!is.null(opt$interval)) {
   cross_object <- calc.genoprob(cross_object)
 }
 
+# If 4way, adjust X chromosome genotype probabilities
+if (type == "4-way") {
+  verbose_print('Adjusting genotype probabilities for 4way cross')
+  cross_object <- adjustXprobs(cross_object)
+}
+
 # Pull covariates out of cross object, if they exist
-covars = vector(mode = "list", length = length(trait_names) - 1)
+covars <- c() # Holds the covariates which should be passed to R/qtl
 if (!is.null(opt$addcovar)) {
-  #If perm strata are being used, it'll be included as the final column in the phenotype file
+  # If perm strata are being used, it'll be included as the final column in the phenotype file
   if (!is.null(opt$pstrata)) {
-    covar_names = trait_names[3:length(trait_names) - 1]
+    covar_names = trait_names[2:(length(trait_names)-1)]
   } else {
     covar_names = trait_names[2:length(trait_names)]
   }
   covars <- pull.pheno(cross_object, covar_names)
+  # Read in the covar description file
+  covarDescr <- read.table(opt$covarstruct, sep="\t", header=FALSE)
+  for(x in 1:nrow(covarDescr)){
+    cat(covarDescr[x, 1])
+    name <- paste0("T_", covarDescr[x, 1]) # The covar description file doesn't have T_ in trait names (the cross object does)
+    type <- covarDescr[x, 2]
+    if(type == "categorical"){
+      if(length(table(covars[,name])) > 2){ # More then 2 levels create the model matrix for the factor
+        mdata <- data.frame(toExpand = as.factor(covars[, name]))
+        options(na.action='na.pass')
+        modelmatrix <- model.matrix(~ toExpand + 0, mdata)[,-1]
+        covars <- cbind(covars, modelmatrix)
+      }else{ # 2 levels? just bind the trait as covar
+        verbose_print('Binding covars to covars\n')
+        covars <- cbind(covars, covars[,name])
+      }
+    }
+  }
 }
 
 # Pull permutation strata out of cross object, if it is being used

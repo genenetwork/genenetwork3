@@ -24,7 +24,7 @@ run the rqtl_wrapper script and return the results as JSON
         raise FileNotFoundError
 
     # Split kwargs by those with values and boolean ones that just convert to True/False
-    kwargs = ["model", "method", "nperm", "scale", "control_marker"]
+    kwargs = ["covarstruct", "model", "method", "nperm", "scale", "control_marker"]
     boolean_kwargs = ["addcovar", "interval", "pstrata"]
     all_kwargs = kwargs + boolean_kwargs
 
