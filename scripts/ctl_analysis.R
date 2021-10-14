@@ -8,7 +8,7 @@ options(stringsAsFactors = FALSE);
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0) {
-  stop("Argument for the geno and pheno file location is required", call.=FALSE)
+  stop("Argument for the data file", call.=FALSE)
 } else {
   # default output file
   json_file_path = args[1]
@@ -28,13 +28,26 @@ ctls <- CTLscan(geno,traits,strategy=input$strategy,
 	nthreads=6,verbose=TRUE)
 
 
+# same function used in a different script:refactor
+genImageRandStr <- function(prefix){
+
+	randStr <- paste(prefix,stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
+
+	return(paste(randStr,".png",sep=""))
+}
+
 
 #output matrix significant CTL interactions with 4 columns: trait, marker, trait, lod
 sign <- CTLsignificant(ctls,significance = input$significance)
+ 
+# Create the lineplot
+imageLoc = file.path(imgDir,genImageRandStr("CTLline"))
 
-# add plots 
+png(imageLoc,width=1000,height=600,type='cairo-png')
+
+lineplot(res, significance=input$significance)
 
 
 json_data <- list(significance=signs,
-	images=lists("image_1":"image_location"),
+	images=lists("image_1"=imageLoc),
 	network_figure_location="/location")
