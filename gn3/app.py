@@ -14,6 +14,7 @@ from gn3.api.heatmaps import heatmaps
 from gn3.api.correlation import correlation
 from gn3.api.data_entry import data_entry
 from gn3.api.wgcna import wgcna
+from gn3.api.ctl import ctl
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
     """Create a new flask object"""
@@ -44,4 +45,5 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(correlation, url_prefix="/api/correlation")
     app.register_blueprint(data_entry, url_prefix="/api/dataentry")
     app.register_blueprint(wgcna, url_prefix="/api/wgcna")
+    app.register_blueprint(ctl, url_prefix="/api/ctl")
     return app
