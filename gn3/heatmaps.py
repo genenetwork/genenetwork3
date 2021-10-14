@@ -374,8 +374,8 @@ def clustered_heatmap(
     fig = make_subplots(
         rows=num_plots if vertical else 1,
         cols=1 if vertical else num_plots,
-        shared_xaxes = "columns" if vertical else False,
-        shared_yaxes = False if vertical else "rows",
+        shared_xaxes="columns" if vertical else False,
+        shared_yaxes=False if vertical else "rows",
         vertical_spacing=0.010,
         horizontal_spacing=0.001,
         subplot_titles=["" if vertical else x_axis["label"]] + [
@@ -407,7 +407,7 @@ def clustered_heatmap(
                 "mirror": False,
                 "showticklabels": i == 0,
                 "ticks": "outside" if i == 0 else ""
-        }
+            }
         for i in range(num_plots)}
 
     print("vertical?: {} ==> {}".format("T" if vertical else "F", axes_layouts))
