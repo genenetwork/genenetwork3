@@ -36,6 +36,7 @@ GENOTYPE_FILES = os.environ.get(
 
 # CROSS-ORIGIN SETUP
 def parse_env_cors(default):
+    """Parse comma-separated configuration into list of strings."""
     origins_str = os.environ.get("CORS_ORIGINS", None)
     if origins_str:
         return [
