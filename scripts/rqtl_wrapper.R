@@ -300,7 +300,11 @@ if (type == "4-way") {
   traitname <- colnames(pull.pheno(cross_object))[1]
   gtsp <- pull.genoprob(cross_object)
   allpheno <- pull.pheno(cross_object)
-  model <- paste0(traitname, " ~ ", paste0(covar_names, sep="", collapse=" + "))
+  if (!is.null(opt$addcovar)) {
+    model <- paste0(traitname, " ~ ", paste0(covar_names, sep="", collapse=" + "))
+  } else {
+    model <- paste0(traitname, " ~ 1 ")
+  }
 
   meffects <- c()
   verbose_print("Getting QTL main effects for 4-way crosses")
