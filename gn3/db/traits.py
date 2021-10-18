@@ -1,11 +1,80 @@
 """This class contains functions relating to trait data manipulation"""
 import os
+from functools import reduce
 from typing import Any, Dict, Union, Sequence
+
 from gn3.settings import TMPDIR
 from gn3.random import random_string
 from gn3.function_helpers import compose
 from gn3.db.datasets import retrieve_trait_dataset
 
+
+def export_trait_data(
+        trait_data: dict, samplelist: Sequence[str], dtype: str = "val",
+        var_exists: bool = False, n_exists: bool = False):
+    """
+    Export data according to `samplelist`. Mostly used in calculating
+    correlations.
+
+    DESCRIPTION:
+    Migrated from
+    https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L166-L211
+
+    PARAMETERS
+    trait: (dict)
+      The dictionary of key-value pairs representing a trait
+    samplelist: (list)
+      A list of sample names
+    dtype: (str)
+      ... verify what this is ...
+    var_exists: (bool)
+      A flag indicating existence of variance
+    n_exists: (bool)
+      A flag indicating existence of ndata
+    """
+    def __export_all_types(tdata, sample):
+        sample_data = []
+        if tdata[sample]["value"]:
+            sample_data.append(tdata[sample]["value"])
+            if var_exists:
+                if tdata[sample]["variance"]:
+                    sample_data.append(tdata[sample]["variance"])
+                else:
+                    sample_data.append(None)
+            if n_exists:
+                if tdata[sample]["ndata"]:
+                    sample_data.append(tdata[sample]["ndata"])
+                else:
+                    sample_data.append(None)
+        else:
+            if var_exists and n_exists:
+                sample_data += [None, None, None]
+            elif var_exists or n_exists:
+                sample_data += [None, None]
+            else:
+                sample_data.append(None)
+
+        return tuple(sample_data)
+
+    def __exporter(accumulator, sample):
+        # pylint: disable=[R0911]
+        if sample in trait_data["data"]:
+            if dtype == "val":
+                return accumulator + (trait_data["data"][sample]["value"], )
+            if dtype == "var":
+                return accumulator + (trait_data["data"][sample]["variance"], )
+            if dtype == "N":
+                return accumulator + (trait_data["data"][sample]["ndata"], )
+            if dtype == "all":
+                return accumulator + __export_all_types(trait_data["data"], sample)
+            raise KeyError("Type `%s` is incorrect" % dtype)
+        if var_exists and n_exists:
+            return accumulator + (None, None, None)
+        if var_exists or n_exists:
+            return accumulator + (None, None)
+        return accumulator + (None,)
+
+    return reduce(__exporter, samplelist, tuple())
 
 def get_trait_csv_sample_data(conn: Any,
                               trait_name: int, phenotype_id: int):
