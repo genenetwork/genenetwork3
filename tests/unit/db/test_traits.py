@@ -319,6 +319,7 @@ class TestTraitsDBFunctions(TestCase):
 
     def test_export_informative(self):
         """Test that the function exports appropriate data."""
+        # pylint: disable=W0621
         for trait_data, inc_var, expected in [
                 [{"data": {
                     "sample1": {
