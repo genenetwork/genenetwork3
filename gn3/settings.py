@@ -35,10 +35,18 @@ GENOTYPE_FILES = os.environ.get(
     "GENOTYPE_FILES", "{}/genotype_files/genotype".format(os.environ.get("HOME")))
 
 # CROSS-ORIGIN SETUP
-CORS_ORIGINS = [
+def parse_env_cors(default):
+    """Parse comma-separated configuration into list of strings."""
+    origins_str = os.environ.get("CORS_ORIGINS", None)
+    if origins_str:
+        return [
+            origin.strip() for origin in origins_str.split(",") if origin != ""]
+    return default
+
+CORS_ORIGINS = parse_env_cors([
     "http://localhost:*",
     "http://127.0.0.1:*"
-]
+])
 
 CORS_HEADERS = [
     "Content-Type",
