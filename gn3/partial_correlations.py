@@ -44,3 +44,19 @@ def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
         ),
         [__process_control__(trait_data) for trait_data in controls],
         (tuple(), tuple(), tuple(), tuple()))
+
+def dictify_by_samples(samples_vals_vars: Sequence[Sequence]) -> dict:
+    """
+    Build a sequence of dictionaries from a sequence of separate sequences of
+    samples, values and variances.
+
+    This is a partial migration of
+    `web.webqtl.correlation.correlationFunction.fixStrains` function in GN1.
+    This implementation extracts code that will find common use, and that will
+    find use in more than one place.
+    """
+    return tuple(
+        {
+            sample: {"sample_name": sample, "value": val, "variance": var}
+            for sample, val, var in zip(*trait_line)
+        } for trait_line in zip(*(samples_vals_vars[0:3])))
