@@ -33,17 +33,20 @@ def stream_cmd_output(socketio, request_data, cmd: str):
                   namespace="/", room=request_data["socket_id"])
     results = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    for line in iter(results.stdout.readline, b""):
 
-        line = line.decode("utf-8").rstrip()
+    if results.stdout is not None:
 
-        socketio.emit("output",
-                      {"data": line}, namespace="/", room=request_data["socket_id"])
+        for line in iter(results.stdout.readline, b""):
 
-    socketio.emit(
-        "output", {"data":
-                   "parsing the output results"}, namespace="/",
-        room=request_data["socket_id"])
+            line = line.decode("utf-8").rstrip()
+
+            socketio.emit("output",
+                          {"data": line}, namespace="/", room=request_data["socket_id"])
+
+        socketio.emit(
+            "output", {"data":
+                       "parsing the output results"}, namespace="/",
+            room=request_data["socket_id"])
 
 
 def process_image(image_loc: str) -> bytes:
