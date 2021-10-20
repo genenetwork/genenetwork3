@@ -37,11 +37,9 @@ def stream_cmd_output(socketio, request_data, cmd: str):
     if results.stdout is not None:
 
         for line in iter(results.stdout.readline, b""):
-
-            line = line.decode("utf-8").rstrip()
-
             socketio.emit("output",
-                          {"data": line}, namespace="/", room=request_data["socket_id"])
+                          {"data": line.decode("utf-8").rstrip()},
+                          namespace="/", room=request_data["socket_id"])
 
         socketio.emit(
             "output", {"data":
