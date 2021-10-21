@@ -106,6 +106,8 @@ class TestPartialCorrelations(TestCase):
 
     def test_dictify_by_samples(self):
         """
+        Test that `dictify_by_samples` generates the appropriate dict
+
         Given:
             a sequence of sequences with sample names, values and variances, as
             in the output of `gn3.partial_correlations.control_samples` or
@@ -133,7 +135,34 @@ class TestPartialCorrelations(TestCase):
             dictified_control_samples)
 
     def test_fix_samples(self):
-        """Test that fix_samples fixes the values"""
+        """
+        Test that `fix_samples` returns only the common samples
+
+        Given:
+            - A primary trait
+            - A sequence of control samples
+        When:
+            - The two arguments are passed to `fix_samples`
+        Then:
+            - Only the names of the samples present in the primary trait that
+              are also present in ALL the control traits are present in the
+              return value
+            - Only the values of the samples present in the primary trait that
+              are also present in ALL the control traits are present in the
+              return value
+            - ALL the values for ALL the control traits are present in the
+              return value
+            - Only the variances of the samples present in the primary trait
+              that are also present in ALL the control traits are present in the
+              return value
+            - ALL the variances for ALL the control traits are present in the
+              return value
+            - The return value is a tuple of the above items, in the following
+              order:
+                ((sample_names, ...), (primary_trait_values, ...),
+                 (control_traits_values, ...), (primary_trait_variances, ...)
+                 (control_traits_variances, ...))
+        """
         self.assertEqual(
             fix_samples(
                 {"B6cC3-1": {"sample_name": "B6cC3-1", "value": 7.51879,
