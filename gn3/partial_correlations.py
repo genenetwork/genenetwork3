@@ -6,7 +6,7 @@ GeneNetwork1.
 """
 
 from functools import reduce
-from typing import Any, Sequence
+from typing import Any, Tuple, Sequence
 
 def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
     """
@@ -86,3 +86,39 @@ def fix_samples(primary_trait: dict, control_traits: Sequence[dict]) -> Sequence
         control_vals_vars[0],
         tuple(primary_trait[sample]["variance"] for sample in primary_samples),
         control_vals_vars[1])
+
+def find_identical_traits(
+        primary_name: str, primary_value: float, control_names: Tuple[str, ...],
+        control_values: Tuple[float, ...]) -> Tuple[str, ...]:
+    """
+    Find traits that have the same value when the values are considered to
+    3 decimal places.
+
+    This is a migration of the
+    `web.webqtl.correlation.correlationFunction.findIdenticalTraits` function in
+    GN1.
+    """
+    def __merge_identicals__(
+            acc: Tuple[str, ...],
+            ident: Tuple[str, Tuple[str, ...]]) -> Tuple[str, ...]:
+        return acc + ident[1]
+
+    def __dictify_controls__(acc, control_item):
+        ckey = "{:.3f}".format(control_item[0])
+        return {**acc, ckey: acc.get(ckey, tuple()) + (control_item[1],)}
+
+    return (reduce(## for identical control traits
+        __merge_identicals__,
+        (item for item in reduce(# type: ignore[var-annotated]
+            __dictify_controls__, zip(control_values, control_names),
+            {}).items() if len(item[1]) > 1),
+        tuple())
+            or
+            reduce(## If no identical control traits, try primary and controls
+                __merge_identicals__,
+                (item for item in reduce(# type: ignore[var-annotated]
+                    __dictify_controls__,
+                    zip((primary_value,) + control_values,
+                        (primary_name,) + control_names), {}).items()
+                 if len(item[1]) > 1),
+                tuple()))

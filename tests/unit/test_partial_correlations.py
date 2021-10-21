@@ -4,7 +4,8 @@ from unittest import TestCase
 from gn3.partial_correlations import (
     fix_samples,
     control_samples,
-    dictify_by_samples)
+    dictify_by_samples,
+    find_identical_traits)
 
 sampleslist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
 control_traits = (
@@ -178,3 +179,33 @@ class TestPartialCorrelations(TestCase):
              (None,),
              (None, None, None, None, None, None, None, None, None, None, None,
               None, None)))
+
+    def test_find_identical_traits(self):
+        """
+        Test `gn3.partial_correlations.find_identical_traits`.
+
+        Given:
+            - the name of a primary trait
+            - the value of a primary trait
+            - a sequence of names of control traits
+            - a sequence of values of control traits
+        When:
+            - the arguments above are passed to the `find_identical_traits`
+              function
+        Then:
+            - Return ALL trait names that have the same value when up to three
+              decimal places are considered
+        """
+        for primn, primv, contn, contv, expected in (
+                ("pt", 12.98395, ("ct0", "ct1", "ct2"),
+                 (0.1234, 2.3456, 3.4567), tuple()),
+                ("pt", 12.98395, ("ct0", "ct1", "ct2"),
+                 (12.98354, 2.3456, 3.4567), ("pt", "ct0")),
+                ("pt", 12.98395, ("ct0", "ct1", "ct2", "ct3"),
+                 (0.1234, 2.3456, 0.1233, 4.5678), ("ct0", "ct2"))
+        ):
+            with self.subTest(
+                    primary_name=primn, primary_value=primv,
+                    control_names=contn, control_values=contv):
+                self.assertEqual(
+                    find_identical_traits(primn, primv, contn, contv), expected)
