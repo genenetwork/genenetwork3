@@ -281,6 +281,14 @@ def fetch_gene_symbol_tissue_value_dict_for_trait(
         return fetch_gene_symbol_tissue_value_dict(xref_info[0], xref_info[2], conn)
     return {}
 
+def batch_computed_tissue_correlation(
+        trait_value: str, symbol_value_dict: dict,
+        method: str = "pearson") -> Tuple[dict, dict]:
+    """
+    `web.webqtl.correlation.correlationFunction.batchCalTissueCorr`"""
+    raise Exception("Not implemented!")
+    return ({}, {})
+
 def correlations_of_all_tissue_traits(
         trait_symbol: str, probeset_freeze_id: int,
         method: str, conn: Any) -> Tuple[dict, dict]:
