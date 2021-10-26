@@ -266,7 +266,22 @@ def fetch_tissue_probeset_xref_info(
         (tuple(), {}, {}, {}, {}, {}, {}))
 
 def correlations_of_all_tissue_traits() -> Tuple[dict, dict]:
+def fetch_gene_symbol_tissue_value_dict_for_trait(
+        gene_name_list: Tuple[str, ...], probeset_freeze_id: int,
+        conn: Any) -> dict:
     """
+    Fetches a map of the gene symbols to the tissue values.
+
+    This is a migration of the
+    `web.webqtl.correlation.correlationFunction.getGeneSymbolTissueValueDictForTrait`
+    function in GeneNetwork1.
+    """
+    xref_info = fetch_tissue_probeset_xref_info(
+        gene_name_list, probeset_freeze_id, conn)
+    if xref_info[0]:
+        return fetch_gene_symbol_tissue_value_dict(xref_info[0], xref_info[2], conn)
+    return {}
+
     This is a migration of the
     `web.webqtl.correlation.CorrelationPage.calculateCorrOfAllTissueTrait`
     function in GeneNetwork1.
