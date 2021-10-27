@@ -47,17 +47,13 @@ def translate_to_mouse_gene_id(species: str, geneid: int, conn: Any) -> int:
         return geneid
 
     with conn.cursor as cursor:
-        if species == "rat":
-            cursor.execute(
-                "SELECT mouse FROM GeneIDXRef WHERE rat = %s", geneid)
-            rat_geneid = cursor.fetchone()
-            if rat_geneid:
-                return rat_geneid[0]
-
-        cursor.execute(
-            "SELECT mouse FROM GeneIDXRef WHERE human = %s", geneid)
-        human_geneid = cursor.fetchone()
-        if human_geneid:
-            return human_geneid[0]
+        query = {
+            "rat": "SELECT mouse FROM GeneIDXRef WHERE rat = %s"
+            "human": "SELECT mouse FROM GeneIDXRef WHERE human = %s"
+        }
+        cursor.execute(query[species], geneid)
+        translated_gene_id = cursor.fetchone()
+        if translated_gene_id:
+            return translated_gene_id[0]
 
     return 0 # default if all else fails
