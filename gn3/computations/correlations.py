@@ -8,7 +8,7 @@ from typing import Optional
 from typing import Callable
 
 import scipy.stats
-from gn3.computations.biweight import calculate_biweight_corr
+import pingouin as pg
 
 
 def map_shared_keys_to_values(target_sample_keys: List,
@@ -102,11 +102,10 @@ package :not packaged in guix
 
     """
 
-    try:
-        results = calculate_biweight_corr(x_val, y_val)
-        return results
-    except Exception as error:
-        raise error
+    results = pg.corr(x, y, method="bicor")
+    corr_coeff = results["r"].values[0]
+    p_val = results["p-val"].values[0]
+    return (corr_coeff, p_val)
 
 
 def filter_shared_sample_keys(this_samplelist,
