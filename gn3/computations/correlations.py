@@ -102,7 +102,7 @@ package :not packaged in guix
 
     """
 
-    results = pg.corr(x, y, method="bicor")
+    results = pg.corr(x_val, y_val, method="bicor")
     corr_coeff = results["r"].values[0]
     p_val = results["p-val"].values[0]
     return (corr_coeff, p_val)
