@@ -140,22 +140,6 @@ def fetch_literature_correlations(
         cursor.execute("DROP TEMPORARY TABLE %s", temp_table)
         return dict(results)
 
-def compare_tissue_correlation_absolute_values(val1, val2):
-    """
-    Comparison function for use when sorting tissue correlation values.
-
-    This is a partial migration of the
-    `web.webqtl.correlation.CorrelationPage.getTempTissueCorrTable` function in
-    GeneNetwork1."""
-    try:
-        if abs(val1) < abs(val2):
-            return 1
-        if abs(val1) == abs(val2):
-            return 0
-        return -1
-    except TypeError:
-        return 0
-
 def fetch_symbol_value_pair_dict(
         symbol_list: Tuple[str, ...], data_id_dict: dict,
         conn: Any) -> Dict[str, Tuple[float, ...]]:
@@ -302,8 +286,7 @@ def build_temporary_tissue_correlations_table(
         method)
 
     symbol_corr_list = sorted(
-        symbol_corr_dict.items(),
-        key=compare_tissue_correlation_absolute_values)
+        symbol_corr_dict.items(), key=lambda key_val: key_val[1])
 
     temp_table_name = f"TOPTISSUE{random_string(8)}"
     create_query = (
