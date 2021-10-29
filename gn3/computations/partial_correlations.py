@@ -122,3 +122,11 @@ def find_identical_traits(
                         (primary_name,) + control_names), {}).items()
                  if len(item[1]) > 1),
                 tuple()))
+
+def batch_computed_tissue_correlation(
+        trait_value: str, symbol_value_dict: dict,
+        method: str = "pearson") -> Tuple[dict, dict]:
+    """
+    `web.webqtl.correlation.correlationFunction.batchCalTissueCorr`"""
+    raise Exception("Not implemented!")
+    return ({}, {})
