@@ -1,11 +1,7 @@
 """Module contains tests for gn3.partial_correlations"""
 
 from unittest import TestCase
-from gn3.partial_correlations import (
-    fix_samples,
-    control_samples,
-    dictify_by_samples,
-    find_identical_traits)
+from gn3.computations.partial_correlations import *
 
 sampleslist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
 control_traits = (
@@ -209,3 +205,54 @@ class TestPartialCorrelations(TestCase):
                     control_names=contn, control_values=contv):
                 self.assertEqual(
                     find_identical_traits(primn, primv, contn, contv), expected)
+
+    def test_tissue_correlation_error(self):
+        """
+        Test that `tissue_correlation` raises specific exceptions for particular
+        error conditions.
+        """
+        for primary, target, method, error, error_msg in (
+                ((1,2,3), (4,5,6,7), "pearson",
+                 AssertionError,
+                 (
+                     "The lengths of the `primary_trait_values` and "
+                     "`target_trait_values` must be equal")),
+                ((1,2,3), (4,5,6,7), "spearman",
+                 AssertionError,
+                 (
+                     "The lengths of the `primary_trait_values` and "
+                     "`target_trait_values` must be equal")),
+                ((1,2,3,4), (5,6,7), "pearson",
+                 AssertionError,
+                 (
+                     "The lengths of the `primary_trait_values` and "
+                     "`target_trait_values` must be equal")),
+                ((1,2,3,4), (5,6,7), "spearman",
+                 AssertionError,
+                 (
+                     "The lengths of the `primary_trait_values` and "
+                     "`target_trait_values` must be equal")),
+                ((1,2,3), (4,5,6), "nonexistentmethod",
+                 AssertionError,
+                 (
+                     "Method must be one of: pearson, spearman"))):
+            with self.subTest(primary=primary, target=target, method=method):
+                with self.assertRaises(error, msg=error_msg):
+                    tissue_correlation(primary, target, method)
+
+    def test_tissue_correlation(self):
+        """
+        Test that the correct correlation values are computed for the given:
+        - primary trait
+        - target trait
+        - method
+        """
+        for primary, target, method, expected in (
+                ((12.34, 18.36, 42.51), (37.25, 46.25, 46.56), "pearson",
+                 (0.6761779252651052, 0.5272701133657985)),
+                ((1, 2, 3, 4, 5), (5, 6, 7, 8, 7), "spearman",
+                 (0.8207826816681233, 0.08858700531354381))
+        ):
+            with self.subTest(primary=primary, target=target, method=method):
+                self.assertEqual(
+                    tissue_correlation(primary, target, method), expected)
