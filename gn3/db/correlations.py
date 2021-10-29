@@ -281,26 +281,6 @@ def fetch_gene_symbol_tissue_value_dict_for_trait(
         return fetch_gene_symbol_tissue_value_dict(xref_info[0], xref_info[2], conn)
     return {}
 
-def correlations_of_all_tissue_traits(
-        trait_symbol: str, probeset_freeze_id: int,
-        method: str, conn: Any) -> Tuple[dict, dict]:
-    """
-    Computes and returns the correlation of all tissue traits.
-
-    This is a migration of the
-    `web.webqtl.correlation.correlationFunction.calculateCorrOfAllTissueTrait`
-    function in GeneNetwork1.
-    """
-    primary_trait_symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
-        (trait_symbol,), probeset_freeze_id, conn)
-    primary_trait_value = primary_trait_symbol_value_dict.vlaues()[0]
-    symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
-        tuple(), probeset_freeze_id, conn)
-    if method == "1":
-        return batch_computed_tissue_correlation(
-            primaryTraitValue,SymbolValueDict,method='spearman')
-    return batch_computed_tissue_correlation(primaryTraitValue,SymbolValueDict)
-
 def build_temporary_tissue_correlations_table(
         trait_symbol: str, probeset_freeze_id: int, method: str,
         return_number: int, conn: Any) -> str:
