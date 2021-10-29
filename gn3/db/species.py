@@ -48,7 +48,7 @@ def translate_to_mouse_gene_id(species: str, geneid: int, conn: Any) -> int:
 
     with conn.cursor as cursor:
         query = {
-            "rat": "SELECT mouse FROM GeneIDXRef WHERE rat = %s"
+            "rat": "SELECT mouse FROM GeneIDXRef WHERE rat = %s",
             "human": "SELECT mouse FROM GeneIDXRef WHERE human = %s"
         }
         cursor.execute(query[species], geneid)
