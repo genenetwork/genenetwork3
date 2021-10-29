@@ -7,6 +7,7 @@ GeneNetwork1.
 
 from functools import reduce
 from typing import Any, Tuple, Sequence
+from scipy.stats import pearsonr, spearmanr
 
 def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
     """
@@ -122,6 +123,32 @@ def find_identical_traits(
                         (primary_name,) + control_names), {}).items()
                  if len(item[1]) > 1),
                 tuple()))
+
+def tissue_correlation(
+        primary_trait_values: Tuple[float, ...],
+        target_trait_values: Tuple[float, ...],
+        method: str) -> Tuple[float, float]:
+    """
+    Compute the correlation between the primary trait values, and the values of
+    a single target value.
+
+    This migrates the `cal_tissue_corr` function embedded in the larger
+    `web.webqtl.correlation.correlationFunction.batchCalTissueCorr` function in
+    GeneNetwork1.
+    """
+    def spearman_corr(*args):
+        result = spearmanr(*args)
+        return (result.correlation, result.pvalue)
+
+    method_fns = {"pearson": pearsonr, "spearman": spearman_corr}
+
+    assert len(primary_trait_values) == len(target_trait_values), (
+        "The lengths of the `primary_trait_values` and `target_trait_values` "
+        "must be equal")
+    assert method in method_fns.keys(), (
+        "Method must be one of: {}".format(",".join(method_fns.keys())))
+
+    return method_fns[method](primary_trait_values, target_trait_values)
 
 def batch_computed_tissue_correlation(
         trait_value: str, symbol_value_dict: dict,
