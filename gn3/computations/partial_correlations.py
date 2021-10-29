@@ -151,12 +151,17 @@ def tissue_correlation(
     return method_fns[method](primary_trait_values, target_trait_values)
 
 def batch_computed_tissue_correlation(
-        trait_value: str, symbol_value_dict: dict,
-        method: str = "pearson") -> Tuple[dict, dict]:
+        primary_trait_values: Tuple[float, ...], target_traits_dict: dict,
+        method: str) -> Tuple[dict, dict]:
     """
-    `web.webqtl.correlation.correlationFunction.batchCalTissueCorr`"""
-    raise Exception("Not implemented!")
-    return ({}, {})
+    This is a migration of the
+    `web.webqtl.correlation.correlationFunction.batchCalTissueCorr` function in
+    GeneNetwork1
+    """
+    def __corr__(acc, target):
+        corr = tissue_correlation(primary_trait_values, target[1], method)
+        return ({**acc[0], target[0]: corr[0]}, {**acc[0], target[1]: corr[1]})
+    return reduce(__corr__, target_traits_dict.items(), ({}, {}))
 
 def correlations_of_all_tissue_traits(
         primary_trait_symbol_value_dict: dict, symbol_value_dict: dict,
