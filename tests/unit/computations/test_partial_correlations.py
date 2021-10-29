@@ -1,7 +1,12 @@
 """Module contains tests for gn3.partial_correlations"""
 
 from unittest import TestCase
-from gn3.computations.partial_correlations import *
+from gn3.computations.partial_correlations import (
+    fix_samples,
+    control_samples,
+    dictify_by_samples,
+    tissue_correlation,
+    find_identical_traits)
 
 sampleslist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
 control_traits = (
@@ -212,27 +217,27 @@ class TestPartialCorrelations(TestCase):
         error conditions.
         """
         for primary, target, method, error, error_msg in (
-                ((1,2,3), (4,5,6,7), "pearson",
+                ((1, 2, 3), (4, 5, 6, 7), "pearson",
                  AssertionError,
                  (
                      "The lengths of the `primary_trait_values` and "
                      "`target_trait_values` must be equal")),
-                ((1,2,3), (4,5,6,7), "spearman",
+                ((1, 2, 3), (4, 5, 6, 7), "spearman",
                  AssertionError,
                  (
                      "The lengths of the `primary_trait_values` and "
                      "`target_trait_values` must be equal")),
-                ((1,2,3,4), (5,6,7), "pearson",
+                ((1, 2, 3, 4), (5, 6, 7), "pearson",
                  AssertionError,
                  (
                      "The lengths of the `primary_trait_values` and "
                      "`target_trait_values` must be equal")),
-                ((1,2,3,4), (5,6,7), "spearman",
+                ((1, 2, 3, 4), (5, 6, 7), "spearman",
                  AssertionError,
                  (
                      "The lengths of the `primary_trait_values` and "
                      "`target_trait_values` must be equal")),
-                ((1,2,3), (4,5,6), "nonexistentmethod",
+                ((1, 2, 3), (4, 5, 6), "nonexistentmethod",
                  AssertionError,
                  (
                      "Method must be one of: pearson, spearman"))):
