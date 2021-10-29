@@ -254,10 +254,9 @@ class TestPartialCorrelations(TestCase):
         """
         for primary, target, method, expected in (
                 ((12.34, 18.36, 42.51), (37.25, 46.25, 46.56), "pearson",
-                 (0.6761779252651052, 0.5272701133657985)),
+                 (0.6761779253, 0.5272701134)),
                 ((1, 2, 3, 4, 5), (5, 6, 7, 8, 7), "spearman",
-                 (0.8207826816681233, 0.08858700531354381))
-        ):
+                 (0.8207826817, 0.0885870053))):
             with self.subTest(primary=primary, target=target, method=method):
                 self.assertEqual(
                     tissue_correlation(primary, target, method), expected)
