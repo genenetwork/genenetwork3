@@ -148,9 +148,8 @@ def tissue_correlation(
     assert method in method_fns.keys(), (
         "Method must be one of: {}".format(",".join(method_fns.keys())))
 
-    return tuple(
-        round(n, 10) for n in
-        method_fns[method](primary_trait_values, target_trait_values))
+    corr, pvalue = method_fns[method](primary_trait_values, target_trait_values)
+    return (round(corr, 10), round(pvalue, 10))
 
 def batch_computed_tissue_correlation(
         primary_trait_values: Tuple[float, ...], target_traits_dict: dict,
