@@ -22,9 +22,6 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 GN2_BASE_URL = "http://www.genenetwork.org/"
 
-# biweight script
-BIWEIGHT_RSCRIPT = "~/genenetwork3/scripts/calculate_biweight.R"
-
 # wgcna script
 WGCNA_RSCRIPT = "wgcna_analysis.R"
 # qtlreaper command
