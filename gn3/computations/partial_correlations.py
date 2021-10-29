@@ -173,6 +173,6 @@ def correlations_of_all_tissue_traits(
     `web.webqtl.correlation.correlationFunction.calculateCorrOfAllTissueTrait`
     function in GeneNetwork1.
     """
-    primary_trait_values = primary_trait_symbol_value_dict.values()[0]
+    primary_trait_values = tuple(primary_trait_symbol_value_dict.values())[0]
     return batch_computed_tissue_correlation(
         primary_trait_values, symbol_value_dict, method)

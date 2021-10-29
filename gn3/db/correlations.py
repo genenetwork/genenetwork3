@@ -10,6 +10,8 @@ from gn3.random import random_string
 from gn3.data_helpers import partition_all
 from gn3.db.species import translate_to_mouse_gene_id
 
+from gn3.computations.partial_correlations import correlations_of_all_tissue_traits
+
 def get_filename(target_db_name: str, conn: Any) -> str:
     """
     Retrieve the name of the reference database file with which correlations are
@@ -275,9 +277,8 @@ def build_temporary_tissue_correlations_table(
     `web.webqtl.correlation.CorrelationPage.getTempTissueCorrTable` function in
     GeneNetwork1."""
     # We should probably pass the `correlations_of_all_tissue_traits` function
-    # as an argument to this function and get rid of the two lines immediately
+    # as an argument to this function and get rid of the one call immediately
     # following this comment.
-    from gn3.computations.partial_correlations import correlations_of_all_tissue_traits
     symbol_corr_dict, symbol_p_value_dict = correlations_of_all_tissue_traits(
         fetch_gene_symbol_tissue_value_dict_for_trait(
             (trait_symbol,), probeset_freeze_id, conn),
@@ -308,7 +309,7 @@ def build_temporary_tissue_correlations_table(
 
     return temp_table_name
 
-def fetch_tissue_correlations(
+def fetch_tissue_correlations(# pylint: disable=R0913
         dataset: dict, trait_symbol: str, probeset_freeze_id: int, method: str,
         return_number: int, conn: Any) -> dict:
     """
