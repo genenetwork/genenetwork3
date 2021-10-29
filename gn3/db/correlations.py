@@ -290,10 +290,40 @@ def build_temporary_tissue_correlations_table(
     This is a migration of the
     `web.webqtl.correlation.CorrelationPage.getTempTissueCorrTable` function in
     GeneNetwork1."""
+    # We should probably pass the `correlations_of_all_tissue_traits` function
+    # as an argument to this function and get rid of the two lines immediately
+    # following this comment.
+    from gn3.computations.partial_correlations import correlations_of_all_tissue_traits
     symbol_corr_dict, symbol_p_value_dict = correlations_of_all_tissue_traits(
-        trait_symbol, probeset_freeze_id, method, conn)
-    raise Exception("Unimplemented!!!")
-    return ""
+        fetch_gene_symbol_tissue_value_dict_for_trait(
+            (trait_symbol,), probeset_freeze_id, conn),
+        fetch_gene_symbol_tissue_value_dict_for_trait(
+            tuple(), probeset_freeze_id, conn),
+        method)
+
+    symbol_corr_list = sorted(
+        symbol_corr_dict.items(),
+        key=compare_tissue_correlation_absolute_values)
+
+    temp_table_name = f"TOPTISSUE{random_string(8)}"
+    create_query = (
+        "CREATE TEMPORARY TABLE {temp_table_name}"
+        "(Symbol varchar(100) PRIMARY KEY, Correlation float, PValue float)")
+    insert_query = (
+        f"INSERT INTO {temp_table_name}(Symbol, Correlation, PValue) "
+        " VALUES (%(symbol)s, %(correlation)s, %(pvalue)s)")
+
+    with conn.cursor() as cursor:
+        cursor.execute(create_query)
+        cursor.execute(
+            insert_query,
+            tuple({
+                "symbol": symbol,
+                "correlation": corr,
+                "pvalue": symbol_p_value_dict[symbol]
+            } for symbol, corr in symbol_corr_list[0: 2 * return_number]))
+
+    return temp_table_name
 
 def fetch_tissue_correlations(
         dataset: dict, trait_symbol: str, probeset_freeze_id: int, method: str,

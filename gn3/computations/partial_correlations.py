@@ -173,19 +173,6 @@ def correlations_of_all_tissue_traits(
     `web.webqtl.correlation.correlationFunction.calculateCorrOfAllTissueTrait`
     function in GeneNetwork1.
     """
-    # The section below existed in the original function, but with the migration
-    # and the proposed rework (in the near future), the values from the database
-    # should be passed into this function, rather than have the function fetch
-    # the data for itself.
-    # ---------------------------------------------------
-    # primary_trait_symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
-    #     (trait_symbol,), probeset_freeze_id, conn)
-    # primary_trait_values = primary_trait_symbol_value_dict.vlaues()[0]
-    # symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
-    #     tuple(), probeset_freeze_id, conn)
-    # ---------------------------------------------------
-    # We might end up actually getting rid of this function all together as the
-    # rework is done.
     primary_trait_values = primary_trait_symbol_value_dict.values()[0]
     return batch_computed_tissue_correlation(
         primary_trait_values, symbol_value_dict, method)
