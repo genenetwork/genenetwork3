@@ -1,15 +1,17 @@
+"""Methods for interacting with gn-proxy."""
 import functools
 import json
+from urllib.parse import urljoin
+from enum import Enum, unique
+from typing import Dict
+
 import redis
 import requests
-
-from typing import Dict
-from enum import Enum, unique
-from urllib.parse import urljoin
 
 
 @functools.total_ordering
 class OrderedEnum(Enum):
+    """A class that ordered Enums in order of position"""
     @classmethod
     @functools.lru_cache(None)
     def _member_list(cls):
@@ -24,6 +26,7 @@ class OrderedEnum(Enum):
 
 @unique
 class DataRole(OrderedEnum):
+    """Enums for Data Access"""
     NO_ACCESS = "no-access"
     VIEW = "view"
     EDIT = "edit"
@@ -31,6 +34,7 @@ class DataRole(OrderedEnum):
 
 @unique
 class AdminRole(OrderedEnum):
+    """Enums for Admin status"""
     NOT_ADMIN = "not-admin"
     EDIT_ACCESS = "edit-access"
     EDIT_ADMINS = "edit-admins"
@@ -81,14 +85,13 @@ def get_highest_user_access_role(
 
     """
     role_mapping = {}
-    for x, y in zip(DataRole, AdminRole):
-        role_mapping.update({x.value: x, })
-        role_mapping.update({y.value: y, })
+    for data_role, admin_role in zip(DataRole, AdminRole):
+        role_mapping.update({data_role.value: data_role, })
+        role_mapping.update({admin_role.value: admin_role, })
     access_role = {}
-    for key, value in json.loads(
-        requests.get(urljoin(
-            gn_proxy_url,
-            ("available?resource="
-             f"{resource_id}&user={user_id}"))).content).items():
-        access_role[key] = max(map(lambda x: role_mapping[x], value))
+    response = requests.get(urljoin(gn_proxy_url,
+                                    ("available?resource="
+                                     f"{resource_id}&user={user_id}")))
+    for key, value in json.loads(response.content).items():
+        access_role[key] = max(map(lambda role: role_mapping[role], value))
     return access_role
