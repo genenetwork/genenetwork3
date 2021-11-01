@@ -339,3 +339,43 @@ def fetch_tissue_correlations(# pylint: disable=R0913
         return {
             trait_name: (tiss_corr, tiss_p_val)
             for trait_name, tiss_corr, tiss_p_val in results}
+
+def check_for_literature_info(conn: Any, geneid: int) -> bool:
+    """
+    Checks the database to find out whether the trait with `geneid` has any
+    associated literature.
+
+    This is a migration of the
+    `web.webqtl.correlation.CorrelationPage.checkForLitInfo` function in
+    GeneNetwork1.
+    """
+    query = "SELECT 1 FROM LCorrRamin3 WHERE GeneId1=%s LIMIT 1"
+    with conn.cursor() as cursor:
+        cursor.execute(query, geneid)
+        result = cursor.fetchone()
+        if result:
+            return True
+
+    return False
+
+def check_symbol_for_tissue_correlation(
+        conn: Any, tissue_probeset_freeze_id: int, symbol: str = "") -> bool:
+    """
+    Checks whether a symbol has any associated tissue correlations.
+
+    This is a migration of the
+    `web.webqtl.correlation.CorrelationPage.checkSymbolForTissueCorr` function
+    in GeneNetwork1.
+    """
+    query = (
+        "SELECT 1 FROM  TissueProbeSetXRef "
+        "WHERE TissueProbeSetFreezeId=%(probeset_freeze_id)s "
+        "AND Symbol=%(symbol)s LIMIT 1")
+    with conn.cursor() as cursor:
+        cursor.execute(
+            query, probeset_freeze_id=tissue_probeset_freeze_id, symbol=symbol)
+        result = cursor.fetchone()
+        if result:
+            return True
+
+    return False
