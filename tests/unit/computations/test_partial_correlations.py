@@ -6,7 +6,8 @@ from gn3.computations.partial_correlations import (
     control_samples,
     dictify_by_samples,
     tissue_correlation,
-    find_identical_traits)
+    find_identical_traits,
+    good_dataset_samples_indexes)
 
 sampleslist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
 control_traits = (
@@ -260,3 +261,13 @@ class TestPartialCorrelations(TestCase):
             with self.subTest(primary=primary, target=target, method=method):
                 self.assertEqual(
                     tissue_correlation(primary, target, method), expected)
+
+    def test_good_dataset_samples_indexes(self):
+        """
+        Test that `good_dataset_samples_indexes` returns correct indices.
+        """
+        self.assertEqual(
+            good_dataset_samples_indexes(
+                ("a", "e", "i", "k"),
+                ("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l")),
+            (0, 4, 8, 10))
