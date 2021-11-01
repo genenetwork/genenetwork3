@@ -3,9 +3,9 @@ import functools
 import json
 from urllib.parse import urljoin
 from enum import Enum, unique
-from typing import Dict
+from typing import Dict, Union
 
-import redis
+from redis import Redis
 import requests
 
 
@@ -40,7 +40,7 @@ class AdminRole(OrderedEnum):
     EDIT_ADMINS = "edit-admins"
 
 
-def get_user_membership(conn: redis.Redis, user_id: str,
+def get_user_membership(conn: Redis, user_id: str,
                         group_id: str) -> Dict:
     """Return a dictionary that indicates whether the `user_id` is a
     member or admin of `group_id`.
@@ -84,7 +84,7 @@ def get_highest_user_access_role(
       A dict indicating the highest access role the user has.
 
     """
-    role_mapping = {}
+    role_mapping: Dict[str, Union[DataRole, AdminRole]] = {}
     for data_role, admin_role in zip(DataRole, AdminRole):
         role_mapping.update({data_role.value: data_role, })
         role_mapping.update({admin_role.value: admin_role, })
