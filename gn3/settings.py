@@ -50,3 +50,6 @@ CORS_HEADERS = [
     "Authorization",
     "Access-Control-Allow-Credentials"
 ]
+
+GNSHARE = os.environ.get("GNSHARE", "/gnshare/gn/")
+TEXTDIR = f"{GNSHARE}/web/ProbeSetFreeze_DataMatrix"
