@@ -110,6 +110,7 @@
                        ("r-rjson" ,r-rjson)
                        ("python-plotly" ,python-plotly)
                        ("python-pandas" ,python-pandas)
+                       ("python-pingouin" ,python-pingouin)
                        ("rust-qtlreaper" ,rust-qtlreaper)
                        ("python-flask-cors" ,python-flask-cors)))
   (build-system python-build-system)

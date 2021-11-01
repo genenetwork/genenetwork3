@@ -5,7 +5,6 @@ from unittest import mock
 from collections import namedtuple
 
 from gn3.computations.correlations import normalize_values
-from gn3.computations.correlations import do_bicor
 from gn3.computations.correlations import compute_sample_r_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
@@ -97,16 +96,6 @@ class TestCorrelation(TestCase):
         expected_results = ([2.3, 4.1, 5], [3.4, 6.2, 4.1], 3)
 
         self.assertEqual(results, expected_results)
-
-    @mock.patch("gn3.computations.correlations.calculate_biweight_corr")
-    def test_bicor(self, mock_biweight):
-        """Test for doing biweight mid correlation """
-        mock_biweight.return_value = (1.0, 0.0)
-
-        results = do_bicor(x_val=[1, 2, 3], y_val=[4, 5, 6])
-
-        self.assertEqual(results, (1.0, 0.0)
-                         )
 
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
     @mock.patch("gn3.computations.correlations.normalize_values")
