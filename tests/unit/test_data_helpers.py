@@ -4,7 +4,7 @@ Test functions in gn3.data_helpers
 
 from unittest import TestCase
 
-from gn3.data_helpers import partition_all
+from gn3.data_helpers import partition_all, parse_csv_line
 
 class TestDataHelpers(TestCase):
     """
@@ -35,3 +35,27 @@ class TestDataHelpers(TestCase):
                  ((0, 1, 2, 3, 4, 5, 6, 7, 8, 9), ))):
             with self.subTest(n=count, items=items):
                 self.assertEqual(partition_all(count, items), expected)
+
+    def test_parse_csv_line(self):
+        """
+        Test parsing a single line from a CSV file
+
+        Given:
+            - `line`: a line read from a csv file
+            - `delimiter`: the expected delimiter in the csv file
+            - `quoting`: the quoting enclosing each column in the csv file
+        When:
+            - `line` is parsed with the `parse_csv_file` with the given
+               parameters
+        Then:
+            - return a tuple of the columns in the CSV file, without the
+              delimiter and quoting
+        """
+        for line, delimiter, quoting, expected in (
+                ('"this","is","a","test"', ",", '"', ("this", "is", "a", "test")),
+                ('"this","is","a","test"', ",", None, ('"this"', '"is"', '"a"', '"test"'))):
+            with self.subTest(line=line, delimiter=delimiter, quoting=quoting):
+                self.assertEqual(
+                    parse_csv_line(
+                        line=line, delimiter=delimiter, quoting=quoting),
+                    expected)
