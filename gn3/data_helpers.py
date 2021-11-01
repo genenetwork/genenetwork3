@@ -5,7 +5,7 @@ data structures.
 
 from math import ceil
 from functools import reduce
-from typing import Any, Tuple, Sequence
+from typing import Any, Tuple, Sequence, Optional
 
 def partition_all(num: int, items: Sequence[Any]) -> Tuple[Tuple[Any, ...], ...]:
     """
@@ -23,3 +23,14 @@ def partition_all(num: int, items: Sequence[Any]) -> Tuple[Tuple[Any, ...], ...]
         tuple(items[start:stop]) for start, stop # type: ignore[has-type]
         in reduce(
             __compute_start_stop__, iterations, tuple())])
+
+def parse_csv_line(
+        line:str, delimiter: str = ",", quoting:Optional[str] = '"') -> Tuple[str, ...]:
+    """
+    Parses a line from a CSV file into a tuple of strings.
+
+    This is a migration of the `web.webqtl.utility.webqtlUtil.readLineCSV`
+    function in GeneNetwork1.
+    """
+    return tuple(
+        col.strip("{} \t\n".format(quoting)) for col in line.split(delimiter))
