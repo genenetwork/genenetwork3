@@ -25,7 +25,8 @@ def partition_all(num: int, items: Sequence[Any]) -> Tuple[Tuple[Any, ...], ...]
             __compute_start_stop__, iterations, tuple())])
 
 def parse_csv_line(
-        line:str, delimiter: str = ",", quoting:Optional[str] = '"') -> Tuple[str, ...]:
+        line: str, delimiter: str = ",",
+        quoting: Optional[str] = '"') -> Tuple[str, ...]:
     """
     Parses a line from a CSV file into a tuple of strings.
 
