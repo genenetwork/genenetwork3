@@ -177,3 +177,18 @@ def correlations_of_all_tissue_traits(
     primary_trait_values = tuple(primary_trait_symbol_value_dict.values())[0]
     return batch_computed_tissue_correlation(
         primary_trait_values, symbol_value_dict, method)
+
+def good_dataset_samples_indexes(
+        samples: Tuple[str, ...],
+        samples_from_file: Tuple[str, ...]) -> Tuple[int, ...]:
+    """
+    Return the indexes of the items in `samples_from_files` that are also found
+    in `samples`.
+
+    This is a partial migration of the
+    `web.webqtl.correlation.PartialCorrDBPage.getPartialCorrelationsFast`
+    function in GeneNetwork1.
+    """
+    return tuple(sorted(
+        samples_from_file.index(good) for good in
+        set(samples).intersection(set(samples_from_file))))
