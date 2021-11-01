@@ -196,6 +196,22 @@ def good_dataset_samples_indexes(
         samples_from_file.index(good) for good in
         set(samples).intersection(set(samples_from_file))))
 
+def determine_partials(
+        primary_vals, control_vals, all_target_trait_names,
+        all_target_trait_values, method):
+    """
+    This **WILL** be a migration of
+    `web.webqtl.correlation.correlationFunction.determinePartialsByR` function
+    in GeneNetwork1.
+
+    The function in GeneNetwork1 contains code written in R that is then used to
+    compute the partial correlations.
+    """
+    ## This function is not implemented at this stage
+    return tuple(
+        primary_vals, control_vals, all_target_trait_names,
+        all_target_trait_values, method)
+
 def compute_partial_correlations_fast(# pylint: disable=[R0913, R0914]
         samples, primary_vals, control_vals, database_filename,
         fetched_correlations, method: str, correlation_type: str) -> Tuple[
