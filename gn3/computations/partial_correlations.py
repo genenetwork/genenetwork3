@@ -257,3 +257,33 @@ def compute_partial_correlations_fast(# pylint: disable=[R0913, R0914]
             (fetched_correlations[corr[0]],) if correlation_type == "literature"
             else fetched_correlations[corr[0]][0:2])
         for idx, corr in enumerate(all_correlations))
+
+def partial_correlation_matrix(
+        xdata: Tuple[float, ...], ydata: Tuple[float, ...],
+        zdata: Tuple[float, ...], method: str = "pearsons",
+        omit_nones: bool = True) -> float:
+    """
+    Computes the partial correlation coefficient using the
+    'variance-covariance matrix' method
+
+    This is a partial migration of the
+    `web.webqtl.correlation.correlationFunction.determinPartialsByR` function in
+    GeneNetwork1, specifically the `pcor.mat` function written in the R
+    programming language.
+    """
+    return 0
+
+def partial_correlation_recursive(
+        xdata: Tuple[float, ...], ydata: Tuple[float, ...],
+        zdata: Tuple[float, ...], method: str = "pearsons",
+        omit_nones: bool = True) -> float:
+    """
+    Computes the partial correlation coefficient using the 'recursive formula'
+    method
+
+    This is a partial migration of the
+    `web.webqtl.correlation.correlationFunction.determinPartialsByR` function in
+    GeneNetwork1, specifically the `pcor.rec` function written in the R
+    programming language.
+    """
+    return 0
