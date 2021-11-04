@@ -10,6 +10,8 @@ from typing import Any, Tuple, Sequence
 from scipy.stats import pearsonr, spearmanr
 
 from gn3.settings import TEXTDIR
+import pandas
+
 from gn3.data_helpers import parse_csv_line
 
 def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
@@ -257,6 +259,20 @@ def compute_partial_correlations_fast(# pylint: disable=[R0913, R0914]
             (fetched_correlations[corr[0]],) if correlation_type == "literature"
             else fetched_correlations[corr[0]][0:2])
         for idx, corr in enumerate(all_correlations))
+
+def build_data_frame(
+        xdata: Tuple[float, ...], ydata: Tuple[float, ...],
+        zdata: Union[
+            Tuple[float, ...],
+            Tuple[Tuple[float, ...], ...]]) -> pandas.DataFrame:
+    """
+    Build a pandas DataFrame object from xdata, ydata and zdata
+    """
+    x_y_df = pandas.DataFrame({"x": xdata, "y": ydata})
+    if isinstance(zdata[0], float):
+        return x_y_df.join(pandas.DataFrame({"z": zdata}))
+    return x_y_df.join(pandas.DataFrame(
+        {"z{}".format(i): val for i, val in enumerate(row)} for row in zdata))
 
 def partial_correlation_matrix(
         xdata: Tuple[float, ...], ydata: Tuple[float, ...],

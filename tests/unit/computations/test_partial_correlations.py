@@ -2,9 +2,12 @@
 
 import csv
 from unittest import TestCase
+
+import pandas
 from gn3.computations.partial_correlations import (
     fix_samples,
     control_samples,
+    build_data_frame,
     dictify_by_samples,
     tissue_correlation,
     find_identical_traits,
@@ -296,6 +299,25 @@ class TestPartialCorrelations(TestCase):
                 ("a", "e", "i", "k"),
                 ("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l")),
             (0, 4, 8, 10))
+
+    def test_build_data_frame(self):
+        """
+        Check that the function builds the correct data frame.
+        """
+        for xdata, ydata, zdata, expected in (
+                ((0.1, 1.1, 2.1), (2.1, 3.1, 4.1), (5.1, 6.1 ,7.1),
+                 pandas.DataFrame({
+                     "x": (0.1, 1.1, 2.1), "y": (2.1, 3.1, 4.1),
+                     "z": (5.1, 6.1 ,7.1)})),
+                ((0.1, 1.1, 2.1), (2.1, 3.1, 4.1),
+                 ((5.1, 6.1 ,7.1), (5.2, 6.2, 7.2), (5.3, 6.3, 7.3)),
+                 pandas.DataFrame({
+                     "x": (0.1, 1.1, 2.1), "y": (2.1, 3.1, 4.1),
+                     "z0": (5.1, 5.2 ,5.3), "z1": (6.1, 6.2 ,6.3),
+                     "z2": (7.1, 7.2 ,7.3)}))):
+            with self.subTest(xdata=xdata, ydata=ydata, zdata=zdata):
+                self.assertTrue(
+                    build_data_frame(xdata, ydata, zdata).equals(expected))
 
     def test_partial_correlation_matrix(self):
         """
