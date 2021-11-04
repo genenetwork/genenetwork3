@@ -5,13 +5,14 @@ It is an attempt to migrate over the partial correlations feature from
 GeneNetwork1.
 """
 
+import math
 from functools import reduce
-from typing import Any, Tuple, Sequence
+from typing import Any, Tuple, Union, Sequence
 from scipy.stats import pearsonr, spearmanr
 
-from gn3.settings import TEXTDIR
 import pandas
 
+from gn3.settings import TEXTDIR, ROUND_TO
 from gn3.data_helpers import parse_csv_line
 
 def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
@@ -276,8 +277,8 @@ def build_data_frame(
 
 def partial_correlation_matrix(
         xdata: Tuple[float, ...], ydata: Tuple[float, ...],
-        zdata: Tuple[float, ...], method: str = "pearsons",
-        omit_nones: bool = True) -> float:
+        zdata: Union[Tuple[float, ...], Tuple[Tuple[float, ...], ...]],
+        method: str = "pearson", omit_nones: bool = True) -> float:
     """
     Computes the partial correlation coefficient using the
     'variance-covariance matrix' method
@@ -291,8 +292,8 @@ def partial_correlation_matrix(
 
 def partial_correlation_recursive(
         xdata: Tuple[float, ...], ydata: Tuple[float, ...],
-        zdata: Tuple[float, ...], method: str = "pearsons",
-        omit_nones: bool = True) -> float:
+        zdata: Union[Tuple[float, ...], Tuple[Tuple[float, ...], ...]],
+        method: str = "pearson", omit_nones: bool = True) -> float:
     """
     Computes the partial correlation coefficient using the 'recursive formula'
     method
@@ -302,4 +303,30 @@ def partial_correlation_recursive(
     GeneNetwork1, specifically the `pcor.rec` function written in the R
     programming language.
     """
-    return 0
+    assert method in ("pearson", "spearman", "kendall")
+    data = (
+        build_data_frame(xdata, ydata, zdata).dropna(axis=0)
+        if omit_nones else
+        build_data_frame(xdata, ydata, zdata))
+
+    if data.shape[1] == 3: # z is a vector, not matrix
+        fields = {
+            "rxy": ("x", "y"),
+            "rxz": ("x", "z"),
+            "ryz": ("y", "z")}
+        tdata = {
+            corr_type: pandas.DataFrame(
+                {cols[0]: data[cols[0]],
+                 cols[1]: data[cols[1]]}).dropna(axis=0)
+            for corr_type, cols in fields.items()
+        }
+        corrs = {
+            corr_type: tdata[corr_type][cols[0]].corr(
+                tdata[corr_type][cols[1]], method=method)
+            for corr_type, cols in fields.items()
+        }
+        return round((
+            (corrs["rxy"] - corrs["rxz"] * corrs["ryz"]) /
+            (math.sqrt(1 - corrs["rxz"]**2) *
+             math.sqrt(1 - corrs["ryz"]**2))), ROUND_TO)
+    return round(0, ROUND_TO)

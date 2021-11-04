@@ -4,6 +4,8 @@ import csv
 from unittest import TestCase
 
 import pandas
+
+from gn3.settings import ROUND_TO
 from gn3.computations.partial_correlations import (
     fix_samples,
     control_samples,
@@ -115,7 +117,7 @@ def parse_test_data_csv(filename):
         "z": __str__to_tuple(line, "z"),
         "method": methods[line["method"]],
         "rm": line["rm"] == "TRUE",
-        "result": float(line["result"])
+        "result": round(float(line["result"]), ROUND_TO)
     } for line in lines)
 
 class TestPartialCorrelations(TestCase):
