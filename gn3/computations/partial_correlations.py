@@ -332,4 +332,29 @@ def partial_correlation_recursive(
             (corrs["rxy"] - corrs["rxz"] * corrs["ryz"]) /
             (math.sqrt(1 - corrs["rxz"]**2) *
              math.sqrt(1 - corrs["ryz"]**2))), ROUND_TO)
-    return round(0, ROUND_TO)
+
+    remaining_cols = [
+        colname for colname, series in data.items()
+        if colname not in ("x", "y", "z0")
+    ]
+
+    new_xdata = tuple(data["x"])
+    new_ydata = tuple(data["y"])
+    zc = tuple(
+        tuple(row_series[1])
+        for row_series in data[remaining_cols].iterrows())
+
+    rxy_zc = partial_correlation_recursive(
+        new_xdata, new_ydata, zc, method=method,
+        omit_nones=omit_nones)
+    rxz0_zc = partial_correlation_recursive(
+        new_xdata, tuple(data["z0"]), zc, method=method,
+        omit_nones=omit_nones)
+    ryz0_zc = partial_correlation_recursive(
+        new_ydata, tuple(data["z0"]), zc, method=method,
+        omit_nones=omit_nones)
+
+    return round(
+        ((rxy_zc - rxz0_zc * ryz0_zc) /(
+            math.sqrt(1 - rxz0_zc**2) * math.sqrt(1 - ryz0_zc**2))),
+        ROUND_TO)
