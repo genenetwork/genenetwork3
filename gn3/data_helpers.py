@@ -24,6 +24,21 @@ def partition_all(num: int, items: Sequence[Any]) -> Tuple[Tuple[Any, ...], ...]
         in reduce(
             __compute_start_stop__, iterations, tuple())])
 
+def partition_by(partition_fn, items):
+    """
+    Given a sequence `items`, return a tuple of tuples, each of which contain
+    the values in `items` partitioned such that the first item in each internal
+    tuple, when passed to `partition_function` returns True.
+
+    This is an approximation of Clojure's `partition-by` function.
+    """
+    def __partitioner__(accumulator, item):
+        if partition_fn(item):
+            return accumulator + ((item,),)
+        return accumulator[:-1] + (accumulator[-1] + (item,),)
+
+    return reduce(__partitioner__, items, tuple())
+
 def parse_csv_line(
         line: str, delimiter: str = ",",
         quoting: Optional[str] = '"') -> Tuple[str, ...]:
