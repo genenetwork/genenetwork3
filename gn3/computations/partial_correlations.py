@@ -272,8 +272,11 @@ def build_data_frame(
     x_y_df = pandas.DataFrame({"x": xdata, "y": ydata})
     if isinstance(zdata[0], float):
         return x_y_df.join(pandas.DataFrame({"z": zdata}))
-    return x_y_df.join(pandas.DataFrame(
+    interm_df = x_y_df.join(pandas.DataFrame(
         {"z{}".format(i): val for i, val in enumerate(row)} for row in zdata))
+    if interm_df.shape[1] == 3:
+        return interm_df.rename(columns={"z0": "z"})
+    return interm_df
 
 def partial_correlation_matrix(
         xdata: Tuple[float, ...], ydata: Tuple[float, ...],
