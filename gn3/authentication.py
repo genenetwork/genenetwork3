@@ -132,8 +132,7 @@ def get_user_info_by_key(key: str, value: str,
     if key != "user_id":
         for uuid, user_info in conn.hgetall("users").items():
             user_info = json.loads(user_info)
-            if (key in user_info and
-                user_info.get(key) == value):
+            if (key in user_info and user_info.get(key) == value):
                 user_info["user_id"] = uuid
                 return user_info
     elif key == "user_id":
