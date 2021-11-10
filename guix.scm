@@ -59,7 +59,7 @@
 (package
   (name "genenetwork3.git")
   (version "0.0.1")
-  (source (local-file %source-dir
+  (source (local-file %source-dir "genenetwork3-checkout"
                       #:recursive? #t
                       #:select? (git-predicate %source-dir)))
   (propagated-inputs `(("coreutils" ,coreutils)
