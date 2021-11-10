@@ -145,9 +145,13 @@ def get_user_info_by_key(key: str, value: str,
 
 
 def create_group(conn: Redis, group_name: Optional[str],
-                 admin_user_uids: List = [],
-                 member_user_uids: List = []) -> Optional[Dict]:
+                 admin_user_uids: List = None,
+                 member_user_uids: List = None) -> Optional[Dict]:
     """Create a group given the group name, members and admins of that group."""
+    if admin_user_uids is None:
+        admin_user_uids = []
+    if member_user_uids is None:
+        member_user_uids = []
     if group_name and bool(admin_user_uids + member_user_uids):
         timestamp = datetime.datetime.utcnow().strftime('%b %d %Y %I:%M%p')
         group = {
