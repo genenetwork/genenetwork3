@@ -29,11 +29,6 @@
 ;;   env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ guix environment -C -l guix.scm
 
 (use-modules
- (srfi srfi-1)
- (srfi srfi-26)
- (ice-9 match)
- (ice-9 popen)
- (ice-9 rdelim)
  (gn packages gemma)
  (gn packages python)
  (gnu packages base)
@@ -60,29 +55,13 @@
 
 (define %source-dir (dirname (current-filename)))
 
-(define git-file?
-  (let* ((pipe (with-directory-excursion %source-dir
-                 (open-pipe* OPEN_READ "git" "ls-files")))
-         (files (let loop ((lines '()))
-                  (match (read-line pipe)
-                    ((? eof-object?)
-                     (reverse lines))
-                    (line
-                     (loop (cons line lines))))))
-         (status (close-pipe pipe)))
-    (lambda (file stat)
-      (match (stat:type stat)
-        ('directory #t)
-        ((or 'regular 'symlink)
-         (any (cut string-suffix? <> file) files))
-        (_ #f)))))
 
 (package
   (name "genenetwork3.git")
   (version "0.0.1")
   (source (local-file %source-dir
                       #:recursive? #t
-                      #:select? git-file?))
+                      #:select? (git-predicate %source-dir)))
   (propagated-inputs `(("coreutils" ,coreutils)
                        ("gemma-wrapper" ,gemma-wrapper)
                        ("gunicorn" ,gunicorn)
