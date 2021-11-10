@@ -113,9 +113,9 @@ def get_groups_by_user_uid(user_uid: str, conn: Redis) -> Dict:
     """
     admin = []
     member = []
-    for uuid, group_info in conn.hgetall("groups").items():
+    for group_uuid, group_info in conn.hgetall("groups").items():
         group_info = json.loads(group_info)
-        group_info["uuid"] = uuid
+        group_info["uuid"] = group_uuid
         if user_uid in group_info.get('admins'):
             admin.append(group_info)
         if user_uid in group_info.get('members'):
@@ -130,10 +130,10 @@ def get_user_info_by_key(key: str, value: str,
                          conn: Redis) -> Optional[Dict]:
     """Given a key, get a user's information if value is matched"""
     if key != "user_id":
-        for uuid, user_info in conn.hgetall("users").items():
+        for user_uuid, user_info in conn.hgetall("users").items():
             user_info = json.loads(user_info)
             if (key in user_info and user_info.get(key) == value):
-                user_info["user_id"] = uuid
+                user_info["user_id"] = user_uuid
                 return user_info
     elif key == "user_id":
         if user_info := conn.hget("users", value):
