@@ -115,7 +115,7 @@ def filter_shared_sample_keys(this_samplelist,
     """
     for key, value in target_samplelist.items():
         if key in this_samplelist:
-            yield value, this_samplelist[key]
+            yield this_samplelist[key], value
 
 
 def fast_compute_all_sample_correlation(this_trait,
