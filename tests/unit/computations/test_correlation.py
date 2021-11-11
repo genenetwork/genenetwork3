@@ -4,6 +4,7 @@ from unittest import mock
 import unittest
 
 from collections import namedtuple
+from numpy.testing import assert_almost_equal
 
 from gn3.computations.correlations import normalize_values
 from gn3.computations.correlations import compute_sample_r_correlation
@@ -481,5 +482,8 @@ class TestCorrelation(TestCase):
                  [None, None, None, None, 2, None, None, 3, None, None],
                  (0.0, 2)]]:
             with self.subTest(dbdata=dbdata, userdata=userdata):
-                self.assertEqual(compute_correlation(
-                    dbdata, userdata), expected)
+                actual = compute_correlation(dbdata, userdata)
+                with self.subTest("correlation coefficient"):
+                    assert_almost_equal(actual[0], expected[0])
+                with self.subTest("overlap"):
+                    self.assertEqual(actual[1], expected[1])
