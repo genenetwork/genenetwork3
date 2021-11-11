@@ -6,7 +6,7 @@ FUNCTIONS:
 compute_correlation:
     TODO: Describe what the function does..."""
 
-from math import sqrt
+from scipy import stats
 ## From GN1: mostly for clustering and heatmap generation
 
 def __items_with_values(dbdata, userdata):
@@ -16,24 +16,11 @@ def __items_with_values(dbdata, userdata):
     return tuple(zip(*filtered)) if filtered else ([], [])
 
 def compute_correlation(dbdata, userdata):
-    """Compute some form of correlation.
+    """Compute the Pearson correlation coefficient.
 
     This is extracted from
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/utility/webqtlUtil.py#L622-L647
     """
     x_items, y_items = __items_with_values(dbdata, userdata)
-    if len(x_items) < 6:
-        return (0.0, len(x_items))
-    meanx = sum(x_items)/len(x_items)
-    meany = sum(y_items)/len(y_items)
-    def cal_corr_vals(acc, item):
-        xitem, yitem = item
-        return [
-            acc[0] + ((xitem - meanx) * (yitem - meany)),
-            acc[1] + ((xitem - meanx) * (xitem - meanx)),
-            acc[2] + ((yitem - meany) * (yitem - meany))]
-    xyd, sxd, syd = reduce(cal_corr_vals, zip(x_items, y_items), [0.0, 0.0, 0.0])
-    try:
-        return ((xyd/(sqrt(sxd)*sqrt(syd))), len(x_items))
-    except ZeroDivisionError:
-        return(0, len(x_items))
+    correlation = stats.pearsonr(x_items, y_items)[0] if len(x_items) >= 6 else 0
+    return (correlation, len(x_items))
