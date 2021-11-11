@@ -4,6 +4,7 @@ from unittest import mock
 import unittest
 
 from collections import namedtuple
+import math
 from numpy.testing import assert_almost_equal
 
 from gn3.computations.correlations import normalize_values
@@ -471,10 +472,10 @@ class TestCorrelation(TestCase):
                  [None, None, None, None, None, None, None, None, None, 0],
                  (0.0, 1)],
                 [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                 (0, 10)],
+                 (math.nan, 10)],
                 [[9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87],
                  [9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87],
-                 (0.9999999999999998, 10)],
+                 (math.nan, 10)],
                 [[9.3, 2.2, 5.4, 7.2, 6.4, 7.6, 3.8, 1.8, 8.4, 0.2],
                  [0.6, 3.97, 5.82, 8.21, 1.65, 4.55, 6.72, 9.5, 7.33, 2.34],
                  (-0.12720361919462056, 10)],
