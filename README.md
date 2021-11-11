@@ -24,7 +24,7 @@ guix environment --load=guix.scm
 Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
 
 ```bash
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --expose=$HOME/genotype_files/ --load=guix.scm
+~/.config/guix/current/bin/guix environment --expose=$HOME/genotype_files/ --load=guix.scm
 python3
   import redis
 ```
@@ -32,7 +32,7 @@ python3
 #### Run a Guix container
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --expose=$HOME/genotype_files/ --load=guix.scm
+~/.config/guix/current/bin/guix environment -C --network --expose=$HOME/genotype_files/ --load=guix.scm
 ```
 
 
@@ -41,7 +41,7 @@ env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix env
 Create a new profile with
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix package -i genenetwork3 -p ~/opt/genenetwork3
+~/.config/guix/current/bin/guix package -i genenetwork3 -p ~/opt/genenetwork3
 ```
 
 and load the profile settings with
