@@ -7,24 +7,13 @@ compute_correlation:
     TODO: Describe what the function does..."""
 
 from math import sqrt
-from functools import reduce
 ## From GN1: mostly for clustering and heatmap generation
 
 def __items_with_values(dbdata, userdata):
     """Retains only corresponding items in the data items that are not `None` values.
     This should probably be renamed to something sensible"""
-    def both_not_none(item1, item2):
-        """Check that both items are not the value `None`."""
-        if (item1 is not None) and (item2 is not None):
-            return (item1, item2)
-        return None
-    def split_lists(accumulator, item):
-        """Separate the 'x' and 'y' items."""
-        return [accumulator[0] + [item[0]], accumulator[1] + [item[1]]]
-    return reduce(
-        split_lists,
-        filter(lambda x: x is not None, map(both_not_none, dbdata, userdata)),
-        [[], []])
+    filtered = [x for x in zip(dbdata, userdata) if x[0] is not None and x[1] is not None]
+    return tuple(zip(*filtered)) if filtered else ([], [])
 
 def compute_correlation(dbdata, userdata):
     """Compute some form of correlation.
