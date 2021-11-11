@@ -9,6 +9,7 @@ option_list = list(
   make_option(c("-g", "--geno"), type="character", help=".geno file containing a dataset's genotypes"),
   make_option(c("-p", "--pheno"), type="character", help="File containing two columns - sample names and values"),
   make_option(c("-c", "--addcovar"), action="store_true", default=NULL, help="Use covariates (included as extra columns in the phenotype input file)"),
+  make_option(c("--covarstruct"), type="character", help="File detailing which covariates are categorical or numerical"),
   make_option(c("--model"), type="character", default="normal", help="Mapping Model - Normal or Non-Parametric"),
   make_option(c("--method"), type="character", default="hk", help="Mapping Method - hk (Haley Knott), ehk (Extended Haley Knott), mr (Marker Regression), em (Expectation-Maximization), imp (Imputation)"),
   make_option(c("--pairscan"), action="store_true", default=NULL, help="Run Pair Scan - the R/qtl function scantwo"),
@@ -34,6 +35,20 @@ verbose_print <- function(...){
   }
 }
 
+adjustXprobs <- function(cross){
+  sex <- getsex(cross)$sex
+  pr <- cross$geno[["X"]]$prob
+  stopifnot(!is.null(pr), !is.null(sex))
+
+  for(i in 1:ncol(pr)) {
+      pr[sex==0,i,3:4] <- 0
+      pr[sex==1,i,1:2] <- 0
+      pr[,i,] <- pr[,i,]/rowSums(pr[,i,])
+  }
+  cross$geno[["X"]]$prob <- pr
+  invisible(cross)
+}
+
 if (is.null(opt$geno) || is.null(opt$pheno)){
   print_help(opt_parser)
   stop("Both a genotype and phenotype file must be provided.", call.=FALSE)
@@ -52,7 +67,7 @@ get_geno_code <- function(header, name = 'unk'){
   return(trim(strsplit(header[mat],':')[[1]][2]))
 }
 
-geno_to_csvr <- function(genotypes, trait_names, trait_vals, out, sex = NULL,
+geno_to_csvr <- function(genotypes, trait_names, trait_vals, out, type, sex = NULL,
                          mapping_scale = "Mb", verbose = FALSE){
   # Assume a geno header is not longer than 40 lines
   header = readLines(genotypes, 40)
@@ -149,8 +164,12 @@ for (i in 1:length(trait_names)) {
   trait_names[i] = paste("T_", this_trait, sep = "")
 }
 
+# Get type of genotypes, since it needs to be checked before calc.genoprob
+header = readLines(geno_file, 40)
+type <- get_geno_code(header, 'type')
+
 verbose_print('Generating cross object\n')
-cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file)
+cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file, type)
 
 # Calculate genotype probabilities
 if (!is.null(opt$interval)) {
@@ -164,17 +183,41 @@ if (!is.null(opt$interval)) {
   cross_object <- calc.genoprob(cross_object)
 }
 
+# If 4way, adjust X chromosome genotype probabilities
+if (type == "4-way") {
+  verbose_print('Adjusting genotype probabilities for 4way cross')
+  cross_object <- adjustXprobs(cross_object)
+}
+
 # Pull covariates out of cross object, if they exist
-covars = vector(mode = "list", length = length(trait_names) - 1)
+covars <- c() # Holds the covariates which should be passed to R/qtl
 if (!is.null(opt$addcovar)) {
   verbose_print('Pulling covariates out of cross object\n')
-  #If perm strata are being used, it'll be included as the final column in the phenotype file
+  # If perm strata are being used, it'll be included as the final column in the phenotype file
   if (!is.null(opt$pstrata)) {
-    covar_names = trait_names[3:length(trait_names) - 1]
+    covar_names = trait_names[2:(length(trait_names)-1)]
   } else {
     covar_names = trait_names[2:length(trait_names)]
   }
   covars <- pull.pheno(cross_object, covar_names)
+  # Read in the covar description file
+  covarDescr <- read.table(opt$covarstruct, sep="\t", header=FALSE)
+  for(x in 1:nrow(covarDescr)){
+    cat(covarDescr[x, 1])
+    name <- paste0("T_", covarDescr[x, 1]) # The covar description file doesn't have T_ in trait names (the cross object does)
+    type <- covarDescr[x, 2]
+    if(type == "categorical"){
+      if(length(table(covars[,name])) > 2){ # More then 2 levels create the model matrix for the factor
+        mdata <- data.frame(toExpand = as.factor(covars[, name]))
+        options(na.action='na.pass')
+        modelmatrix <- model.matrix(~ toExpand + 0, mdata)[,-1]
+        covars <- cbind(covars, modelmatrix)
+      }else{ # 2 levels? just bind the trait as covar
+        verbose_print('Binding covars to covars\n')
+        covars <- cbind(covars, covars[,name])
+      }
+    }
+  }
 }
 
 # Pull permutation strata out of cross object, if it is being used
@@ -250,5 +293,51 @@ if (!is.null(opt$pairscan)) {
   write.csv(qtl_results[1], out_file)
   write.csv(qtl_results[2], map_out_file)
 } else {
+  # QTL main effects on adjusted longevity
+  getEffects <- function(sdata, gtsprob, marker = "1_24042124", model = "longevity ~ sex + site + cohort + treatment", trait = "longevity"){
+    rownames(sdata) <- 1:nrow(sdata)
+    rownames(gtsprob) <- 1:nrow(gtsprob)
+    mp <- gtsprob[, grep(marker, colnames(gtsprob))]
+    gts <- unlist(lapply(lapply(lapply(apply(mp,1,function(x){which(x > 0.85)}),names), strsplit, ":"), function(x){
+      if(length(x) > 0){ return(x[[1]][2]); }else{ return(NA) }
+    }))
+
+    ismissing <- which(apply(sdata, 1, function(x){any(is.na(x))}))
+    if(length(ismissing) > 0){
+      sdata <- sdata[-ismissing, ]
+      gts <- gts[-ismissing]
+    }
+
+    mlm <- lm(as.formula(model), data = sdata)
+    pheAdj <- rep(NA, nrow(sdata))
+    adj <- residuals(mlm) + mean(sdata[, trait])
+    pheAdj[as.numeric(names(adj))] <- adj
+    means <- c(mean(pheAdj[which(gts == "AC")],na.rm=TRUE),mean(pheAdj[which(gts == "AD")],na.rm=TRUE),mean(pheAdj[which(gts == "BC")],na.rm=TRUE),mean(pheAdj[which(gts == "BD")],na.rm=TRUE))
+    std <- function(x) sd(x,na.rm=TRUE)/sqrt(length(x))
+    stderrs <- c(std(pheAdj[which(gts == "AC")]),std(pheAdj[which(gts == "AD")]),std(pheAdj[which(gts == "BC")]),std(pheAdj[which(gts == "BD")]))
+    paste0(round(means,0), " ± ", round(stderrs,2))
+  }
+
+  if (type == "4-way") {
+    verbose_print("Get phenotype name + genoprob + all phenotypes + models for 4-way crosses")
+    traitname <- colnames(pull.pheno(cross_object))[1]
+    gtsp <- pull.genoprob(cross_object)
+    allpheno <- pull.pheno(cross_object)
+    if (!is.null(opt$addcovar)) {
+      model <- paste0(traitname, " ~ ", paste0(covar_names, sep="", collapse=" + "))
+    } else {
+      model <- paste0(traitname, " ~ 1 ")
+    }
+
+    meffects <- c()
+    verbose_print("Getting QTL main effects for 4-way crosses")
+    for(marker in  rownames(qtl_results)){
+      meff <- getEffects(allpheno, gtsp, marker = marker, model, trait = traitname)
+      meffects <- rbind(meffects, meff)
+    }
+    qtl_results <- cbind(data.frame(qtl_results[,1:3]), meffects)
+    colnames(qtl_results)[4:7] <- c("AC", "AD", "BC", "BD")
+  }
+
   write.csv(qtl_results, out_file)
 }
