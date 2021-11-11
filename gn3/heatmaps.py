@@ -64,11 +64,7 @@ def cluster_traits(traits_data_list: Sequence[Dict]):
     def __compute_corr(tdata_i, tdata_j):
         if tdata_i[0] == tdata_j[0]:
             return 0.0
-        corr_vals = compute_correlation(tdata_i[1], tdata_j[1])
-        corr = corr_vals[0]
-        if (1 - corr) < 0:
-            return 0.0
-        return 1 - corr
+        return 1 - compute_correlation(tdata_i[1], tdata_j[1])[0]
 
     def __cluster(tdata_i):
         return tuple(
