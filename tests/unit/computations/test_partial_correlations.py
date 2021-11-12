@@ -161,7 +161,7 @@ def parse_result(key_value):
         return (key, float(value))
     return key_value
 
-parser_function = compose(
+parse_for_rec = compose(
     parse_result,
     parse_rm,
     parse_xyz,
@@ -170,7 +170,7 @@ parser_function = compose(
     lambda k_v: tuple(item.strip("\n\t ") for item in k_v),
     lambda s: s.split(":"))
 
-def parse_input_line(line):
+def parse_input_line(line, parser_function):
     return tuple(
         parser_function(item) for item in line if not item.startswith("------"))
 
@@ -183,10 +183,10 @@ def merge_z(item):
             "z",
             tuple(val for key, val in item.items() if key.startswith("z")))}
 
-def parse_input(lines):
+def parse_input(lines, parser_function):
     return tuple(
         merge_z(dict(item))
-        for item in (parse_input_line(line) for line in lines)
+        for item in (parse_input_line(line, parser_function) for line in lines)
         if len(item) != 0)
 
 def parse_test_data(filename):
@@ -195,7 +195,7 @@ def parse_test_data(filename):
             lambda s: s.startswith("------"),
             (line.strip("\n\t ") for line in fl.readlines()))
 
-    return parse_input(input_lines)
+    return parse_input(input_lines, parse_for_rec)
 
 class TestPartialCorrelations(TestCase):
     """Class for testing partial correlations computation functions"""
