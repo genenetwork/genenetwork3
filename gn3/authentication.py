@@ -1,9 +1,12 @@
 """Methods for interacting with gn-proxy."""
 import functools
 import json
+import uuid
+import datetime
+
 from urllib.parse import urljoin
 from enum import Enum, unique
-from typing import Dict, Union
+from typing import Dict, List, Optional, Union
 
 from redis import Redis
 import requests
@@ -95,3 +98,65 @@ def get_highest_user_access_role(
     for key, value in json.loads(response.content).items():
         access_role[key] = max(map(lambda role: role_mapping[role], value))
     return access_role
+
+
+def get_groups_by_user_uid(user_uid: str, conn: Redis) -> Dict:
+    """Given a user uid, get the groups in which they are a member or admin of.
+
+    Args:
+      - user_uid: A user's unique id
+      - conn: A redis connection
+
+    Returns:
+      - A dictionary containing the list of groups the user is part of e.g.:
+        {"admin": [], "member": ["ce0dddd1-6c50-4587-9eec-6c687a54ad86"]}
+    """
+    admin = []
+    member = []
+    for uuid, group_info in conn.hgetall("groups").items():
+        group_info = json.loads(group_info)
+        group_info["uuid"] = uuid
+        if user_uid in group_info.get('admins'):
+            admin.append(group_info)
+        if user_uid in group_info.get('members'):
+            member.append(group_info)
+    return {
+        "admin": admin,
+        "member": member,
+    }
+
+
+def get_user_info_by_key(key: str, value: str,
+                         conn: Redis) -> Optional[Dict]:
+    """Given a key, get a user's information if value is matched"""
+    if key != "user_id":
+        for uuid, user_info in conn.hgetall("users").items():
+            user_info = json.loads(user_info)
+            if (key in user_info and
+                user_info.get(key) == value):
+                user_info["user_id"] = uuid
+                return user_info
+    elif key == "user_id":
+        if user_info := conn.hget("users", value):
+            user_info = json.loads(user_info)
+            user_info["user_id"] = value
+            return user_info
+    return None
+
+
+def create_group(conn: Redis, group_name: Optional[str],
+                 admin_user_uids: List = [],
+                 member_user_uids: List = []) -> Optional[Dict]:
+    """Create a group given the group name, members and admins of that group."""
+    if group_name and bool(admin_user_uids + member_user_uids):
+        timestamp = datetime.datetime.utcnow().strftime('%b %d %Y %I:%M%p')
+        group = {
+            "id": (group_id := str(uuid.uuid4())),
+            "admins": admin_user_uids,
+            "members": member_user_uids,
+            "name": group_name,
+            "created_timestamp": timestamp,
+            "changed_timestamp": timestamp,
+        }
+        conn.hset("groups", group_id, json.dumps(group))
+        return group
