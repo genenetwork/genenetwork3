@@ -189,13 +189,13 @@ def parse_input(lines, parser_function):
         for item in (parse_input_line(line, parser_function) for line in lines)
         if len(item) != 0)
 
-def parse_test_data(filename):
-    with open("pcor_rec_blackbox_attempt.txt", newline="\n") as fl:
+def parse_test_data(filename, parser_function):
+    with open(filename, newline="\n") as fl:
         input_lines = partition_by(
             lambda s: s.startswith("------"),
             (line.strip("\n\t ") for line in fl.readlines()))
 
-    return parse_input(input_lines, parse_for_rec)
+    return parse_input(input_lines, parser_function)
 
 class TestPartialCorrelations(TestCase):
     """Class for testing partial correlations computation functions"""
@@ -422,12 +422,15 @@ class TestPartialCorrelations(TestCase):
         """
         for sample in parse_test_data(
                 ("tests/unit/computations/partial_correlations_test_data/"
-                 "pcor_rec_blackbox_test.txt")):
+                 "pcor_rec_blackbox_test.txt"),
+        parse_for_rec):
             with self.subTest(
                     xdata=sample["x"], ydata=sample["y"], zdata=sample["z"],
                     method=sample["method"], omit_nones=sample["rm"]):
                 self.assertEqual(
-                    partial_correlation_recursive(
-                        sample["x"], sample["y"], sample["z"],
-                        method=sample["method"], omit_nones=sample["rm"]),
+                    round(
+                        partial_correlation_recursive(
+                            sample["x"], sample["y"], sample["z"],
+                            method=sample["method"], omit_nones=sample["rm"]),
+                        ROUND_TO),
                     round(sample["result"], ROUND_TO))

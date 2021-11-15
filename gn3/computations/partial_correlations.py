@@ -12,7 +12,7 @@ from scipy.stats import pearsonr, spearmanr
 
 import pandas
 
-from gn3.settings import TEXTDIR, ROUND_TO
+from gn3.settings import TEXTDIR
 from gn3.data_helpers import parse_csv_line
 
 def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
@@ -328,10 +328,10 @@ def partial_correlation_recursive(
                 tdata[corr_type][cols[1]], method=method)
             for corr_type, cols in fields.items()
         }
-        return round((
+        return (
             (corrs["rxy"] - corrs["rxz"] * corrs["ryz"]) /
             (math.sqrt(1 - corrs["rxz"]**2) *
-             math.sqrt(1 - corrs["ryz"]**2))), ROUND_TO)
+             math.sqrt(1 - corrs["ryz"]**2)))
 
     remaining_cols = [
         colname for colname, series in data.items()
@@ -340,9 +340,7 @@ def partial_correlation_recursive(
 
     new_xdata = tuple(data["x"])
     new_ydata = tuple(data["y"])
-    zc = tuple(
-        tuple(row_series[1])
-        for row_series in data[remaining_cols].iterrows())
+    zc = tuple(tuple(data[colname]) for colname in data[remaining_cols].columns)
 
     rxy_zc = partial_correlation_recursive(
         new_xdata, new_ydata, zc, method=method,
@@ -354,7 +352,5 @@ def partial_correlation_recursive(
         new_ydata, tuple(data["z0"]), zc, method=method,
         omit_nones=omit_nones)
 
-    return round(
-        ((rxy_zc - rxz0_zc * ryz0_zc) /(
-            math.sqrt(1 - rxz0_zc**2) * math.sqrt(1 - ryz0_zc**2))),
-        ROUND_TO)
+    return ((rxy_zc - rxz0_zc * ryz0_zc) /(
+        math.sqrt(1 - rxz0_zc**2) * math.sqrt(1 - ryz0_zc**2)))
