@@ -392,8 +392,8 @@ class TestPartialCorrelations(TestCase):
                  ((5.1, 6.1 ,7.1), (5.2, 6.2, 7.2), (5.3, 6.3, 7.3)),
                  pandas.DataFrame({
                      "x": (0.1, 1.1, 2.1), "y": (2.1, 3.1, 4.1),
-                     "z0": (5.1, 5.2 ,5.3), "z1": (6.1, 6.2 ,6.3),
-                     "z2": (7.1, 7.2 ,7.3)}))):
+                     "z0": (5.1, 6.1, 7.1), "z1": (5.2, 6.2 ,7.2),
+                     "z2": (5.3, 6.3 ,7.3)}))):
             with self.subTest(xdata=xdata, ydata=ydata, zdata=zdata):
                 self.assertTrue(
                     build_data_frame(xdata, ydata, zdata).equals(expected))

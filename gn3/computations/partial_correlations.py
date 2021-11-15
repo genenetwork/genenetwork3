@@ -273,7 +273,7 @@ def build_data_frame(
     if isinstance(zdata[0], float):
         return x_y_df.join(pandas.DataFrame({"z": zdata}))
     interm_df = x_y_df.join(pandas.DataFrame(
-        {"z{}".format(i): val for i, val in enumerate(row)} for row in zdata))
+        {"z{}".format(i): val for i, val in enumerate(zdata)}))
     if interm_df.shape[1] == 3:
         return interm_df.rename(columns={"z0": "z"})
     return interm_df
