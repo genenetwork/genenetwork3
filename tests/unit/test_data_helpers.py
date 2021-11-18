@@ -61,6 +61,21 @@ class TestDataHelpers(TestCase):
                     expected)
 
     def test_partition_by(self):
+        """
+        Test that `partition_by` groups the data using the given predicate
+
+        Given:
+          - `part_fn`: a predicate funtion that return boolean True/False
+          - `items`: a sequence of items
+        When:
+          - the partitioning predicate function and the sequence of items are
+            passed to the `partition_by` function
+        Then:
+          - the result is a tuple, with sub-tuples containing the data in the
+            original sequence. Each sub-tuple is a partition, ending as soon as
+            the next value in the sequence, when passed to `part_fn`, returns
+            boolean `True`.
+        """
         for part_fn, items, expected in (
                 (lambda s: s.startswith("----"),
                  ("------", "a", "b", "-----", "c", "----", "d", "e", "---",

@@ -280,7 +280,7 @@ def build_data_frame(
     return interm_df
 
 def compute_partial(
-        primary_val, control_vals, target_vals, target_names,
+        primary_vals, control_vals, target_vals, target_names,
         method: str) -> Tuple[
             Union[
                 Tuple[str, int, float, float, float, float], None],
@@ -300,18 +300,22 @@ def compute_partial(
     """
     # replace the R code with `pingouin.partial_corr`
     def __compute_trait_info__(target):
-        df = build_data_frame(
-            [prim for targ, prim in zip(target, primary_vals)
-             if targ is not None],
+        primary = [
+            prim for targ, prim in zip(target, primary_vals)
+            if targ is not None]
+        datafrm = build_data_frame(
+            primary,
             [targ for targ in target if targ is not None],
-            [cont for i, cont in enumerate(control) if target[i] is not None])
-        covariates = "z" if df.shape[1] == 3 else [
-            col for col in df.columns if col not in ("x", "y")]
+            [cont for i, cont in enumerate(control_vals)
+             if target[i] is not None])
+        covariates = "z" if datafrm.shape[1] == 3 else [
+            col for col in datafrm.columns if col not in ("x", "y")]
         ppc = pingouin.partial_corr(
-            data=df, x="x", y="y", covar=covariates, method=method)
+            data=datafrm, x="x", y="y", covar=covariates, method=method)
         pc_coeff = ppc["r"]
 
-        zero_order_corr = pingouin.corr(df["x"], df["y"], method=method)
+        zero_order_corr = pingouin.corr(
+            datafrm["x"], datafrm["y"], method=method)
 
         if math.isnan(pc_coeff):
             return (

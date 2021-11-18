@@ -1,6 +1,8 @@
 """Module contains tests for gn3.heatmaps.heatmaps"""
 from unittest import TestCase
-from numpy.testing import assert_allclose
+
+from numpy import allclose
+
 from gn3.heatmaps import (
     cluster_traits,
     get_loci_names,
@@ -40,7 +42,7 @@ class TestHeatmap(TestCase):
             (6.84118, 7.08432, 7.59844, 7.08229, 7.26774, 7.24991),
             (9.45215, 10.6943, 8.64719, 10.1592, 7.75044, 8.78615),
             (7.04737, 6.87185, 7.58586, 6.92456, 6.84243, 7.36913)]
-        assert_allclose(
+        self.assertTrue(allclose(
             cluster_traits(traits_data_list),
             ((0.0, 0.20337048635536847, 0.16381088984330505, 1.7388553629398245,
               1.5025235756329178, 0.6952839500255574, 1.271661230252733,
@@ -72,7 +74,7 @@ class TestHeatmap(TestCase):
              (0.7934461515867415, 0.4497104244247795, 0.7127042590637039,
               0.9313185954797953, 1.1683723389247052, 0.23451785425383564,
               1.7413442197913358, 0.33370067057028485, 1.3256191648260216,
-              0.0)))
+              0.0))))
 
     def test_compute_heatmap_order(self):
         """Test the orders."""
