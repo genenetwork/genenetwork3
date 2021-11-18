@@ -16,9 +16,7 @@ from gn3.computations.partial_correlations import (
     dictify_by_samples,
     tissue_correlation,
     find_identical_traits,
-    partial_correlation_matrix,
-    good_dataset_samples_indexes,
-    partial_correlation_recursive)
+    good_dataset_samples_indexes)
 
 sampleslist = ["B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"]
 control_traits = (
@@ -397,40 +395,3 @@ class TestPartialCorrelations(TestCase):
             with self.subTest(xdata=xdata, ydata=ydata, zdata=zdata):
                 self.assertTrue(
                     build_data_frame(xdata, ydata, zdata).equals(expected))
-
-    def test_partial_correlation_matrix(self):
-        """
-        Test that `partial_correlation_matrix` computes the appropriate
-        correlation value.
-        """
-        for sample in parse_test_data_csv(
-                ("tests/unit/computations/partial_correlations_test_data/"
-                 "pcor_mat_blackbox_test.csv")):
-            with self.subTest(
-                    xdata=sample["x"], ydata=sample["y"], zdata=sample["z"],
-                    method=sample["method"], omit_nones=sample["rm"]):
-                self.assertEqual(
-                    partial_correlation_matrix(
-                        sample["x"], sample["y"], sample["z"],
-                        method=sample["method"], omit_nones=sample["rm"]),
-                    sample["result"])
-
-    def test_partial_correlation_recursive(self):
-        """
-        Test that `partial_correlation_recursive` computes the appropriate
-        correlation value.
-        """
-        for sample in parse_test_data(
-                ("tests/unit/computations/partial_correlations_test_data/"
-                 "pcor_rec_blackbox_test.txt"),
-        parse_for_rec):
-            with self.subTest(
-                    xdata=sample["x"], ydata=sample["y"], zdata=sample["z"],
-                    method=sample["method"], omit_nones=sample["rm"]):
-                self.assertEqual(
-                    round(
-                        partial_correlation_recursive(
-                            sample["x"], sample["y"], sample["z"],
-                            method=sample["method"], omit_nones=sample["rm"]),
-                        ROUND_TO),
-                    round(sample["result"], ROUND_TO))
