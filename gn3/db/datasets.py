@@ -1,7 +1,11 @@
 """
 This module contains functions relating to specific trait dataset manipulation
 """
-from typing import Any
+import re
+from string import Template
+from typing import Any, Dict, Optional
+from SPARQLWrapper import JSON, SPARQLWrapper
+from gn3.settings import SPARQL_ENDPOINT
 
 def retrieve_probeset_trait_dataset_name(
         threshold: int, name: str, connection: Any):
@@ -289,3 +293,83 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
         **dataset_fns[trait_type](),
         **group
     }
+
+def dataset_metadata(accession_id: str) -> Optional[Dict[str, Any]]:
+    """Return info about dataset with ACCESSION_ID."""
+    # Check accession_id to protect against query injection.
+    pattern = re.compile(r'GN\d+', re.ASCII)
+    if not pattern.fullmatch(accession_id):
+        return None
+    query = Template("""
+PREFIX gn: <https://genenetwork.org/>
+SELECT ?name ?geo_series ?title ?status ?platform_name ?normalization_name
+       ?species_name ?inbred_set_name ?tissue_name
+       ?investigator_name ?investigator_address ?investigator_city
+       ?investigator_state ?investigator_zip ?investigator_phone
+       ?investigator_email ?investigator_country ?investigator_homepage
+       ?specifics ?summary ?about_cases ?about_tissue ?about_platform
+       ?about_data_processing ?notes ?experiment_design ?contributors
+       ?citation ?acknowledgment
+WHERE {
+  ?dataset rdf:type gn:dataset .
+  ?dataset gn:name ?name .
+  ?dataset gn:geoSeries ?geo_series .
+  ?dataset gn:title ?title .
+  ?dataset gn:datasetStatus ?status .
+
+  ?dataset gn:datasetOfPlatform ?platform .
+  ?platform gn:name ?platform_name .
+
+  ?dataset gn:normalization ?normalization .
+  ?normalization gn:name ?normalization_name .
+
+  ?dataset gn:datasetOfSpecies ?species .
+  ?species gn:menuName ?species_name .
+
+  ?dataset gn:datasetOfInbredSet ?inbredSet .
+  ?inbredSet gn:name ?inbred_set_name .
+
+  ?dataset gn:datasetOfTissue ?tissue .
+  ?tissue gn:name ?tissue_name .
+
+  OPTIONAL { ?dataset gn:datasetOfInvestigator ?investigator . }
+  OPTIONAL { ?investigator foaf:name ?investigator_name . }
+  OPTIONAL { ?investigator gn:address ?investigator_address . }
+  OPTIONAL { ?investigator gn:city ?investigator_city . }
+  OPTIONAL { ?investigator gn:state ?investigator_state . }
+  OPTIONAL { ?investigator gn:zipCode ?investigator_zip . }
+  OPTIONAL { ?investigator foaf:phone ?investigator_phone . }
+  OPTIONAL { ?investigator foaf:mbox ?investigator_email . }
+  OPTIONAL { ?investigator gn:country ?investigator_country . }
+  OPTIONAL { ?investigator foaf:homepage ?investigator_homepage . }
+
+  OPTIONAL { ?dataset gn:specifics ?specifics . }
+  OPTIONAL { ?dataset gn:summary ?summary . }
+  OPTIONAL { ?dataset gn:aboutCases ?about_cases . }
+  OPTIONAL { ?dataset gn:aboutTissue ?about_tissue . }
+  OPTIONAL { ?dataset gn:aboutPlatform ?about_platform . }
+  OPTIONAL { ?dataset gn:aboutDataProcessing ?about_data_processing . }
+  OPTIONAL { ?dataset gn:notes ?notes . }
+  OPTIONAL { ?dataset gn:experimentDesign ?experiment_design . }
+  OPTIONAL { ?dataset gn:contributors ?contributors . }
+  OPTIONAL { ?dataset gn:accessionId '$accession_id' . }
+  OPTIONAL { ?dataset gn:citation ?citation . }
+  OPTIONAL { ?dataset gn:acknowledgment ?acknowledgment . }
+}
+""")
+    sparql = SPARQLWrapper(SPARQL_ENDPOINT)
+    sparql.setQuery(query.substitute(accession_id=accession_id))
+    sparql.setReturnFormat(JSON)
+    query_results = sparql.queryAndConvert()
+    query_result = query_results['results']['bindings'][0]
+    # Build result dictionary, putting investigator metadata into a nested
+    # dictionary.
+    result = {}
+    for key, value in query_result.items():
+        if key.startswith('investigator_'):
+            if 'investigator' not in result:
+                result['investigator'] = {}
+            result['investigator'][key[len('investigator_'):]] = value['value']
+        else:
+            result[key] = value['value']
+    return result if result else None

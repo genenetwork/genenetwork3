@@ -45,6 +45,7 @@
              (gnu packages python-web)
              (gnu packages python-xyz)
              (gnu packages python-science)
+             (gnu packages rdf)
              ((guix build utils) #:select (with-directory-excursion))
              (guix build-system python)
              (guix gexp)
@@ -79,6 +80,7 @@
                        ("python-requests" ,python-requests)
                        ("python-scipy" ,python-scipy)
                        ("python-flask-socketio" ,python-flask-socketio)
+                       ("python-sparqlwrapper" ,python-sparqlwrapper)
                        ("python-sqlalchemy-stubs"
                         ,python-sqlalchemy-stubs)
                        ("r-optparse" ,r-optparse)

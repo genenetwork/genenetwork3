@@ -13,6 +13,9 @@ REDIS_JOB_QUEUE = "GN3::job-queue"
 TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
 RQTL_WRAPPER = "rqtl_wrapper.R"
 
+# SPARQL endpoint
+SPARQL_ENDPOINT = "http://localhost:8891/sparql"
+
 # SQL confs
 SQL_URI = os.environ.get(
     "SQL_URI", "mysql://webqtlout:webqtlout@localhost/db_webqtl")
