@@ -23,7 +23,7 @@
 ;;
 ;; To get a development container (e.g., run in emacs shell).
 ;;
-;;   guix environment -C -l guix.scm
+;;   guix shell -C -Df guix.scm
 
 (use-modules (gn packages gemma)
              (gn packages python)
