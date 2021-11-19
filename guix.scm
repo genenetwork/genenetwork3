@@ -17,12 +17,13 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with genenetwork3. If not, see https://www.gnu.org/licenses/.
 
-;; After checking out the git repo
-;;   cd ~ ; git clone https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics
+;; Make sure you have the
+;; https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics channel
+;; set up.
 ;;
 ;; To get a development container (e.g., run in emacs shell).
 ;;
-;;   env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ guix environment -C -l guix.scm
+;;   guix environment -C -l guix.scm
 
 (use-modules (gn packages gemma)
              (gn packages python)
