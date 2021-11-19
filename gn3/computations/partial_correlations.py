@@ -156,7 +156,7 @@ def tissue_correlation(
         "Method must be one of: {}".format(",".join(method_fns.keys())))
 
     corr, pvalue = method_fns[method](primary_trait_values, target_trait_values)
-    return (round(corr, 10), round(pvalue, 10))
+    return (corr, pvalue)
 
 def batch_computed_tissue_correlation(
         primary_trait_values: Tuple[float, ...], target_traits_dict: dict,

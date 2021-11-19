@@ -3,6 +3,7 @@
 from unittest import TestCase
 
 import pandas
+from numpy.testing import assert_allclose
 
 from gn3.computations.partial_correlations import (
     fix_samples,
@@ -250,7 +251,7 @@ class TestPartialCorrelations(TestCase):
                 with self.assertRaises(error, msg=error_msg):
                     tissue_correlation(primary, target, method)
 
-    def test_tissue_correlation(self):
+    def test_tissue_correlation(self): # pylint: disable=R0201
         """
         Test that the correct correlation values are computed for the given:
         - primary trait
@@ -259,11 +260,11 @@ class TestPartialCorrelations(TestCase):
         """
         for primary, target, method, expected in (
                 ((12.34, 18.36, 42.51), (37.25, 46.25, 46.56), "pearson",
-                 (0.6761779253, 0.5272701134)),
+                 (0.6761779252651052, 0.5272701133657985)),
                 ((1, 2, 3, 4, 5), (5, 6, 7, 8, 7), "spearman",
-                 (0.8207826817, 0.0885870053))):
+                 (0.8207826816681233, 0.08858700531354381))):
             with self.subTest(primary=primary, target=target, method=method):
-                self.assertEqual(
+                assert_allclose(
                     tissue_correlation(primary, target, method), expected)
 
     def test_good_dataset_samples_indexes(self):
