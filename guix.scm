@@ -84,7 +84,6 @@
                        ("r-stringi" ,r-stringi)
                        ("r-wgcna" ,r-wgcna)
                        ("r-rjson" ,r-rjson)
-                       ("python-plotly" ,python-plotly)
                        ("python-pandas" ,python-pandas)
                        ("python-pingouin" ,python-pingouin)
                        ("rust-qtlreaper" ,rust-qtlreaper)))
