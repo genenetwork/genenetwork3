@@ -5,9 +5,13 @@ It is an attempt to migrate over the partial correlations feature from
 GeneNetwork1.
 """
 
+import math
 from functools import reduce
-from typing import Any, Tuple, Sequence
+from typing import Any, Tuple, Union, Sequence
 from scipy.stats import pearsonr, spearmanr
+
+import pandas
+import pingouin
 
 from gn3.settings import TEXTDIR
 from gn3.data_helpers import parse_csv_line
@@ -152,7 +156,7 @@ def tissue_correlation(
         "Method must be one of: {}".format(",".join(method_fns.keys())))
 
     corr, pvalue = method_fns[method](primary_trait_values, target_trait_values)
-    return (round(corr, 10), round(pvalue, 10))
+    return (corr, pvalue)
 
 def batch_computed_tissue_correlation(
         primary_trait_values: Tuple[float, ...], target_traits_dict: dict,
@@ -245,7 +249,7 @@ def compute_partial_correlations_fast(# pylint: disable=[R0913, R0914]
     all_target_trait_names: Tuple[str, ...] = processed_trait_names_values[0]
     all_target_trait_values: Tuple[float, ...] = processed_trait_names_values[1]
 
-    all_correlations = determine_partials(
+    all_correlations = compute_partial(
         primary_vals, control_vals, all_target_trait_names,
         all_target_trait_values, method)
     ## Line 772 to 779 in GN1 are the cause of the weird complexity in the
@@ -258,32 +262,71 @@ def compute_partial_correlations_fast(# pylint: disable=[R0913, R0914]
             else fetched_correlations[corr[0]][0:2])
         for idx, corr in enumerate(all_correlations))
 
-def partial_correlation_matrix(
+def build_data_frame(
         xdata: Tuple[float, ...], ydata: Tuple[float, ...],
-        zdata: Tuple[float, ...], method: str = "pearsons",
-        omit_nones: bool = True) -> float:
+        zdata: Union[
+            Tuple[float, ...],
+            Tuple[Tuple[float, ...], ...]]) -> pandas.DataFrame:
     """
-    Computes the partial correlation coefficient using the
-    'variance-covariance matrix' method
+    Build a pandas DataFrame object from xdata, ydata and zdata
+    """
+    x_y_df = pandas.DataFrame({"x": xdata, "y": ydata})
+    if isinstance(zdata[0], float):
+        return x_y_df.join(pandas.DataFrame({"z": zdata}))
+    interm_df = x_y_df.join(pandas.DataFrame(
+        {"z{}".format(i): val for i, val in enumerate(zdata)}))
+    if interm_df.shape[1] == 3:
+        return interm_df.rename(columns={"z0": "z"})
+    return interm_df
 
-    This is a partial migration of the
-    `web.webqtl.correlation.correlationFunction.determinPartialsByR` function in
-    GeneNetwork1, specifically the `pcor.mat` function written in the R
-    programming language.
+def compute_partial(
+        primary_vals, control_vals, target_vals, target_names,
+        method: str) -> Tuple[
+            Union[
+                Tuple[str, int, float, float, float, float], None],
+            ...]:
     """
-    return 0
+    Compute the partial correlations.
 
-def partial_correlation_recursive(
-        xdata: Tuple[float, ...], ydata: Tuple[float, ...],
-        zdata: Tuple[float, ...], method: str = "pearsons",
-        omit_nones: bool = True) -> float:
-    """
-    Computes the partial correlation coefficient using the 'recursive formula'
-    method
+    This is a re-implementation of the
+    `web.webqtl.correlation.correlationFunction.determinePartialsByR` function
+    in GeneNetwork1.
 
-    This is a partial migration of the
-    `web.webqtl.correlation.correlationFunction.determinPartialsByR` function in
-    GeneNetwork1, specifically the `pcor.rec` function written in the R
-    programming language.
+    This implementation reworks the child function `compute_partial` which will
+    then be used in the place of `determinPartialsByR`.
+
+    TODO: moving forward, we might need to use the multiprocessing library to
+    speed up the computations, in case they are found to be slow.
     """
-    return 0
+    # replace the R code with `pingouin.partial_corr`
+    def __compute_trait_info__(target):
+        primary = [
+            prim for targ, prim in zip(target, primary_vals)
+            if targ is not None]
+        datafrm = build_data_frame(
+            primary,
+            [targ for targ in target if targ is not None],
+            [cont for i, cont in enumerate(control_vals)
+             if target[i] is not None])
+        covariates = "z" if datafrm.shape[1] == 3 else [
+            col for col in datafrm.columns if col not in ("x", "y")]
+        ppc = pingouin.partial_corr(
+            data=datafrm, x="x", y="y", covar=covariates, method=method)
+        pc_coeff = ppc["r"]
+
+        zero_order_corr = pingouin.corr(
+            datafrm["x"], datafrm["y"], method=method)
+
+        if math.isnan(pc_coeff):
+            return (
+                target[1], len(primary), pc_coeff, 1, zero_order_corr["r"],
+                zero_order_corr["p-val"])
+        return (
+            target[1], len(primary), pc_coeff,
+            (ppc["p-val"] if not math.isnan(ppc["p-val"]) else (
+                0 if (abs(pc_coeff - 1) < 0.0000001) else 1)),
+            zero_order_corr["r"], zero_order_corr["p-val"])
+
+    return tuple(
+        __compute_trait_info__(target)
+        for target in zip(target_vals, target_names))

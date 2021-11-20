@@ -1,6 +1,8 @@
 """Module contains tests for gn3.heatmaps.heatmaps"""
 from unittest import TestCase
+
 from numpy.testing import assert_allclose
+
 from gn3.heatmaps import (
     cluster_traits,
     get_loci_names,
@@ -25,7 +27,7 @@ slinked = (
 class TestHeatmap(TestCase):
     """Class for testing heatmap computation functions"""
 
-    def test_cluster_traits(self):
+    def test_cluster_traits(self): # pylint: disable=R0201
         """
         Test that the clustering is working as expected.
         """

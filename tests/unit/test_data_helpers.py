@@ -4,7 +4,7 @@ Test functions in gn3.data_helpers
 
 from unittest import TestCase
 
-from gn3.data_helpers import partition_all, parse_csv_line
+from gn3.data_helpers import partition_by, partition_all, parse_csv_line
 
 class TestDataHelpers(TestCase):
     """
@@ -59,3 +59,31 @@ class TestDataHelpers(TestCase):
                     parse_csv_line(
                         line=line, delimiter=delimiter, quoting=quoting),
                     expected)
+
+    def test_partition_by(self):
+        """
+        Test that `partition_by` groups the data using the given predicate
+
+        Given:
+          - `part_fn`: a predicate funtion that return boolean True/False
+          - `items`: a sequence of items
+        When:
+          - the partitioning predicate function and the sequence of items are
+            passed to the `partition_by` function
+        Then:
+          - the result is a tuple, with sub-tuples containing the data in the
+            original sequence. Each sub-tuple is a partition, ending as soon as
+            the next value in the sequence, when passed to `part_fn`, returns
+            boolean `True`.
+        """
+        for part_fn, items, expected in (
+                (lambda s: s.startswith("----"),
+                 ("------", "a", "b", "-----", "c", "----", "d", "e", "---",
+                  "f"),
+                 (("------", "a", "b"), ("-----", "c"),
+                  ("----", "d", "e", "---", "f"))),
+                (lambda x: (x % 2) == 0,
+                 (0, 1, 3, 2, 4, 5, 7, 6, 9, 1),
+                 ((0, 1, 3), (2,), (4, 5, 7), (6, 9, 1))),):
+            with self.subTest(items=items):
+                self.assertEqual(partition_by(part_fn, items), expected)

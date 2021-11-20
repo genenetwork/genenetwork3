@@ -35,4 +35,4 @@ Werkzeug==1.0.1
 wrapt==1.12.1
 plotly==4.14.3
 flask-cors==3.0.9
-pingouin==0.3.12
+pingouin
