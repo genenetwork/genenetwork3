@@ -34,7 +34,7 @@ def get_filename(target_db_name: str, conn: Any) -> str:
     return ""
 
 def build_temporary_literature_table(
-        species: str, gene_id: int, return_number: int, conn: Any) -> str:
+        conn: Any, species: str, gene_id: int, return_number: int) -> str:
     """
     Build and populate a temporary table to hold the literature correlation data
     to be used in computations.
@@ -128,7 +128,7 @@ def fetch_literature_correlations(
     GeneNetwork1.
     """
     temp_table = build_temporary_literature_table(
-        species, gene_id, return_number, conn)
+        conn, species, gene_id, return_number)
     query_fns = {
         "Geno": fetch_geno_literature_correlations,
         # "Temp": fetch_temp_literature_correlations,
@@ -268,8 +268,8 @@ def fetch_gene_symbol_tissue_value_dict_for_trait(
     return {}
 
 def build_temporary_tissue_correlations_table(
-        trait_symbol: str, probeset_freeze_id: int, method: str,
-        return_number: int, conn: Any) -> str:
+        conn: Any, trait_symbol: str, probeset_freeze_id: int, method: str,
+        return_number: int) -> str:
     """
     Build a temporary table to hold the tissue correlations data.
 
@@ -320,7 +320,7 @@ def fetch_tissue_correlations(# pylint: disable=R0913
     GeneNetwork1.
     """
     temp_table = build_temporary_tissue_correlations_table(
-        trait_symbol, probeset_freeze_id, method, return_number, conn)
+        conn, trait_symbol, probeset_freeze_id, method, return_number)
     with conn.cursor() as cursor:
         cursor.execute(
             (
