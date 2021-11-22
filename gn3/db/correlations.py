@@ -402,6 +402,43 @@ def fetch_sample_ids(
             species_name=species)
         return cursor.fetchall()
 
+def build_query_sgo_lit_corr(
+        db_type: str, temp_table: str, sample_id_columns: str,
+        joins: Tuple[str, ...]) -> str:
+    """
+    Build query for `SGO Literature Correlation` data, when querying the given
+    `temp_table` temporary table.
+    """
+    return (
+        (f"SELECT {db_type}.Name, {temp_table}.value, " +
+         sample_id_columns +
+         f" FROM ({db_type}, {db_type}XRef, {db_type}Freeze) " +
+         f"LEFT JOIN {temp_table} ON {temp_table}.GeneId2=ProbeSet.GeneId " +
+         " ".join(joins) +
+         f" WHERE ProbeSet.GeneId IS NOT NULL " +
+         f"AND {temp_table}.value IS NOT NULL " +
+         f"AND {db_type}XRef.{db_type}FreezeId = {db_type}Freeze.Id " +
+         f"AND {db_type}Freeze.Name = %(db_name)s " +
+         f"AND {db_type}.Id = {db_type}XRef.{db_type}Id " +
+         f"ORDER BY {db_type}.Id"),
+        2)
+
+def build_query_tissue_corr(db_type, temp_table, sample_id_columns, joins):
+    return (
+        (f"SELECT {db_type}.Name, {temp_table}.Correlation, " +
+         f"{temp_table}.PValue, " +
+         sample_id_columns +
+         f" FROM ({db_type}, {db_type}XRef, {db_type}Freeze) " +
+         f"LEFT JOIN {temp_table} ON {temp_table}.Symbol=ProbeSet.Symbol " +
+         " ".join(joins) +
+         f" WHERE ProbeSet.Symbol IS NOT NULL " +
+         f"AND {temp_table}.Correlation IS NOT NULL " +
+         f"AND {db_type}XRef.{db_type}FreezeId = {db_type}Freeze.Id " +
+         f"AND {db_type}Freeze.Name = %(db_name)s " +
+         f"AND {db_type}.Id = {db_type}XRef.{db_type}Id "
+         f"ORDER BY {db_type}.Id"),
+        3)
+
 def fetch_all_database_data(
         conn: Any, species: str, gene_id: int, gene_symbol: str,
         samples: Tuple[str, ...], db_type: str, db_name: str, method: str,
@@ -411,37 +448,6 @@ def fetch_all_database_data(
     `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
     GeneNetwork1.
     """
-    def __build_query_sgo_lit__(temp_table, sample_id_columns, joins):
-        return (
-            (f"SELECT {db_type}.Name, {temp_table}.value " +
-             sample_id_columns +
-             f" FROM ({db_type}, {db_type}XRef, {db_type}Freeze) " +
-             f"LEFT JOIN {temp_table} ON {temp_table}.GeneId2=ProbeSet.GeneId " +
-             " ".join(joins) +
-             f" WHERE ProbeSet.GeneId IS NOT NULL " +
-             f"AND {temp_table}.value IS NOT NULL " +
-             f"AND {db_type}XRef.{db_type}FreezeId = {db_type}Freeze.Id " +
-             f"AND {db_type}Freeze.Name = %(db_name)s " +
-             f"AND {db_type}.Id = {db_type}XRef.{db_type}Id " +
-             f"ORDER BY {db_type}.Id"),
-            2)
-
-    def __build_query_tissue_corr__(temp_table, sample_id_columns, joins):
-        return (
-            (f"SELECT {db_type}.Name, {temp_table}.Correlation, " +
-             f"{temp_table}.PValue, " +
-             sample_id_columns +
-             f" FROM ({db_type}, {db_type}XRef, {db_type}Freeze) " +
-             f"LEFT JOIN {temp_table} ON {temp_table}.Symbol=ProbeSet.Symbol " +
-             " ".join(joins) +
-             f" WHERE ProbeSet.Symbol IS NOT NULL " +
-             f"AND {temp_table}.Correlation IS NOT NULL " +
-             f"AND {db_type}XRef.{db_type}FreezeId = {db_type}Freeze.Id " +
-             f"AND {db_type}Freeze.Name = %(db_name)s " +
-             f"AND {db_type}.Id = {db_type}XRef.%sId "
-             f"ORDER BY {db_type}.Id"),
-            3)
-
     def __build_query__(sample_ids, temp_table):
         sample_id_columns = ", ".join(f"T{smpl}.value" for smpl in samples_ids)
         if db_type == "Publish":
@@ -460,17 +466,17 @@ def fetch_all_database_data(
                 1)
         if temp_table is not None:
             joins = tuple(
-                ("LEFT JOIN {db_type}Data AS T{item} "
-                 "ON T{item}.Id = {db_type}XRef.DataId "
-                 "AND T{item}.StrainId=%(T{item}_sample_id)s")
+                (f"LEFT JOIN {db_type}Data AS T{item} "
+                 f"ON T{item}.Id = {db_type}XRef.DataId "
+                 f"AND T{item}.StrainId=%(T{item}_sample_id)s")
                 for item in sample_ids)
             if method.lower() == "sgo literature correlation":
-                return __build_query_sgo_lit__(
+                return build_query_sgo_lit_corr(
                     sample_ids, temp_table, sample_id_columns)
             if method.lower() in (
                     "tissue correlation, pearson's r",
                     "tissue correlation, spearman's rho"):
-                return __build_query_tissue_corr__(
+                return build_query_tissue_corr(
                     sample_ids, temp_table, sample_id_columns)
         joins = tuple(
             (f"LEFT JOIN {db_type}Data AS T{item} "
