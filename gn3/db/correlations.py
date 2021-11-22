@@ -379,3 +379,150 @@ def check_symbol_for_tissue_correlation(
             return True
 
     return False
+
+def fetch_sample_ids(
+        conn: Any, sample_names: Tuple[str, ...], species_name: str) -> Tuple[
+            int, ...]:
+    """
+    Given a sequence of sample names, and a species name, return the sample ids
+    that correspond to both.
+
+    This is a partial migration of the
+    `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
+    GeneNetwork1.
+    """
+    query = (
+        "SELECT Strain.Id FROM Strain, Species "
+        "WHERE Strain.Name IN %(samples_names)s "
+        "AND Strain.SpeciesId=Species.Id "
+        "AND Species.name=%(species_name)s")
+    with conn.cursor() as cursor:
+        cursor.execute(
+            query, samples_names=tuple(samples),
+            species_name=species)
+        return cursor.fetchall()
+
+def fetch_all_database_data(
+        conn: Any, species: str, gene_id: int, gene_symbol: str,
+        samples: Tuple[str, ...], db_type: str, db_name: str, method: str,
+        returnNumber: int, tissueProbeSetFreezeId: int) -> Tuple[Any, Any]:
+    """
+    This is a migration of the
+    `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
+    GeneNetwork1.
+    """
+    def __build_query_sgo_lit__(temp_table, sample_id_columns, joins):
+        return (
+            (f"SELECT {db_type}.Name, {temp_table}.value " +
+             sample_id_columns +
+             f" FROM ({db_type}, {db_type}XRef, {db_type}Freeze) " +
+             f"LEFT JOIN {temp_table} ON {temp_table}.GeneId2=ProbeSet.GeneId " +
+             " ".join(joins) +
+             f" WHERE ProbeSet.GeneId IS NOT NULL " +
+             f"AND {temp_table}.value IS NOT NULL " +
+             f"AND {db_type}XRef.{db_type}FreezeId = {db_type}Freeze.Id " +
+             f"AND {db_type}Freeze.Name = %(db_name)s " +
+             f"AND {db_type}.Id = {db_type}XRef.{db_type}Id " +
+             f"ORDER BY {db_type}.Id"),
+            2)
+
+    def __build_query_tissue_corr__(temp_table, sample_id_columns, joins):
+        return (
+            (f"SELECT {db_type}.Name, {temp_table}.Correlation, " +
+             f"{temp_table}.PValue, " +
+             sample_id_columns +
+             f" FROM ({db_type}, {db_type}XRef, {db_type}Freeze) " +
+             f"LEFT JOIN {temp_table} ON {temp_table}.Symbol=ProbeSet.Symbol " +
+             " ".join(joins) +
+             f" WHERE ProbeSet.Symbol IS NOT NULL " +
+             f"AND {temp_table}.Correlation IS NOT NULL " +
+             f"AND {db_type}XRef.{db_type}FreezeId = {db_type}Freeze.Id " +
+             f"AND {db_type}Freeze.Name = %(db_name)s " +
+             f"AND {db_type}.Id = {db_type}XRef.%sId "
+             f"ORDER BY {db_type}.Id"),
+            3)
+
+    def __build_query__(sample_ids, temp_table):
+        sample_id_columns = ", ".join(f"T{smpl}.value" for smpl in samples_ids)
+        if db_type == "Publish":
+            joins = tuple(
+                ("LEFT JOIN PublishData AS T{item} "
+                 "ON T{item}.Id = PublishXRef.DataId "
+                 "AND T{item}.StrainId = %(T{item}_sample_id)s")
+                for item in sample_ids)
+            return (
+                ("SELECT PublishXRef.Id, " +
+                 sample_id_columns +
+                 "FROM (PublishXRef, PublishFreeze) " +
+                 " ".join(joins) +
+                 " WHERE PublishXRef.InbredSetId = PublishFreeze.InbredSetId "
+                 "AND PublishFreeze.Name = %(db_name)s"),
+                1)
+        if temp_table is not None:
+            joins = tuple(
+                ("LEFT JOIN {db_type}Data AS T{item} "
+                 "ON T{item}.Id = {db_type}XRef.DataId "
+                 "AND T{item}.StrainId=%(T{item}_sample_id)s")
+                for item in sample_ids)
+            if method.lower() == "sgo literature correlation":
+                return __build_query_sgo_lit__(
+                    sample_ids, temp_table, sample_id_columns)
+            if method.lower() in (
+                    "tissue correlation, pearson's r",
+                    "tissue correlation, spearman's rho"):
+                return __build_query_tissue_corr__(
+                    sample_ids, temp_table, sample_id_columns)
+        joins = tuple(
+            (f"LEFT JOIN {db_type}Data AS T{item} "
+             f"ON T{item}.Id = {db_type}XRef.DataId "
+             f"AND T{item}.StrainId = %(T{item}_sample_id)s")
+            for item in sample_ids)
+        return (
+            (
+                f"SELECT {db_type}.Name, " +
+                sample_id_columns +
+                f" FROM ({db_type}, {db_type}XRef, {db_type}Freeze) " +
+                " ".join(joins) +
+                f" WHERE {db_type}XRef.{db_type}FreezeId = {db_type}Freeze.Id " +
+                f"AND {db_type}Freeze.Name = %(db_name)s " +
+                f"AND {db_type}.Id = {db_type}XRef.{db_type}Id " +
+                f"ORDER BY {db_type}.Id"),
+            1)
+
+    def __fetch_data__(sample_ids, temp_table):
+        query, data_start_pos = __build_query__(sample_ids, temp_table)
+        with conn.cursor() as cursor:
+            cursor.execute(
+                query, db_name=db_name,
+                **{f"T{item}_sample_id": item for item in sample_ids})
+            return cursor.fetchall()
+
+    sample_ids = tuple(
+        # look into graduating this to an argument and removing the `samples`
+        # and `species` argument: function currying and compositions might help
+        # with this
+        f"{sample_id}" for sample_id in
+        fetch_sample_ids(conn, samples, species))
+
+    temp_table = None
+    if gene_id and db_type == "probeset":
+        if method.lower() == "sgo literature correlation":
+            temp_table = build_temporary_literature_table(
+                conn, species, gene_id, return_number)
+        if method.lower() in (
+                "tissue correlation, pearson's r",
+                "tissue correlation, spearman's rho"):
+            temp_table = build_temporary_tissue_correlations_table(
+                conn, trait_symbol, probeset_freeze_id, method, return_number)
+
+    trait_database = tuple(
+        item for sublist in
+        (__fetch_data__(ssample_ids, temp_table)
+         for ssample_ids in partition_all(25, sample_ids))
+        for item in sublist)
+
+    if temp_table:
+        with conn.cursor() as cursor:
+            cursor.execute(f"DROP TEMPORARY TABLE {temp_table}")
+
+    return trait_database, data_start_pos
