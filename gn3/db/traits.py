@@ -103,7 +103,7 @@ def get_trait_csv_sample_data(conn: Any,
                 ",".join([str(val) if val else "x"
                           for val in (strain_id, strain_name,
                                       value, error, count)]))
-    return f"# Publish Data Id: {publishdata_id}\n\n" + "\n".join(csv_data)
+    return f"# Publish Data Id: {publishdata_id}\n" + "\n".join(csv_data)
 
 
 def update_sample_data(conn: Any,
