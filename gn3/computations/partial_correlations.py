@@ -200,11 +200,13 @@ def good_dataset_samples_indexes(
         samples_from_file.index(good) for good in
         set(samples).intersection(set(samples_from_file))))
 
-def compute_partial_correlations_fast(# pylint: disable=[R0913, R0914]
+def partial_correlations_fast(# pylint: disable=[R0913, R0914]
         samples, primary_vals, control_vals, database_filename,
         fetched_correlations, method: str, correlation_type: str) -> Tuple[
             float, Tuple[float, ...]]:
     """
+    Computes partial correlation coefficients using data from a CSV file.
+
     This is a partial migration of the
     `web.webqtl.correlation.PartialCorrDBPage.getPartialCorrelationsFast`
     function in GeneNetwork1.

@@ -13,6 +13,9 @@ class TestCorrelation(TestCase):
     maxDiff = None
 
     def test_build_query_sgo_lit_corr(self):
+        """
+        Test that the literature correlation query is built correctly.
+        """
         self.assertEqual(
             build_query_sgo_lit_corr(
                 "Probeset",
@@ -51,6 +54,9 @@ class TestCorrelation(TestCase):
              2))
 
     def test_build_query_tissue_corr(self):
+        """
+        Test that the tissue correlation query is built correctly.
+        """
         self.assertEqual(
             build_query_tissue_corr(
                 "Probeset",
