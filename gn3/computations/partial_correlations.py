@@ -200,22 +200,6 @@ def good_dataset_samples_indexes(
         samples_from_file.index(good) for good in
         set(samples).intersection(set(samples_from_file))))
 
-def determine_partials(
-        primary_vals, control_vals, all_target_trait_names,
-        all_target_trait_values, method):
-    """
-    This **WILL** be a migration of
-    `web.webqtl.correlation.correlationFunction.determinePartialsByR` function
-    in GeneNetwork1.
-
-    The function in GeneNetwork1 contains code written in R that is then used to
-    compute the partial correlations.
-    """
-    ## This function is not implemented at this stage
-    return tuple(
-        primary_vals, control_vals, all_target_trait_names,
-        all_target_trait_values, method)
-
 def compute_partial_correlations_fast(# pylint: disable=[R0913, R0914]
         samples, primary_vals, control_vals, database_filename,
         fetched_correlations, method: str, correlation_type: str) -> Tuple[
@@ -330,3 +314,47 @@ def compute_partial(
     return tuple(
         __compute_trait_info__(target)
         for target in zip(target_vals, target_names))
+
+def partial_correlations_normal(# pylint: disable=R0913
+        primary_vals, control_vals, input_trait_gene_id, trait_database,
+        data_start_pos: int, db_type: str, method: str) -> Tuple[
+            float, Tuple[float, ...]]:
+    """
+    Computes the correlation coefficients.
+
+    This is a migration of the
+    `web.webqtl.correlation.PartialCorrDBPage.getPartialCorrelationsNormal`
+    function in GeneNetwork1.
+    """
+    def __add_lit_and_tiss_corr__(item):
+        if method.lower() == "sgo literature correlation":
+            # if method is 'SGO Literature Correlation', `compute_partial`
+            # would give us LitCorr in the [1] position
+            return tuple(item) + trait_database[1]
+        if method.lower() in (
+                "tissue correlation, pearson's r",
+                "tissue correlation, spearman's rho"):
+            # if method is 'Tissue Correlation, *', `compute_partial` would give
+            # us Tissue Corr in the [1] position and Tissue Corr P Value in the
+            # [2] position
+            return tuple(item) + (trait_database[1], trait_database[2])
+        return item
+
+    target_trait_names, target_trait_vals = reduce(
+        lambda acc, item: (acc[0]+(item[0],), acc[1]+(item[data_start_pos:],)),
+        trait_database, (tuple(), tuple()))
+
+    all_correlations = compute_partial(
+        primary_vals, control_vals, target_trait_vals, target_trait_names,
+        method)
+
+    if (input_trait_gene_id and db_type == "ProbeSet" and method.lower() in (
+            "sgo literature correlation", "tissue correlation, pearson's r",
+            "tissue correlation, spearman's rho")):
+        return (
+            len(trait_database),
+            tuple(
+                __add_lit_and_tiss_corr__(item)
+                for idx, item in enumerate(all_correlations)))
+
+    return len(trait_database), all_correlations
