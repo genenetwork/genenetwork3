@@ -408,6 +408,10 @@ def build_query_sgo_lit_corr(
     """
     Build query for `SGO Literature Correlation` data, when querying the given
     `temp_table` temporary table.
+
+    This is a partial migration of the
+    `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
+    GeneNetwork1.
     """
     return (
         (f"SELECT {db_type}.Name, {temp_table}.value, " +
@@ -424,6 +428,14 @@ def build_query_sgo_lit_corr(
         2)
 
 def build_query_tissue_corr(db_type, temp_table, sample_id_columns, joins):
+    """
+    Build query for `Tissue Correlation` data, when querying the given
+    `temp_table` temporary table.
+
+    This is a partial migration of the
+    `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
+    GeneNetwork1.
+    """
     return (
         (f"SELECT {db_type}.Name, {temp_table}.Correlation, " +
          f"{temp_table}.PValue, " +
