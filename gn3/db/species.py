@@ -57,3 +57,20 @@ def translate_to_mouse_gene_id(species: str, geneid: int, conn: Any) -> int:
             return translated_gene_id[0]
 
     return 0 # default if all else fails
+
+def species_name(conn: Any, group: str) -> str:
+    """
+    Retrieve the name of the species, given the group (RISet).
+
+    This is a migration of the
+    `web.webqtl.dbFunction.webqtlDatabaseFunction.retrieveSpecies` function in
+    GeneNetwork1.
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(
+            ("SELECT Species.Name FROM Species, InbredSet "
+             "WHERE InbredSet.Name = %(group_name)s "
+             "AND InbredSet.SpeciesId = Species.Id"),
+            group_name=group_name)
+        return cursor.fetchone()[0]
+    return None
