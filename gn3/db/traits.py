@@ -79,6 +79,11 @@ def export_trait_data(
 def get_trait_csv_sample_data(conn: Any,
                               trait_name: int, phenotype_id: int):
     """Fetch a trait and return it as a csv string"""
+
+    def __float_strip(n):
+        if str(n)[-2:] == ".0":
+            return str(int(n))
+        return str(n)
     sql = ("SELECT DISTINCT Strain.Id, PublishData.Id, Strain.Name, "
            "PublishData.value, "
            "PublishSE.error, NStrain.count FROM "
@@ -100,7 +105,7 @@ def get_trait_csv_sample_data(conn: Any,
             (strain_id, publishdata_id,
              strain_name, value, error, count) = record
             csv_data.append(
-                ",".join([str(val) if val else "x"
+                ",".join([__float_strip(val) if val else "x"
                           for val in (strain_id, strain_name,
                                       value, error, count)]))
     return f"# Publish Data Id: {publishdata_id}\n" + "\n".join(csv_data)
