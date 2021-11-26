@@ -23,8 +23,8 @@ def get_filename(target_db_name: str, conn: Any) -> str:
     """
     with conn.cursor() as cursor:
         cursor.execute(
-            "SELECT Id, FullName from ProbeSetFreeze WHERE Name-%s",
-            target_db_name)
+            "SELECT Id, FullName from ProbeSetFreeze WHERE Name=%s",
+            (target_db_name,))
         result = cursor.fetchone()
         if result:
             return "ProbeSetFreezeId_{tid}_FullName_{fname}.txt".format(
@@ -398,9 +398,12 @@ def fetch_sample_ids(
         "AND Species.name=%(species_name)s")
     with conn.cursor() as cursor:
         cursor.execute(
-            query, samples_names=tuple(sample_names),
-            species_name=species_name)
         return cursor.fetchall()
+            query,
+            {
+                "samples_names": tuple(sample_names),
+                "species_name": species_name
+            })
 
 def build_query_sgo_lit_corr(
         db_type: str, temp_table: str, sample_id_columns: str,
@@ -511,8 +514,9 @@ def fetch_all_database_data(# pylint: disable=[R0913, R0914]
         query, data_start_pos = __build_query__(sample_ids, temp_table)
         with conn.cursor() as cursor:
             cursor.execute(
-                query, db_name=db_name,
-                **{f"T{item}_sample_id": item for item in sample_ids})
+                query,
+                {"db_name": db_name,
+                 **{f"T{item}_sample_id": item for item in sample_ids}})
             return (cursor.fetchall(), data_start_pos)
 
     sample_ids = tuple(

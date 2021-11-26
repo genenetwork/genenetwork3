@@ -71,6 +71,6 @@ def species_name(conn: Any, group: str) -> str:
             ("SELECT Species.Name FROM Species, InbredSet "
              "WHERE InbredSet.Name = %(group_name)s "
              "AND InbredSet.SpeciesId = Species.Id"),
-            group_name=group_name)
+            {"group_name": group})
         return cursor.fetchone()[0]
     return None
