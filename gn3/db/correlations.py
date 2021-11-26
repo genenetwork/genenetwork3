@@ -2,7 +2,7 @@
 This module will hold functions that are used in the (partial) correlations
 feature to access the database to retrieve data needed for computations.
 """
-
+import os
 from functools import reduce
 from typing import Any, Dict, Tuple, Union
 
@@ -28,11 +28,13 @@ def get_filename(conn: Any, target_db_name: str, text_files_dir: str) -> Union[
             (target_db_name,))
         result = cursor.fetchone()
         if result:
-            return "ProbeSetFreezeId_{tid}_FullName_{fname}.txt".format(
+            filename = "ProbeSetFreezeId_{tid}_FullName_{fname}.txt".format(
                 tid=result[0],
                 fname=result[1].replace(' ', '_').replace('/', '_'))
+            return ((filename in os.listdir(text_file_dir))
+                    and f"{text_files_dir}/{filename}")
 
-    return ""
+    return False
 
 def build_temporary_literature_table(
         conn: Any, species: str, gene_id: int, return_number: int) -> str:
