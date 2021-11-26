@@ -399,12 +399,12 @@ def fetch_sample_ids(
         "AND Species.name=%(species_name)s")
     with conn.cursor() as cursor:
         cursor.execute(
-        return cursor.fetchall()
             query,
             {
                 "samples_names": tuple(sample_names),
                 "species_name": species_name
             })
+        return tuple(row[0] for row in cursor.fetchall())
 
 def build_query_sgo_lit_corr(
         db_type: str, temp_table: str, sample_id_columns: str,
