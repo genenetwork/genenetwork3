@@ -467,6 +467,8 @@ def fetch_all_database_data(# pylint: disable=[R0913, R0914]
     `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
     GeneNetwork1.
     """
+    db_type = dataset["dataset_type"]
+    db_name = dataset["dataset_name"]
     def __build_query__(sample_ids, temp_table):
         sample_id_columns = ", ".join(f"T{smpl}.value" for smpl in sample_ids)
         if db_type == "Publish":
@@ -551,4 +553,4 @@ def fetch_all_database_data(# pylint: disable=[R0913, R0914]
         with conn.cursor() as cursor:
             cursor.execute(f"DROP TEMPORARY TABLE {temp_table}")
 
-    return (tuple(item[0] for item in trait_database), trait_database[0][1])
+    return (trait_database[0], trait_database[1])
