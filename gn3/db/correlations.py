@@ -4,7 +4,7 @@ feature to access the database to retrieve data needed for computations.
 """
 
 from functools import reduce
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Union
 
 from gn3.random import random_string
 from gn3.data_helpers import partition_all
@@ -12,7 +12,8 @@ from gn3.db.species import translate_to_mouse_gene_id
 
 from gn3.computations.partial_correlations import correlations_of_all_tissue_traits
 
-def get_filename(target_db_name: str, conn: Any) -> str:
+def get_filename(conn: Any, target_db_name: str, text_files_dir: str) -> Union[
+        str, bool]:
     """
     Retrieve the name of the reference database file with which correlations are
     computed.
@@ -456,8 +457,9 @@ def build_query_tissue_corr(db_type, temp_table, sample_id_columns, joins):
 
 def fetch_all_database_data(# pylint: disable=[R0913, R0914]
         conn: Any, species: str, gene_id: int, trait_symbol: str,
-        samples: Tuple[str, ...], db_type: str, db_name: str, method: str,
-        return_number: int, probeset_freeze_id: int) -> Tuple[Any, Any]:
+        samples: Tuple[str, ...], dataset: dict, method: str,
+        return_number: int, probeset_freeze_id: int) -> Tuple[
+            Tuple[float], int]:
     """
     This is a migration of the
     `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
