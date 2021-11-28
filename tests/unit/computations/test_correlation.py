@@ -113,36 +113,23 @@ class TestCorrelation(TestCase):
         """Test for doing sample correlation gets the cor\
         and p value and rho value using pearson correlation
         """
-        primary_values = [2.3, 4.1, 5]
-        target_values = [3.4, 6.2, 4.1]
+        primary_values = [2.3, 4.1, 5, 4.2, None, None, 4, 1.2, 1.1]
+        target_values = [3.4, 6.2, 4, 1.1, 1.2, None, 8, 1.1, 2.1]
 
-        norm_vals.return_value = ([2.3, 4.1, 5, 4.2, 4, 1.2],
-                                  [3.4, 6.2, 4, 1.1, 8, 1.1], 6)
-        compute_corr.side_effect = [(0.7, 0.3), (-1.0, 0.9), (1, 0.21)]
 
-        pearson_results = compute_sample_r_correlation(trait_name="1412_at",
-                                                       corr_method="pearson",
-                                                       trait_vals=primary_values,
-                                                       target_samples_vals=target_values)
+        norm_vals.return_value = iter(
+            [(2.3, 3.4), (4.1, 6.2), (5, 4), (4.2, 1.1), (4, 8), (1.2, 1.1), (1.1, 2.1)])
 
-        spearman_results = compute_sample_r_correlation(trait_name="1412_at",
-                                                        corr_method="spearman",
-                                                        trait_vals=primary_values,
-                                                        target_samples_vals=target_values)
+
+        compute_corr.return_value = (0.8, 0.21)
 
         bicor_results = compute_sample_r_correlation(trait_name="1412_at",
                                                      corr_method="bicor",
                                                      trait_vals=primary_values,
                                                      target_samples_vals=target_values)
 
-        self.assertEqual(bicor_results, ("1412_at", 1, 0.21, 6))
-        self.assertEqual(pearson_results, ("1412_at", 0.7, 0.3, 6))
-        self.assertEqual(spearman_results, ("1412_at", -1.0, 0.9, 6))
 
-        self.assertIsInstance(
-            pearson_results, tuple, "message")
-        self.assertIsInstance(
-            spearman_results, tuple, "message")
+        self.assertEqual(bicor_results, ("1412_at", 0.8, 0.21, 7))
 
     def test_filter_shared_sample_keys(self):
         """Function to  tests shared key between two dicts"""
