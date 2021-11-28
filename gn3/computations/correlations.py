@@ -79,9 +79,12 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
 
     """
 
-    sanitized_traits_vals, sanitized_target_vals = list(
-        zip(*list(normalize_values(trait_vals, target_samples_vals))))
-    num_overlap = len(sanitized_traits_vals)
+    try:
+        sanitized_traits_vals, sanitized_target_vals = list(
+            zip(*list(normalize_values(trait_vals, target_samples_vals))))
+        num_overlap = len(sanitized_traits_vals)
+    except ValueError:
+        return
 
     if num_overlap > 5:
 
