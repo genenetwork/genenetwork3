@@ -38,18 +38,13 @@ def map_shared_keys_to_values(target_sample_keys: List,
     return target_dataset_data
 
 
-def normalize_values(a_values: List,
-                     b_values: List) -> Tuple[List[float], List[float], int]:
-    """Trim two lists of values to contain only the values they both share Given
-    two lists of sample values, trim each list so that it contains only the
-    samples that contain a value in both lists. Also returns the number of
-    such samples.
-
-    >>> normalize_values([2.3, None, None, 3.2, 4.1, 5],
-                         [3.4, 7.2, 1.3, None, 6.2, 4.1])
-    ([2.3, 4.1, 5], [3.4, 6.2, 4.1], 3)
+def normalize_values(a_values: List,b_values: List):
+    """
+    input:nested two list of primary and target values *includes None vals
+    output: yield two list of normalized values elimate if none 
 
     """
+    
     for a_val, b_val in zip(a_values, b_values):
         if (a_val and b_val is not None):
             yield a_val, b_val
