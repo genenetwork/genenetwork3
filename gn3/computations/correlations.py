@@ -38,13 +38,13 @@ def map_shared_keys_to_values(target_sample_keys: List,
     return target_dataset_data
 
 
-def normalize_values(a_values: List,b_values: List):
+def normalize_values(a_values: List, b_values: List):
     """
     input:nested two list of primary and target values *includes None vals
     output: yield two list of normalized values elimate if none 
 
     """
-    
+
     for a_val, b_val in zip(a_values, b_values):
         if (a_val and b_val is not None):
             yield a_val, b_val
@@ -166,8 +166,14 @@ def compute_all_sample_correlation(this_trait,
     for target_trait in target_dataset:
         trait_name = target_trait.get("trait_id")
         target_trait_data = target_trait["trait_sample_data"]
-        this_vals, target_vals = list(zip(*list(filter_shared_sample_keys(
-            this_trait_samples, target_trait_data))))
+
+        try:
+            this_vals, target_vals = list(zip(*list(filter_shared_sample_keys(
+                this_trait_samples, target_trait_data))))
+
+        except ValueError:
+            # case where no matching strain names
+            this_vals, target_vals = []
 
         sample_correlation = compute_sample_r_correlation(
             trait_name=trait_name,
