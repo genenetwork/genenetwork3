@@ -94,14 +94,19 @@ class TestCorrelation(TestCase):
 
     def test_normalize_values(self):
         """Function to test normalizing values """
-        results = normalize_values([2.3, None, None, 3.2, 4.1, 5],
-                                   [3.4, 7.2, 1.3, None, 6.2, 4.1])
 
-        expected_results = [(2.3, 4.1, 5), (3.4, 6.2, 4.1)]
+        test_data = [
+            [[2.3, None, None, 3.2, 4.1, 5], [3.4, 7.2, 1.3, None, 6.2, 4.1],
+             [(2.3, 4.1, 5), (3.4, 6.2, 4.1)]],
+            [[2.3, None, 1.3, None], [None, None, None, 1.2], []],
+            [[], [], []]
+        ]
 
-        self.assertEqual(list(zip(*list(results))), expected_results)
+        for a_values, b_values, expected_result in test_data:
+            with self.subTest(a_values=a_values, b_values=b_values):
+                results = normalize_values(a_values, b_values)
+                self.assertEqual(list(zip(*list(results))), expected_result)
 
-    @unittest.skip("reason for skipping")
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
     @mock.patch("gn3.computations.correlations.normalize_values")
     def test_compute_sample_r_correlation(self, norm_vals, compute_corr):
