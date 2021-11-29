@@ -6,15 +6,20 @@ GeneNetwork1.
 """
 
 import math
-from functools import reduce
+from functools import reduce, partial
 from typing import Any, Tuple, Union, Sequence
-from scipy.stats import pearsonr, spearmanr
 
 import pandas
 import pingouin
+from scipy.stats import pearsonr, spearmanr
 
 from gn3.settings import TEXTDIR
+from gn3.function_helpers import  compose
 from gn3.data_helpers import parse_csv_line
+from gn3.db.traits import export_informative
+from gn3.db.traits import retrieve_trait_info, retrieve_trait_data
+from gn3.db.species import species_name, translate_to_mouse_gene_id
+from gn3.db.correlations import get_filename, fetch_all_database_data
 
 def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
     """
@@ -112,7 +117,7 @@ def find_identical_traits(
         return acc + ident[1]
 
     def __dictify_controls__(acc, control_item):
-        ckey = "{:.3f}".format(control_item[0])
+        ckey = tuple("{:.3f}".format(item) for item in control_item[0])
         return {**acc, ckey: acc.get(ckey, tuple()) + (control_item[1],)}
 
     return (reduce(## for identical control traits
@@ -212,7 +217,7 @@ def partial_correlations_fast(# pylint: disable=[R0913, R0914]
     function in GeneNetwork1.
     """
     assert method in ("spearman", "pearson")
-    with open(f"{TEXTDIR}/{database_filename}", "r") as dataset_file:
+    with open(database_filename, "r") as dataset_file:
         dataset = tuple(dataset_file.readlines())
 
     good_dataset_samples = good_dataset_samples_indexes(
@@ -286,32 +291,37 @@ def compute_partial(
     """
     # replace the R code with `pingouin.partial_corr`
     def __compute_trait_info__(target):
+        targ_vals = target[0]
+        targ_name = target[1]
         primary = [
-            prim for targ, prim in zip(target, primary_vals)
+            prim for targ, prim in zip(targ_vals, primary_vals)
             if targ is not None]
+
         datafrm = build_data_frame(
             primary,
-            [targ for targ in target if targ is not None],
-            [cont for i, cont in enumerate(control_vals)
-             if target[i] is not None])
+            tuple(targ for targ in targ_vals if targ is not None),
+            tuple(cont for i, cont in enumerate(control_vals)
+                  if target[i] is not None))
         covariates = "z" if datafrm.shape[1] == 3 else [
             col for col in datafrm.columns if col not in ("x", "y")]
         ppc = pingouin.partial_corr(
-            data=datafrm, x="x", y="y", covar=covariates, method=method)
-        pc_coeff = ppc["r"]
+            data=datafrm, x="x", y="y", covar=covariates, method=(
+                "pearson" if "pearson" in method.lower() else "spearman"))
+        pc_coeff = ppc["r"][0]
 
         zero_order_corr = pingouin.corr(
-            datafrm["x"], datafrm["y"], method=method)
+            datafrm["x"], datafrm["y"], method=(
+            "pearson" if "pearson" in method.lower() else "spearman"))
 
         if math.isnan(pc_coeff):
             return (
-                target[1], len(primary), pc_coeff, 1, zero_order_corr["r"],
-                zero_order_corr["p-val"])
+                targ_name, len(primary), pc_coeff, 1, zero_order_corr["r"][0],
+                zero_order_corr["p-val"][0])
         return (
-            target[1], len(primary), pc_coeff,
-            (ppc["p-val"] if not math.isnan(ppc["p-val"]) else (
+            targ_name, len(primary), pc_coeff,
+            (ppc["p-val"][0] if not math.isnan(ppc["p-val"][0]) else (
                 0 if (abs(pc_coeff - 1) < 0.0000001) else 1)),
-            zero_order_corr["r"], zero_order_corr["p-val"])
+            zero_order_corr["r"][0], zero_order_corr["p-val"][0])
 
     return tuple(
         __compute_trait_info__(target)
@@ -360,3 +370,318 @@ def partial_correlations_normal(# pylint: disable=R0913
                 for idx, item in enumerate(all_correlations)))
 
     return len(trait_database), all_correlations
+
+def partial_corrs(
+        conn, samples , primary_vals, control_vals, return_number, species, input_trait_geneid,
+        input_trait_symbol, tissue_probeset_freeze_id, method, dataset, database_filename):
+    """
+    Compute the partial correlations, selecting the fast or normal method
+    depending on the existence of the database text file.
+
+    This is a partial migration of the
+    `web.webqtl.correlation.PartialCorrDBPage.__init__` function in
+    GeneNetwork1.
+    """
+    if database_filename:
+        return partial_correlations_fast(
+            samples, primary_vals, control_vals, database_filename,
+            (
+                fetch_literature_correlations(
+                    species, input_trait_geneid, dataset, return_number, conn)
+                if "literature" in method.lower() else
+                fetch_tissue_correlations(
+                    dataset, input_trait_symbol, tissue_probeset_freeze_id,
+                    method, return_number, conn)),
+            method,
+            ("literature" if method.lower() == "sgo literature correlation"
+             else ("tissue" if "tissue" in method.lower() else "genetic")))
+
+    trait_database, data_start_pos = fetch_all_database_data(
+        conn, species, input_trait_geneid, input_trait_symbol, samples, dataset,
+        method, return_number, tissue_probeset_freeze_id)
+    return partial_correlations_normal(
+        primary_vals, control_vals, input_trait_geneid, trait_database,
+        data_start_pos, dataset, method)
+
+def literature_correlation_by_list(
+        conn: Any, input_trait_mouse_geneid: int, species: str,
+        trait_list: Tuple[dict]) -> Tuple[dict]:
+    """
+    This is a migration of the
+    `web.webqtl.correlation.CorrelationPage.getLiteratureCorrelationByList`
+    function in GeneNetwork1.
+    """
+    if any((lambda t: (
+            bool(t.get("tissue_corr")) and
+            bool(t.get("tissue_p_value"))))(trait)
+           for trait in trait_list):
+        temp_table_name = f"LITERATURE{random_string(8)}"
+        q1 = (
+            f"CREATE TEMPORARY TABLE {temporary_table_name} "
+            "(GeneId1 INT(12) UNSIGNED, GeneId2 INT(12) UNSIGNED PRIMARY KEY, "
+            "value DOUBLE)")
+        q2 = (
+            f"INSERT INTO {temporary_table_name}(GeneId1, GeneId2, value) "
+            "SELECT GeneId1, GeneId2, value FROM LCorrRamin3 "
+            "WHERE GeneId1=%(geneid)s")
+        q3 = (
+            "INSERT INTO {temporary_table_name}(GeneId1, GeneId2, value) "
+            "SELECT GeneId2, GeneId1, value FROM LCorrRamin3 "
+            "WHERE GeneId2=%s AND GeneId1 != %(geneid)s")
+
+        def __set_mouse_geneid__(trait):
+            if trait.get("geneid"):
+                return {
+                    **trait,
+                    "mouse_geneid": translate_to_mouse_gene_id(trait.get("geneid"))
+                }
+            return {**trait, "mouse_geneid": 0}
+
+        def __retrieve_lcorr__(cursor, geneids):
+            cursor.execute(
+                f"SELECT GeneId2, value FROM {temporary_table_name} "
+                "WHERE GeneId2 IN %(geneids)s",
+                geneids = geneids)
+            return {geneid: value for geneid, value in cursor.fetchall()}
+
+        with conn.cursor() as cursor:
+            cursor.execute(q1)
+            cursor.execute(q2)
+            cursor.execute(q3)
+
+            traits = tuple(__set_mouse_geneid__(trait) for trait in trait_list)
+            lcorrs = __retrieve_lcorr__(
+                cursor, (
+                    trait["mouse_geneid"] for trait in traits
+                    if (trait["mouse_geneid"] != 0 and
+                        trait["mouse_geneid"].find(";") < 0)))
+            return tuple(
+                {**trait, "l_corr": lcorrs.get(trait["mouse_geneid"], None)}
+                for trait in traits)
+
+        return trait_list
+    return trait_list
+
+def tissue_correlation_by_list(
+        conn: Any, primary_trait_symbol: str, tissue_probeset_freeze_id: int,
+        method: str, trait_list: Tuple[dict]) -> Tuple[dict]:
+    """
+    This is a migration of the
+    `web.webqtl.correlation.CorrelationPage.getTissueCorrelationByList`
+    function in GeneNetwork1.
+    """
+    def __add_tissue_corr__(trait, primary_trait_value, trait_value):
+        result = pingouin.corr(
+            primary_trait_values, target_trait_values,
+            method=("spearman" if "spearman" in method.lower() else "pearson"))
+        return {
+            **trait,
+            "tissue_corr": result["r"],
+            "tissue_p_value": result["p-val"]
+        }
+
+    if any((lambda t: bool(t.get("l_corr")))(trait) for trait in trait_list):
+        prim_trait_symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
+            (primary_trait_symbol,), tissue_probeset_freeze_id, conn)
+        if primary_trait_symbol.lower() in prim_trait_symbol_value_dict:
+            primary_trait_value = prim_trait_symbol_value_dict[prim_trait_symbol.lower()]
+            gene_symbol_list = tuple(
+                trait for trait in trait_list if "symbol" in trait.keys())
+            symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
+                gene_symbol_list, tissue_probeset_freeze_id, conn)
+            return tuple(
+                __add_tissue_corr__(
+                    trait, primary_trait_value,
+                    symbol_value_dict[trait["symbol"].lower()])
+                for trait in trait_list
+                if ("symbol" in trait and
+                    bool(trait["symbol"]) and
+                    trait["symbol"].lower() in symbol_value_dict))
+        return tuple({
+            **trait,
+            "tissue_corr": None,
+            "tissue_p_value": None
+        } for trait in trait_list)
+    return trait_list
+
+def partial_correlations_entry(
+        conn: Any, primary_trait_name: str,
+        control_trait_names: Tuple[str, ...], method: str,
+        criteria: int, group: str, target_db_name: str) -> dict:
+    """
+    This is the 'ochestration' function for the partial-correlation feature.
+
+    This function will dispatch the functions doing data fetches from the
+    database (and various other places) and feed that data to the functions
+    doing the conversions and computations. It will then return the results of
+    all of that work.
+
+    This function is doing way too much. Look into splitting out the
+    functionality into smaller functions that do fewer things.
+    """
+    threshold = 0
+    corr_min_informative = 4
+
+    primary_trait = retrieve_trait_info(threshold, primary_trait_name, conn)
+    primary_trait_data = retrieve_trait_data(primary_trait, conn)
+    primary_samples, primary_values, primary_variances = export_informative(
+        primary_trait_data)
+
+    cntrl_traits = tuple(
+        retrieve_trait_info(threshold, trait_full_name, conn)
+        for trait_full_name in control_trait_names)
+    cntrl_traits_data = tuple(
+        retrieve_trait_data(cntrl_trait, conn)
+        for cntrl_trait in cntrl_traits)
+    species = species_name(conn, group)
+
+    (cntrl_samples,
+     cntrl_values,
+     cntrl_variances,
+     cntrl_ns) = control_samples(cntrl_traits_data, primary_samples)
+
+    common_primary_control_samples = primary_samples
+    fixed_primary_vals = primary_values
+    fixed_control_vals = cntrl_values
+    if not all(cnt_smp == primary_samples for cnt_smp in cntrl_samples):
+        (common_primary_control_samples,
+         fixed_primary_vals,
+         fixed_control_vals,
+         primary_variances,
+         cntrl_variances) = fix_samples(primary_trait, cntrl_traits)
+
+    if len(common_primary_control_samples) < corr_min_informative:
+        return {
+            "status": "error",
+            "message": (
+                f"Fewer than {corr_min_informative} samples data entered for "
+                f"{group} dataset. No calculation of correlation has been "
+                "attempted."),
+            "error_type": "Inadequate Samples"}
+
+    identical_traits_names = find_identical_traits(
+        primary_trait_name, primary_values, control_trait_names, cntrl_values)
+    if len(identical_traits_names) > 0:
+        return {
+            "status": "error",
+            "message": (
+                f"{identical_traits_names[0]} and {identical_traits_names[1]} "
+                "have the same values for the {len(fixed_primary_vals)} "
+                "samples that will be used to compute the partial correlation "
+                "(common for all primary and control traits). In such cases, "
+                "partial correlation cannot be computed. Please re-select your "
+                "traits."),
+            "error_type": "Identical Traits"}
+
+    input_trait_geneid = primary_trait.get("geneid")
+    input_trait_symbol = primary_trait.get("symbol")
+    input_trait_mouse_geneid = translate_to_mouse_gene_id(
+        species, input_trait_geneid, conn)
+
+    tissue_probeset_freeze_id = 1
+    db_type = primary_trait["db"]["dataset_type"]
+    db_name = primary_trait["db"]["dataset_name"]
+
+    if db_type == "ProbeSet" and method.lower() in (
+            "sgo literature correlation",
+            "tissue correlation, pearson's r",
+            "tissue correlation, spearman's rho"):
+        return {
+            "status": "error",
+            "message": (
+                "Wrong correlation type: It is not possible to compute the "
+                f"{method} between your trait and data in the {target_db_name} "
+                "database. Please try again after selecting another type of "
+                "correlation."),
+            "error_type": "Correlation Type"}
+
+    if (method.lower() == "sgo literature correlation" and (
+            input_trait_geneid is None or
+            check_for_literature_info(conn, input_trait_mouse_geneid))):
+        return {
+            "status": "error",
+            "message": (
+                "No Literature Information: This gene does not have any "
+                "associated Literature Information."),
+            "error_type": "Literature Correlation"}
+
+    if (method.lower() in (
+            "tissue correlation, pearson's r",
+            "tissue correlation, spearman's rho")
+        and input_trait_symbol is None):
+        return {
+            "status": "error",
+            "message": (
+                "No Tissue Correlation Information: This gene does not have "
+                "any associated Tissue Correlation Information."),
+            "error_type": "Tissue Correlation"}
+
+    if (method.lower() in (
+            "tissue correlation, pearson's r",
+            "tissue correlation, spearman's rho")
+        and check_symbol_for_tissue_correlation(
+            conn, tissue_probeset_freeze_id, input_trait_symbol)):
+        return {
+            "status": "error",
+            "message": (
+                "No Tissue Correlation Information: This gene does not have "
+                "any associated Tissue Correlation Information."),
+            "error_type": "Tissue Correlation"}
+
+    database_filename = get_filename(conn, target_db_name, TEXTDIR)
+    total_traits, all_correlations = partial_corrs(
+        conn, common_primary_control_samples, fixed_primary_vals,
+        fixed_control_vals, len(fixed_primary_vals), species,
+        input_trait_geneid, input_trait_symbol, tissue_probeset_freeze_id,
+        method, primary_trait["db"], database_filename)
+
+
+    def __make_sorter__(method):
+        def __sort_6__(x):
+            return x[6]
+
+        def __sort_3__(x):
+            return x[3]
+
+        if "literature" in method.lower():
+            return __sort_6__
+
+        if "tissue" in method.lower():
+            return __sort_6__
+
+        return __sort_3__
+
+    sorted_correlations = sorted(
+        all_correlations, key=__make_sorter__(method))
+
+    add_lit_corr_and_tiss_corr = compose(
+        partial(
+            literature_correlation_by_list, conn, input_trait_mouse_geneid,
+            species),
+        partial(
+            tissue_correlation_by_list, conn, input_trait_symbol,
+            tissue_probeset_freeze_id, method))
+
+    trait_list = add_lit_corr_and_tiss_corr(tuple(
+            {
+                **retrieve_trait_info(
+                    threshold,
+                    f"{primary_trait['db']['dataset_name']}::{item[0]}",
+                    conn),
+                "noverlap": item[1],
+                "partial_corr": item[2],
+                "partial_corr_p_value": item[3],
+                "corr": item[4],
+                "corr_p_value": item[5],
+                "rank_order": (1 if "spearman" in method.lower() else 0),
+                **({
+                    "tissue_corr": item[6],
+                    "tissue_p_value": item[7]}
+               if len(item) == 8 else {}),
+                **({"l_corr": item[6]}
+               if len(item) == 7 else {})
+            }
+        for item in
+            sorted_correlations[:min(criteria, len(all_correlations))]))
+
+    return trait_list

@@ -10,8 +10,6 @@ from gn3.random import random_string
 from gn3.data_helpers import partition_all
 from gn3.db.species import translate_to_mouse_gene_id
 
-from gn3.computations.partial_correlations import correlations_of_all_tissue_traits
-
 def get_filename(conn: Any, target_db_name: str, text_files_dir: str) -> Union[
         str, bool]:
     """
@@ -282,6 +280,15 @@ def build_temporary_tissue_correlations_table(
     # We should probably pass the `correlations_of_all_tissue_traits` function
     # as an argument to this function and get rid of the one call immediately
     # following this comment.
+    from gn3.computations.partial_correlations import correlations_of_all_tissue_traits
+    # This import above is necessary within the function to avoid
+    # circular-imports.
+    #
+    #
+    # This import above is indicative of convoluted code, with the computation
+    # being interwoven with the data retrieval. This needs to be changed, such
+    # that the function being imported here is no longer necessary, or have the
+    # imported function passed to this function as an argument.
     symbol_corr_dict, symbol_p_value_dict = correlations_of_all_tissue_traits(
         fetch_gene_symbol_tissue_value_dict_for_trait(
             (trait_symbol,), probeset_freeze_id, conn),
