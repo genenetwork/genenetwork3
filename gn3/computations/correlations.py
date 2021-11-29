@@ -75,17 +75,17 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
     """
 
     try:
-        sanitized_traits_vals, sanitized_target_vals = list(
+        normalized_traits_vals, normalized_target_vals = list(
             zip(*list(normalize_values(trait_vals, target_samples_vals))))
-        num_overlap = len(sanitized_traits_vals)
+        num_overlap = len(normalized_traits_vals)
     except ValueError:
         return
 
     if num_overlap > 5:
 
         (corr_coefficient, p_value) =\
-            compute_corr_coeff_p_value(primary_values=sanitized_traits_vals,
-                                       target_values=sanitized_target_vals,
+            compute_corr_coeff_p_value(primary_values=normalized_traits_vals,
+                                       target_values=normalized_target_vals,
                                        corr_method=corr_method)
 
         if corr_coefficient is not None and not math.isnan(corr_coefficient):
