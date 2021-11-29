@@ -1,8 +1,9 @@
 """This class contains functions relating to trait data manipulation"""
 import os
-import MySQLdb
 from functools import reduce
 from typing import Any, Dict, Union, Sequence
+
+import MySQLdb
 
 from gn3.settings import TMPDIR
 from gn3.random import random_string
@@ -81,10 +82,10 @@ def export_trait_data(
 def get_trait_csv_sample_data(conn: Any,
                               trait_name: int, phenotype_id: int):
     """Fetch a trait and return it as a csv string"""
-    def __float_strip(n):
-        if str(n)[-2:] == ".0":
-            return str(int(n))
-        return str(n)
+    def __float_strip(num_str):
+        if str(num_str)[-2:] == ".0":
+            return str(int(num_str))
+        return str(num_str)
     sql = ("SELECT DISTINCT Strain.Name, PublishData.value, "
            "PublishSE.error, NStrain.count FROM "
            "(PublishData, Strain, PublishXRef, PublishFreeze) "
@@ -108,7 +109,7 @@ def get_trait_csv_sample_data(conn: Any,
     return "\n".join(csv_data)
 
 
-def update_sample_data(conn: Any,
+def update_sample_data(conn: Any, #pylint: disable=[R0913]
                        trait_name: str,
                        strain_name: str,
                        phenotype_id: int,
@@ -219,7 +220,7 @@ def delete_sample_data(conn: Any,
                             "WHERE StrainId = %s AND DataId = %s" %
                             (strain_id, data_id)))
             deleted_n_strains = cursor.rowcount
-        except Exception as e:
+        except Exception as e: #pylint: disable=[C0103, W0612]
             conn.rollback()
             raise MySQLdb.Error
         conn.commit()
@@ -230,7 +231,7 @@ def delete_sample_data(conn: Any,
             deleted_se_data, deleted_n_strains)
 
 
-def insert_sample_data(conn: Any,
+def insert_sample_data(conn: Any, #pylint: disable=[R0913]
                        trait_name: str,
                        strain_name: str,
                        phenotype_id: int,
@@ -272,7 +273,7 @@ def insert_sample_data(conn: Any,
                                 "VALUES (%s, %s, %s)") %
                                (strain_id, data_id, count))
             inserted_n_strains = cursor.rowcount
-        except Exception as e:
+        except Exception as e: #pylint: disable=[C0103, W0612]
             conn.rollback()
             raise MySQLdb.Error
     return (inserted_published_data,
@@ -450,7 +451,7 @@ def set_homologene_id_field(trait_type, trait_info, conn):
     Common postprocessing function for all trait types.
 
     Sets the value for the 'homologene' key."""
-    def set_to_null(ti): return {**ti, "homologeneid": None}
+    def set_to_null(ti): return {**ti, "homologeneid": None} # pylint: disable=[C0103, C0321]
     functions_table = {
         "Temp": set_to_null,
         "Geno": set_to_null,
@@ -656,8 +657,9 @@ def retrieve_temp_trait_data(trait_info: dict, conn: Any):
             query,
             {"trait_name": trait_info["trait_name"]})
         return [dict(zip(
-            ["sample_name", "value", "se_error", "nstrain", "id"], row))
-            for row in cursor.fetchall()]
+            ["sample_name", "value", "se_error", "nstrain", "id"],
+            row))
+                for row in cursor.fetchall()]
     return []
 
 
@@ -696,8 +698,10 @@ def retrieve_geno_trait_data(trait_info: Dict, conn: Any):
              "dataset_name": trait_info["db"]["dataset_name"],
              "species_id": retrieve_species_id(
                  trait_info["db"]["group"], conn)})
-        return [dict(zip(
-            ["sample_name", "value", "se_error", "id"], row))
+        return [
+            dict(zip(
+                ["sample_name", "value", "se_error", "id"],
+                row))
             for row in cursor.fetchall()]
     return []
 
@@ -728,8 +732,9 @@ def retrieve_publish_trait_data(trait_info: Dict, conn: Any):
             query,
             {"trait_name": trait_info["trait_name"],
              "dataset_id": trait_info["db"]["dataset_id"]})
-        return [dict(zip(
-            ["sample_name", "value", "se_error", "nstrain", "id"], row))
+        return [
+            dict(zip(
+                ["sample_name", "value", "se_error", "nstrain", "id"], row))
             for row in cursor.fetchall()]
     return []
 
@@ -762,8 +767,9 @@ def retrieve_cellid_trait_data(trait_info: Dict, conn: Any):
             {"cellid": trait_info["cellid"],
              "trait_name": trait_info["trait_name"],
              "dataset_id": trait_info["db"]["dataset_id"]})
-        return [dict(zip(
-            ["sample_name", "value", "se_error", "id"], row))
+        return [
+            dict(zip(
+                ["sample_name", "value", "se_error", "id"], row))
             for row in cursor.fetchall()]
     return []
 
@@ -792,8 +798,9 @@ def retrieve_probeset_trait_data(trait_info: Dict, conn: Any):
             query,
             {"trait_name": trait_info["trait_name"],
              "dataset_name": trait_info["db"]["dataset_name"]})
-        return [dict(zip(
-            ["sample_name", "value", "se_error", "id"], row))
+        return [
+            dict(zip(
+                ["sample_name", "value", "se_error", "id"], row))
             for row in cursor.fetchall()]
     return []
 

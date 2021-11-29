@@ -29,7 +29,7 @@ def get_filename(conn: Any, target_db_name: str, text_files_dir: str) -> Union[
             filename = "ProbeSetFreezeId_{tid}_FullName_{fname}.txt".format(
                 tid=result[0],
                 fname=result[1].replace(' ', '_').replace('/', '_'))
-            return ((filename in os.listdir(text_file_dir))
+            return ((filename in os.listdir(text_files_dir))
                     and f"{text_files_dir}/{filename}")
 
     return False
@@ -280,7 +280,8 @@ def build_temporary_tissue_correlations_table(
     # We should probably pass the `correlations_of_all_tissue_traits` function
     # as an argument to this function and get rid of the one call immediately
     # following this comment.
-    from gn3.computations.partial_correlations import correlations_of_all_tissue_traits
+    from gn3.computations.partial_correlations import (#pylint: disable=[C0415, R0401]
+        correlations_of_all_tissue_traits)
     # This import above is necessary within the function to avoid
     # circular-imports.
     #
