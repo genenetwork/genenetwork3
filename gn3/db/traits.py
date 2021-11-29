@@ -1,5 +1,6 @@
 """This class contains functions relating to trait data manipulation"""
 import os
+import MySQLdb
 from functools import reduce
 from typing import Any, Dict, Union, Sequence
 
@@ -110,6 +111,7 @@ def get_trait_csv_sample_data(conn: Any,
 
 
 def update_sample_data(conn: Any, #pylint: disable=[R0913]
+
                        trait_name: str,
                        strain_name: str,
                        phenotype_id: int,
