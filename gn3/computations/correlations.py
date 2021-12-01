@@ -132,9 +132,16 @@ def fast_compute_all_sample_correlation(this_trait,
     for target_trait in target_dataset:
         trait_name = target_trait.get("trait_id")
         target_trait_data = target_trait["trait_sample_data"]
-        processed_values.append((trait_name, corr_method,
-                                 list(zip(*list(filter_shared_sample_keys(
-                                     this_trait_samples, target_trait_data))))))
+
+        try:
+            this_vals, target_vals = list(zip(*list(filter_shared_sample_keys(
+                this_trait_samples, target_trait_data))))
+
+            processed_values.append(
+                (trait_name, corr_method, this_vals, target_vals))
+        except ValueError:
+            continue
+
     with closing(multiprocessing.Pool()) as pool:
         results = pool.starmap(compute_sample_r_correlation, processed_values)
 
@@ -173,7 +180,7 @@ def compute_all_sample_correlation(this_trait,
 
         except ValueError:
             # case where no matching strain names
-            this_vals, target_vals = []
+            continue
 
         sample_correlation = compute_sample_r_correlation(
             trait_name=trait_name,
