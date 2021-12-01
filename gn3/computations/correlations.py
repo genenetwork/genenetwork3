@@ -40,9 +40,9 @@ def map_shared_keys_to_values(target_sample_keys: List,
 
 def normalize_values(a_values: List, b_values: List):
     """
-    input:nested two list of primary and target values *includes None vals
-    output: yield two list of normalized values elimate if none 
-
+    :param a_values: list of primary strain values
+    :param b_values: a list of target strain values
+    :return: yield 2 values if none of them is none
     """
 
     for a_val, b_val in zip(a_values, b_values):
