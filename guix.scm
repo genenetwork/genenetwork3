@@ -80,6 +80,7 @@
                        ("python-requests" ,python-requests)
                        ("python-scipy" ,python-scipy)
                        ("python-sparqlwrapper" ,python-sparqlwrapper)
+                       ("r" ,r)
                        ("r-optparse" ,r-optparse)
                        ("r-qtl" ,r-qtl)
                        ("r-rjson" ,r-rjson)
