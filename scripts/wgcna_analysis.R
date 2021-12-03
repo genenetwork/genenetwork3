@@ -25,6 +25,7 @@ if (length(args)==0) {
 inputData <- fromJSON(file = json_file_path)
 imgDir = inputData$TMPDIR
 
+inputData
 
 trait_sample_data <- do.call(rbind, inputData$trait_sample_data)
 
@@ -51,10 +52,8 @@ names(dataExpr) = inputData$trait_names
 # Allow multi-threading within WGCNA
 enableWGCNAThreads()
 
-# choose softthreshhold (Calculate soft threshold)
-# xtodo allow users to pass args
-
-powers <- c(c(1:10), seq(from = 12, to=20, by=2)) 
+# powers <- c(c(1:10), seq(from = 12, to=20, by=2)) 
+powers <- unlist(c(inputData$SoftThresholds))
 sft <- pickSoftThreshold(dataExpr, powerVector = powers, verbose = 5)
 
 # check the power estimate
