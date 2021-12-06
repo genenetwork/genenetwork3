@@ -9,8 +9,8 @@ Install GNU Guix - this can be done on every running Linux system.
 
 There are at least three ways to start GeneNetwork3 with GNU Guix:
 
-1. Create an environment with `guix environment`
-2. Create a container with `guix environment -C`
+1. Create an environment with `guix shell`
+2. Create a container with `guix shell -C`
 3. Use a profile and shell settings with `source ~/opt/genenetwork3/etc/profile`
 
 #### Create an environment:
@@ -18,13 +18,13 @@ There are at least three ways to start GeneNetwork3 with GNU Guix:
 Simply load up the environment (for development purposes):
 
 ```bash
-guix environment --load=guix.scm
+guix shell -Df guix.scm
 ```
 
 Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
 
 ```bash
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --expose=$HOME/genotype_files/ --load=guix.scm
+guix shell --expose=$HOME/genotype_files/ -Df guix.scm
 python3
   import redis
 ```
@@ -32,7 +32,7 @@ python3
 #### Run a Guix container
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --expose=$HOME/genotype_files/ --load=guix.scm
+guix shell -C --network --expose=$HOME/genotype_files/ -Df guix.scm
 ```
 
 
@@ -41,7 +41,7 @@ env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix env
 Create a new profile with
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix package -i genenetwork3 -p ~/opt/genenetwork3
+guix package -i genenetwork3 -p ~/opt/genenetwork3
 ```
 
 and load the profile settings with

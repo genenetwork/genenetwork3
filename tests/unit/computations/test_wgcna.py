@@ -10,13 +10,16 @@ from gn3.computations.wgcna import call_wgcna_script
 class TestWgcna(TestCase):
     """test class for wgcna"""
 
+    @mock.patch("gn3.computations.wgcna.process_image")
     @mock.patch("gn3.computations.wgcna.run_cmd")
     @mock.patch("gn3.computations.wgcna.compose_wgcna_cmd")
     @mock.patch("gn3.computations.wgcna.dump_wgcna_data")
     def test_call_wgcna_script(self,
                                mock_dumping_data,
                                mock_compose_wgcna,
-                               mock_run_cmd):
+                               mock_run_cmd,
+                               mock_img,
+                               ):
         """test for calling wgcna script"""
 
         # pylint: disable = line-too-long
@@ -50,7 +53,7 @@ class TestWgcna(TestCase):
             "output": "Flagging genes and samples with too many missing values...\n  ..step 1\nAllowing parallel execution with up to 3 working processes.\npickSoftThreshold: will use block size 7.\n pickSoftThreshold: calculating connectivity for given powers...\n   ..working on genes 1 through 7 of 7\n   Flagging genes and samples with too many missing values...\n    ..step 1\n ..Working on block 1 .\n    TOM calculation: adjacency..\n    ..will not use multithreading.\nclustering..\n ....detecting modules..\n ....calculating module eigengenes..\n ....checking kME in modules..\n ..merging modules that are too close..\n     mergeCloseModules: Merging modules whose distance is less than 0.15\n     mergeCloseModules: less than two proper modules.\n      ..color levels are turquoise\n      ..there is nothing to merge.\n       Calculating new MEs...\n"
         }
 
-        json_output = "{\"inputdata\":{\"trait_sample_data \":{},\"minModuleSize\":30,\"TOMtype\":\"unsigned\"},\"outputdata\":{\"eigengenes\":[],\"colors\":[]}}"
+        json_output = "{\"inputdata\":{\"trait_sample_data \":{},\"minModuleSize\":30,\"TOMtype\":\"unsigned\"},\"output\":{\"eigengenes\":[],\"imageLoc\":[],\"colors\":[]}}"
 
         expected_output = {
 
@@ -61,9 +64,11 @@ class TestWgcna(TestCase):
                     "TOMtype": "unsigned"
                 },
 
-                "outputdata": {
+                "output": {
                     "eigengenes": [],
-                    "colors": []
+                    "imageLoc": [],
+                    "colors": [],
+                    "image_data": "AFDSFNBSDGJJHH"
                 }
             },
 
@@ -74,6 +79,7 @@ class TestWgcna(TestCase):
         with mock.patch("builtins.open", mock.mock_open(read_data=json_output)):
 
             mock_run_cmd.return_value = mock_run_cmd_results
+            mock_img.return_value = b"AFDSFNBSDGJJHH"
 
             results = call_wgcna_script(
                 "Rscript/GUIX_PATH/scripts/r_file.R", request_data)

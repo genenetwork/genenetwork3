@@ -6,10 +6,12 @@ library(rjson)
 
 options(stringsAsFactors = FALSE);
 
-imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
+cat("Running the wgcna analysis script\n")
+
 # load expression data **assumes from json files row(traits)(columns info+samples)
 # pass the file_path as arg
 # pass the file path to read json data
+
 
 args = commandArgs(trailingOnly=TRUE)
 
@@ -21,6 +23,7 @@ if (length(args)==0) {
 }
 
 inputData <- fromJSON(file = json_file_path)
+imgDir = inputData$TMPDIR
 
 
 trait_sample_data <- do.call(rbind, inputData$trait_sample_data)
@@ -83,6 +86,11 @@ network <- blockwiseModules(dataExpr,
 
 
 
+cat("Generated network \n")
+
+network
+
+
 genImageRandStr <- function(prefix){
 
 	randStr <- paste(prefix,stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
@@ -90,14 +98,19 @@ genImageRandStr <- function(prefix){
 	return(paste(randStr,".png",sep=""))
 }
 
+
 mergedColors <- labels2colors(network$colors)
 
 imageLoc <- file.path(imgDir,genImageRandStr("WGCNAoutput"))
 png(imageLoc,width=1000,height=600,type='cairo-png')
 
+
+cat("Generating the CLuster  dendrogram\n")
+
+
 plotDendroAndColors(network$dendrograms[[1]],mergedColors[network$blockGenes[[1]]],
 "Module colors",
-dendroLabels = FALSE, hang = 0.03,
+dendroLabels = NULL, hang = 0.03,
 addGuide = TRUE, guideHang = 0.05)
 
 
