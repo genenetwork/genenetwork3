@@ -517,7 +517,7 @@ def tissue_correlation_by_list(
 def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         conn: Any, primary_trait_name: str,
         control_trait_names: Tuple[str, ...], method: str,
-        criteria: int, group: str, target_db_name: str) -> dict:
+        criteria: int, target_db_name: str) -> dict:
     """
     This is the 'ochestration' function for the partial-correlation feature.
 
@@ -533,6 +533,7 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
     corr_min_informative = 4
 
     primary_trait = retrieve_trait_info(threshold, primary_trait_name, conn)
+    group = primary_trait["group"]
     primary_trait_data = retrieve_trait_data(primary_trait, conn)
     primary_samples, primary_values, _primary_variances = export_informative(
         primary_trait_data)
