@@ -26,10 +26,13 @@ def retrieve_probeset_trait_dataset_name(
                 "threshold": threshold,
                 "name": name
             })
-        return dict(zip(
-            ["dataset_id", "dataset_name", "dataset_fullname",
-             "dataset_shortname", "dataset_datascale"],
-            cursor.fetchone()))
+        res = cursor.fetchone()
+        if res:
+            return dict(zip(
+                ["dataset_id", "dataset_name", "dataset_fullname",
+                 "dataset_shortname", "dataset_datascale"],
+                res))
+        return {"dataset_id": None, "dataset_name": name, "dataset_fullname": name}
 
 def retrieve_publish_trait_dataset_name(
         threshold: int, name: str, connection: Any):

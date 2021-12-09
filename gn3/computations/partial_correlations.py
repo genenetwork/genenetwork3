@@ -309,7 +309,7 @@ def compute_partial(
             primary,
             tuple(targ for targ in targ_vals if targ is not None),
             tuple(cont for i, cont in enumerate(control_vals)
-                  if target[i] is not None))
+                  if target[0][i] is not None))
         covariates = "z" if datafrm.shape[1] == 3 else [
             col for col in datafrm.columns if col not in ("x", "y")]
         ppc = pingouin.partial_corr(
