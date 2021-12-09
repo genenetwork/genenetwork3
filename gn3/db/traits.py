@@ -550,7 +550,7 @@ def build_trait_name(trait_fullname):
         return "ProbeSet"
 
     name_parts = trait_fullname.split("::")
-    assert len(name_parts) >= 2, "Name format error"
+    assert len(name_parts) >= 2, f"Name format error: '{trait_fullname}'"
     dataset_name = name_parts[0]
     dataset_type = dataset_type(dataset_name)
     return {
