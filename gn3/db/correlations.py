@@ -235,8 +235,10 @@ def fetch_tissue_probeset_xref_info(
                 "INNER JOIN TissueProbeSetXRef AS t ON t.Symbol = x.Symbol "
                 "AND t.Mean = x.maxmean")
             cursor.execute(
-                query, probeset_freeze_id=probeset_freeze_id,
-                symbols=tuple(gene_name_list))
+                query, {
+                    "probeset_freeze_id": probeset_freeze_id,
+                    "symbols": tuple(gene_name_list)
+                })
 
         results = cursor.fetchall()
 
