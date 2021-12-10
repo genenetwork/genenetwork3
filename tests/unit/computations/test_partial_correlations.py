@@ -193,7 +193,7 @@ class TestPartialCorrelations(TestCase):
 
         Given:
             - the name of a primary trait
-            - the value of a primary trait
+            - a sequence of values for the primary trait
             - a sequence of names of control traits
             - a sequence of values of control traits
         When:
@@ -204,12 +204,14 @@ class TestPartialCorrelations(TestCase):
               decimal places are considered
         """
         for primn, primv, contn, contv, expected in (
-                ("pt", 12.98395, ("ct0", "ct1", "ct2"),
-                 (0.1234, 2.3456, 3.4567), tuple()),
-                ("pt", 12.98395, ("ct0", "ct1", "ct2"),
-                 (12.98354, 2.3456, 3.4567), ("pt", "ct0")),
-                ("pt", 12.98395, ("ct0", "ct1", "ct2", "ct3"),
-                 (0.1234, 2.3456, 0.1233, 4.5678), ("ct0", "ct2"))
+                ("pt", (12.98395,), ("ct0", "ct1", "ct2"),
+                 ((0.1234, 2.3456, 3.4567),), tuple()),
+                ("pt", (12.98395, 2.3456, 3.4567), ("ct0", "ct1", "ct2"),
+                 ((12.98354, 2.3456, 3.4567), (64.2334, 6.3256, 64.2364),
+                  (4.2374, 67.2345, 7.48234)), ("pt", "ct0")),
+                ("pt", (12.98395, 75.52382), ("ct0", "ct1", "ct2", "ct3"),
+                 ((0.1234, 2.3456), (0.3621, 6543.572), (0.1234, 2.3456),
+                  (0.1233, 4.5678)), ("ct0", "ct2"))
         ):
             with self.subTest(
                     primary_name=primn, primary_value=primv,

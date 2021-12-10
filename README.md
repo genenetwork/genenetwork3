@@ -1,4 +1,7 @@
 # genenetwork3
+
+[![GeneNetwork3 CI badge](https://ci.systemreboot.net/badge/genenetwork3.svg)](https://ci.systemreboot.net/jobs/genenetwork3)
+
 GeneNetwork3 REST API for data science and machine  learning
 
 ## Installation
