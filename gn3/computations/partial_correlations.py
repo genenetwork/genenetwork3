@@ -640,12 +640,20 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
                 "any associated Tissue Correlation Information."),
             "error_type": "Tissue Correlation"}
 
+    target_dataset = retrieve_trait_dataset(
+        ("Temp" if "Temp" in target_db_name else
+         ("Publish" if "Publish" in target_db_name else
+          "Geno" if "Geno" in target_db_name else "ProbeSet")),
+        {"db": {"dataset_name": target_db_name}, "trait_name": "_"},
+        threshold,
+        conn)
+
     database_filename = get_filename(conn, target_db_name, TEXTDIR)
     _total_traits, all_correlations = partial_corrs(
         conn, common_primary_control_samples, fixed_primary_vals,
         fixed_control_vals, len(fixed_primary_vals), species,
         input_trait_geneid, input_trait_symbol, tissue_probeset_freeze_id,
-        method, primary_trait["db"], database_filename)
+        method, {**target_dataset, "dataset_type": target_dataset["type"]}, database_filename)
 
 
     def __make_sorter__(method):
