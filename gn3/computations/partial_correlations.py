@@ -305,11 +305,16 @@ def compute_partial(
             prim for targ, prim in zip(targ_vals, primary_vals)
             if targ is not None]
 
+        def __remove_controls_for_target_nones(cont_targ):
+            return tuple(cont for cont,targ in cont_targ if targ is not None)
+
+        conts_targs = tuple(tuple(
+            zip(control, targ_vals)) for control in control_vals)
         datafrm = build_data_frame(
             primary,
-            tuple(targ for targ in targ_vals if targ is not None),
-            tuple(cont for i, cont in enumerate(control_vals)
-                  if target[0][i] is not None))
+            [targ for targ in targ_vals if targ is not None],
+            [__remove_controls_for_target_nones(cont_targ)
+             for cont_targ in conts_targs])
         covariates = "z" if datafrm.shape[1] == 3 else [
             col for col in datafrm.columns if col not in ("x", "y")]
         ppc = pingouin.partial_corr(
