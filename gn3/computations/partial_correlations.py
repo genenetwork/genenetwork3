@@ -18,6 +18,7 @@ from gn3.random import random_string
 from gn3.function_helpers import  compose
 from gn3.data_helpers import parse_csv_line
 from gn3.db.traits import export_informative
+from gn3.db.datasets import retrieve_trait_dataset
 from gn3.db.traits import retrieve_trait_info, retrieve_trait_data
 from gn3.db.species import species_name, translate_to_mouse_gene_id
 from gn3.db.correlations import (
