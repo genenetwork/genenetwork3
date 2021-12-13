@@ -483,14 +483,14 @@ def fetch_all_database_data(# pylint: disable=[R0913, R0914]
         sample_id_columns = ", ".join(f"T{smpl}.value" for smpl in sample_ids)
         if db_type == "Publish":
             joins = tuple(
-                ("LEFT JOIN PublishData AS T{item} "
-                 "ON T{item}.Id = PublishXRef.DataId "
-                 "AND T{item}.StrainId = %(T{item}_sample_id)s")
+                (f"LEFT JOIN PublishData AS T{item} "
+                 f"ON T{item}.Id = PublishXRef.DataId "
+                 f"AND T{item}.StrainId = %(T{item}_sample_id)s")
                 for item in sample_ids)
             return (
                 ("SELECT PublishXRef.Id, " +
                  sample_id_columns +
-                 "FROM (PublishXRef, PublishFreeze) " +
+                 " FROM (PublishXRef, PublishFreeze) " +
                  " ".join(joins) +
                  " WHERE PublishXRef.InbredSetId = PublishFreeze.InbredSetId "
                  "AND PublishFreeze.Name = %(db_name)s"),
