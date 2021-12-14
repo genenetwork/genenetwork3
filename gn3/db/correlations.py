@@ -157,11 +157,12 @@ def fetch_symbol_value_pair_dict(
         symbol: data_id_dict.get(symbol) for symbol in symbol_list
         if data_id_dict.get(symbol) is not None
     }
-    query = "SELECT Id, value FROM TissueProbeSetData WHERE Id IN %(data_ids)s"
+    query = "SELECT Id, value FROM TissueProbeSetData WHERE Id IN ({})".format(
+        ",".join(f"%(id{i})s" for i in range(data_ids.values())))
     with conn.cursor() as cursor:
         cursor.execute(
             query,
-            data_ids=tuple(data_ids.values()))
+            **{f"id{i}": did for i, did in enumerate(data_ids.values())})
         value_results = cursor.fetchall()
         return {
             key: tuple(row[1] for row in value_results if row[0] == key)
@@ -406,14 +407,15 @@ def fetch_sample_ids(
     """
     query = (
         "SELECT Strain.Id FROM Strain, Species "
-        "WHERE Strain.Name IN %(samples_names)s "
+        "WHERE Strain.Name IN ({}) "
         "AND Strain.SpeciesId=Species.Id "
-        "AND Species.name=%(species_name)s")
+        "AND Species.name=%(species_name)s").format(
+            ",".join(f"%(s{i})s" for i in range(len(sample_names))))
     with conn.cursor() as cursor:
         cursor.execute(
             query,
             {
-                "samples_names": tuple(sample_names),
+                **{f"s{i}": sname for i, sname in enumerate(sample_names)},
                 "species_name": species_name
             })
         return tuple(row[0] for row in cursor.fetchall())
