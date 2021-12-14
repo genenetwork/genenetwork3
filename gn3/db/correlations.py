@@ -158,7 +158,7 @@ def fetch_symbol_value_pair_dict(
         if data_id_dict.get(symbol) is not None
     }
     query = "SELECT Id, value FROM TissueProbeSetData WHERE Id IN ({})".format(
-        ",".join(f"%(id{i})s" for i in range(data_ids.values())))
+        ",".join(f"%(id{i})s" for i in range(len(data_ids.values()))))
     with conn.cursor() as cursor:
         cursor.execute(
             query,
