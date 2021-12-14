@@ -306,6 +306,9 @@ def compute_partial(
             prim for targ, prim in zip(targ_vals, primary_vals)
             if targ is not None]
 
+        if len(primary) < 3:
+            return None
+
         def __remove_controls_for_target_nones(cont_targ):
             return tuple(cont for cont,targ in cont_targ if targ is not None)
 
@@ -338,8 +341,10 @@ def compute_partial(
             zero_order_corr["r"][0], zero_order_corr["p-val"][0])
 
     return tuple(
-        __compute_trait_info__(target)
+        result for result in (
+            __compute_trait_info__(target)
         for target in zip(target_vals, target_names))
+        if result is not None)
 
 def partial_correlations_normal(# pylint: disable=R0913
         primary_vals, control_vals, input_trait_gene_id, trait_database,
