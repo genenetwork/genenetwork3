@@ -11,6 +11,7 @@ from typing import Any, Tuple, Union, Sequence
 
 import pandas
 import pingouin
+from flask import current_app
 from scipy.stats import pearsonr, spearmanr
 
 from gn3.settings import TEXTDIR
@@ -320,7 +321,7 @@ def compute_partial(
             [__remove_controls_for_target_nones(cont_targ)
              for cont_targ in conts_targs])
         covariates = "z" if datafrm.shape[1] == 3 else [
-            col for col in datafrm.columns if col not in ("x", "y")]
+            col for col in datafrm.columns if col not in ("x", "y")]; current_app.logger.info("DATAFRAME: {}".format(datafrm))
         ppc = pingouin.partial_corr(
             data=datafrm, x="x", y="y", covar=covariates, method=(
                 "pearson" if "pearson" in method.lower() else "spearman"))
