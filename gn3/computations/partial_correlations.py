@@ -259,8 +259,9 @@ def partial_correlations_fast(# pylint: disable=[R0913, R0914]
     ## `correlation_type` parameter
     return len(all_correlations), tuple(
         corr + (
-            (fetched_correlations[corr[0]],) if correlation_type == "literature"
-            else fetched_correlations[corr[0]][0:2])
+            (fetched_correlations[corr[0]],) # type: ignore[index]
+            if correlation_type == "literature"
+            else fetched_correlations[corr[0]][0:2]) # type: ignore[index]
         for idx, corr in enumerate(all_correlations))
 
 def build_data_frame(
@@ -372,7 +373,7 @@ def partial_correlations_normal(# pylint: disable=R0913
             return tuple(item) + (trait_database[1], trait_database[2])
         return item
 
-    target_trait_names, target_trait_vals = reduce(
+    target_trait_names, target_trait_vals = reduce(# type: ignore[var-annotated]
         lambda acc, item: (acc[0]+(item[0],), acc[1]+(item[data_start_pos:],)),
         trait_database, (tuple(), tuple()))
 
@@ -425,7 +426,7 @@ def partial_corrs(# pylint: disable=[R0913]
         data_start_pos, dataset, method)
 
 def literature_correlation_by_list(
-        conn: Any, species: str, trait_list: Tuple[dict]) -> Tuple[dict]:
+        conn: Any, species: str, trait_list: Tuple[dict]) -> Tuple[dict, ...]:
     """
     This is a migration of the
     `web.webqtl.correlation.CorrelationPage.getLiteratureCorrelationByList`

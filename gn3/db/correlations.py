@@ -422,7 +422,7 @@ def fetch_sample_ids(
 
 def build_query_sgo_lit_corr(
         db_type: str, temp_table: str, sample_id_columns: str,
-        joins: Tuple[str, ...]) -> str:
+        joins: Tuple[str, ...]) -> Tuple[str, int]:
     """
     Build query for `SGO Literature Correlation` data, when querying the given
     `temp_table` temporary table.
