@@ -13,15 +13,17 @@ class TestDatasetsDBFunctions(TestCase):
 
     def test_retrieve_dataset_name(self):
         """Test that the function is called correctly."""
-        for trait_type, thresh, trait_name, dataset_name, columns, table in [
+        for trait_type, thresh, trait_name, dataset_name, columns, table, expected in [
                 ["ProbeSet", 9, "probesetTraitName", "probesetDatasetName",
-                 "Id, Name, FullName, ShortName, DataScale", "ProbeSetFreeze"],
+                 "Id, Name, FullName, ShortName, DataScale", "ProbeSetFreeze",
+                 {"dataset_id": None, "dataset_name": "probesetDatasetName",
+                  "dataset_fullname": "probesetDatasetName"}],
                 ["Geno", 3, "genoTraitName", "genoDatasetName",
-                 "Id, Name, FullName, ShortName", "GenoFreeze"],
+                 "Id, Name, FullName, ShortName", "GenoFreeze", {}],
                 ["Publish", 6, "publishTraitName", "publishDatasetName",
-                 "Id, Name, FullName, ShortName", "PublishFreeze"],
+                 "Id, Name, FullName, ShortName", "PublishFreeze", {}],
                 ["Temp", 4, "tempTraitName", "tempTraitName",
-                 "Id, Name, FullName, ShortName", "TempFreeze"]]:
+                 "Id, Name, FullName, ShortName", "TempFreeze", {}]]:
             db_mock = mock.MagicMock()
             with self.subTest(trait_type=trait_type):
                 with db_mock.cursor() as cursor:
@@ -29,7 +31,7 @@ class TestDatasetsDBFunctions(TestCase):
                     self.assertEqual(
                         retrieve_dataset_name(
                             trait_type, thresh, trait_name, dataset_name, db_mock),
-                        {})
+                        expected)
                     cursor.execute.assert_called_once_with(
                         "SELECT {cols} "
                         "FROM {table} "
