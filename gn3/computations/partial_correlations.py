@@ -690,7 +690,7 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         {
             **retrieve_trait_info(
                 threshold,
-                f"{primary_trait['db']['dataset_name']}::{item[0]}",
+                f"{target_dataset['dataset_name']}::{item[0]}",
                 conn),
             "noverlap": item[1],
             "partial_corr": item[2],
