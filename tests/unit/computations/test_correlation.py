@@ -1,7 +1,6 @@
 """Module contains the tests for correlation"""
 from unittest import TestCase
 from unittest import mock
-import unittest
 
 from collections import namedtuple
 import math

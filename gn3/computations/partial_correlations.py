@@ -11,7 +11,6 @@ from typing import Any, Tuple, Union, Sequence
 
 import pandas
 import pingouin
-from flask import current_app
 from scipy.stats import pearsonr, spearmanr
 
 from gn3.settings import TEXTDIR
@@ -312,7 +311,7 @@ def compute_partial(
             return None
 
         def __remove_controls_for_target_nones(cont_targ):
-            return tuple(cont for cont,targ in cont_targ if targ is not None)
+            return tuple(cont for cont, targ in cont_targ if targ is not None)
 
         conts_targs = tuple(tuple(
             zip(control, targ_vals)) for control in control_vals)
@@ -322,7 +321,7 @@ def compute_partial(
             [__remove_controls_for_target_nones(cont_targ)
              for cont_targ in conts_targs])
         covariates = "z" if datafrm.shape[1] == 3 else [
-            col for col in datafrm.columns if col not in ("x", "y")]; current_app.logger.info("DATAFRAME: {}".format(datafrm))
+            col for col in datafrm.columns if col not in ("x", "y")]
         ppc = pingouin.partial_corr(
             data=datafrm, x="x", y="y", covar=covariates, method=(
                 "pearson" if "pearson" in method.lower() else "spearman"))
@@ -345,7 +344,7 @@ def compute_partial(
     return tuple(
         result for result in (
             __compute_trait_info__(target)
-        for target in zip(target_vals, target_names))
+            for target in zip(target_vals, target_names))
         if result is not None)
 
 def partial_correlations_normal(# pylint: disable=R0913

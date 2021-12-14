@@ -1,6 +1,5 @@
 """This class contains functions relating to trait data manipulation"""
 import os
-import MySQLdb
 from functools import reduce
 from typing import Any, Dict, Union, Sequence
 
