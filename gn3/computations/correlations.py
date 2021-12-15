@@ -422,3 +422,26 @@ def fast_compute_tissue_correlation(primary_tissue_dict: dict,
     return sorted(
         tissues_results,
         key=lambda trait_name: -abs(list(trait_name.values())[0]["tissue_corr"]))
+
+
+def _mp_calculate(x_val, dataset, n_jobs, chunk_size):
+    """corr mp reimplementation
+    credit:https://github.com/bukson/nancorrmp
+    """
+
+    def _compute_correlation_2(x_val, y_val, trait_name):
+    """function to compute correlation"""
+
+    return (trait_name, scipy.stats.pearsonr(x_val, y_val))
+
+    arguments = ((x_val, y_val, trait_name) for (trait_name, y_val) in dataset)
+
+    processes = n_jobs if n_jobs > 0 else None
+
+    worker_function = _compute_correlation_2
+
+    with multiprocessing.pool(processes=processes) as pool:
+        results = list(pool.imap_unordered(
+            worker_function, arguments, chunksize=chunks))
+
+    return results
