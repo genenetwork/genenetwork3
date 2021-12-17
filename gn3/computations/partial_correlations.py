@@ -715,7 +715,9 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         sorted_correlations[:min(criteria, len(all_correlations))]))
 
     return {
+        "status": "success",
+        "results": {
         "primary_trait": primary_trait,
         "control_traits": cntrl_traits,
         "correlations": trait_list
-    }
+        }}
