@@ -8,6 +8,7 @@ from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.db_utils import database_connector
+from gn3.computations.partial_correlations import partial_correlations_entry
 
 correlation = Blueprint("correlation", __name__)
 
@@ -83,3 +84,18 @@ def compute_tissue_corr(corr_method="pearson"):
                                          corr_method=corr_method)
 
     return jsonify(results)
+
+@correlation.route("/partial", methods=["POST"])
+def partial_correlation():
+    def trait_fullname(trait):
+        return f"{trait['dataset']}::{trait['name']}"
+
+    args = request.get_json()
+    conn, _cursor_object = database_connector()
+    corr_results = partial_correlations_entry(
+        conn, trait_fullname(args["primary_trait"]),
+        tuple(trait_fullname(trait) for trait in args["control_traits"]),
+        args["method"], int(args["criteria"]), args["target_db"])
+    return make_response(
+        jsonify(corr_results),
+        400)
