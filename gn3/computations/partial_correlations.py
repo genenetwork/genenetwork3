@@ -526,6 +526,54 @@ def tissue_correlation_by_list(
         } for trait in trait_list)
     return trait_list
 
+def trait_for_output(trait):
+    """
+    Process a trait for output.
+
+    Removes a lot of extraneous data from the trait, that is not needed for
+    the display of partial correlation results.
+    This function also removes all key-value pairs, for which the value is
+    `None`, because it is a waste of network resources to transmit the key-value
+    pair just to indicate it does not exist.
+    """
+    trait = {
+        "trait_type": trait["trait_type"],
+        "dataset_name": trait["db"]["dataset_name"],
+        "dataset_type": trait["db"]["dataset_type"],
+        "group": trait["db"]["group"],
+        "trait_fullname": trait["trait_fullname"],
+        "trait_name": trait["trait_name"],
+        "symbol": trait.get("symbol"),
+        "description": trait.get("description"),
+        "pre_publication_description": trait.get(
+            "pre_publication_description"),
+        "post_publication_description": trait.get(
+            "post_publication_description"),
+        "original_description": trait.get(
+            "original_description"),
+        "authors": trait.get("authors"),
+        "year": trait.get("year"),
+        "probe_target_description": trait.get(
+            "probe_target_description"),
+        "chr": trait.get("chr"),
+        "mb": trait.get("mb"),
+        "geneid": trait.get("geneid"),
+        "homologeneid": trait.get("homologeneid"),
+        "noverlap": trait.get("noverlap"),
+        "partial_corr": trait.get("partial_corr"),
+        "partial_corr_p_value": trait.get("partial_corr_p_value"),
+        "corr": trait.get("corr"),
+        "corr_p_value": trait.get("corr_p_value"),
+        "rank_order": trait.get("rank_order"),
+        "delta": (
+            None if trait.get("partial_corr") is None
+            else (trait.get("partial_corr") - trait.get("corr"))),
+        "l_corr":  trait.get("l_corr"),
+        "tissue_corr": trait.get("tissue_corr"),
+        "tissue_p_value": trait.get("tissue_p_value")
+    }
+    return {key: val for key, val in trait.items() if val is not None}
+
 def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         conn: Any, primary_trait_name: str,
         control_trait_names: Tuple[str, ...], method: str,
@@ -717,8 +765,10 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
     return {
         "status": "success",
         "results": {
-            "primary_trait": primary_trait,
-            "control_traits": cntrl_traits,
-            "correlations": trait_list,
+            "primary_trait": trait_for_output(primary_trait),
+            "control_traits": tuple(
+                trait_for_output(trait) for trait in cntrl_traits),
+            "correlations": tuple(
+                trait_for_output(trait) for trait in trait_list),
             "dataset_type": target_dataset["type"]
         }}
