@@ -717,7 +717,8 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
     return {
         "status": "success",
         "results": {
-        "primary_trait": primary_trait,
-        "control_traits": cntrl_traits,
-        "correlations": trait_list
+            "primary_trait": primary_trait,
+            "control_traits": cntrl_traits,
+            "correlations": trait_list,
+            "dataset_type": target_dataset["type"]
         }}
