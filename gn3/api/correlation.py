@@ -110,7 +110,7 @@ def partial_correlation():
         tuple(trait_fullname(trait) for trait in args["control_traits"]),
         args["method"], int(args["criteria"]), args["target_db"])
     response = make_response(
-        json.dumps(corr_results, cls=OutputEncoder),
+        json.dumps(corr_results, cls=OutputEncoder).replace(": NaN", ": null"),
         400 if "error" in corr_results.keys() else 200)
     response.headers["Content-Type"] = "application/json"
     return response
