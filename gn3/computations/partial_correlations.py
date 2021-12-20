@@ -770,5 +770,6 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
                 trait_for_output(trait) for trait in cntrl_traits),
             "correlations": tuple(
                 trait_for_output(trait) for trait in trait_list),
-            "dataset_type": target_dataset["type"]
+            "dataset_type": target_dataset["type"],
+            "method": "spearman" if "spearman" in method.lower() else "pearson"
         }}
