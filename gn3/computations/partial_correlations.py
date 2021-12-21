@@ -717,19 +717,30 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
 
 
     def __make_sorter__(method):
-        def __sort_6__(row):
-            return row[6]
+        def __compare_lit_or_tiss_correlation_values_(row):
+            # Index  Content
+            # 0      trait name
+            # 1      N
+            # 2      partial correlation coefficient
+            # 3      p value of partial correlation
+            # 6      literature/tissue correlation value
+            return (row[6], row[3])
 
-        def __sort_3__(row):
+        def __compare_partial_correlation_p_values__(row):
+            # Index  Content
+            # 0      trait name
+            # 1      partial correlation coefficient
+            # 2      N
+            # 3      p value of partial correlation
             return row[3]
 
         if "literature" in method.lower():
-            return __sort_6__
+            return __compare_lit_or_tiss_correlation_values_
 
         if "tissue" in method.lower():
-            return __sort_6__
+            return __compare_lit_or_tiss_correlation_values_
 
-        return __sort_3__
+        return __compare_partial_correlation_p_values__
 
     sorted_correlations = sorted(
         all_correlations, key=__make_sorter__(method))
