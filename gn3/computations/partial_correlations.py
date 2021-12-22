@@ -217,7 +217,7 @@ def good_dataset_samples_indexes(
 def partial_correlations_fast(# pylint: disable=[R0913, R0914]
         samples, primary_vals, control_vals, database_filename,
         fetched_correlations, method: str, correlation_type: str) -> Tuple[
-            float, Tuple[float, ...]]:
+            int, Tuple[float, ...]]:
     """
     Computes partial correlation coefficients using data from a CSV file.
 
@@ -350,7 +350,9 @@ def compute_partial(
 def partial_correlations_normal(# pylint: disable=R0913
         primary_vals, control_vals, input_trait_gene_id, trait_database,
         data_start_pos: int, db_type: str, method: str) -> Tuple[
-            float, Tuple[float, ...]]:
+            int, Tuple[Union[
+                Tuple[str, int, float, float, float, float], None],
+                       ...]]:#Tuple[float, ...]
     """
     Computes the correlation coefficients.
 
@@ -485,7 +487,7 @@ def literature_correlation_by_list(
 
 def tissue_correlation_by_list(
         conn: Any, primary_trait_symbol: str, tissue_probeset_freeze_id: int,
-        method: str, trait_list: Tuple[dict]) -> Tuple[dict]:
+        method: str, trait_list: Tuple[dict]) -> Tuple[dict, ...]:
     """
     This is a migration of the
     `web.webqtl.correlation.CorrelationPage.getTissueCorrelationByList`
@@ -508,7 +510,7 @@ def tissue_correlation_by_list(
             primary_trait_value = prim_trait_symbol_value_dict[
                 primary_trait_symbol.lower()]
             gene_symbol_list = tuple(
-                trait for trait in trait_list if "symbol" in trait.keys())
+                trait["symbol"] for trait in trait_list if "symbol" in trait.keys())
             symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
                 gene_symbol_list, tissue_probeset_freeze_id, conn)
             return tuple(
