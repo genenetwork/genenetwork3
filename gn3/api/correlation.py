@@ -1,4 +1,6 @@
 """Endpoints for running correlations"""
+import json
+
 from flask import jsonify
 from flask import Blueprint
 from flask import request
@@ -87,8 +89,19 @@ def compute_tissue_corr(corr_method="pearson"):
 
 @correlation.route("/partial", methods=["POST"])
 def partial_correlation():
+    """API endpoint for partial correlations."""
     def trait_fullname(trait):
         return f"{trait['dataset']}::{trait['name']}"
+
+    class OutputEncoder(json.JSONEncoder):
+        """
+        Class to encode output into JSON, for objects which the default
+        json.JSONEncoder class does not have default encoding for.
+        """
+        def default(self, obj):
+            if isinstance(obj, bytes):
+                return str(obj, encoding="utf-8")
+            return json.JSONEncoder.default(self, obj)
 
     args = request.get_json()
     conn, _cursor_object = database_connector()
