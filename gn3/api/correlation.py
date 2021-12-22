@@ -1,9 +1,9 @@
 """Endpoints for running correlations"""
 import json
-
 from flask import jsonify
 from flask import Blueprint
 from flask import request
+from flask import make_response
 
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
@@ -109,6 +109,8 @@ def partial_correlation():
         conn, trait_fullname(args["primary_trait"]),
         tuple(trait_fullname(trait) for trait in args["control_traits"]),
         args["method"], int(args["criteria"]), args["target_db"])
-    return make_response(
-        jsonify(corr_results),
-        400)
+    response = make_response(
+        json.dumps(corr_results, cls=OutputEncoder),
+        400 if "error" in corr_results.keys() else 200)
+    response.headers["Content-Type"] = "application/json"
+    return response
