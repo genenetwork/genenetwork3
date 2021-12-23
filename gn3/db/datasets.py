@@ -362,8 +362,8 @@ WHERE {
   OPTIONAL { ?dataset gn:acknowledgment ?acknowledgment . }
 }
 """]
-    result = {'accession_id': accession_id,
-              'investigator': {}}
+    result: Dict[str, Any] = {'accession_id': accession_id,
+                              'investigator': {}}
     query_result = {}
     for query in queries:
         if sparql_result := sparql_query(Template(query).substitute(accession_id=accession_id)):
