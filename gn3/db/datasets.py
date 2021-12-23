@@ -328,7 +328,7 @@ WHERE {
   OPTIONAL { ?dataset gn:geoSeries ?geo_series } .
 }
 """,
-             """
+               """
 PREFIX gn: <http://genenetwork.org/>
 SELECT ?platform_name ?normalization_name ?species_name ?inbred_set_name ?tissue_name
 WHERE {
@@ -341,7 +341,7 @@ WHERE {
   OPTIONAL { ?dataset gn:datasetOfPlatform / gn:name ?platform_name } .
 }
 """,
-             """
+               """
 PREFIX gn: <http://genenetwork.org/>
 SELECT ?specifics ?summary ?about_cases ?about_tissue ?about_platform
        ?about_data_processing ?notes ?experiment_design ?contributors
