@@ -539,7 +539,7 @@ def trait_for_output(trait):
     pair just to indicate it does not exist.
     """
     trait = {
-        "trait_type": trait["trait_type"],
+        "trait_type": trait["db"]["dataset_type"],
         "dataset_name": trait["db"]["dataset_name"],
         "dataset_type": trait["db"]["dataset_type"],
         "group": trait["db"]["group"],
