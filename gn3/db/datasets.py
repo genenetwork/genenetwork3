@@ -3,7 +3,7 @@ This module contains functions relating to specific trait dataset manipulation
 """
 import re
 from string import Template
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from SPARQLWrapper import JSON, SPARQLWrapper
 from gn3.settings import SPARQL_ENDPOINT
 
@@ -297,7 +297,7 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
         **group
     }
 
-def sparql_query(query: str) -> Dict[str, Any]:
+def sparql_query(query: str) -> List[Dict[str, Any]]:
     """Run a SPARQL query and return the bound variables."""
     sparql = SPARQLWrapper(SPARQL_ENDPOINT)
     sparql.setQuery(query)
