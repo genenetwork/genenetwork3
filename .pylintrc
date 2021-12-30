@@ -4,4 +4,6 @@ ignore-imports=yes
 
 [MESSAGES CONTROL]
 
-disable=fixme
+disable=
+	fixme,
+	duplicate-code
