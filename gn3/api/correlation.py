@@ -98,10 +98,10 @@ def partial_correlation():
         Class to encode output into JSON, for objects which the default
         json.JSONEncoder class does not have default encoding for.
         """
-        def default(self, obj):
-            if isinstance(obj, bytes):
-                return str(obj, encoding="utf-8")
-            return json.JSONEncoder.default(self, obj)
+        def default(self, o):
+            if isinstance(o, bytes):
+                return str(o, encoding="utf-8")
+            return json.JSONEncoder.default(self, o)
 
     args = request.get_json()
     conn, _cursor_object = database_connector()
@@ -110,7 +110,7 @@ def partial_correlation():
         tuple(trait_fullname(trait) for trait in args["control_traits"]),
         args["method"], int(args["criteria"]), args["target_db"])
     response = make_response(
-        json.dumps(corr_results, cls=OutputEncoder).replace(": NaN", ": null"),
+        json.dumps(corr_results, cls=OutputEncoder),
         400 if "error" in corr_results.keys() else 200)
     response.headers["Content-Type"] = "application/json"
     return response

@@ -9,6 +9,7 @@ import math
 from functools import reduce, partial
 from typing import Any, Tuple, Union, Sequence
 
+import numpy
 import pandas
 import pingouin
 from scipy.stats import pearsonr, spearmanr
@@ -538,6 +539,11 @@ def trait_for_output(trait):
     `None`, because it is a waste of network resources to transmit the key-value
     pair just to indicate it does not exist.
     """
+    def __nan_to_none__(val):
+        if math.isnan(val) or numpy.isnan(val):
+            return None
+        return val
+
     trait = {
         "trait_type": trait["db"]["dataset_type"],
         "dataset_name": trait["db"]["dataset_name"],
@@ -562,19 +568,27 @@ def trait_for_output(trait):
         "geneid": trait.get("geneid"),
         "homologeneid": trait.get("homologeneid"),
         "noverlap": trait.get("noverlap"),
-        "partial_corr": trait.get("partial_corr"),
-        "partial_corr_p_value": trait.get("partial_corr_p_value"),
-        "corr": trait.get("corr"),
-        "corr_p_value": trait.get("corr_p_value"),
-        "rank_order": trait.get("rank_order"),
+        "partial_corr": __nan_to_none__(trait.get("partial_corr")),
+        "partial_corr_p_value": __nan_to_none__(
+            trait.get("partial_corr_p_value")),
+        "corr": __nan_to_none__(trait.get("corr")),
+        "corr_p_value": __nan_to_none__(trait.get("corr_p_value")),
+        "rank_order": __nan_to_none__(trait.get("rank_order")),
         "delta": (
             None if trait.get("partial_corr") is None
             else (trait.get("partial_corr") - trait.get("corr"))),
-        "l_corr":  trait.get("l_corr"),
-        "tissue_corr": trait.get("tissue_corr"),
-        "tissue_p_value": trait.get("tissue_p_value")
+        "l_corr": __nan_to_none__(trait.get("l_corr")),
+        "tissue_corr": __nan_to_none__(trait.get("tissue_corr")),
+        "tissue_p_value": __nan_to_none__(trait.get("tissue_p_value"))
     }
-    return {key: val for key, val in trait.items() if val is not None}
+    return {
+        key: val
+        for key, val in trait.items()
+        if (
+            val is not None
+            or key in (
+                "partial_corr_p_value", "corr", "corr_p_value", "rank_order",
+                "delta", "l_corr", "tissue_corr", "tissue_p_value"))}
 
 def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         conn: Any, primary_trait_name: str,
