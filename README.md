@@ -38,7 +38,6 @@ python3
 guix shell -C --network --expose=$HOME/genotype_files/ -Df guix.scm
 ```
 
-
 #### Using a Guix profile (or rolling back)
 
 Create a new profile with
@@ -127,6 +126,8 @@ And for the scalable production version run
 ```
 gunicorn --bind 0.0.0.0:8080 --workers 8 --keep-alive 6000 --max-requests 10 --max-requests-jitter 5 --timeout 1200 wsgi:app
 ```
+
+(see also the [.guix_deploy](./.guix_deploy) script)
 
 ## Using python-pip
 
