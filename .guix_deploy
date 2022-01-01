@@ -1,0 +1,3 @@
+# Deploy script on tux01
+
+/home/wrk/opt/guix-pull/bin/guix shell -L /home/wrk/guix-bioinformatics/ --expose=$HOME/production/genotype_files/ -C -N -Df guix.scm
