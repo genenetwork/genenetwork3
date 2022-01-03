@@ -733,8 +733,8 @@ def set_homologene_id(conn, traits):
         "SELECT InbredSet.Name AS `group`, Homologene.GeneId AS geneid, "
         "HomologeneId "
         "FROM Homologene, Species, InbredSet "
-        "WHERE Homologene.GeneId = ({geneids}) "
-        "AND InbredSet.Name = ({groups}) "
+        "WHERE Homologene.GeneId IN ({geneids}) "
+        "AND InbredSet.Name IN ({groups}) "
         "AND InbredSet.SpeciesId = Species.Id "
         "AND Species.TaxonomyId = Homologene.TaxonomyId").format(
             geneids=", ".join(["%s"] * len(geneids)),
