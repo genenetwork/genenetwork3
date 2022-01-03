@@ -263,7 +263,7 @@ def merge_traits_and_info(traits, info_results):
     """
     if info_results:
         results = {
-            trait["trait_name"]: trait for trait in info_results
+            str(trait["trait_name"]): trait for trait in info_results
         }
         return tuple(
             {
