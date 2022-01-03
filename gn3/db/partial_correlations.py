@@ -314,8 +314,9 @@ def publish_traits_info(
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
-            tuple(trait["trait_name"] for trait in traits) +
-            tuple(trait_dataset_ids))
+            (
+                tuple(trait["trait_name"] for trait in traits) +
+                tuple(trait_dataset_ids)))
         return merge_traits_and_info(traits, cursor.fetchall())
     return tuple({**trait, "haveinfo": False} for trait in traits)
 
