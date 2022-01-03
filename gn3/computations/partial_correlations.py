@@ -555,16 +555,13 @@ def trait_for_output(trait):
         "trait_name": trait["trait_name"],
         "symbol": trait.get("symbol"),
         "description": trait.get("description"),
-        "pre_publication_description": trait.get(
-            "pre_publication_description"),
+        "pre_publication_description": trait.get("Pre_publication_description"),
         "post_publication_description": trait.get(
-            "post_publication_description"),
-        "original_description": trait.get(
-            "original_description"),
-        "authors": trait.get("authors"),
-        "year": trait.get("year"),
-        "probe_target_description": trait.get(
-            "probe_target_description"),
+            "Post_publication_description"),
+        "original_description": trait.get("Original_description"),
+        "authors": trait.get("Authors"),
+        "year": trait.get("Year"),
+        "probe_target_description": trait.get("Probe_target_description"),
         "chr": trait.get("chr"),
         "mb": trait.get("mb"),
         "geneid": trait.get("geneid"),
