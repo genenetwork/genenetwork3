@@ -540,6 +540,8 @@ def trait_for_output(trait):
     pair just to indicate it does not exist.
     """
     def __nan_to_none__(val):
+        if val is None:
+            return None
         if math.isnan(val) or numpy.isnan(val):
             return None
         return val
@@ -581,14 +583,7 @@ def trait_for_output(trait):
         "tissue_corr": __nan_to_none__(trait.get("tissue_corr")),
         "tissue_p_value": __nan_to_none__(trait.get("tissue_p_value"))
     }
-    return {
-        key: val
-        for key, val in trait.items()
-        if (
-            val is not None
-            or key in (
-                "partial_corr_p_value", "corr", "corr_p_value", "rank_order",
-                "delta", "l_corr", "tissue_corr", "tissue_p_value"))}
+    return {key: val for key, val in trait.items() if val is not None}
 
 def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         conn: Any, primary_trait_name: str,
