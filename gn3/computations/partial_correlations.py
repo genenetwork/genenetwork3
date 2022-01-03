@@ -758,7 +758,7 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         all_correlations,
         key=__make_sorter__(method))[:min(criteria, len(all_correlations))]
     traits_list_corr_info = {
-        "{target_dataset['dataset_name']}::{item[0]}": {
+        f"{target_dataset['dataset_name']}::{item[0]}": {
             "noverlap": item[1],
             "partial_corr": item[2],
             "partial_corr_p_value": item[3],
