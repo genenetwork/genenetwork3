@@ -259,6 +259,13 @@ def insert_sample_data(conn: Any, #pylint: disable=[R0913]
                            (strain_name,))
             strain_id = cursor.fetchone()
 
+            # Return early if an insert already exists!
+            cursor.execute("SELECT Id FROM PublishData where Id = %s "
+                           "AND StrainId = %s AND value = %s ",
+                           (data_id, strain_id, value))
+            if cursor.fetchone():  # This strain already exists
+                return (0, 0, 0)
+
             # Insert the PublishData table
             cursor.execute(("INSERT INTO PublishData (Id, StrainId, value)"
                             "VALUES (%s, %s, %s)"),
