@@ -110,7 +110,6 @@ def get_trait_csv_sample_data(conn: Any,
 
 
 def update_sample_data(conn: Any, #pylint: disable=[R0913]
-
                        trait_name: str,
                        strain_name: str,
                        phenotype_id: int,
@@ -261,8 +260,8 @@ def insert_sample_data(conn: Any, #pylint: disable=[R0913]
 
             # Return early if an insert already exists!
             cursor.execute("SELECT Id FROM PublishData where Id = %s "
-                           "AND StrainId = %s AND value = %s ",
-                           (data_id, strain_id, value))
+                           "AND StrainId = %s",
+                           (data_id, strain_id))
             if cursor.fetchone():  # This strain already exists
                 return (0, 0, 0)
 
