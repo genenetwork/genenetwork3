@@ -540,12 +540,12 @@ def geno_datasets_names(conn, threshold, dataset_names):
         "WHERE "
         "public > %s "
         "AND "
-        "(Name = ({names}) OR FullName = ({names}) OR ShortName = ({names}))")
+        "(Name IN ({names}) OR FullName IN ({names}) OR ShortName IN ({names}))")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query.format(names=", ".join(["%s"] * len(dataset_names))),
-            (threshold,) + tuple(dataset_names))
-        return ...
+            (threshold,) + (tuple(dataset_names) * 3))
+        return {ds["dataset_name"]: ds for ds in cursor.fetchall()}
     return {}
 
 def geno_datasets_groups(conn, dataset_names):
