@@ -29,8 +29,11 @@ def get_filename(conn: Any, target_db_name: str, text_files_dir: str) -> Union[
             filename = "ProbeSetFreezeId_{tid}_FullName_{fname}.txt".format(
                 tid=result[0],
                 fname=result[1].replace(' ', '_').replace('/', '_'))
-            return ((filename in os.listdir(text_files_dir))
-                    and f"{text_files_dir}/{filename}")
+            full_filename = f"{text_files_dir}/{filename}"
+            return (
+                os.path.exists(full_filename) and
+                (filename in os.listdir(text_files_dir)) and
+                full_filename)
 
     return False
 
