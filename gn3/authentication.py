@@ -163,8 +163,4 @@ def create_group(conn: Redis, group_name: Optional[str],
         }
         conn.hset("groups", group_id, json.dumps(group))
         return group
-    # This might break stuff, but it fixes the linting error regarding
-    # inconsistent return types.
-    # @BonfaceKilz please review this and replace with appropriate return and
-    # remove these comments.
     return None

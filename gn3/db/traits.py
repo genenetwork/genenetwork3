@@ -110,7 +110,6 @@ def get_trait_csv_sample_data(conn: Any,
 
 
 def update_sample_data(conn: Any, #pylint: disable=[R0913]
-
                        trait_name: str,
                        strain_name: str,
                        phenotype_id: int,
@@ -203,25 +202,30 @@ def delete_sample_data(conn: Any,
                  "AND Strain.Name = \"%s\"") % (trait_name,
                                                 phenotype_id,
                                                 str(strain_name)))
-            strain_id, data_id = cursor.fetchone()
 
-            cursor.execute(("DELETE FROM PublishData "
+            # Check if it exists if the data was already deleted:
+            if _result := cursor.fetchone():
+                strain_id, data_id = _result
+
+            # Only run if the strain_id and data_id exist
+            if strain_id and data_id:
+                cursor.execute(("DELETE FROM PublishData "
                             "WHERE StrainId = %s AND Id = %s")
-                           % (strain_id, data_id))
-            deleted_published_data = cursor.rowcount
+                               % (strain_id, data_id))
+                deleted_published_data = cursor.rowcount
 
-            # Delete the PublishSE table
-            cursor.execute(("DELETE FROM PublishSE "
-                            "WHERE StrainId = %s AND DataId = %s") %
-                           (strain_id, data_id))
-            deleted_se_data = cursor.rowcount
+                # Delete the PublishSE table
+                cursor.execute(("DELETE FROM PublishSE "
+                                "WHERE StrainId = %s AND DataId = %s") %
+                               (strain_id, data_id))
+                deleted_se_data = cursor.rowcount
 
-            # Delete the NStrain table
-            cursor.execute(("DELETE FROM NStrain "
-                            "WHERE StrainId = %s AND DataId = %s" %
-                            (strain_id, data_id)))
-            deleted_n_strains = cursor.rowcount
-        except Exception as e: #pylint: disable=[C0103, W0612]
+                # Delete the NStrain table
+                cursor.execute(("DELETE FROM NStrain "
+                                "WHERE StrainId = %s AND DataId = %s" %
+                                (strain_id, data_id)))
+                deleted_n_strains = cursor.rowcount
+        except Exception as e:  #pylint: disable=[C0103, W0612]
             conn.rollback()
             raise MySQLdb.Error
         conn.commit()
@@ -253,6 +257,13 @@ def insert_sample_data(conn: Any, #pylint: disable=[R0913]
             cursor.execute("SELECT Id FROM Strain WHERE Name = %s",
                            (strain_name,))
             strain_id = cursor.fetchone()
+
+            # Return early if an insert already exists!
+            cursor.execute("SELECT Id FROM PublishData where Id = %s "
+                           "AND StrainId = %s",
+                           (data_id, strain_id))
+            if cursor.fetchone():  # This strain already exists
+                return (0, 0, 0)
 
             # Insert the PublishData table
             cursor.execute(("INSERT INTO PublishData (Id, StrainId, value)"
