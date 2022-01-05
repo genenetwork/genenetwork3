@@ -3,7 +3,7 @@ This module contains functions relating to specific trait dataset manipulation
 """
 import re
 from string import Template
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from SPARQLWrapper import JSON, SPARQLWrapper
 from gn3.settings import SPARQL_ENDPOINT
 
@@ -297,7 +297,7 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
         **group
     }
 
-def sparql_query(query: str) -> Dict[str, Any]:
+def sparql_query(query: str) -> List[Dict[str, Any]]:
     """Run a SPARQL query and return the bound variables."""
     sparql = SPARQLWrapper(SPARQL_ENDPOINT)
     sparql.setQuery(query)
@@ -328,7 +328,7 @@ WHERE {
   OPTIONAL { ?dataset gn:geoSeries ?geo_series } .
 }
 """,
-             """
+               """
 PREFIX gn: <http://genenetwork.org/>
 SELECT ?platform_name ?normalization_name ?species_name ?inbred_set_name ?tissue_name
 WHERE {
@@ -341,7 +341,7 @@ WHERE {
   OPTIONAL { ?dataset gn:datasetOfPlatform / gn:name ?platform_name } .
 }
 """,
-             """
+               """
 PREFIX gn: <http://genenetwork.org/>
 SELECT ?specifics ?summary ?about_cases ?about_tissue ?about_platform
        ?about_data_processing ?notes ?experiment_design ?contributors
@@ -362,8 +362,8 @@ WHERE {
   OPTIONAL { ?dataset gn:acknowledgment ?acknowledgment . }
 }
 """]
-    result = {'accession_id': accession_id,
-              'investigator': {}}
+    result: Dict[str, Any] = {'accession_id': accession_id,
+                              'investigator': {}}
     query_result = {}
     for query in queries:
         if sparql_result := sparql_query(Template(query).substitute(accession_id=accession_id)):

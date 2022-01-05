@@ -1,7 +1,9 @@
 """Endpoints for running correlations"""
+import json
 from flask import jsonify
 from flask import Blueprint
 from flask import request
+from flask import make_response
 
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
@@ -87,8 +89,19 @@ def compute_tissue_corr(corr_method="pearson"):
 
 @correlation.route("/partial", methods=["POST"])
 def partial_correlation():
+    """API endpoint for partial correlations."""
     def trait_fullname(trait):
         return f"{trait['dataset']}::{trait['name']}"
+
+    class OutputEncoder(json.JSONEncoder):
+        """
+        Class to encode output into JSON, for objects which the default
+        json.JSONEncoder class does not have default encoding for.
+        """
+        def default(self, obj):
+            if isinstance(obj, bytes):
+                return str(obj, encoding="utf-8")
+            return json.JSONEncoder.default(self, obj)
 
     args = request.get_json()
     conn, _cursor_object = database_connector()
@@ -96,6 +109,8 @@ def partial_correlation():
         conn, trait_fullname(args["primary_trait"]),
         tuple(trait_fullname(trait) for trait in args["control_traits"]),
         args["method"], int(args["criteria"]), args["target_db"])
-    return make_response(
-        jsonify(corr_results),
-        400)
+    response = make_response(
+        json.dumps(corr_results, cls=OutputEncoder).replace(": NaN", ": null"),
+        400 if "error" in corr_results.keys() else 200)
+    response.headers["Content-Type"] = "application/json"
+    return response

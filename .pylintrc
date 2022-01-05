@@ -1,3 +1,7 @@
 [SIMILARITIES]
 
 ignore-imports=yes
+
+[MESSAGES CONTROL]
+
+disable=fixme

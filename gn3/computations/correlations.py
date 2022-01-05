@@ -7,6 +7,7 @@ from typing import List
 from typing import Tuple
 from typing import Optional
 from typing import Callable
+from typing import Generator
 
 import scipy.stats
 import pingouin as pg
@@ -79,7 +80,7 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
             zip(*list(normalize_values(trait_vals, target_samples_vals))))
         num_overlap = len(normalized_traits_vals)
     except ValueError:
-        return
+        return None
 
     if num_overlap > 5:
 
@@ -106,7 +107,7 @@ package :not packaged in guix
 
 
 def filter_shared_sample_keys(this_samplelist,
-                              target_samplelist) -> Tuple[List, List]:
+                              target_samplelist) -> Generator:
     """Given primary and target sample-list for two base and target trait select
     filter the values using the shared keys
 

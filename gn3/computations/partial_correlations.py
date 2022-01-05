@@ -217,7 +217,7 @@ def good_dataset_samples_indexes(
 def partial_correlations_fast(# pylint: disable=[R0913, R0914]
         samples, primary_vals, control_vals, database_filename,
         fetched_correlations, method: str, correlation_type: str) -> Tuple[
-            float, Tuple[float, ...]]:
+            int, Tuple[float, ...]]:
     """
     Computes partial correlation coefficients using data from a CSV file.
 
@@ -350,7 +350,9 @@ def compute_partial(
 def partial_correlations_normal(# pylint: disable=R0913
         primary_vals, control_vals, input_trait_gene_id, trait_database,
         data_start_pos: int, db_type: str, method: str) -> Tuple[
-            float, Tuple[float, ...]]:
+            int, Tuple[Union[
+                Tuple[str, int, float, float, float, float], None],
+                       ...]]:#Tuple[float, ...]
     """
     Computes the correlation coefficients.
 
@@ -485,7 +487,7 @@ def literature_correlation_by_list(
 
 def tissue_correlation_by_list(
         conn: Any, primary_trait_symbol: str, tissue_probeset_freeze_id: int,
-        method: str, trait_list: Tuple[dict]) -> Tuple[dict]:
+        method: str, trait_list: Tuple[dict]) -> Tuple[dict, ...]:
     """
     This is a migration of the
     `web.webqtl.correlation.CorrelationPage.getTissueCorrelationByList`
@@ -508,7 +510,7 @@ def tissue_correlation_by_list(
             primary_trait_value = prim_trait_symbol_value_dict[
                 primary_trait_symbol.lower()]
             gene_symbol_list = tuple(
-                trait for trait in trait_list if "symbol" in trait.keys())
+                trait["symbol"] for trait in trait_list if "symbol" in trait.keys())
             symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
                 gene_symbol_list, tissue_probeset_freeze_id, conn)
             return tuple(
@@ -525,6 +527,54 @@ def tissue_correlation_by_list(
             "tissue_p_value": None
         } for trait in trait_list)
     return trait_list
+
+def trait_for_output(trait):
+    """
+    Process a trait for output.
+
+    Removes a lot of extraneous data from the trait, that is not needed for
+    the display of partial correlation results.
+    This function also removes all key-value pairs, for which the value is
+    `None`, because it is a waste of network resources to transmit the key-value
+    pair just to indicate it does not exist.
+    """
+    trait = {
+        "trait_type": trait["trait_type"],
+        "dataset_name": trait["db"]["dataset_name"],
+        "dataset_type": trait["db"]["dataset_type"],
+        "group": trait["db"]["group"],
+        "trait_fullname": trait["trait_fullname"],
+        "trait_name": trait["trait_name"],
+        "symbol": trait.get("symbol"),
+        "description": trait.get("description"),
+        "pre_publication_description": trait.get(
+            "pre_publication_description"),
+        "post_publication_description": trait.get(
+            "post_publication_description"),
+        "original_description": trait.get(
+            "original_description"),
+        "authors": trait.get("authors"),
+        "year": trait.get("year"),
+        "probe_target_description": trait.get(
+            "probe_target_description"),
+        "chr": trait.get("chr"),
+        "mb": trait.get("mb"),
+        "geneid": trait.get("geneid"),
+        "homologeneid": trait.get("homologeneid"),
+        "noverlap": trait.get("noverlap"),
+        "partial_corr": trait.get("partial_corr"),
+        "partial_corr_p_value": trait.get("partial_corr_p_value"),
+        "corr": trait.get("corr"),
+        "corr_p_value": trait.get("corr_p_value"),
+        "rank_order": trait.get("rank_order"),
+        "delta": (
+            None if trait.get("partial_corr") is None
+            else (trait.get("partial_corr") - trait.get("corr"))),
+        "l_corr":  trait.get("l_corr"),
+        "tissue_corr": trait.get("tissue_corr"),
+        "tissue_p_value": trait.get("tissue_p_value")
+    }
+    return {key: val for key, val in trait.items() if val is not None}
 
 def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         conn: Any, primary_trait_name: str,
@@ -669,19 +719,30 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
 
 
     def __make_sorter__(method):
-        def __sort_6__(row):
-            return row[6]
+        def __compare_lit_or_tiss_correlation_values_(row):
+            # Index  Content
+            # 0      trait name
+            # 1      N
+            # 2      partial correlation coefficient
+            # 3      p value of partial correlation
+            # 6      literature/tissue correlation value
+            return (row[6], row[3])
 
-        def __sort_3__(row):
+        def __compare_partial_correlation_p_values__(row):
+            # Index  Content
+            # 0      trait name
+            # 1      partial correlation coefficient
+            # 2      N
+            # 3      p value of partial correlation
             return row[3]
 
         if "literature" in method.lower():
-            return __sort_6__
+            return __compare_lit_or_tiss_correlation_values_
 
         if "tissue" in method.lower():
-            return __sort_6__
+            return __compare_lit_or_tiss_correlation_values_
 
-        return __sort_3__
+        return __compare_partial_correlation_p_values__
 
     sorted_correlations = sorted(
         all_correlations, key=__make_sorter__(method))
@@ -717,7 +778,11 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
     return {
         "status": "success",
         "results": {
-        "primary_trait": primary_trait,
-        "control_traits": cntrl_traits,
-        "correlations": trait_list
+            "primary_trait": trait_for_output(primary_trait),
+            "control_traits": tuple(
+                trait_for_output(trait) for trait in cntrl_traits),
+            "correlations": tuple(
+                trait_for_output(trait) for trait in trait_list),
+            "dataset_type": target_dataset["type"],
+            "method": "spearman" if "spearman" in method.lower() else "pearson"
         }}

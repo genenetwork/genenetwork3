@@ -1,0 +1,8 @@
+# Deploy script on tux01
+#
+# echo Run tests:
+# echo python -m unittest discover -v
+# echo Run service (single process):
+# echo flask run --port=8080
+
+/home/wrk/opt/guix-pull/bin/guix shell -L /home/wrk/guix-bioinformatics/ --expose=$HOME/production/genotype_files/ -C -N -Df guix.scm
