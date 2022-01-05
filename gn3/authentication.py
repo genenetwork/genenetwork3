@@ -163,3 +163,4 @@ def create_group(conn: Redis, group_name: Optional[str],
         }
         conn.hset("groups", group_id, json.dumps(group))
         return group
+    return None
