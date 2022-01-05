@@ -202,8 +202,6 @@ class TestTraitsDBFunctions(TestCase):
         """
         # pylint: disable=C0103
         db_mock = mock.MagicMock()
-
-        STRAIN_ID_SQL: str = "UPDATE Strain SET Name = %s WHERE Id = %s"
         PUBLISH_DATA_SQL: str = (
             "UPDATE PublishData SET value = %s "
             "WHERE StrainId = %s AND Id = %s")
@@ -216,16 +214,33 @@ class TestTraitsDBFunctions(TestCase):
 
         with db_mock.cursor() as cursor:
             type(cursor).rowcount = 1
+            mock_fetchone = mock.MagicMock()
+            mock_fetchone.return_value = (1, 1)
+            type(cursor).fetchone = mock_fetchone
             self.assertEqual(update_sample_data(
                 conn=db_mock, strain_name="BXD11",
-                strain_id=10, publish_data_id=8967049,
-                value=18.7, error=2.3, count=2),
-                             (1, 1, 1, 1))
+                trait_name="1",
+                phenotype_id=10, value=18.7,
+                error=2.3, count=2),
+                             (1, 1, 1))
             cursor.execute.assert_has_calls(
-                [mock.call(STRAIN_ID_SQL, ('BXD11', 10)),
-                 mock.call(PUBLISH_DATA_SQL, (18.7, 10, 8967049)),
-                 mock.call(PUBLISH_SE_SQL, (2.3, 10, 8967049)),
-                 mock.call(N_STRAIN_SQL, (2, 10, 8967049))]
+                [mock.call('SELECT Strain.Id, PublishData.Id FROM'
+                           ' (PublishData, Strain, PublishXRef, '
+                           'PublishFreeze) LEFT JOIN PublishSE ON '
+                           '(PublishSE.DataId = PublishData.Id '
+                           'AND PublishSE.StrainId = '
+                           'PublishData.StrainId) LEFT JOIN NStrain ON '
+                           '(NStrain.DataId = PublishData.Id AND '
+                           'NStrain.StrainId = PublishData.StrainId) WHERE '
+                           'PublishXRef.InbredSetId = '
+                           'PublishFreeze.InbredSetId AND PublishData.Id = '
+                           'PublishXRef.DataId AND PublishXRef.Id = 1 AND '
+                           'PublishXRef.PhenotypeId = 10 AND '
+                           'PublishData.StrainId = Strain.Id AND '
+                           'Strain.Name = "BXD11"'),
+                 mock.call(PUBLISH_DATA_SQL, (18.7, 1, 1)),
+                 mock.call(PUBLISH_SE_SQL, (2.3, 1, 1)),
+                 mock.call(N_STRAIN_SQL, (2, 1, 1))]
             )
 
     def test_set_haveinfo_field(self):
