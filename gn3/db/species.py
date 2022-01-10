@@ -30,3 +30,47 @@ def get_chromosome(name: str, is_species: bool, conn: Any) -> Optional[Tuple]:
     with conn.cursor() as cursor:
         cursor.execute(_sql)
         return cursor.fetchall()
+
+def translate_to_mouse_gene_id(species: str, geneid: int, conn: Any) -> int:
+    """
+    Translate rat or human geneid to mouse geneid
+
+    This is a migration of the
+    `web.webqtl.correlation/CorrelationPage.translateToMouseGeneID` function in
+    GN1
+    """
+    assert species in ("rat", "mouse", "human"), "Invalid species"
+    if geneid is None:
+        return 0
+
+    if species == "mouse":
+        return geneid
+
+    with conn.cursor as cursor:
+        query = {
+            "rat": "SELECT mouse FROM GeneIDXRef WHERE rat = %s",
+            "human": "SELECT mouse FROM GeneIDXRef WHERE human = %s"
+        }
+        cursor.execute(query[species], geneid)
+        translated_gene_id = cursor.fetchone()
+        if translated_gene_id:
+            return translated_gene_id[0]
+
+    return 0 # default if all else fails
+
+def species_name(conn: Any, group: str) -> str:
+    """
+    Retrieve the name of the species, given the group (RISet).
+
+    This is a migration of the
+    `web.webqtl.dbFunction.webqtlDatabaseFunction.retrieveSpecies` function in
+    GeneNetwork1.
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(
+            ("SELECT Species.Name FROM Species, InbredSet "
+             "WHERE InbredSet.Name = %(group_name)s "
+             "AND InbredSet.SpeciesId = Species.Id"),
+            {"group_name": group})
+        return cursor.fetchone()[0]
+    return None

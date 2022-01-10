@@ -1,14 +1,17 @@
 """module contains code for correlations"""
 import math
 import multiprocessing
+from contextlib import closing
 
+from typing import Generator
 from typing import List
 from typing import Tuple
 from typing import Optional
 from typing import Callable
+from typing import Generator
 
 import scipy.stats
-from gn3.computations.biweight import calculate_biweight_corr
+import pingouin as pg
 
 
 def map_shared_keys_to_values(target_sample_keys: List,
@@ -37,25 +40,16 @@ def map_shared_keys_to_values(target_sample_keys: List,
     return target_dataset_data
 
 
-def normalize_values(a_values: List,
-                     b_values: List) -> Tuple[List[float], List[float], int]:
-    """Trim two lists of values to contain only the values they both share Given
-    two lists of sample values, trim each list so that it contains only the
-    samples that contain a value in both lists. Also returns the number of
-    such samples.
-
-    >>> normalize_values([2.3, None, None, 3.2, 4.1, 5],
-                         [3.4, 7.2, 1.3, None, 6.2, 4.1])
-    ([2.3, 4.1, 5], [3.4, 6.2, 4.1], 3)
-
+def normalize_values(a_values: List, b_values: List) -> Tuple[Generator, Generator]:
     """
-    a_new = []
-    b_new = []
+    :param a_values: list of primary strain values
+    :param b_values: a list of target strain values
+    :return: yield 2 values if none of them is none
+    """
+
     for a_val, b_val in zip(a_values, b_values):
         if (a_val and b_val is not None):
-            a_new.append(a_val)
-            b_new.append(b_val)
-    return a_new, b_new, len(a_new)
+            yield a_val, b_val
 
 
 def compute_corr_coeff_p_value(primary_values: List, target_values: List,
@@ -81,14 +75,19 @@ def compute_sample_r_correlation(trait_name, corr_method, trait_vals,
     correlation coeff and p value
 
     """
-    (sanitized_traits_vals, sanitized_target_vals,
-     num_overlap) = normalize_values(trait_vals, target_samples_vals)
+
+    try:
+        normalized_traits_vals, normalized_target_vals = list(
+            zip(*list(normalize_values(trait_vals, target_samples_vals))))
+        num_overlap = len(normalized_traits_vals)
+    except ValueError:
+        return None
 
     if num_overlap > 5:
 
         (corr_coefficient, p_value) =\
-            compute_corr_coeff_p_value(primary_values=sanitized_traits_vals,
-                                       target_values=sanitized_target_vals,
+            compute_corr_coeff_p_value(primary_values=normalized_traits_vals,
+                                       target_values=normalized_target_vals,
                                        corr_method=corr_method)
 
         if corr_coefficient is not None and not math.isnan(corr_coefficient):
@@ -102,26 +101,21 @@ package :not packaged in guix
 
     """
 
-    try:
-        results = calculate_biweight_corr(x_val, y_val)
-        return results
-    except Exception as error:
-        raise error
+    results = pg.corr(x_val, y_val, method="bicor")
+    corr_coeff = results["r"].values[0]
+    p_val = results["p-val"].values[0]
+    return (corr_coeff, p_val)
 
 
 def filter_shared_sample_keys(this_samplelist,
-                              target_samplelist) -> Tuple[List, List]:
+                              target_samplelist) -> Generator:
     """Given primary and target sample-list for two base and target trait select
     filter the values using the shared keys
 
     """
-    this_vals = []
-    target_vals = []
     for key, value in target_samplelist.items():
         if key in this_samplelist:
-            target_vals.append(value)
-            this_vals.append(this_samplelist[key])
-    return (this_vals, target_vals)
+            yield this_samplelist[key], value
 
 
 def fast_compute_all_sample_correlation(this_trait,
@@ -140,9 +134,17 @@ def fast_compute_all_sample_correlation(this_trait,
     for target_trait in target_dataset:
         trait_name = target_trait.get("trait_id")
         target_trait_data = target_trait["trait_sample_data"]
-        processed_values.append((trait_name, corr_method, *filter_shared_sample_keys(
-            this_trait_samples, target_trait_data)))
-    with multiprocessing.Pool(4) as pool:
+
+        try:
+            this_vals, target_vals = list(zip(*list(filter_shared_sample_keys(
+                this_trait_samples, target_trait_data))))
+
+            processed_values.append(
+                (trait_name, corr_method, this_vals, target_vals))
+        except ValueError:
+            continue
+
+    with closing(multiprocessing.Pool()) as pool:
         results = pool.starmap(compute_sample_r_correlation, processed_values)
 
         for sample_correlation in results:
@@ -173,8 +175,14 @@ def compute_all_sample_correlation(this_trait,
     for target_trait in target_dataset:
         trait_name = target_trait.get("trait_id")
         target_trait_data = target_trait["trait_sample_data"]
-        this_vals, target_vals = filter_shared_sample_keys(
-            this_trait_samples, target_trait_data)
+
+        try:
+            this_vals, target_vals = list(zip(*list(filter_shared_sample_keys(
+                this_trait_samples, target_trait_data))))
+
+        except ValueError:
+            # case where no matching strain names
+            continue
 
         sample_correlation = compute_sample_r_correlation(
             trait_name=trait_name,

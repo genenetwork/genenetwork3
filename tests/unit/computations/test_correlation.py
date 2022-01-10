@@ -3,12 +3,14 @@ from unittest import TestCase
 from unittest import mock
 
 from collections import namedtuple
+import math
+from numpy.testing import assert_almost_equal
 
 from gn3.computations.correlations import normalize_values
-from gn3.computations.correlations import do_bicor
 from gn3.computations.correlations import compute_sample_r_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
+
 from gn3.computations.correlations import tissue_correlation_for_trait
 from gn3.computations.correlations import lit_correlation_for_trait
 from gn3.computations.correlations import fetch_lit_correlation_data
@@ -91,22 +93,18 @@ class TestCorrelation(TestCase):
 
     def test_normalize_values(self):
         """Function to test normalizing values """
-        results = normalize_values([2.3, None, None, 3.2, 4.1, 5],
-                                   [3.4, 7.2, 1.3, None, 6.2, 4.1])
 
-        expected_results = ([2.3, 4.1, 5], [3.4, 6.2, 4.1], 3)
+        test_data = [
+            [[2.3, None, None, 3.2, 4.1, 5], [3.4, 7.2, 1.3, None, 6.2, 4.1],
+             [(2.3, 4.1, 5), (3.4, 6.2, 4.1)]],
+            [[2.3, None, 1.3, None], [None, None, None, 1.2], []],
+            [[], [], []]
+        ]
 
-        self.assertEqual(results, expected_results)
-
-    @mock.patch("gn3.computations.correlations.calculate_biweight_corr")
-    def test_bicor(self, mock_biweight):
-        """Test for doing biweight mid correlation """
-        mock_biweight.return_value = (1.0, 0.0)
-
-        results = do_bicor(x_val=[1, 2, 3], y_val=[4, 5, 6])
-
-        self.assertEqual(results, (1.0, 0.0)
-                         )
+        for a_values, b_values, expected_result in test_data:
+            with self.subTest(a_values=a_values, b_values=b_values):
+                results = normalize_values(a_values, b_values)
+                self.assertEqual(list(zip(*list(results))), expected_result)
 
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
     @mock.patch("gn3.computations.correlations.normalize_values")
@@ -114,36 +112,23 @@ class TestCorrelation(TestCase):
         """Test for doing sample correlation gets the cor\
         and p value and rho value using pearson correlation
         """
-        primary_values = [2.3, 4.1, 5]
-        target_values = [3.4, 6.2, 4.1]
+        primary_values = [2.3, 4.1, 5, 4.2, None, None, 4, 1.2, 1.1]
+        target_values = [3.4, 6.2, 4, 1.1, 1.2, None, 8, 1.1, 2.1]
 
-        norm_vals.return_value = ([2.3, 4.1, 5, 4.2, 4, 1.2],
-                                  [3.4, 6.2, 4, 1.1, 8, 1.1], 6)
-        compute_corr.side_effect = [(0.7, 0.3), (-1.0, 0.9), (1, 0.21)]
 
-        pearson_results = compute_sample_r_correlation(trait_name="1412_at",
-                                                       corr_method="pearson",
-                                                       trait_vals=primary_values,
-                                                       target_samples_vals=target_values)
+        norm_vals.return_value = iter(
+            [(2.3, 3.4), (4.1, 6.2), (5, 4), (4.2, 1.1), (4, 8), (1.2, 1.1), (1.1, 2.1)])
 
-        spearman_results = compute_sample_r_correlation(trait_name="1412_at",
-                                                        corr_method="spearman",
-                                                        trait_vals=primary_values,
-                                                        target_samples_vals=target_values)
+
+        compute_corr.return_value = (0.8, 0.21)
 
         bicor_results = compute_sample_r_correlation(trait_name="1412_at",
                                                      corr_method="bicor",
                                                      trait_vals=primary_values,
                                                      target_samples_vals=target_values)
 
-        self.assertEqual(bicor_results, ("1412_at", 1, 0.21, 6))
-        self.assertEqual(pearson_results, ("1412_at", 0.7, 0.3, 6))
-        self.assertEqual(spearman_results, ("1412_at", -1.0, 0.9, 6))
 
-        self.assertIsInstance(
-            pearson_results, tuple, "message")
-        self.assertIsInstance(
-            spearman_results, tuple, "message")
+        self.assertEqual(bicor_results, ("1412_at", 0.8, 0.21, 7))
 
     def test_filter_shared_sample_keys(self):
         """Function to  tests shared key between two dicts"""
@@ -163,22 +148,23 @@ class TestCorrelation(TestCase):
 
         }
 
-        filtered_target_samplelist = ["1.23", "6.565", "6.456"]
-        filtered_this_samplelist = ["6.266", "6.565", "6.456"]
+        filtered_target_samplelist = ("1.23", "6.565", "6.456")
+        filtered_this_samplelist = ("6.266", "6.565", "6.456")
 
         results = filter_shared_sample_keys(
             this_samplelist=this_samplelist, target_samplelist=target_samplelist)
 
-        self.assertEqual(results, (filtered_this_samplelist,
-                                   filtered_target_samplelist))
+        self.assertEqual(list(zip(*list(results))), [filtered_this_samplelist,
+                                                     filtered_target_samplelist])
 
     @mock.patch("gn3.computations.correlations.compute_sample_r_correlation")
     @mock.patch("gn3.computations.correlations.filter_shared_sample_keys")
     def test_compute_all_sample(self, filter_shared_samples, sample_r_corr):
         """Given target dataset compute all sample r correlation"""
 
-        filter_shared_samples.return_value = (["1.23", "6.565", "6.456"], [
-            "6.266", "6.565", "6.456"])
+        filter_shared_samples.return_value = [iter(val) for val in [(
+            "1.23", "6.266"), ("6.565", "6.565"), ("6.456", "6.456")]]
+
         sample_r_corr.return_value = (["1419792_at", -1.0, 0.9, 6])
 
         this_trait_data = {
@@ -210,10 +196,8 @@ class TestCorrelation(TestCase):
             this_trait=this_trait_data, target_dataset=traits_dataset), sample_all_results)
         sample_r_corr.assert_called_once_with(
             trait_name='1419792_at',
-            corr_method="pearson", trait_vals=['1.23', '6.565', '6.456'],
-            target_samples_vals=['6.266', '6.565', '6.456'])
-        filter_shared_samples.assert_called_once_with(
-            this_trait_data.get("trait_sample_data"), traits_dataset[0].get("trait_sample_data"))
+            corr_method="pearson", trait_vals=('1.23', '6.565', '6.456'),
+            target_samples_vals=('6.266', '6.565', '6.456'))
 
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
     def test_tissue_correlation_for_trait(self, mock_compute_corr_coeff):
@@ -479,10 +463,10 @@ class TestCorrelation(TestCase):
                  [None, None, None, None, None, None, None, None, None, 0],
                  (0.0, 1)],
                 [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                 (0, 10)],
+                 (math.nan, 10)],
                 [[9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87],
                  [9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87, 9.87],
-                 (0.9999999999999998, 10)],
+                 (math.nan, 10)],
                 [[9.3, 2.2, 5.4, 7.2, 6.4, 7.6, 3.8, 1.8, 8.4, 0.2],
                  [0.6, 3.97, 5.82, 8.21, 1.65, 4.55, 6.72, 9.5, 7.33, 2.34],
                  (-0.12720361919462056, 10)],
@@ -490,5 +474,8 @@ class TestCorrelation(TestCase):
                  [None, None, None, None, 2, None, None, 3, None, None],
                  (0.0, 2)]]:
             with self.subTest(dbdata=dbdata, userdata=userdata):
-                self.assertEqual(compute_correlation(
-                    dbdata, userdata), expected)
+                actual = compute_correlation(dbdata, userdata)
+                with self.subTest("correlation coefficient"):
+                    assert_almost_equal(actual[0], expected[0])
+                with self.subTest("overlap"):
+                    self.assertEqual(actual[1], expected[1])

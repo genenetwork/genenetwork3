@@ -1,4 +1,7 @@
 # genenetwork3
+
+[![GeneNetwork3 CI badge](https://ci.systemreboot.net/badge/genenetwork3.svg)](https://ci.systemreboot.net/jobs/genenetwork3)
+
 GeneNetwork3 REST API for data science and machine  learning
 
 ## Installation
@@ -9,8 +12,8 @@ Install GNU Guix - this can be done on every running Linux system.
 
 There are at least three ways to start GeneNetwork3 with GNU Guix:
 
-1. Create an environment with `guix environment`
-2. Create a container with `guix environment -C`
+1. Create an environment with `guix shell`
+2. Create a container with `guix shell -C`
 3. Use a profile and shell settings with `source ~/opt/genenetwork3/etc/profile`
 
 #### Create an environment:
@@ -18,13 +21,13 @@ There are at least three ways to start GeneNetwork3 with GNU Guix:
 Simply load up the environment (for development purposes):
 
 ```bash
-guix environment --load=guix.scm
+guix shell -Df guix.scm
 ```
 
 Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
 
 ```bash
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment --expose=$HOME/genotype_files/ --load=guix.scm
+guix shell --expose=$HOME/genotype_files/ -Df guix.scm
 python3
   import redis
 ```
@@ -32,16 +35,15 @@ python3
 #### Run a Guix container
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C --network --expose=$HOME/genotype_files/ --load=guix.scm
+guix shell -C --network --expose=$HOME/genotype_files/ -Df guix.scm
 ```
-
 
 #### Using a Guix profile (or rolling back)
 
 Create a new profile with
 
 ```
-env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/.config/guix/current/bin/guix package -i genenetwork3 -p ~/opt/genenetwork3
+guix package -i genenetwork3 -p ~/opt/genenetwork3
 ```
 
 and load the profile settings with
@@ -124,6 +126,8 @@ And for the scalable production version run
 ```
 gunicorn --bind 0.0.0.0:8080 --workers 8 --keep-alive 6000 --max-requests 10 --max-requests-jitter 5 --timeout 1200 wsgi:app
 ```
+
+(see also the [.guix_deploy](./.guix_deploy) script)
 
 ## Using python-pip
 

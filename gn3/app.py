@@ -22,12 +22,6 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     # Load default configuration
     app.config.from_object("gn3.settings")
 
-    CORS(
-        app,
-        origins=app.config["CORS_ORIGINS"],
-        allow_headers=app.config["CORS_HEADERS"],
-        supports_credentials=True, intercept_exceptions=False)
-
     # Load environment configuration
     if "GN3_CONF" in os.environ:
         app.config.from_envvar('GN3_CONF')
@@ -38,6 +32,13 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
             app.config.update(config)
         elif config.endswith(".py"):
             app.config.from_pyfile(config)
+
+    CORS(
+        app,
+        origins=app.config["CORS_ORIGINS"],
+        allow_headers=app.config["CORS_HEADERS"],
+        supports_credentials=True, intercept_exceptions=False)
+
     app.register_blueprint(general, url_prefix="/api/")
     app.register_blueprint(gemma, url_prefix="/api/gemma")
     app.register_blueprint(rqtl, url_prefix="/api/rqtl")
