@@ -199,7 +199,7 @@ def delete_sample_data(conn: Any,
             # Only run if the strain_id and data_id exist
             if strain_id and data_id:
                 cursor.execute(("DELETE FROM PublishData "
-                            "WHERE StrainId = %s AND Id = %s")
+                                "WHERE StrainId = %s AND Id = %s")
                                % (strain_id, data_id))
                 deleted_published_data = cursor.rowcount
 
