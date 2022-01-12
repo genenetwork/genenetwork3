@@ -86,26 +86,15 @@ def get_trait_csv_sample_data(conn: Any,
         if str(num_str)[-2:] == ".0":
             return str(int(num_str))
         return str(num_str)
-    sql = ("SELECT DISTINCT Strain.Name, PublishData.value, "
-           "PublishSE.error, NStrain.count FROM "
-           "(PublishData, Strain, PublishXRef, PublishFreeze) "
-           "LEFT JOIN PublishSE ON "
-           "(PublishSE.DataId = PublishData.Id AND "
-           "PublishSE.StrainId = PublishData.StrainId) "
-           "LEFT JOIN NStrain ON (NStrain.DataId = PublishData.Id AND "
-           "NStrain.StrainId = PublishData.StrainId) WHERE "
-           "PublishXRef.InbredSetId = PublishFreeze.InbredSetId AND "
-           "PublishData.Id = PublishXRef.DataId AND "
-           "PublishXRef.Id = %s AND PublishXRef.PhenotypeId = %s "
-           "AND PublishData.StrainId = Strain.Id Order BY Strain.Name")
-    csv_data = ["Strain Name,Value,SE,Count"]
-    with conn.cursor() as cursor:
-        cursor.execute(sql, (trait_name, phenotype_id,))
-        for record in cursor.fetchall():
-            (strain_name, value, error, count) = record
-            csv_data.append(
-                ",".join([__float_strip(val) if val else "x"
-                          for val in (strain_name, value, error, count)]))
+    def __process_for_csv__(record):
+        return ",".join([
+            __float_strip(record[key]) if record[key] else "x"
+            for key in ("sample_name", "value", "se_error", "nstrain")])
+    csv_data = ["Strain Name,Value,SE,Count"] + [
+        __process_for_csv__(record) for record in
+        retrieve_publish_trait_data(
+            {"trait_name": trait_name, "db": {"dataset_id": phenotype_id}},
+            conn)]
     return "\n".join(csv_data)
 
 
