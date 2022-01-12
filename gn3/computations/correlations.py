@@ -3,7 +3,6 @@ import math
 import multiprocessing
 from contextlib import closing
 
-from typing import Generator
 from typing import List
 from typing import Tuple
 from typing import Optional
@@ -40,7 +39,7 @@ def map_shared_keys_to_values(target_sample_keys: List,
     return target_dataset_data
 
 
-def normalize_values(a_values: List, b_values: List) -> Tuple[Generator, Generator]:
+def normalize_values(a_values: List, b_values: List) -> Generator:
     """
     :param a_values: list of primary strain values
     :param b_values: a list of target strain values
