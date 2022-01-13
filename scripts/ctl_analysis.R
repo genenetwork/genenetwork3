@@ -63,18 +63,40 @@ genImageRandStr <- function(prefix){
 # #output matrix significant CTL interactions with 4 columns: trait, marker, trait, lod
 ctl_significant <- CTLsignificant(ctls,significance = 0.05)
  
+colnames(ctl_significant) = c("trait","marker","trait_2","LOD","dcor")
+
+
 # # Create the lineplot
-# imageLoc = file.path(imgDir,genImageRandStr("CTLline"))
-
-# png(imageLoc,width=1000,height=600,type='cairo-png')
-
-# ctl.lineplot(ctls, significance=formData$significance)
 
 
+imageLoc = file.path(input$imgDir,genImageRandStr("CTLline"))
+
+png(imageLoc,width=1000,height=600,type='cairo-png')
+
+ctl.lineplot(ctls,significance = 0.05, gap = 50, 
+col = "orange", bg.col = "lightgray", cex = 1, verbose = FALSE)
+
+dev.off()
+
+
+n = 2
+ctl_plots = c()
+
+for (trait in phenoData$trait_db_list)
+{
+	image_loc = file.path(input$imgDir,genImageRandStr(paste("CTL",n,sep="")))
+	png(image_loc,width=1000, height=600, type='cairo-png')
+  plot.CTLobject(ctls,n-1,significance= 0.05, main=paste("Phenotype",trait,sep=""))
+
+  ctl_plots = append(ctl_plots,image_loc)
+
+  dev.off()
+  n = n + 1
+
+}
 # rename coz of duplicate key names 
-colnames(sign) = c("trait","marker","trait_2","LOD","dcor")
 
-json_data <- list(significance_table = ctl_significant)
+json_data <- list(significance_table = ctl_significant,image_loc = imageLoc,ctl_plots=ctl_plots)
 
 
 json_data <- toJSON(json_data)
