@@ -1,4 +1,5 @@
 """module contains code to process ctl analysis data"""
+import json
 from gn3.commands import run_cmd
 
 from gn3.computations.wgcna import dump_wgcna_data
@@ -14,7 +15,11 @@ def call_ctl_script(data):
     try:
         cmd_results = run_cmd(cmd)
         print(cmd_results)
-    except Exception as e:
-        raise e
+        with open(temp_file_name,"r") as outputfile:
+            if cmd_results["code"] != 0:
+                return cmd_results
+            return json.load(outputfile)
 
-    return "hello"
+
+    except Exception as e:
+        return str(e)
