@@ -97,12 +97,124 @@ for (trait in phenoData$trait_db_list)
 # rename coz of duplicate key names 
 
 
-network_file_path  = file.path(input$imgDir,paste("ctlnet","random",".sif",sep=""))
+network_file_path  = file.path(input$imgDir,paste("ctlnet","randomz",sep=""))
 
 
 file.create(network_file_path)
 
-ctl_network = CTLnetwork(ctls, significance = 0.05, LODdrop = 2,short = FALSE, add.qtls = FALSE, file = network_file_path, verbose = TRUE)
+
+
+
+# temp fix override ctlnetwork function to target certain output file
+
+
+CTLnetworkGn<- function(CTLobject, mapinfo, significance = 0.05, LODdrop = 2, what = c("names","ids"), short = FALSE, add.qtls = FALSE, file = "",tmpDir = "",verbose = TRUE){
+  if(missing(CTLobject) || is.null(CTLobject)) stop("argument 'CTLobject' is missing, with no default")
+  if("CTLscan" %in% class(CTLobject)) CTLobject = list(CTLobject)
+  if(length(what) > 1) what = what[1]
+
+  results <- NULL
+  significant <- CTLsignificant(CTLobject, significance, what = "ids")
+  if(!is.null(significant)){
+    all_m <- NULL; all_p <- NULL;
+    nodefile=""; netfile = "";
+    if(file != ""){
+
+    	netfile  = file.path(tmpDir,paste("ctlnet",file,".sif",sep=""))
+
+    	nodefile = file.path(tmpDir,paste("ctlnet",file,".nodes",sep=""))
+
+      # netfile <- paste("ctlnet",file,".sif",sep="")
+      # nodefile <- paste("ctlnet",file,".nodes",sep="")
+    }
+    cat("",file=netfile); cat("",file=nodefile);
+    if(verbose) cat("NETWORK.SIF\n")
+    edges <- NULL
+    for(x in 1:nrow(significant)){
+      data    <- as.numeric(significant[x,])
+      CTLscan <- CTLobject[[data[1]]]
+      markern <- rownames(CTLscan$dcor)
+      traitsn <- colnames(CTLscan$dcor)
+      name    <- ctl.name(CTLscan)
+      if(what=="ids"){
+        tid     <- which(traitsn %in% ctl.name(CTLobject[[data[1]]]))
+        name    <- paste("P",tid,sep="")
+        markern <- paste("M",1:nrow(CTLobject[[data[1]]]$dcor), sep="")
+        traitsn <- paste("P", 1:ncol(CTLobject[[data[1]]]$dcor), sep="")
+      }
+      if(add.qtls){ # Add QTL to the output SIF
+        bfc    <- length(CTLscan$qtl)
+        above  <- which(CTLscan$qtl > -log10(significance))
+        qtlnms <- names(above); qtlmid <- 1
+        for(m in above){
+          cat(name,"\tQTL\t",markern[m],"\tQTL\t",CTLscan$qtl[m],"\n",sep="",file=netfile,append=TRUE)
+          all_m  <- CTLnetwork.addmarker(all_m, mapinfo, markern[data[2]], qtlnms[qtlmid])
+          qtlmid <- qtlmid+1
+        }
+      }
+      lod <- CTLscan$ctl[data[2],data[3]]
+      qlod1    <- CTLscan$qtl[data[2]]
+      qlod2    <- qlod1
+      edgetype <- NA
+      if(length(CTLobject) >= data[3]){  # Edge type based on QTL LOD scores
+        qlod2 <- CTLobject[[data[3]]]$qtl[data[2]]
+        if((qlod1-qlod2) > LODdrop){
+          edgetype <- 1
+        }else if((qlod1-qlod2) < -LODdrop){
+          edgetype <- -1
+        }else{ edgetype <- 0; }
+      } else { 
+        cat("Warning: Phenotype", data[3], "from", data[1], "no CTL/QTL information\n")
+        qlod2 <- NA; 
+      }
+      #Store the results
+      results <- rbind(results, c(data[1], data[2], data[3], lod, edgetype, qlod1, qlod2))
+
+      if(nodefile == "" && !verbose){ }else{
+        if(short){
+          edge <- paste(name,traitsn[data[3]])
+          edgeI <- paste(traitsn[data[3]],name)
+          if(!edge %in% edges && !edgeI %in% edges){
+            cat(name, "\t", markern[data[2]],"\t", traitsn[data[3]],"\n",file=netfile, append=TRUE,sep="")
+            edges <- c(edges,edge)
+          }
+        }else{
+          cat(name, "\t", "CTL_", data[1],"_",data[3], "\t", markern[data[2]],file=netfile, append=TRUE,sep="")
+          cat("\tCTL\t", lod, "\n", file=netfile, append=TRUE,sep="")
+          cat(markern[data[2]], "\t", "CTL_", data[1],"_",data[3], "\t",file=netfile, append=TRUE,sep="")
+          cat(traitsn[data[3]],"\tCTL\t", lod, "\n", file=netfile,append=TRUE,sep="")
+        }
+      }
+      all_m <- CTLnetwork.addmarker(all_m, mapinfo, markern[data[2]], rownames(CTLscan$dcor)[data[2]])
+      all_p <- unique(c(all_p, name, traitsn[data[3]]))
+    }
+    colnames(results) <- c("TRAIT1","MARKER","TRAIT2","LOD_C","CAUSAL","LOD_T1","LOD_T2")
+    if(verbose) cat("NODE.DESCRIPTION\n")
+    if(nodefile == "" && !verbose){ }else{
+      for(m in all_m){ cat(m,"\n",    sep="", file=nodefile, append=TRUE); }
+      for(p in all_p){ cat(p,"\tPHENOTYPE\n", sep="", file=nodefile, append=TRUE); }
+    }
+  }
+  if(!is.null(results)){
+    class(results) <- c(class(results),"CTLnetwork")
+  }
+  invisible(results)
+}
+
+CTLnetwork.addmarker <- function(markers, mapinfo, name, realname){
+  if(!missing(mapinfo)){
+    id      <- which(rownames(mapinfo) %in% realname)
+    fname   <- paste(name,"\tMARKER\t",mapinfo[id,1],"\t",mapinfo[id,2],sep="")
+    markers <- unique(c(markers, fname))
+  }
+  return(markers)
+}
+
+
+# generating network
+
+
+ctl_network = CTLnetworkGn(ctls, significance = 0.05, LODdrop = 2,short = FALSE, add.qtls = FALSE,tmpDir=input$imgDir,file = "random", verbose = TRUE)
 
 
 
