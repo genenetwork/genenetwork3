@@ -96,6 +96,16 @@ for (trait in phenoData$trait_db_list)
 }
 # rename coz of duplicate key names 
 
+
+network_file_path  = file.path(input$imgDir,paste("ctlnet","random",".sif",sep=""))
+
+
+file.create(network_file_path)
+
+ctl_network = CTLnetwork(ctls, significance = 0.05, LODdrop = 2,short = FALSE, add.qtls = FALSE, file = network_file_path, verbose = TRUE)
+
+
+
 json_data <- list(significance_table = ctl_significant,image_loc = imageLoc,ctl_plots=ctl_plots)
 
 
