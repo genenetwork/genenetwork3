@@ -1,3 +1,4 @@
+
 library(ctl)
 library(stringi);
 library(rjson)
@@ -21,29 +22,35 @@ json_file_path
 # add validation for the files
 input <- fromJSON(file = json_file_path)
 
-genoData <- input$geno
-phenoData <- input$pheno
+cat("The input data is \n")
 
-formData <- input$form
+
+
+genoData <- input$genoData
+phenoData <- input$phenoData
+
+# formData <- input$form
 # create the matixes
-genoData
+
+# genotypes Matrix of genotypes. (individuals x markers)
+# phenotypes Matrix of phenotypes. (individuals x phenotypes)
+
 geno_matrix = t(matrix(unlist(genoData$genotypes),
 	nrow=length(genoData$markernames), ncol=length(genoData$individuals),
 	dimnames=list(genoData$markernames, genoData$individuals), byrow=TRUE))
 
+
 pheno_matrix = t(matrix(as.numeric(unlist(phenoData$traits)), nrow=length(phenoData$trait_db_list), ncol=length(
     phenoData$individuals), dimnames= list(phenoData$trait_db_list, phenoData$individuals), byrow=TRUE))
 
-# Use a data frame to store the objects
-pheno = data.frame(pheno_matrix, check.names=FALSE)
-geno = data.frame(geno_matrix, check.names=FALSE)
+# # Use a data frame to store the objects
+
+
+ctls <- CTLscan(geno_matrix,pheno_matrix,nperm=input$nperm,strategy=input$strategy,parametric=TRUE,nthreads=3,verbose=TRUE)
 
 
 
-
-ctls <- CTLscan(geno,pheno,verbose=TRUE)
-
-# same function used in a different script:refactor
+# # same function used in a different script:refactor
 genImageRandStr <- function(prefix){
 
 	randStr <- paste(prefix,stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
@@ -52,16 +59,24 @@ genImageRandStr <- function(prefix){
 }
 
 
-#output matrix significant CTL interactions with 4 columns: trait, marker, trait, lod
-sign <- CTLsignificant(ctls,significance = formData$significance)
+
+# #output matrix significant CTL interactions with 4 columns: trait, marker, trait, lod
+ctl_significant <- CTLsignificant(ctls,significance = 0.05)
  
-# Create the lineplot
-imageLoc = file.path(imgDir,genImageRandStr("CTLline"))
+# # Create the lineplot
+# imageLoc = file.path(imgDir,genImageRandStr("CTLline"))
 
-png(imageLoc,width=1000,height=600,type='cairo-png')
+# png(imageLoc,width=1000,height=600,type='cairo-png')
 
-ctl.lineplot(ctls, significance=formData$significance)
+# ctl.lineplot(ctls, significance=formData$significance)
 
-json_data <- list(significance=sign,
-	images=list("image_1"=imageLoc),
-	network_figure_location="/location")
+
+# rename coz of duplicate key names 
+colnames(sign) = c("trait","marker","trait_2","LOD","dcor")
+
+json_data <- list(significance_table = ctl_significant)
+
+
+json_data <- toJSON(json_data)
+
+write(json_data,file= json_file_path)
