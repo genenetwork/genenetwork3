@@ -21,15 +21,15 @@ There are at least three ways to start GeneNetwork3 with GNU Guix:
 Simply load up the environment (for development purposes):
 
 ```bash
-guix shell -Df guix.scm
+guix shell
 ```
 
 Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
 
 ```bash
-guix shell --expose=$HOME/genotype_files/ -Df guix.scm
+guix shell --expose=$HOME/genotype_files/
 python3
-  import redis
+import redis
 ```
 
 #### Run a Guix container
