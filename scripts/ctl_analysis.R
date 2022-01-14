@@ -59,6 +59,13 @@ genImageRandStr <- function(prefix){
 }
 
 
+genRandomFileName <- function(prefix,file_ext=".png"){
+
+	randStr = paste(prefix,stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
+
+	return(paste(randStr,file_ext,sep=""))
+}
+
 
 # #output matrix significant CTL interactions with 4 columns: trait, marker, trait, lod
 ctl_significant <- CTLsignificant(ctls,significance = 0.05)
@@ -69,7 +76,7 @@ colnames(ctl_significant) = c("trait","marker","trait_2","LOD","dcor")
 # # Create the lineplot
 
 
-imageLoc = file.path(input$imgDir,genImageRandStr("CTLline"))
+imageLoc = file.path(input$imgDir,genRandomFileName("CTLline"))
 
 png(imageLoc,width=1000,height=600,type='cairo-png')
 
@@ -84,7 +91,7 @@ ctl_plots = c()
 
 for (trait in phenoData$trait_db_list)
 {
-	image_loc = file.path(input$imgDir,genImageRandStr(paste("CTL",n,sep="")))
+	image_loc = file.path(input$imgDir,genRandomFileName(paste("CTL",n,sep="")))
 	png(image_loc,width=1000, height=600, type='cairo-png')
   plot.CTLobject(ctls,n-1,significance= 0.05, main=paste("Phenotype",trait,sep=""))
 
@@ -97,18 +104,18 @@ for (trait in phenoData$trait_db_list)
 # rename coz of duplicate key names 
 
 
-network_file_path  = file.path(input$imgDir,paste("ctlnet","randomz",sep=""))
+# refactor this
 
+network_file_name = paste("ctlnet",stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
+netfile =  file.path(input$imgDir,paste(network_file_name,".sif",sep=""))
 
-file.create(network_file_path)
+nodefile = file.path(input$imgDir,paste(network_file_name,".nodes",sep=""))
 
+# temp fix override ctlnetwork function to target gn2 use case
 
+# xtodo refactor function
 
-
-# temp fix override ctlnetwork function to target certain output file
-
-
-CTLnetworkGn<- function(CTLobject, mapinfo, significance = 0.05, LODdrop = 2, what = c("names","ids"), short = FALSE, add.qtls = FALSE, file = "",tmpDir = "",verbose = TRUE){
+CTLnetworkGn<- function(CTLobject, mapinfo, significance = 0.05, LODdrop = 2, what = c("names","ids"), short = FALSE, add.qtls = FALSE,verbose = TRUE){
   if(missing(CTLobject) || is.null(CTLobject)) stop("argument 'CTLobject' is missing, with no default")
   if("CTLscan" %in% class(CTLobject)) CTLobject = list(CTLobject)
   if(length(what) > 1) what = what[1]
@@ -117,16 +124,8 @@ CTLnetworkGn<- function(CTLobject, mapinfo, significance = 0.05, LODdrop = 2, wh
   significant <- CTLsignificant(CTLobject, significance, what = "ids")
   if(!is.null(significant)){
     all_m <- NULL; all_p <- NULL;
-    nodefile=""; netfile = "";
-    if(file != ""){
 
-    	netfile  = file.path(tmpDir,paste("ctlnet",file,".sif",sep=""))
 
-    	nodefile = file.path(tmpDir,paste("ctlnet",file,".nodes",sep=""))
-
-      # netfile <- paste("ctlnet",file,".sif",sep="")
-      # nodefile <- paste("ctlnet",file,".nodes",sep="")
-    }
     cat("",file=netfile); cat("",file=nodefile);
     if(verbose) cat("NETWORK.SIF\n")
     edges <- NULL
@@ -214,7 +213,7 @@ CTLnetwork.addmarker <- function(markers, mapinfo, name, realname){
 # generating network
 
 
-ctl_network = CTLnetworkGn(ctls, significance = 0.05, LODdrop = 2,short = FALSE, add.qtls = FALSE,tmpDir=input$imgDir,file = "random", verbose = TRUE)
+ctl_network = CTLnetworkGn(ctls, significance = 0.05, LODdrop = 2,short = FALSE, add.qtls = FALSE, verbose = TRUE)
 
 
 
