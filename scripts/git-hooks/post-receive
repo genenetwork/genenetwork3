@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+version="0.01"
+job_name="genenetwork3"
+
+RESET_IFS="${IFS}"
+IFS='/'
+read -ra PWD_ARRAY < <(pwd)
+IFS="${RESET_IFS}"
+
+PWD_ARRAY_LEN="${#PWD_ARRAY[@]}"
+GIT_REPO_NAME="${PWD_ARRAY[$((PWD_ARRAY_LEN - 1))]}"
+GIT_REPO_NAME="${GIT_REPO_NAME/.git}"
+GIT_USER_OR_GROUP="${PWD_ARRAY[$((PWD_ARRAY_LEN - 2))]}"
+GIT_HOST="$(hostname -f)"
+
+if [ "${GIT_HOST}" == *"uthsc.edu"* ];
+then
+    GIT_HOST="git.genenetwork.org";
+fi
+
+GIT_REPO_URL="git@${GIT_HOST}:${GIT_USER_OR_GROUP}/${GIT_REPO_NAME}.git"
+
+repo_name_auto="${GIT_REPO_URL,,}"
+repo_name_auto="${repo_name_auto/git@}"
+repo_name_auto="${repo_name_auto/.git}"
+repo_name_auto=$(echo -n "${repo_name_auto}" | tr -c '[:alnum:]' '-')
+
+# Read each line of refs
+while read -r line;
+do
+    # assign to separate variables
+    read -r old_commit new_commit ref_name < <(echo "${line}")
+
+    # retrieve author and committer names and emails
+    mapfile -t autcom_name_email < <(git log --format="%an%n%ae%n%cn%n%ce" "${new_commit}^!")
+
+    GIT_AUTHOR="${autcom_name_email[0]}"
+    GIT_AUTHOR_EMAIL="${autcom_name_email[1]}"
+    GIT_COMMITTER="${autcom_name_email[2]}"
+    GIT_COMMITTER_EMAIL="${autcom_name_email[3]}"
+
+    msg="[Laminar git hook ${version}] Queued Laminar CI build (${job_name} -> ${repo_name_auto})"
+    echo "${msg}";
+
+    LAMINAR_REASON="Push from ${GIT_AUTHOR} to ${GIT_REPO_URL}" laminarc queue "${job_name}" GIT_AUTHOR="${GIT_AUTHOR}" GIT_REPO_URL="${GIT_REPO_URL}" GIT_COMMIT_REF="${new_commit}" GIT_REF_NAME="${ref_name}" GIT_REPO_NAME="${repo_name_auto}";
+done
