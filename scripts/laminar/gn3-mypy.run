@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e  # Abort on first error
+set -ex  # Abort on first error
 CUR_DIR=$PWD
 GN3_CI_DIR=$HOME/CI/genenetwork3/
 
