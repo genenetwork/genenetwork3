@@ -1,6 +1,6 @@
 # genenetwork3
 
-[![GeneNetwork3 CI badge](https://ci.systemreboot.net/badge/genenetwork3.svg)](https://ci.systemreboot.net/jobs/genenetwork3)
+[![GeneNetwork3 CI badge](https://penguin2.genenetwork.org/badge/genenetwork3.svg)](https://penguin2.genenetwork.org/jobs/genenetwork3)
 
 GeneNetwork3 REST API for data science and machine  learning
 
