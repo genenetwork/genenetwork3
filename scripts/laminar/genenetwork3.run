@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+
+(
+    # Lock directory
+    flock 9
+
+    # pull in latest changes
+    cd "${WORKSPACE}"
+    git fetch
+    git checkout "${GIT_COMMIT_REF}"
+    cd -
+
+    for filename in "${WORKSPACE}"/*
+    do
+	if [ "${filename}" != ".git" ]
+	then
+	    cp -vR "${filename}" .
+	fi
+    done
+) 9>"${WORKSPACE}/lock"
+
+# Simultaneously trigger common checks
+GN3_CI_DIR="$(pwd)"
+laminarc run gn3-lint GN3_CI_DIR="${GN3_CI_DIR}" \
+	 gn3-mypy GN3_CI_DIR="${GN3_CI_DIR}" \
+	 gn3-unittest GN3_CI_DIR="${GN3_CI_DIR}"

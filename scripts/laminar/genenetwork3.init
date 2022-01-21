@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -ex
+
+# Clone repository if it doesn't already exist
+git clone "${GIT_REPO_URL}" .
