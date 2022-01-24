@@ -406,6 +406,12 @@ def partial_corrs(# pylint: disable=[R0913]
     `web.webqtl.correlation.PartialCorrDBPage.__init__` function in
     GeneNetwork1.
     """
+    symbol_corr_dict, symbol_p_value_dict = correlations_of_all_tissue_traits(
+        fetch_gene_symbol_tissue_value_dict_for_trait(
+            (input_trait_symbol,), tissue_probeset_freeze_id, conn),
+        fetch_gene_symbol_tissue_value_dict_for_trait(
+            tuple(), tissue_probeset_freeze_id, conn),
+        method)
     if database_filename:
         return partial_correlations_fast(
             samples, primary_vals, control_vals, database_filename,
@@ -414,15 +420,15 @@ def partial_corrs(# pylint: disable=[R0913]
                     species, input_trait_geneid, dataset, return_number, conn)
                 if "literature" in method.lower() else
                 fetch_tissue_correlations(
-                    dataset, input_trait_symbol, tissue_probeset_freeze_id,
-                    method, return_number, conn)),
+                    dataset, symbol_corr_dict, symbol_p_value_dict,
+                    return_number, conn)),
             method,
             ("literature" if method.lower() == "sgo literature correlation"
              else ("tissue" if "tissue" in method.lower() else "genetic")))
 
     trait_database, data_start_pos = fetch_all_database_data(
-        conn, species, input_trait_geneid, input_trait_symbol, samples, dataset,
-        method, return_number, tissue_probeset_freeze_id)
+        conn, species, input_trait_geneid, samples, dataset, method,
+        symbol_corr_dict, symbol_p_value_dict, return_number)
     return partial_correlations_normal(
         primary_vals, control_vals, input_trait_geneid, trait_database,
         data_start_pos, dataset, method)

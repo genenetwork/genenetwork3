@@ -275,7 +275,7 @@ def fetch_gene_symbol_tissue_value_dict_for_trait(
     return {}
 
 def build_temporary_tissue_correlations_table(
-        conn: Any, trait_symbol: str, probeset_freeze_id: int, method: str,
+        conn: Any, symbol_corr_dict: dict, symbol_p_value_dict: dict,
         return_number: int) -> str:
     """
     Build a temporary table to hold the tissue correlations data.
@@ -283,26 +283,6 @@ def build_temporary_tissue_correlations_table(
     This is a migration of the
     `web.webqtl.correlation.CorrelationPage.getTempTissueCorrTable` function in
     GeneNetwork1."""
-    # We should probably pass the `correlations_of_all_tissue_traits` function
-    # as an argument to this function and get rid of the one call immediately
-    # following this comment.
-    from gn3.computations.partial_correlations import (#pylint: disable=[C0415, R0401]
-        correlations_of_all_tissue_traits)
-    # This import above is necessary within the function to avoid
-    # circular-imports.
-    #
-    #
-    # This import above is indicative of convoluted code, with the computation
-    # being interwoven with the data retrieval. This needs to be changed, such
-    # that the function being imported here is no longer necessary, or have the
-    # imported function passed to this function as an argument.
-    symbol_corr_dict, symbol_p_value_dict = correlations_of_all_tissue_traits(
-        fetch_gene_symbol_tissue_value_dict_for_trait(
-            (trait_symbol,), probeset_freeze_id, conn),
-        fetch_gene_symbol_tissue_value_dict_for_trait(
-            tuple(), probeset_freeze_id, conn),
-        method)
-
     symbol_corr_list = sorted(
         symbol_corr_dict.items(), key=lambda key_val: key_val[1])
 
@@ -326,8 +306,8 @@ def build_temporary_tissue_correlations_table(
 
     return temp_table_name
 
-def fetch_tissue_correlations(# pylint: disable=R0913
-        dataset: dict, trait_symbol: str, probeset_freeze_id: int, method: str,
+def fetch_tissue_correlations(
+        dataset: dict, symbol_corr_dict: dict, symbol_p_value_dict: dict,
         return_number: int, conn: Any) -> dict:
     """
     Pair tissue correlations data with a trait id string.
@@ -337,7 +317,7 @@ def fetch_tissue_correlations(# pylint: disable=R0913
     GeneNetwork1.
     """
     temp_table = build_temporary_tissue_correlations_table(
-        conn, trait_symbol, probeset_freeze_id, method, return_number)
+        conn, symbol_corr_dict, symbol_p_value_dict, return_number)
     with conn.cursor() as cursor:
         cursor.execute(
             (
@@ -473,9 +453,9 @@ def build_query_tissue_corr(db_type, temp_table, sample_id_columns, joins):
         3)
 
 def fetch_all_database_data(# pylint: disable=[R0913, R0914]
-        conn: Any, species: str, gene_id: int, trait_symbol: str,
-        samples: Tuple[str, ...], dataset: dict, method: str,
-        return_number: int, probeset_freeze_id: int) -> Tuple[
+        conn: Any, species: str, gene_id: int, samples: Tuple[str, ...],
+        dataset: dict, method: str, symbol_corr_dict: dict,
+        symbol_p_value_dict: dict, return_number: int) -> Tuple[
             Tuple[float], int]:
     """
     This is a migration of the
@@ -556,7 +536,7 @@ def fetch_all_database_data(# pylint: disable=[R0913, R0914]
                 "tissue correlation, pearson's r",
                 "tissue correlation, spearman's rho"):
             temp_table = build_temporary_tissue_correlations_table(
-                conn, trait_symbol, probeset_freeze_id, method, return_number)
+                conn, symbol_corr_dict, symbol_p_value_dict, return_number)
 
     trait_database = tuple(
         item for sublist in
