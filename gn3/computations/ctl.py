@@ -27,7 +27,7 @@ def call_ctl_script(data):
                 output_file_data["image_loc"]).decode("ascii")
 
             output_file_data["ctl_plots"] = [process_image(ctl_plot).decode("ascii") for
-                                             clt_plot in output_file_data["ctl_plots"]]
+                                             ctl_plot in output_file_data["ctl_plots"]]
 
             return output_file_data
 
