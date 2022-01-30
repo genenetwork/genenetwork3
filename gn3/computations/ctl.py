@@ -33,3 +33,4 @@ def call_ctl_script(data):
 
     except Exception as e:
         return str(e)
+
