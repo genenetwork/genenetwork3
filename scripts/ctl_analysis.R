@@ -220,3 +220,4 @@ json_data <- list(phenotypes = input$phenoData$trait_db_list,significance_data =
 json_data <- toJSON(json_data)
 
 write(json_data,file= json_file_path)
+
