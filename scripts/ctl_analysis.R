@@ -66,7 +66,7 @@ genRandomFileName <- function(prefix,file_ext=".png"){
 
 
 # #output matrix significant CTL interactions with 4 columns: trait, marker, trait, lod
-ctl_significant <- CTLsignificant(ctls,significance = 0.05)
+ctl_significant <- CTLsignificant(ctls,significance = input$significance)
  
 colnames(ctl_significant) = c("trait","marker","trait_2","LOD","dcor")
 
@@ -78,7 +78,7 @@ imageLoc = file.path(input$imgDir,genRandomFileName("CTLline"))
 
 png(imageLoc,width=1000,height=600,type='cairo-png')
 
-ctl.lineplot(ctls,significance = 0.05, gap = 50, 
+ctl.lineplot(ctls,significance = input$significance, gap = 50, 
 col = "orange", bg.col = "lightgray", cex = 1, verbose = FALSE)
 
 dev.off()
@@ -91,7 +91,7 @@ for (trait in phenoData$trait_db_list)
 {
 	image_loc = file.path(input$imgDir,genRandomFileName(paste("CTL",n,sep="")))
 	png(image_loc,width=1000, height=600, type='cairo-png')
-  plot.CTLobject(ctls,n-1,significance= 0.05, main=paste("Phenotype",trait,sep=""))
+  plot.CTLobject(ctls,n-1,significance= input$significance, main=paste("Phenotype",trait,sep=""))
 
   ctl_plots = append(ctl_plots,image_loc)
 
@@ -99,19 +99,15 @@ for (trait in phenoData$trait_db_list)
   n = n + 1
 
 }
-# rename coz of duplicate key names 
 
 
-# refactor this
 
 network_file_name = paste("ctlnet",stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
 netfile =  file.path(input$imgDir,paste(network_file_name,".sif",sep=""))
 
 nodefile = file.path(input$imgDir,paste(network_file_name,".nodes",sep=""))
 
-# temp fix override ctlnetwork function to target gn2 use case
-
-# xtodo refactor function
+# fn overrides ctlnetwork function to target gn2 use case
 
 CTLnetworkGn<- function(CTLobject, mapinfo, significance = 0.05, LODdrop = 2, what = c("names","ids"), short = FALSE, add.qtls = FALSE,verbose = TRUE){
   if(missing(CTLobject) || is.null(CTLobject)) stop("argument 'CTLobject' is missing, with no default")
@@ -211,7 +207,7 @@ CTLnetwork.addmarker <- function(markers, mapinfo, name, realname){
 # generating network
 
 
-ctl_network = CTLnetworkGn(ctls, significance = 0.05, LODdrop = 2,short = FALSE, add.qtls = FALSE, verbose = TRUE)
+ctl_network = CTLnetworkGn(ctls, significance = input$significance, LODdrop = 2,short = FALSE, add.qtls = FALSE, verbose = TRUE)
 
 
 
