@@ -31,6 +31,6 @@ def call_ctl_script(data):
 
             return output_file_data
 
-    except Exception as e:
+    except Exception as e:        
         return str(e)
 
