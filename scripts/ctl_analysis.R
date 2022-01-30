@@ -22,12 +22,19 @@ json_file_path
 # add validation for the files
 input <- fromJSON(file = json_file_path)
 
-cat("The input data is \n")
 
+cat("The input data is \n")
 
 
 genoData <- input$genoData
 phenoData <- input$phenoData
+
+parametric <- switch(
+  input$parametric,
+  "True" = TRUE,
+  "False" = FALSE
+
+  )  
 # create the matixes
 
 # genotypes Matrix of genotypes. (individuals x markers)
@@ -44,7 +51,7 @@ pheno_matrix = t(matrix(as.numeric(unlist(phenoData$traits)), nrow=length(phenoD
 # # Use a data frame to store the objects
 
 
-ctls <- CTLscan(geno_matrix,pheno_matrix,nperm=input$nperm,strategy=input$strategy,parametric=input$parametric,nthreads=3,verbose=TRUE)
+ctls <- CTLscan(geno_matrix,pheno_matrix,nperm=input$nperm,strategy=input$strategy,parametric=parametric,nthreads=3,verbose=TRUE)
 
 
 
