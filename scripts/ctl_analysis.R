@@ -28,8 +28,6 @@ cat("The input data is \n")
 
 genoData <- input$genoData
 phenoData <- input$phenoData
-
-# formData <- input$form
 # create the matixes
 
 # genotypes Matrix of genotypes. (individuals x markers)
@@ -217,8 +215,7 @@ ctl_network = CTLnetworkGn(ctls, significance = 0.05, LODdrop = 2,short = FALSE,
 
 
 
-json_data <- list(significance_table = ctl_significant,image_loc = imageLoc,ctl_plots=ctl_plots)
-
+json_data <- list(phenotypes = input$phenoData$trait_db_list,significance_data = ctl_significant,image_loc = imageLoc,ctl_plots=ctl_plots,network_file_name =  network_file_name)
 
 json_data <- toJSON(json_data)
 
