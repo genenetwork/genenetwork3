@@ -5,8 +5,6 @@ library(rjson)
 
 options(stringsAsFactors = FALSE);
 
-# The genotypes.csv file containing the genotype matrix is stored individuals (rows) x genetic marker (columns):
-
 args = commandArgs(trailingOnly=TRUE)
 
 imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
@@ -14,7 +12,7 @@ imgDir = Sys.getenv("GENERATED_IMAGE_DIR")
 if (length(args)==0) {
   stop("Argument for the data file", call.=FALSE)
 } else {
-  # default output file
+
   json_file_path = args[1]
 }
 
@@ -48,14 +46,8 @@ geno_matrix = t(matrix(unlist(genoData$genotypes),
 pheno_matrix = t(matrix(as.numeric(unlist(phenoData$traits)), nrow=length(phenoData$trait_db_list), ncol=length(
     phenoData$individuals), dimnames= list(phenoData$trait_db_list, phenoData$individuals), byrow=TRUE))
 
-# # Use a data frame to store the objects
-
-
 ctls <- CTLscan(geno_matrix,pheno_matrix,nperm=input$nperm,strategy=input$strategy,parametric=parametric,nthreads=3,verbose=TRUE)
 
-
-
-# # same function used in a different script:refactor
 genImageRandStr <- function(prefix){
 
 	randStr <- paste(prefix,stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
@@ -78,13 +70,12 @@ ctl_significant <- CTLsignificant(ctls,significance = input$significance)
 colnames(ctl_significant) = c("trait","marker","trait_2","LOD","dcor")
 
 
-# # Create the lineplot
-
 
 imageLoc = file.path(input$imgDir,genRandomFileName("CTLline"))
 
 png(imageLoc,width=1000,height=600,type='cairo-png')
 
+# Create the lineplot
 ctl.lineplot(ctls,significance = input$significance, gap = 50, 
 col = "orange", bg.col = "lightgray", cex = 1, verbose = FALSE)
 
