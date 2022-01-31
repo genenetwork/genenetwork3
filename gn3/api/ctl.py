@@ -16,9 +16,7 @@ def run_ctl():
     """endpoint to run ctl"""
     ctl_data = request.json
 
-    results = call_ctl_script(ctl_data)
-
-    return jsonify({
+    (cmd_results, response) = call_ctl_script(ctl_data)
+    return (jsonify({
         "results": results
-    })
-    
+    }), 200) if response is not None else (jsonify({"error": str(cmd_results)}), 401)
