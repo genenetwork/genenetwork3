@@ -20,5 +20,5 @@ def run_ctl():
 
     (cmd_results, response) = call_ctl_script(ctl_data)
     return (jsonify({
-        "results": results
+        "results": response
     }), 200) if response is not None else (jsonify({"error": str(cmd_results)}), 401)
