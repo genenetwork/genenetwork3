@@ -1,7 +1,5 @@
 """module contains endpoints for ctl"""
 
-# so small
-
 from flask import Blueprint
 from flask import request
 from flask import jsonify
@@ -13,7 +11,11 @@ ctl = Blueprint("ctl", __name__)
 
 @ctl.route("/run_ctl", methods=["POST"])
 def run_ctl():
-    """endpoint to run ctl"""
+    """endpoint to run ctl
+    input: request form object
+    output:json object enum::(response,error)
+
+    """
     ctl_data = request.json
 
     (cmd_results, response) = call_ctl_script(ctl_data)
