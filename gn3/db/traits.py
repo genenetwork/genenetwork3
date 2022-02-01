@@ -309,13 +309,12 @@ def retrieve_publish_trait_info(trait_data_source: Dict[str, Any], conn: Any):
         "SELECT "
         "{columns} "
         "FROM "
-        "PublishXRef, Publication, Phenotype, PublishFreeze "
+        "PublishXRef, Publication, Phenotype "
         "WHERE "
         "PublishXRef.Id = %(trait_name)s AND "
         "Phenotype.Id = PublishXRef.PhenotypeId AND "
         "Publication.Id = PublishXRef.PublicationId AND "
-        "PublishXRef.InbredSetId = PublishFreeze.InbredSetId AND "
-        "PublishFreeze.Id =%(trait_dataset_id)s").format(columns=columns)
+        "PublishXRef.InbredSetId = %(trait_dataset_id)s").format(columns=columns)
     with conn.cursor() as cursor:
         cursor.execute(
             query,
