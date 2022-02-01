@@ -88,7 +88,7 @@ def get_trait_csv_sample_data(conn: Any,
         return str(num_str)
     def __process_for_csv__(record):
         return ",".join([
-            __float_strip(record[key]) if record[key] else "x"
+            __float_strip(record[key]) if record[key] is not None else "x"
             for key in ("sample_name", "value", "se_error", "nstrain")])
     csv_data = ["Strain Name,Value,SE,Count"] + [
         __process_for_csv__(record) for record in
