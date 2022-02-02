@@ -202,14 +202,19 @@ if (!is.null(opt$addcovar)) {
     name <- paste0("T_", covarDescr[x, 1]) # The covar description file doesn't have T_ in trait names (the cross object does)
     type <- covarDescr[x, 2]
     if(type == "categorical"){
-      if(length(table(covars[,name])) > 2){ # More then 2 levels create the model matrix for the factor
-        mdata <- data.frame(toExpand = as.factor(covars[, name]))
+      verbose_print('Binding covars to covars\n')
+      if (nrow(covarDescr) < 2){
+        this_covar = covars
+      } else {
+        this_covar = covars[,name]
+      }
+      if(length(table(this_covar)) > 2){ # More then 2 levels create the model matrix for the factor
+        mdata <- data.frame(toExpand = as.factor(this_covar))
         options(na.action='na.pass')
         modelmatrix <- model.matrix(~ toExpand + 0, mdata)[,-1]
         covars <- cbind(covars, modelmatrix)
       }else{ # 2 levels? just bind the trait as covar
-        verbose_print('Binding covars to covars\n')
-        covars <- cbind(covars, covars[,name])
+        covars <- cbind(covars, this_covar)
       }
     }
   }
