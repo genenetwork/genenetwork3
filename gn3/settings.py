@@ -57,3 +57,5 @@ GNSHARE = os.environ.get("GNSHARE", "/gnshare/gn/")
 TEXTDIR = f"{GNSHARE}/web/ProbeSetFreeze_DataMatrix"
 
 ROUND_TO = 10
+
+MULTIPROCESSOR_PROCS = 6 # Number of processes to spawn
