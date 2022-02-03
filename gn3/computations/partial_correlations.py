@@ -731,19 +731,16 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
 
 
     def __make_sorter__(method):
-        def __sort_6__(row):
-            return row[6]
+        def __by_lit_or_tiss_corr_then_p_val__(row):
+            return (row[6], row[3])
 
-        def __sort_3__(row):
+        def __by_partial_corr_p_value__(row):
             return row[3]
 
-        if "literature" in method.lower():
-            return __sort_6__
+        if (("literature" in method.lower()) or ("tissue" in method.lower())):
+            return __by_lit_or_tiss_corr_then_p_val__
 
-        if "tissue" in method.lower():
-            return __sort_6__
-
-        return __sort_3__
+        return __by_partial_corr_p_value__
 
     add_lit_corr_and_tiss_corr = compose(
         partial(literature_correlation_by_list, conn, species),
