@@ -723,7 +723,7 @@ def retrieve_publish_trait_data(trait_info: Dict, conn: Any):
         "AND NStrain.StrainId = PublishData.StrainId) "
         "WHERE PublishData.Id = PublishXRef.DataId "
         "AND PublishXRef.Id = %(trait_name)s "
-        "AND PublishXRef.InbredSetId = %(dataset_id)s "
+        "AND PublishXRef.PhenotypeId = %(dataset_id)s "
         "AND PublishData.StrainId = Strain.Id "
         "ORDER BY Strain.Name")
     with conn.cursor() as cursor:
