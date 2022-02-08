@@ -270,7 +270,7 @@ def insert_sample_data(conn: Any, #pylint: disable=[R0913]
             # Insert into the NStrain table
             if count and count != "x":
                 cursor.execute(("INSERT INTO NStrain "
-                                "(StrainId, DataId, error) "
+                                "(StrainId, DataId, count) "
                                 "VALUES (%s, %s, %s)") %
                                (strain_id, data_id, count))
             inserted_n_strains = cursor.rowcount
