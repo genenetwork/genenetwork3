@@ -294,13 +294,11 @@ def compute_trait_info(primary_vals, control_vals, target, method):
     def __remove_controls_for_target_nones(cont_targ):
         return tuple(cont for cont, targ in cont_targ if targ is not None)
 
-    conts_targs = tuple(tuple(
-        zip(control, targ_vals)) for control in control_vals)
     datafrm = build_data_frame(
         primary,
         [targ for targ in targ_vals if targ is not None],
-        [__remove_controls_for_target_nones(cont_targ)
-         for cont_targ in conts_targs])
+        [__remove_controls_for_target_nones(tuple(zip(control, targ_vals)))
+         for control in control_vals])
     covariates = "z" if datafrm.shape[1] == 3 else [
         col for col in datafrm.columns if col not in ("x", "y")]
     ppc = pingouin.partial_corr(
