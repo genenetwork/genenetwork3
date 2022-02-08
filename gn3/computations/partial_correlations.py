@@ -6,7 +6,6 @@ GeneNetwork1.
 """
 
 import math
-import multiprocessing as mp
 from functools import reduce, partial
 from typing import Any, Tuple, Union, Sequence
 
@@ -15,12 +14,12 @@ import pandas
 import pingouin
 from scipy.stats import pearsonr, spearmanr
 
+from gn3.settings import TEXTDIR
 from gn3.random import random_string
 from gn3.function_helpers import  compose
 from gn3.data_helpers import parse_csv_line
 from gn3.db.traits import export_informative
 from gn3.db.datasets import retrieve_trait_dataset
-from gn3.settings import TEXTDIR, MULTIPROCESSOR_PROCS
 from gn3.db.partial_correlations import traits_info, traits_data
 from gn3.db.species import species_name, translate_to_mouse_gene_id
 from gn3.db.correlations import (
@@ -339,14 +338,12 @@ def compute_partial(
     This implementation reworks the child function `compute_partial` which will
     then be used in the place of `determinPartialsByR`.
     """
-    with mp.Pool(MULTIPROCESSOR_PROCS or (mp.cpu_count() - 1)) as pool:
-        return tuple(
-            result for result in
-            pool.starmap(
-                compute_trait_info,
-                ((primary_vals, control_vals, (tvals, tname), method)
-                 for tvals, tname in zip(target_vals, target_names)))
-            if result is not None)
+    return tuple(
+        result for result in (
+            compute_trait_info(
+                primary_vals, control_vals, (tvals, tname), method)
+            for tvals, tname in zip(target_vals, target_names))
+        if result is not None)
 
 def partial_correlations_normal(# pylint: disable=R0913
         primary_vals, control_vals, input_trait_gene_id, trait_database,
