@@ -140,6 +140,16 @@ def update_sample_data(conn: Any, #pylint: disable=[R0913]
                        (None if value == "x" else value,
                         strain_id, data_id))
         updated_published_data = cursor.rowcount
+        if not updated_published_data:
+            cursor.execute(
+                    "SELECT * FROM "
+                    "PublishData WHERE StrainId = "
+                    "%s AND Id = %s" % (strain_id, data_id))
+            if not cursor.fetchone():
+                cursor.execute(("INSERT INTO PublishData (Id, StrainId, "
+                                " value) VALUES (%s, %s, %s)") %
+                               (data_id, strain_id, value))
+                updated_published_data = cursor.rowcount
 
         # Update the PublishSE table
         cursor.execute(("UPDATE PublishSE SET error = %s "
@@ -147,13 +157,34 @@ def update_sample_data(conn: Any, #pylint: disable=[R0913]
                        (None if error == "x" else error,
                         strain_id, data_id))
         updated_se_data = cursor.rowcount
+        if not updated_se_data:
+            cursor.execute(
+                    "SELECT * FROM "
+                    "PublishSE WHERE StrainId = "
+                    "%s AND DataId = %s" % (strain_id, data_id))
+            if not cursor.fetchone():
+                cursor.execute(("INSERT INTO PublishSE (StrainId, DataId, "
+                                " error) VALUES (%s, %s, %s)") %
+                               (strain_id, data_id,
+                                None if error == "x" else error))
+                updated_se_data = cursor.rowcount
 
         # Update the NStrain table
         cursor.execute(("UPDATE NStrain SET count = %s "
                         "WHERE StrainId = %s AND DataId = %s"),
-                       (None if count == "x" else count,
-                        strain_id, data_id))
+                       (count, strain_id, data_id))
         updated_n_strains = cursor.rowcount
+        if not updated_n_strains:
+            cursor.execute(
+                    "SELECT * FROM "
+                    "NStrain WHERE StrainId = "
+                    "%s AND DataId = %s" % (strain_id, data_id))
+            if not cursor.fetchone():
+                cursor.execute(("INSERT INTO NStrain "
+                                "(StrainId, DataId, count) "
+                                "VALUES (%s, %s, %s)") %
+                               (strain_id, data_id, count))
+                updated_n_strains = cursor.rowcount
     return (updated_published_data,
             updated_se_data, updated_n_strains)
 
