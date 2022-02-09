@@ -75,13 +75,12 @@ class TestTraitsDBFunctions(TestCase):
                  " Publication.Year, PublishXRef.Sequence, Phenotype.Units,"
                  " PublishXRef.comments"
                  " FROM"
-                 " PublishXRef, Publication, Phenotype, PublishFreeze"
+                 " PublishXRef, Publication, Phenotype"
                  " WHERE"
                  " PublishXRef.Id = %(trait_name)s"
                  " AND Phenotype.Id = PublishXRef.PhenotypeId"
                  " AND Publication.Id = PublishXRef.PublicationId"
-                 " AND PublishXRef.InbredSetId = PublishFreeze.InbredSetId"
-                 " AND PublishFreeze.Id =%(trait_dataset_id)s"),
+                 " AND PublishXRef.InbredSetId = %(trait_dataset_id)s"),
                 trait_source)
 
     def test_retrieve_probeset_trait_info(self):
