@@ -80,23 +80,30 @@ def export_trait_data(
 
 
 def get_trait_csv_sample_data(conn: Any,
-                              trait_name: int, phenotype_id: int):
+                              trait_name: int, phenotype_id: int) -> str:
     """Fetch a trait and return it as a csv string"""
-    def __float_strip(num_str):
-        if str(num_str)[-2:] == ".0":
-            return str(int(num_str))
-        return str(num_str)
-    def __process_for_csv__(record):
-        return ",".join([
-            __float_strip(record[key]) if record[key] is not None else "x"
-            for key in ("sample_name", "value", "se_error", "nstrain")])
-    csv_data = ["Strain Name,Value,SE,Count"] + [
-        __process_for_csv__(record) for record in
-        retrieve_publish_trait_data(
-            {"trait_name": trait_name, "db": {"dataset_id": phenotype_id}},
-            conn)]
-    return "\n".join(csv_data)
-
+    __query = ("SELECT concat(st.Name, ',', ifnull(pd.value, 'x'), ',', "
+               "ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) as 'Data' "
+               "ifnull(ca.Name, 'x') as 'CaseAttr', "
+               "ifnull(cxref.value, 'x') as 'Value' "
+               "FROM PublishFreeze pf "
+               "JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId "
+               "JOIN PublishData pd ON pd.Id = px.DataId "
+               "JOIN Strain st ON pd.StrainId = st.Id "
+               "LEFT JOIN PublishSE ps ON ps.DataId = pd.Id "
+               "AND ps.StrainId = pd.StrainId "
+               "LEFT JOIN NStrain ns ON ns.DataId = pd.Id "
+               "AND ns.StrainId = pd.StrainId "
+               "LEFT JOIN CaseAttributeXRefNew cxref ON "
+               "(cxref.InbredSetId = px.InbredSetId AND "
+               "cxref.StrainId = st.Id) "
+               "LEFT JOIN CaseAttribute ca ON ca.Id = cxref.CaseAttributeId"
+               "WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name")
+    with conn.cursor() as cursor:
+        cursor.execute(__query, (trait_name, phenotype_id))
+        return ("Strain Name,Value,SE,Count\n" +
+                "\n".join(map(lambda x:x[0], cursor.fetchall())))
+    return "No Sample Data Found"
 
 def update_sample_data(conn: Any, #pylint: disable=[R0913]
                        trait_name: str,
