@@ -6,6 +6,7 @@ GeneNetwork1.
 """
 
 import math
+import warnings
 from functools import reduce, partial
 from typing import Any, Tuple, Union, Sequence
 
@@ -78,11 +79,24 @@ def dictify_by_samples(samples_vals_vars: Sequence[Sequence]) -> Sequence[dict]:
     This implementation extracts code that will find common use, and that will
     find use in more than one place.
     """
+    def __build_key_value_pairs__(
+            sample: str, value: Union[float, None],
+            variance: Union[float, None]) -> dict[
+                str, dict[str, Union[str, float, None]]]:
+        smp = sample.strip()
+        if smp == "":
+            warnings.warn(
+                "Empty strings for sample names is not allowed. Returning None",
+                category=RuntimeWarning)
+            return None
+        return (smp, {"sample_name": smp, "value": value, "variance": variance})
+
     return tuple(
-        {
-            sample: {"sample_name": sample, "value": val, "variance": var}
-            for sample, val, var in zip(*trait_line)
-        } for trait_line in zip(*(samples_vals_vars[0:3])))
+        dict(item for item in
+             (__build_key_value_pairs__(sample, val, var)
+              for sample, val, var in zip(*trait_line))
+             if item is not None)
+        for trait_line in zip(*(samples_vals_vars[0:3])))
 
 def fix_samples(primary_trait: dict, control_traits: Sequence[dict]) -> Sequence[Sequence[Any]]:
     """
