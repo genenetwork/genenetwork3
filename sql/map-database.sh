@@ -11,5 +11,7 @@ clusters="Others=AccessLog,Docs,Investigators,MachineAccessLog,News,Organization
 
 flags="--db MySQL --skip-tables $skip_tables --cluster $clusters"
 
+# shellcheck disable=SC2086 # Intentional splitting of `flags`
 sqlt-graph $flags --output-type png --output schema.png schema.sql
+# shellcheck disable=SC2086 # Intentional splitting of `flags`
 sqlt-graph $flags --output-type svg --output schema.svg schema.sql
