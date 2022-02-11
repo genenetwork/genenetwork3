@@ -34,4 +34,9 @@ setup(author='Bonface M. K.',
           'tests'
       ],
       url='https://github.com/genenetwork/genenetwork3',
-      version='0.1')
+      version='0.1',
+      # ---- TESTING ---- #
+      setup_requires=['pytest-runner'],
+      tests_require=["pytest", "hypothesis"]
+      # ---- END: TESTING ---- #
+      )
