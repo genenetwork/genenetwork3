@@ -3,6 +3,7 @@ import json
 from flask import jsonify
 from flask import Blueprint
 from flask import request
+from functools import reduce
 from flask import make_response
 
 from gn3.computations.correlations import compute_all_sample_correlation
@@ -93,6 +94,20 @@ def partial_correlation():
     def trait_fullname(trait):
         return f"{trait['dataset']}::{trait['name']}"
 
+    def __field_errors__(args):
+        def __check__(acc, field):
+            if args.get(field) is None:
+                return acc + (f"Field '{field}' missing",)
+            return acc
+        return __check__
+
+    def __errors__(request_data, fields):
+        errors = tuple()
+        if request_data is None:
+            return ("No request data",)
+
+        return reduce(__field_errors__(args), fields, errors)
+
     class OutputEncoder(json.JSONEncoder):
         """
         Class to encode output into JSON, for objects which the default
@@ -104,11 +119,22 @@ def partial_correlation():
             return json.JSONEncoder.default(self, o)
 
     args = request.get_json()
+    request_errors = __errors__(
+        args, ("primary_trait", "control_traits", "target_db", "method"))
+    if request_errors:
+        response = make_response(
+            json.dumps({
+                "status": "error",
+                "messages": request_errors,
+                "error_type": "Client Error"}),
+            400)
+        response.headers["Content-Type"] = "application/json"
+        return response
     conn, _cursor_object = database_connector()
     corr_results = partial_correlations_entry(
         conn, trait_fullname(args["primary_trait"]),
         tuple(trait_fullname(trait) for trait in args["control_traits"]),
-        args["method"], int(args["criteria"]), args["target_db"])
+        args["method"], int(args.get("criteria", 500)), args["target_db"])
     response = make_response(
         json.dumps(corr_results, cls=OutputEncoder),
         400 if "error" in corr_results.keys() else 200)
