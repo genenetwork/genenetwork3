@@ -2,6 +2,7 @@
 from unittest import TestCase
 from unittest import mock
 
+import pytest
 from collections import namedtuple
 import math
 from numpy.testing import assert_almost_equal
@@ -91,6 +92,7 @@ class DataBase(QueryableMixin):
 class TestCorrelation(TestCase):
     """Class for testing correlation functions"""
 
+    @pytest.mark.unit_test
     def test_normalize_values(self):
         """Function to test normalizing values """
 
@@ -106,6 +108,7 @@ class TestCorrelation(TestCase):
                 results = normalize_values(a_values, b_values)
                 self.assertEqual(list(zip(*list(results))), expected_result)
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
     @mock.patch("gn3.computations.correlations.normalize_values")
     def test_compute_sample_r_correlation(self, norm_vals, compute_corr):
@@ -130,6 +133,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(bicor_results, ("1412_at", 0.8, 0.21, 7))
 
+    @pytest.mark.unit_test
     def test_filter_shared_sample_keys(self):
         """Function to  tests shared key between two dicts"""
 
@@ -157,6 +161,7 @@ class TestCorrelation(TestCase):
         self.assertEqual(list(zip(*list(results))), [filtered_this_samplelist,
                                                      filtered_target_samplelist])
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.correlations.compute_sample_r_correlation")
     @mock.patch("gn3.computations.correlations.filter_shared_sample_keys")
     def test_compute_all_sample(self, filter_shared_samples, sample_r_corr):
@@ -199,6 +204,7 @@ class TestCorrelation(TestCase):
             corr_method="pearson", trait_vals=('1.23', '6.565', '6.456'),
             target_samples_vals=('6.266', '6.565', '6.456'))
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.correlations.compute_corr_coeff_p_value")
     def test_tissue_correlation_for_trait(self, mock_compute_corr_coeff):
         """Test given a primary tissue values for a trait  and and a list of\
@@ -217,6 +223,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(tissue_results, expected_tissue_results)
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.correlations.fetch_lit_correlation_data")
     @mock.patch("gn3.computations.correlations.map_to_mouse_gene_id")
     def test_lit_correlation_for_trait(self, mock_mouse_gene_id, fetch_lit_data):
@@ -244,6 +251,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(lit_results, expected_results)
 
+    @pytest.mark.unit_test
     def test_fetch_lit_correlation_data(self):
         """Test for fetching lit correlation data from\
         the database where the input and mouse geneid are none
@@ -257,6 +265,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, ("1", 0))
 
+    @pytest.mark.unit_test
     def test_fetch_lit_correlation_data_db_query(self):
         """Test for fetching lit corr coefficent givent the input\
          input trait mouse gene id and mouse gene id
@@ -274,6 +283,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(expected_results, lit_results)
 
+    @pytest.mark.unit_test
     def test_query_lit_correlation_for_db_empty(self):
         """Test that corr coeffient returned is 0 given the\
         db value if corr coefficient is empty
@@ -289,6 +299,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(lit_results, ("16", 0))
 
+    @pytest.mark.unit_test
     def test_query_formatter(self):
         """Test for formatting a query given the query string and also the\
         values
@@ -316,6 +327,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(formatted_query, expected_formatted_query)
 
+    @pytest.mark.unit_test
     def test_query_formatter_no_query_values(self):
         """Test for formatting a query where there are no\
         string placeholder
@@ -325,6 +337,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(formatted_query, query)
 
+    @pytest.mark.unit_test
     def test_map_to_mouse_gene_id(self):
         """Test for converting a gene id to mouse geneid\
         given a species which is not mouse
@@ -348,6 +361,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, expected_results)
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.correlations.lit_correlation_for_trait")
     def test_compute_all_lit_correlation(self, mock_lit_corr):
         """Test for compute all lit correlation which acts\
@@ -368,6 +382,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(lit_correlation_results, expected_mocked_lit_results)
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.correlations.tissue_correlation_for_trait")
     @mock.patch("gn3.computations.correlations.process_trait_symbol_dict")
     def test_compute_all_tissue_correlation(self, process_trait_symbol, mock_tissue_corr):
@@ -411,6 +426,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, expected_results)
 
+    @pytest.mark.unit_test
     def test_map_shared_keys_to_values(self):
         """test helper function needed to integrate with genenenetwork2\
         given a a samplelist containing dataset sampelist keys\
@@ -431,6 +447,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, expected_results)
 
+    @pytest.mark.unit_test
     def test_process_trait_symbol_dict(self):
         """test for processing trait symbol dict\
         and fetch tissue values from tissue value dict\
@@ -449,6 +466,7 @@ class TestCorrelation(TestCase):
 
         self.assertEqual(results, [expected_results])
 
+    @pytest.mark.unit_test
     def test_compute_correlation(self):
         """Test that the new correlation function works the same as the original
         from genenetwork1."""

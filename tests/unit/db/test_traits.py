@@ -1,5 +1,6 @@
 """Tests for gn3/db/traits.py"""
 from unittest import mock, TestCase
+import pytest
 from gn3.db.traits import (
     build_trait_name,
     export_trait_data,
@@ -49,6 +50,7 @@ trait_data = {
 class TestTraitsDBFunctions(TestCase):
     "Test cases for traits functions"
 
+    @pytest.mark.unit_test
     def test_retrieve_publish_trait_info(self):
         """Test retrieval of type `Publish` traits."""
         db_mock = mock.MagicMock()
@@ -83,6 +85,7 @@ class TestTraitsDBFunctions(TestCase):
                  " AND PublishXRef.InbredSetId = %(trait_dataset_id)s"),
                 trait_source)
 
+    @pytest.mark.unit_test
     def test_retrieve_probeset_trait_info(self):
         """Test retrieval of type `Probeset` traits."""
         db_mock = mock.MagicMock()
@@ -118,6 +121,7 @@ class TestTraitsDBFunctions(TestCase):
                     "AND ProbeSetFreeze.Name = %(trait_dataset_name)s "
                     "AND ProbeSet.Name = %(trait_name)s"), trait_source)
 
+    @pytest.mark.unit_test
     def test_retrieve_geno_trait_info(self):
         """Test retrieval of type `Geno` traits."""
         db_mock = mock.MagicMock()
@@ -141,6 +145,7 @@ class TestTraitsDBFunctions(TestCase):
                     "AND Geno.Name = %(trait_name)s"),
                 trait_source)
 
+    @pytest.mark.unit_test
     def test_retrieve_temp_trait_info(self):
         """Test retrieval of type `Temp` traits."""
         db_mock = mock.MagicMock()
@@ -153,6 +158,7 @@ class TestTraitsDBFunctions(TestCase):
                 "SELECT name, description FROM Temp WHERE Name = %(trait_name)s",
                 trait_source)
 
+    @pytest.mark.unit_test
     def test_build_trait_name_with_good_fullnames(self):
         """
         Check that the name is built correctly.
@@ -169,6 +175,7 @@ class TestTraitsDBFunctions(TestCase):
             with self.subTest(fullname=fullname):
                 self.assertEqual(build_trait_name(fullname), expected)
 
+    @pytest.mark.unit_test
     def test_build_trait_name_with_bad_fullnames(self):
         """
         Check that an exception is raised if the full name format is wrong.
@@ -178,6 +185,7 @@ class TestTraitsDBFunctions(TestCase):
                 with self.assertRaises(AssertionError, msg="Name format error"):
                     build_trait_name(fullname)
 
+    @pytest.mark.unit_test
     def test_retrieve_trait_info(self):
         """Test that information on traits is retrieved as appropriate."""
         for threshold, trait_fullname, expected in [
@@ -194,6 +202,7 @@ class TestTraitsDBFunctions(TestCase):
                             threshold, trait_fullname, db_mock),
                         expected)
 
+    @pytest.mark.unit_test
     def test_update_sample_data(self):
         """Test that the SQL queries when calling update_sample_data are called with
         the right calls.
@@ -242,6 +251,7 @@ class TestTraitsDBFunctions(TestCase):
                  mock.call(N_STRAIN_SQL, (2, 1, 1))]
             )
 
+    @pytest.mark.unit_test
     def test_set_haveinfo_field(self):
         """Test that the `haveinfo` field is set up correctly"""
         for trait_info, expected in [
@@ -250,6 +260,7 @@ class TestTraitsDBFunctions(TestCase):
             with self.subTest(trait_info=trait_info, expected=expected):
                 self.assertEqual(set_haveinfo_field(trait_info), expected)
 
+    @pytest.mark.unit_test
     def test_set_homologene_id_field(self):
         """Test that the `homologene_id` field is set up correctly"""
         for trait_type, trait_info, expected in [
@@ -264,6 +275,7 @@ class TestTraitsDBFunctions(TestCase):
                     self.assertEqual(
                         set_homologene_id_field(trait_type, trait_info, db_mock), expected)
 
+    @pytest.mark.unit_test
     def test_set_confidential_field(self):
         """Test that the `confidential` field is set up correctly"""
         for trait_type, trait_info, expected in [
@@ -275,6 +287,7 @@ class TestTraitsDBFunctions(TestCase):
                 self.assertEqual(
                     set_confidential_field(trait_type, trait_info), expected)
 
+    @pytest.mark.unit_test
     def test_export_trait_data_dtype(self):
         """
         Test `export_trait_data` with different values for the `dtype` keyword
@@ -290,6 +303,7 @@ class TestTraitsDBFunctions(TestCase):
                     export_trait_data(trait_data, samplelist, dtype=dtype),
                     expected)
 
+    @pytest.mark.unit_test
     def test_export_trait_data_dtype_all_flags(self):
         """
         Test `export_trait_data` with different values for the `dtype` keyword
@@ -331,6 +345,7 @@ class TestTraitsDBFunctions(TestCase):
                         n_exists=nflag),
                     expected)
 
+    @pytest.mark.unit_test
     def test_export_informative(self):
         """Test that the function exports appropriate data."""
         # pylint: disable=W0621

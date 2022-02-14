@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable
 from unittest import mock
+import pytest
 from gn3.commands import compose_gemma_cmd
 from gn3.commands import compose_rqtl_cmd
 from gn3.commands import queue_cmd
@@ -23,6 +24,7 @@ class MockRedis:
 class TestCommands(unittest.TestCase):
     """Test cases for commands.py"""
 
+    @pytest.mark.unit_test
     def test_compose_gemma_cmd_no_extra_args(self):
         """Test that the gemma cmd is composed correctly"""
         self.assertEqual(
@@ -37,6 +39,7 @@ class TestCommands(unittest.TestCase):
              "-p /tmp/gf13Ad0tRX/phenofile.txt"
              " -gk"))
 
+    @pytest.mark.unit_test
     def test_compose_gemma_cmd_extra_args(self):
         """Test that the gemma cmd is composed correctly"""
         self.assertEqual(
@@ -54,6 +57,7 @@ class TestCommands(unittest.TestCase):
              "-p /tmp/gf13Ad0tRX/phenofile.txt"
              " -gk"))
 
+    @pytest.mark.unit_test
     def test_compose_rqtl_cmd(self):
         """Test that the R/qtl cmd is composed correctly"""
         self.assertEqual(
@@ -78,6 +82,7 @@ class TestCommands(unittest.TestCase):
              "--addcovar")
         )
 
+    @pytest.mark.unit_test
     def test_queue_cmd_exception_raised_when_redis_is_down(self):
         """Test that the correct error is raised when Redis is unavailable"""
         self.assertRaises(RedisConnectionError,
@@ -88,6 +93,7 @@ class TestCommands(unittest.TestCase):
                                          hset=mock.MagicMock(),
                                          rpush=mock.MagicMock()))
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.commands.datetime")
     @mock.patch("gn3.commands.uuid4")
     def test_queue_cmd_correct_calls_to_redis(self, mock_uuid4,
@@ -112,6 +118,7 @@ class TestCommands(unittest.TestCase):
         mock_redis_conn.rpush.assert_has_calls(
             [mock.call("GN2::job-queue", actual_unique_id)])
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.commands.datetime")
     @mock.patch("gn3.commands.uuid4")
     def test_queue_cmd_right_calls_to_redis_with_email(self,
@@ -140,11 +147,13 @@ class TestCommands(unittest.TestCase):
         mock_redis_conn.rpush.assert_has_calls(
             [mock.call("GN2::job-queue", actual_unique_id)])
 
+    @pytest.mark.unit_test
     def test_run_cmd_correct_input(self):
         """Test that a correct cmd is processed correctly"""
         self.assertEqual(run_cmd("echo test"),
                          {"code": 0, "output": "test\n"})
 
+    @pytest.mark.unit_test
     def test_run_cmd_incorrect_input(self):
         """Test that an incorrect cmd is processed correctly"""
         result = run_cmd("echoo test")

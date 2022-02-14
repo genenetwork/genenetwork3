@@ -1,8 +1,10 @@
 """Integration tests for some 'general' API endpoints"""
 import os
 import unittest
-
 from unittest import mock
+
+import pytest
+
 from gn3.app import create_app
 
 
@@ -11,6 +13,7 @@ class GeneralAPITest(unittest.TestCase):
     def setUp(self):
         self.app = create_app().test_client()
 
+    @pytest.mark.integration_test
     def test_metadata_endpoint_exists(self):
         """Test that /metadata/upload exists"""
         response = self.app.post("/api/metadata/upload/d41d86-e4ceEo")
@@ -19,6 +22,7 @@ class GeneralAPITest(unittest.TestCase):
                          {"status": 128,
                           "error": "Please provide a file!"})
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.general.extract_uploaded_file")
     def test_metadata_file_upload(self, mock_extract_upload):
         """Test correct upload of file"""
@@ -37,6 +41,7 @@ class GeneralAPITest(unittest.TestCase):
                          {"status": 0,
                           "token": "d41d86-e4ceEo"})
 
+    @pytest.mark.integration_test
     def test_metadata_file_wrong_upload(self):
         """Test that incorrect upload return correct status code"""
         response = self.app.post("/api/metadata/upload/d41d86-e4ceEo",
@@ -47,6 +52,7 @@ class GeneralAPITest(unittest.TestCase):
                          {"status": 128,
                           "error": "gzip failed to unpack file"})
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.general.run_cmd")
     def test_run_r_qtl(self, mock_run_cmd):
         """Test correct upload of file"""

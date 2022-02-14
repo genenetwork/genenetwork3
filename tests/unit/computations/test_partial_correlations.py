@@ -3,6 +3,7 @@
 from unittest import TestCase
 
 import pandas
+import pytest
 from numpy.testing import assert_allclose
 
 from gn3.computations.partial_correlations import (
@@ -98,6 +99,7 @@ dictified_control_samples = (
 class TestPartialCorrelations(TestCase):
     """Class for testing partial correlations computation functions"""
 
+    @pytest.mark.unit_test
     def test_control_samples(self):
         """Test that the control_samples works as expected."""
         self.assertEqual(
@@ -112,6 +114,7 @@ class TestPartialCorrelations(TestCase):
               (None, None, None)),
              (6, 4, 3)))
 
+    @pytest.mark.unit_test
     def test_dictify_by_samples(self):
         """
         Test that `dictify_by_samples` generates the appropriate dict
@@ -142,6 +145,7 @@ class TestPartialCorrelations(TestCase):
                  (6, 4, 3))),
             dictified_control_samples)
 
+    @pytest.mark.unit_test
     def test_fix_samples(self):
         """
         Test that `fix_samples` returns only the common samples
@@ -187,6 +191,7 @@ class TestPartialCorrelations(TestCase):
              (None, None, None, None, None, None, None, None, None, None, None,
               None, None)))
 
+    @pytest.mark.unit_test
     def test_find_identical_traits(self):
         """
         Test `gn3.partial_correlations.find_identical_traits`.
@@ -219,6 +224,7 @@ class TestPartialCorrelations(TestCase):
                 self.assertEqual(
                     find_identical_traits(primn, primv, contn, contv), expected)
 
+    @pytest.mark.unit_test
     def test_tissue_correlation_error(self):
         """
         Test that `tissue_correlation` raises specific exceptions for particular
@@ -253,6 +259,7 @@ class TestPartialCorrelations(TestCase):
                 with self.assertRaises(error, msg=error_msg):
                     tissue_correlation(primary, target, method)
 
+    @pytest.mark.unit_test
     def test_tissue_correlation(self): # pylint: disable=R0201
         """
         Test that the correct correlation values are computed for the given:
@@ -269,6 +276,7 @@ class TestPartialCorrelations(TestCase):
                 assert_allclose(
                     tissue_correlation(primary, target, method), expected)
 
+    @pytest.mark.unit_test
     def test_good_dataset_samples_indexes(self):
         """
         Test that `good_dataset_samples_indexes` returns correct indices.
@@ -279,6 +287,7 @@ class TestPartialCorrelations(TestCase):
                 ("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l")),
             (0, 4, 8, 10))
 
+    @pytest.mark.unit_test
     def test_build_data_frame(self):
         """
         Check that the function builds the correct data frame.

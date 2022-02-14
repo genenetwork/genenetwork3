@@ -1,6 +1,7 @@
 """Tests for gn3/db/datasets.py"""
 
 from unittest import mock, TestCase
+import pytest
 from gn3.db.datasets import (
     retrieve_dataset_name,
     retrieve_group_fields,
@@ -11,6 +12,7 @@ from gn3.db.datasets import (
 class TestDatasetsDBFunctions(TestCase):
     """Test cases for datasets functions."""
 
+    @pytest.mark.unit_test
     def test_retrieve_dataset_name(self):
         """Test that the function is called correctly."""
         for trait_type, thresh, trait_name, dataset_name, columns, table, expected in [
@@ -42,6 +44,7 @@ class TestDatasetsDBFunctions(TestCase):
                             table=table, cols=columns),
                         {"threshold": thresh, "name": dataset_name})
 
+    @pytest.mark.unit_test
     def test_retrieve_probeset_group_fields(self):
         """
         Test that the `group` and `group_id` fields are retrieved appropriately
@@ -65,6 +68,7 @@ class TestDatasetsDBFunctions(TestCase):
                             " AND ProbeSetFreeze.Name = %(name)s"),
                         {"name": trait_name})
 
+    @pytest.mark.unit_test
     def test_retrieve_group_fields(self):
         """
         Test that the group fields are set up correctly for the different trait
@@ -90,6 +94,7 @@ class TestDatasetsDBFunctions(TestCase):
                             trait_type, trait_name, dataset_info, db_mock),
                         expected)
 
+    @pytest.mark.unit_test
     def test_retrieve_publish_group_fields(self):
         """
         Test that the `group` and `group_id` fields are retrieved appropriately
@@ -112,6 +117,7 @@ class TestDatasetsDBFunctions(TestCase):
                             " AND PublishFreeze.Name = %(name)s"),
                         {"name": trait_name})
 
+    @pytest.mark.unit_test
     def test_retrieve_geno_group_fields(self):
         """
         Test that the `group` and `group_id` fields are retrieved appropriately

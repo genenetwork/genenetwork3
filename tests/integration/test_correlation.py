@@ -1,6 +1,7 @@
 """module contains integration tests for correlation"""
 from unittest import TestCase
 from unittest import mock
+import pytest
 from gn3.app import create_app
 
 
@@ -10,6 +11,7 @@ class CorrelationIntegrationTest(TestCase):
     def setUp(self):
         self.app = create_app().test_client()
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.correlation.compute_all_sample_correlation")
     def test_sample_r_correlation(self, mock_compute_samples):
         """Test /api/correlation/sample_r/{method}"""
@@ -61,6 +63,7 @@ class CorrelationIntegrationTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), api_response)
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.correlation.compute_all_lit_correlation")
     @mock.patch("gn3.api.correlation.database_connector")
     def test_lit_correlation(self, database_connector, mock_compute_corr):
@@ -80,6 +83,7 @@ class CorrelationIntegrationTest(TestCase):
         self.assertEqual(mock_compute_corr.call_count, 1)
         self.assertEqual(response.status_code, 200)
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.correlation.compute_tissue_correlation")
     def test_tissue_correlation(self, mock_tissue_corr):
         """Test api/correlation/tissue_corr/{corr_method}"""

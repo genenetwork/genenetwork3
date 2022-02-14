@@ -3,6 +3,7 @@
 from unittest import TestCase
 from unittest import mock
 
+import pytest
 from types import SimpleNamespace
 
 from gn3.db_utils import database_connector
@@ -12,6 +13,7 @@ from gn3.db_utils import parse_db_url
 class TestDatabase(TestCase):
     """class contains testd for db connection functions"""
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.db_utils.mdb")
     @mock.patch("gn3.db_utils.parse_db_url")
     def test_database_connector(self, mock_db_parser, mock_sql):
@@ -28,6 +30,7 @@ class TestDatabase(TestCase):
         self.assertIsInstance(
             results, tuple, "database not created successfully")
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.db_utils.SQL_URI",
                 "mysql://username:4321@localhost/test")
     def test_parse_db_url(self):

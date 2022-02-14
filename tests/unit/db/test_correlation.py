@@ -4,6 +4,8 @@ Tests for the gn3.db.correlations module
 
 from unittest import TestCase
 
+import pytest
+
 from gn3.db.correlations import (
     build_query_sgo_lit_corr,
     build_query_tissue_corr)
@@ -12,6 +14,7 @@ class TestCorrelation(TestCase):
     """Test cases for correlation data fetching functions"""
     maxDiff = None
 
+    @pytest.mark.unit_test
     def test_build_query_sgo_lit_corr(self):
         """
         Test that the literature correlation query is built correctly.
@@ -53,6 +56,7 @@ class TestCorrelation(TestCase):
               "ORDER BY Probeset.Id"),
              2))
 
+    @pytest.mark.unit_test
     def test_build_query_tissue_corr(self):
         """
         Test that the tissue correlation query is built correctly.

@@ -4,6 +4,8 @@ Test functions in gn3.data_helpers
 
 from unittest import TestCase
 
+import pytest
+
 from gn3.data_helpers import partition_by, partition_all, parse_csv_line
 
 class TestDataHelpers(TestCase):
@@ -11,6 +13,7 @@ class TestDataHelpers(TestCase):
     Test functions in gn3.data_helpers
     """
 
+    @pytest.mark.unit_test
     def test_partition_all(self):
         """
         Test that `gn3.data_helpers.partition_all` partitions sequences as expected.
@@ -36,6 +39,7 @@ class TestDataHelpers(TestCase):
             with self.subTest(n=count, items=items):
                 self.assertEqual(partition_all(count, items), expected)
 
+    @pytest.mark.unit_test
     def test_parse_csv_line(self):
         """
         Test parsing a single line from a CSV file
@@ -60,6 +64,7 @@ class TestDataHelpers(TestCase):
                         line=line, delimiter=delimiter, quoting=quoting),
                     expected)
 
+    @pytest.mark.unit_test
     def test_partition_by(self):
         """
         Test that `partition_by` groups the data using the given predicate

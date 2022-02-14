@@ -63,6 +63,7 @@ values = st.lists(st.floats())
 variances = st.lists(st.one_of(st.none(), st.floats()))
 other = st.lists(st.integers())
 
+@pytest.mark.unit_test
 @given(svv=st.tuples(
     st.lists(non_empty_samples),
     st.lists(values),
