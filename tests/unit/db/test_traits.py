@@ -5,6 +5,7 @@ from gn3.db.traits import (
     build_trait_name,
     export_trait_data,
     export_informative,
+    get_trait_csv_sample_data,
     set_haveinfo_field,
     update_sample_data,
     retrieve_trait_info,
@@ -431,3 +432,146 @@ class TestTraitsDBFunctions(TestCase):
             with self.subTest(trait_data=trait_data):
                 self.assertEqual(
                     export_informative(trait_data, inc_var), expected)
+
+
+class TestRetrieveCsvData(TestCase):
+    "Test cases for retrieving csv data"
+    def test_get_trait_csv_sample_data_with_case_attributes(self):
+        """Test that correct csv is returned when all samples have case attribute
+values"""
+        mock_conn = mock.MagicMock()
+        with mock_conn.cursor() as cursor:
+            cursor.fetchall.return_value = [
+                ['H1044,25.900000,x,1', 'Strain', 'BXD29'],
+                ['H1044,25.900000,x,1', 'Condition', 'CD'],
+                ['H1044,25.900000,x,1', 'EarTag', 1044],
+                ['H1044,25.900000,x,1', 'Age', 724],
+                ['H1096,23.700001,x,1', 'EarTag', 1096],
+                ['H1096,23.700001,x,1', 'Age', 732],
+                ['H1096,23.700001,x,1', 'Strain', 'BXD90'],
+                ['H1096,23.700001,x,1', 'Condition', 'CD'],
+                ['H1163,95.000000,x,1', 'Strain', 'D2B6F1'],
+                ['H1163,95.000000,x,1', 'Condition', 'HF'],
+                ['H1163,95.000000,x,1', 'EarTag', 1163],
+                ['H1163,95.000000,x,1', 'Age', 1114],
+                ['H1230,88.099998,x,1', 'EarTag', 1230],
+                ['H1230,88.099998,x,1', 'Age', 726],
+                ['H1230,88.099998,x,1', 'Strain', 'B6D2F1'],
+                ['H1230,88.099998,x,1', 'Condition', 'HF'],
+                ['H1251,24.100000,x,1', 'EarTag', 1251],
+                ['H1251,24.100000,x,1', 'Age', 711],
+                ['H1251,24.100000,x,1', 'Strain', 'C57BL/6J'],
+                ['H1251,24.100000,x,1', 'Condition', 'CD'],
+                ['H1292,24.900000,x,1', 'Strain', 'C57BL/6J'],
+                ['H1292,24.900000,x,1', 'Condition', 'CD'],
+                ['H1292,24.900000,x,1', 'EarTag', 1292],
+                ['H1292,24.900000,x,1', 'Age', 705],
+            ]
+        csv = get_trait_csv_sample_data(conn=mock_conn,
+                                        trait_name=10006,
+                                        phenotype_id=28409)
+        self.assertEqual(csv, """Strain Name,Value,SE,Count,Age,Condition,EarTag,Strain
+H1044,25.900000,x,1,724,CD,1044,BXD29
+H1096,23.700001,x,1,732,CD,1096,BXD90
+H1163,95.000000,x,1,1114,HF,1163,D2B6F1
+H1230,88.099998,x,1,726,HF,1230,B6D2F1
+H1251,24.100000,x,1,711,CD,1251,C57BL/6J
+H1292,24.900000,x,1,705,CD,1292,C57BL/6J
+""")
+
+    def test_get_trait_csv_sample_data_with_missing_case_attributes(self):
+        """Test that the correct csv is returned when some case attributes are not
+present from some samples"""
+        mock_conn = mock.MagicMock()
+        with mock_conn.cursor() as cursor:
+            cursor.fetchall.return_value = [
+                ['H1044,25.900000,x,1', 'Strain', 'BXD29'],
+                ['H1044,25.900000,x,1', 'Condition', 'CD'],
+                ['H1044,25.900000,x,1', 'Age', 724],
+                ['H1096,23.700001,x,1', 'Age', 732],
+                ['H1096,23.700001,x,1', 'Strain', 'BXD90'],
+                ['H1096,23.700001,x,1', 'Condition', 'CD'],
+                ['H1163,95.000000,x,1', 'Condition', 'HF'],
+                ['H1163,95.000000,x,1', 'EarTag', 1163],
+                ['H1163,95.000000,x,1', 'Age', 1114],
+                ['H1230,88.099998,x,1', 'EarTag', 1230],
+                ['H1230,88.099998,x,1', 'Age', 726],
+                ['H1230,88.099998,x,1', 'Strain', 'B6D2F1'],
+                ['H1230,88.099998,x,1', 'Condition', 'HF'],
+                ['H1251,24.100000,x,1', 'EarTag', 1251],
+                ['H1251,24.100000,x,1', 'Age', 711],
+                ['H1251,24.100000,x,1', 'Strain', 'C57BL/6J'],
+                ['H1251,24.100000,x,1', 'Condition', 'CD'],
+                ['H1292,24.900000,x,1', 'Strain', 'C57BL/6J'],
+                ['H1292,24.900000,x,1', 'Condition', 'CD'],
+                ['H1292,24.900000,x,1', 'EarTag', 1292],
+            ]
+        csv = get_trait_csv_sample_data(conn=mock_conn,
+                                        trait_name=10006,
+                                        phenotype_id=28409)
+        self.assertEqual(csv, """Strain Name,Value,SE,Count,Age,Condition,EarTag,Strain
+H1044,25.900000,x,1,724,CD,x,BXD29
+H1096,23.700001,x,1,732,CD,x,BXD90
+H1163,95.000000,x,1,1114,HF,1163,x
+H1230,88.099998,x,1,726,HF,1230,B6D2F1
+H1251,24.100000,x,1,711,CD,1251,C57BL/6J
+H1292,24.900000,x,1,x,CD,1292,C57BL/6J
+""")
+
+    def test_get_trait_csv_sample_data_with_varying_case_attributes(self):
+        """Test that the correct csv is returned when case attributes are entirely
+missing from same samples, and only one sample has a case attribute that is
+not present in all other samples"""
+        mock_conn = mock.MagicMock()
+        with mock_conn.cursor() as cursor:
+            cursor.fetchall.return_value = [
+                ['H1044,25.900000,x,1', 'x', 'x'],
+                ['H1096,23.700001,x,1', 'x', 'x'],
+                ['H1163,95.000000,x,1', 'x', 'x'],
+                ['H1230,88.099998,x,1', 'x', 'x'],
+                ['H1251,24.100000,x,1', 'x', 'x'],
+                ['H1292,24.900000,x,1', 'x', 'x'],
+            ]
+        csv = get_trait_csv_sample_data(conn=mock_conn,
+                                        trait_name=10006,
+                                        phenotype_id=28409)
+        self.assertEqual(csv, """Strain Name,Value,SE,Count
+H1044,25.900000,x,1
+H1096,23.700001,x,1
+H1163,95.000000,x,1
+H1230,88.099998,x,1
+H1251,24.100000,x,1
+H1292,24.900000,x,1""")
+
+    def test_get_trait_csv_sample_data_with_empty_case_attributes(self):
+        mock_conn = mock.MagicMock()
+        with mock_conn.cursor() as cursor:
+            cursor.fetchall.return_value = [
+                ['H1044,25.900000,x,1', 'x', 'x'],
+                ['H1096,23.700001,x,1', 'Age', 732],
+                ['H1096,23.700001,x,1', 'Sex', "M"],
+                ['H1096,23.700001,x,1', 'Strain', 'BXD90'],
+                ['H1096,23.700001,x,1', 'Condition', 'CD'],
+                ['H1163,95.000000,x,1', 'Condition', 'HF'],
+                ['H1163,95.000000,x,1', 'EarTag', 1163],
+                ['H1163,95.000000,x,1', 'Age', 1114],
+                ['H1230,88.099998,x,1', 'EarTag', 1230],
+                ['H1230,88.099998,x,1', 'Age', 726],
+                ['H1230,88.099998,x,1', 'Strain', 'B6D2F1'],
+                ['H1230,88.099998,x,1', 'Condition', 'HF'],
+                ['H1251,24.100000,x,1', 'x', 'x'],
+                ['H1292,24.900000,x,1', 'Strain', 'C57BL/6J'],
+                ['H1292,24.900000,x,1', 'Condition', 'CD'],
+                ['H1292,24.900000,x,1', 'EarTag', 1292],
+            ]
+        csv = get_trait_csv_sample_data(conn=mock_conn,
+                                        trait_name=10006,
+                                        phenotype_id=28409)
+        self.assertEqual(csv, """Strain Name,Value,SE,Count,Age,Condition,EarTag,Sex,Strain
+H1044,25.900000,x,1,x,x,x,x,x
+H1096,23.700001,x,1,732,CD,x,M,BXD90
+H1163,95.000000,x,1,1114,HF,1163,x,x
+H1230,88.099998,x,1,726,HF,1230,x,B6D2F1
+H1251,24.100000,x,1,x,x,x,x,x
+H1292,24.900000,x,1,x,CD,1292,x,C57BL/6J
+""")
