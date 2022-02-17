@@ -99,11 +99,35 @@ def get_trait_csv_sample_data(conn: Any,
                "cxref.StrainId = st.Id) "
                "LEFT JOIN CaseAttribute ca ON ca.Id = cxref.CaseAttributeId"
                "WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name")
+    case_attr_columns = set()
+    csv_data = {}
     with conn.cursor() as cursor:
         cursor.execute(__query, (trait_name, phenotype_id))
-        return ("Strain Name,Value,SE,Count\n" +
-                "\n".join(map(lambda x:x[0], cursor.fetchall())))
+        for data in cursor.fetchall():
+            if data[1] == "x":
+                csv_data[data[0]] = None
+            else:
+                sample, case_attr, value = data[0], data[1], data[2]
+                if not csv_data.get(sample):
+                    csv_data[sample] = {}
+                csv_data[sample][case_attr] = None if value == "x" else value
+                case_attr_columns.add(case_attr)
+        if not case_attr_columns:
+            return ("Strain Name,Value,SE,Count\n" +
+                    "\n".join(csv_data.keys()))
+        else:
+            columns = sorted(case_attr_columns)
+            csv = ("Strain Name,Value,SE,Count," +
+                   ",".join(columns) + "\n")
+            for key, value in csv_data.items():
+                if not value:
+                    csv += (key + (len(case_attr_columns) * ",x") + "\n")
+                else:
+                    vals = [str(value.get(column, "x")) for column in columns]
+                    csv += (key + "," + ",".join(vals) + "\n")
+            return csv
     return "No Sample Data Found"
+
 
 def update_sample_data(conn: Any, #pylint: disable=[R0913]
                        trait_name: str,
