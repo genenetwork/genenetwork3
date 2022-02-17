@@ -129,7 +129,7 @@ def get_trait_csv_sample_data(conn: Any,
     return "No Sample Data Found"
 
 
-def update_sample_data(conn: Any, #pylint: disable=[R0913]
+def update_sample_data(conn: Any,  # pylint: disable=[R0913]
                        trait_name: str,
                        strain_name: str,
                        phenotype_id: int,
@@ -306,7 +306,7 @@ def delete_sample_data(conn: Any,
             deleted_se_data, deleted_n_strains)
 
 
-def insert_sample_data(conn: Any, #pylint: disable=[R0913]
+def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
                        trait_name: str,
                        strain_name: str,
                        phenotype_id: int,
@@ -355,7 +355,7 @@ def insert_sample_data(conn: Any, #pylint: disable=[R0913]
                                 "VALUES (%s, %s, %s)"),
                                (strain_id, data_id, count))
             inserted_n_strains = cursor.rowcount
-        except Exception as e: #pylint: disable=[C0103, W0612]
+        except Exception:  # pylint: disable=[C0103, W0612]
             conn.rollback()
             raise MySQLdb.Error
     return (inserted_published_data,
