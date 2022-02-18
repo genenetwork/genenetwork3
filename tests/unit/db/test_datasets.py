@@ -23,9 +23,7 @@ class TestDatasetsDBFunctions(TestCase):
                 ["Geno", 3, "genoTraitName", "genoDatasetName",
                  "Id, Name, FullName, ShortName", "GenoFreeze", {}],
                 ["Publish", 6, "publishTraitName", "publishDatasetName",
-                 "Id, Name, FullName, ShortName", "PublishFreeze", {}],
-                ["Temp", 4, "tempTraitName", "tempTraitName",
-                 "Id, Name, FullName, ShortName", "TempFreeze", {}]]:
+                 "Id, Name, FullName, ShortName", "PublishFreeze", {}]]:
             db_mock = mock.MagicMock()
             with self.subTest(trait_type=trait_type):
                 with db_mock.cursor() as cursor:
