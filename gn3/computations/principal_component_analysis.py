@@ -26,3 +26,14 @@ def compute_zscores(nums: list, axis: int = 0, ddof: int = 0) -> list:
     zscores = stats.zscore(nums_array, axis=axis, ddof=ddof)
 
     return list(zscores)
+
+
+def generate_scree_plot_data(variance_ratio):
+
+    perc_var = np.round(variance_ratio*100, decimals=1)
+
+    x_coordinates = [f"PC{val}" for val in range(1, len(perc_var)+1)]
+
+    y_coordinates = np.round(pca_obj.explained_variance_ratio_*100, decimals=1)
+
+    return list(zip(x_coordinates, y_coordinates)
