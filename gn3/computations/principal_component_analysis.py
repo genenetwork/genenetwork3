@@ -30,7 +30,7 @@ def generate_scree_plot_data(variance_ratio):
     return list(zip(x_coordinates, y_coordinates))
 
 
-def generate_pca_traits_data(trait_data_array: list, corr_matrix):
+def generate_pca_traits_data(trait_data_array: list):
     """function generates new pca traits data from
     zscores and eigen vectors"""
 
@@ -53,3 +53,30 @@ def process_factor_loadings_tdata(factor_loadings, traits_list_num: int):
 
     return [list(trait_loading[:target_columns])
             for trait_loading in traits_loadings]
+
+
+def generate_pca_temp_dataset(species: str, group: str,
+                              traits_data: list, dataset_samples, shared_samples):
+
+    pca_traits = generate_pca_traits_data()
+
+    pca_trait_dict = {}
+
+    for (idx, pca_trait) in generate_pca_traits(traits_data):
+        trait_id = f"PCA{str(idx+1)}-{species}{group}{datetime.datetime.now().strftime('%m%d%H%M%S')}"
+        sample_vals = []
+
+        pointer = 0
+
+        for sample in dataset_samples:
+            if sample in shared_samples:
+                sample_vals.append(pca_trait[pointer])
+                pointer += 1
+
+            else:
+                sample_vals.append("x")
+        sample_vals = " ".join(sample_vals)
+
+        pca_trait_dict[trait_id] = sample_vals
+
+    return pca_trait_dict
