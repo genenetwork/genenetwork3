@@ -587,24 +587,6 @@ def geno_traits_datasets(conn: Any, threshold: int, traits: Tuple[Dict]):
         }
     } for trait in traits)
 
-def temp_datasets_names(conn, threshold, dataset_names):
-    """
-    Get the ID, DataScale and various name formats for a `Temp` trait.
-    """
-    query = (
-        "SELECT Id, Name, FullName, ShortName "
-        "FROM TempFreeze "
-        "WHERE "
-        "public > %s "
-        "AND "
-        "(Name = ({names}) OR FullName = ({names}) OR ShortName = ({names}))")
-    with conn.cursor(cursorclass=DictCursor) as cursor:
-        cursor.execute(
-            query.format(names=", ".join(["%s"] * len(dataset_names))),
-            (threshold,) +(dataset_names * 3))
-        return {ds["dataset_name"]: ds for ds in cursor.fetchall()}
-    return {}
-
 def temp_datasets_groups(conn, dataset_names):
     """
     Retrieve the Group, and GroupID values for `Temp` trait types.
@@ -625,13 +607,11 @@ def temp_traits_datasets(conn: Any, threshold: int, traits: Tuple[Dict]):
     Retrieve datasets for 'Temp' traits.
     """
     dataset_names = tuple(set(trait["db"]["dataset_name"] for trait in traits))
-    dataset_names_info = temp_datasets_names(conn, threshold, dataset_names)
     dataset_groups = temp_datasets_groups(conn, dataset_names)
     return tuple({
         **trait,
         "db": {
             **trait["db"],
-            **dataset_names_info.get(trait["db"]["dataset_name"], {}),
             **dataset_groups.get(trait["db"]["dataset_name"], {})
         }
     } for trait in traits)

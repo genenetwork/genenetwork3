@@ -82,30 +82,6 @@ def retrieve_geno_trait_dataset_name(
              "dataset_shortname"],
             cursor.fetchone()))
 
-def retrieve_temp_trait_dataset_name(
-        threshold: int, name: str, connection: Any):
-    """
-    Get the ID, DataScale and various name formats for a `Temp` trait.
-    """
-    query = (
-        "SELECT Id, Name, FullName, ShortName "
-        "FROM TempFreeze "
-        "WHERE "
-        "public > %(threshold)s "
-        "AND "
-        "(Name = %(name)s OR FullName = %(name)s OR ShortName = %(name)s)")
-    with connection.cursor() as cursor:
-        cursor.execute(
-            query,
-            {
-                "threshold": threshold,
-                "name": name
-            })
-        return dict(zip(
-            ["dataset_id", "dataset_name", "dataset_fullname",
-             "dataset_shortname"],
-            cursor.fetchone()))
-
 def retrieve_dataset_name(
         trait_type: str, threshold: int, trait_name: str, dataset_name: str,
         conn: Any):
@@ -120,9 +96,7 @@ def retrieve_dataset_name(
         "ProbeSet": retrieve_probeset_trait_dataset_name,
         "Publish": retrieve_publish_trait_dataset_name,
         "Geno": retrieve_geno_trait_dataset_name,
-        "Temp": retrieve_temp_trait_dataset_name}
-    if trait_type == "Temp":
-        return retrieve_temp_trait_dataset_name(threshold, trait_name, conn)
+        "Temp": lambda threshold, dataset_name, conn: {}}
     return fn_map[trait_type](threshold, dataset_name, conn)
 
 
