@@ -118,25 +118,25 @@ def partial_correlation():
                 return str(o, encoding="utf-8")
             return json.JSONEncoder.default(self, o)
 
+    def __build_response__(data):
+        status_codes = {"error": 400, "not-found": 404, "success": 200}
+        response = make_response(
+            json.dumps(data, cls=OutputEncoder),
+            status_codes[data["status"]])
+        response.headers["Content-Type"] = "application/json"
+        return response
+
     args = request.get_json()
     request_errors = __errors__(
         args, ("primary_trait", "control_traits", "target_db", "method"))
     if request_errors:
-        response = make_response(
-            json.dumps({
-                "status": "error",
-                "messages": request_errors,
-                "error_type": "Client Error"}),
-            400)
-        response.headers["Content-Type"] = "application/json"
-        return response
+        return __build_response__({
+            "status": "error",
+            "messages": request_errors,
+            "error_type": "Client Error"})
     conn, _cursor_object = database_connector()
     corr_results = partial_correlations_entry(
         conn, trait_fullname(args["primary_trait"]),
         tuple(trait_fullname(trait) for trait in args["control_traits"]),
         args["method"], int(args.get("criteria", 500)), args["target_db"])
-    response = make_response(
-        json.dumps(corr_results, cls=OutputEncoder),
-        400 if "error" in corr_results.keys() else 200)
-    response.headers["Content-Type"] = "application/json"
-    return response
+    return __build_response__(corr_results)

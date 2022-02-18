@@ -616,6 +616,11 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
     primary_trait = tuple(
         trait for trait in all_traits
         if trait["trait_fullname"] == primary_trait_name)[0]
+    if not primary_trait["haveinfo"]:
+        return {
+            "status": "not-found",
+            "message": f"Could not find primary trait {primary_trait['trait_fullname']}"
+        }
     group = primary_trait["db"]["group"]
     primary_trait_data = all_traits_data[primary_trait["trait_name"]]
     primary_samples, primary_values, _primary_variances = export_informative(
