@@ -19,15 +19,6 @@ def compute_pca(matrix):
     }
 
 
-def compute_zscores(nums: list, axis: int = 0, ddof: int = 0) -> list:
-
-    nums_array = numpy.array(nums)
-
-    zscores = stats.zscore(nums_array, axis=axis, ddof=ddof)
-
-    return list(zscores)
-
-
 def generate_scree_plot_data(variance_ratio):
 
     perc_var = np.round(variance_ratio*100, decimals=1)
