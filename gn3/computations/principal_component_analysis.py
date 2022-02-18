@@ -36,4 +36,19 @@ def generate_scree_plot_data(variance_ratio):
 
     y_coordinates = np.round(pca_obj.explained_variance_ratio_*100, decimals=1)
 
-    return list(zip(x_coordinates, y_coordinates)
+    return list(zip(x_coordinates, y_coordinates))
+
+
+def generate_pca_traits_data(trait_data_array: list, corr_matrix):
+    """function generates new pca traits data from
+    zscores and eigen vectors"""
+
+    (corr_eigen_vectors, _eigen_values) = np.linalg.eig(np.array(trait_data_array))
+
+    # sort the above
+
+    trait_zscores = stats.zscore(trait_data_array)
+
+    pca_traits_values = np.dot(corr_eigen_vectors, trait_zscores)
+
+    return pca_trait_values
