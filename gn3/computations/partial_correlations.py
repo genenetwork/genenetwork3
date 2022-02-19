@@ -621,14 +621,19 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
             "status": "not-found",
             "message": f"Could not find primary trait {primary_trait['trait_fullname']}"
         }
+    cntrl_traits = tuple(
+        trait for trait in all_traits
+        if trait["trait_fullname"] != primary_trait_name)
+    if not any(trait["haveinfo"] for trait in cntrl_traits):
+        return {
+            "status": "not-found",
+            "message": "None of the requested control traits were found."}
+
     group = primary_trait["db"]["group"]
     primary_trait_data = all_traits_data[primary_trait["trait_name"]]
     primary_samples, primary_values, _primary_variances = export_informative(
         primary_trait_data)
 
-    cntrl_traits = tuple(
-        trait for trait in all_traits
-        if trait["trait_fullname"] != primary_trait_name)
     cntrl_traits_data = tuple(
         data for trait_name, data in all_traits_data.items()
         if trait_name != primary_trait["trait_name"])

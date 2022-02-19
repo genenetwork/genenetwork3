@@ -197,13 +197,14 @@ def geno_traits_data(conn, traits):
         "AND GenoXRef.DataId = GenoData.Id "
         "AND GenoData.StrainId = Strain.Id "
         "ORDER BY Strain.Name").format(
-            species_ids=sp_ids,
+            species_ids=", ".join(["%s"] * len(sp_ids)),
             trait_names=", ".join(["%s"] * len(traits)),
             dataset_names=", ".join(["%s"] * len(dataset_names)))
     if len(sp_ids) > 0 and len(dataset_names) > 0:
         with conn.cursor(cursorclass=DictCursor) as cursor:
             cursor.execute(
                 query,
+                sp_ids +
                 tuple(trait["trait_name"] for trait in traits) +
                 tuple(dataset_names))
             return organise_trait_data_by_trait(cursor.fetchall())
