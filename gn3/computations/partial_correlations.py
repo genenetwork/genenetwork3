@@ -628,6 +628,12 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
         return {
             "status": "not-found",
             "message": "None of the requested control traits were found."}
+    for trait in cntrl_traits:
+        if trait["haveinfo"] == False:
+            warnings.warn(
+                (f"Control traits {trait['trait_fullname']} was not found "
+                 "- continuing without it."),
+                category=UserWarning)
 
     group = primary_trait["db"]["group"]
     primary_trait_data = all_traits_data[primary_trait["trait_name"]]

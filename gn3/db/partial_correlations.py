@@ -347,10 +347,11 @@ def probeset_traits_info(
         "probe_set_note_by_rw", "flag")
     query = (
         "SELECT ProbeSet.Name AS trait_name, {columns} "
-        "FROM ProbeSet, ProbeSetFreeze, ProbeSetXRef "
-        "WHERE ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id "
-        "AND ProbeSetXRef.ProbeSetId = ProbeSet.Id "
-        "AND ProbeSetFreeze.Name IN ({dataset_names}) "
+        "FROM ProbeSet INNER JOIN ProbeSetXRef "
+        "ON ProbeSetXRef.ProbeSetId = ProbeSet.Id "
+        "INNER JOIN ProbeSetFreeze "
+        "ON ProbeSetFreeze.Id = ProbeSetXRef.ProbeSetFreezeId "
+        "WHERE ProbeSetFreeze.Name IN ({dataset_names}) "
         "AND ProbeSet.Name IN ({trait_names})").format(
             columns=", ".join(["ProbeSet.{}".format(x) for x in keys]),
             dataset_names=", ".join(["%s"] * len(dataset_names)),
@@ -376,11 +377,10 @@ def geno_traits_info(
         "SELECT "
         "Geno.Name AS trait_name, {columns} "
         "FROM "
-        "Geno, GenoFreeze, GenoXRef "
-        "WHERE "
-        "GenoXRef.GenoFreezeId = GenoFreeze.Id AND GenoXRef.GenoId = Geno.Id AND "
-        "GenoFreeze.Name IN ({dataset_names}) AND "
-        "Geno.Name IN ({trait_names})").format(
+        "Geno INNER JOIN GenoXRef ON GenoXRef.GenoId = Geno.Id "
+        "INNER JOIN GenoFreeze ON GenoFreeze.Id = GenoXRef.GenoFreezeId "
+        "WHERE GenoFreeze.Name IN ({dataset_names}) "
+        "AND Geno.Name IN ({trait_names})").format(
             columns=", ".join(["Geno.{}".format(x) for x in keys]),
             dataset_names=", ".join(["%s"] * len(dataset_names)),
             trait_names=", ".join(["%s"] * len(traits)))

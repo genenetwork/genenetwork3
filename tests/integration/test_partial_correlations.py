@@ -1,7 +1,7 @@
 """Test partial correlations"""
 import pytest
 
-from tests.integration.conftest import client
+from gn3.computations.partial_correlations import partial_correlations_entry
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize(
@@ -176,3 +176,42 @@ def test_partial_correlation_api_with_non_existent_control_traits(client, post_d
     assert (
         response.status_code == 404 and response.is_json and
         response.json.get("status") != "error")
+
+@pytest.mark.integration_test
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "primary,controls,method,target", (
+        (# Probeset
+            "UCLA_BXDBXH_CARTILAGE_V2::ILM103710672", (
+                "UCLA_BXDBXH_CARTILAGE_V2::nonExisting01",
+                "UCLA_BXDBXH_CARTILAGE_V2::nonExisting02",
+                "UCLA_BXDBXH_CARTILAGE_V2::ILM380019"),
+            "Genetic Correlation, Pearson's r", "BXDPublish"),
+        (# Publish
+            "BXDPublish::17937", (
+                "BXDPublish::17940",
+                "BXDPublish::nonExisting03"),
+            "Genetic Correlation, Spearman's rho", "BXDPublish"),
+        (# Geno
+            "AKXDGeno::D4Mit16", (
+                "AKXDGeno::D1Mit170",
+                "AKXDGeno::nonExisting04",
+                "AKXDGeno::D1Mit135",
+                "AKXDGeno::nonExisting05",
+                "AKXDGeno::nonExisting06"),
+            "SGO Literature Correlation", "BXDPublish")
+    )
+    # Temp -- the data in the database for these is ephemeral, making it
+    #         difficult to test for these without a temp database with the temp
+    #         traits data set to something we are in control of
+     )
+def test_part_corr_api_with_mix_of_existing_and_non_existing_control_traits(
+        db_conn, primary, controls, method, target):
+    """
+    Check that calling the function with a mix of existing and missing control
+    traits raises an warning.
+    """
+    criteria = 10
+    with pytest.warns(UserWarning):
+        partial_correlations_entry(
+            db_conn, primary, controls, method, criteria, target)
