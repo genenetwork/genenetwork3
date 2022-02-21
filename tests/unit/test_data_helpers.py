@@ -37,7 +37,7 @@ class TestDataHelpers(TestCase):
                 (13, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
                  ((0, 1, 2, 3, 4, 5, 6, 7, 8, 9), ))):
             with self.subTest(n=count, items=items):
-                self.assertEqual(partition_all(count, items), expected)
+                self.assertEqual(tuple(partition_all(count, items)), expected)
 
     @pytest.mark.unit_test
     def test_parse_csv_line(self):

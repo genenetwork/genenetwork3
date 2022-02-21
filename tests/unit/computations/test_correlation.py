@@ -1,10 +1,10 @@
 """Module contains the tests for correlation"""
+import math
 from unittest import TestCase
 from unittest import mock
+from collections import namedtuple
 
 import pytest
-from collections import namedtuple
-import math
 from numpy.testing import assert_almost_equal
 
 from gn3.computations.correlations import normalize_values
@@ -58,12 +58,12 @@ class DataBase(QueryableMixin):
         """expects the expectede results value to be an array"""
         self.password = password
         self.db_name = db_name
-        self.__query_options = None
+        self.__query_options = None # pylint: disable=[W0238]
         self.results_generator(expected_results)
 
     def execute(self, query_options):
         """method to execute an sql query"""
-        self.__query_options = query_options
+        self.__query_options = query_options # pylint: disable=[W0238]
         return 1
 
     def cursor(self):

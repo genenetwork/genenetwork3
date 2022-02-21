@@ -27,7 +27,7 @@ def generate_traits_file(samples, trait_values, traits_filename):
         ["{}\t{}".format(
             len(trait_values), "\t".join([str(i) for i in t]))
          for t in trait_values[-1:]])
-    with open(traits_filename, "w") as outfile:
+    with open(traits_filename, "w", encoding="utf8") as outfile:
         outfile.writelines(data)
 
 def create_output_directory(path: str):
@@ -68,13 +68,13 @@ def run_reaper(
     The function will raise a `subprocess.CalledProcessError` exception in case
     of any errors running the `qtlreaper` command.
     """
-    create_output_directory("{}/qtlreaper".format(output_dir))
-    output_filename = "{}/qtlreaper/main_output_{}.txt".format(
-        output_dir, random_string(10))
+    create_output_directory(f"{output_dir}/qtlreaper")
+    output_filename = (
+        f"{output_dir}/qtlreaper/main_output_{random_string(10)}.txt")
     output_list = ["--main_output", output_filename]
     if separate_nperm_output:
-        permu_output_filename: Union[None, str] = "{}/qtlreaper/permu_output_{}.txt".format(
-            output_dir, random_string(10))
+        permu_output_filename: Union[None, str] = (
+            f"{output_dir}/qtlreaper/permu_output_{random_string(10)}.txt")
         output_list = output_list + [
             "--permu_output", permu_output_filename] # type: ignore[list-item]
     else:
@@ -135,7 +135,7 @@ def parse_reaper_main_results(results_file):
     """
     Parse the results file of running QTLReaper into a list of dicts.
     """
-    with open(results_file, "r") as infile:
+    with open(results_file, "r", encoding="utf8") as infile:
         lines = infile.readlines()
 
     def __parse_column_float_value(value):
@@ -164,7 +164,7 @@ def parse_reaper_permutation_results(results_file):
     """
     Parse the results QTLReaper permutations into a list of values.
     """
-    with open(results_file, "r") as infile:
+    with open(results_file, "r", encoding="utf8") as infile:
         lines = infile.readlines()
 
     return [float(line.strip()) for line in lines]

@@ -27,8 +27,7 @@ def clustered_heatmaps():
     conn, _cursor = database_connector()
     def parse_trait_fullname(trait):
         name_parts = trait.split(":")
-        return "{dataset_name}::{trait_name}".format(
-            dataset_name=name_parts[1], trait_name=name_parts[0])
+        return f"{name_parts[1]}::{name_parts[0]}"
     traits_fullnames = [parse_trait_fullname(trait) for trait in traits_names]
 
     with io.StringIO() as io_str:

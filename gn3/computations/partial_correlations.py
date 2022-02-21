@@ -141,7 +141,7 @@ def find_identical_traits(
         return acc + ident[1]
 
     def __dictify_controls__(acc, control_item):
-        ckey = tuple("{:.3f}".format(item) for item in control_item[0])
+        ckey = tuple("{item:.3f}" for item in control_item[0])
         return {**acc, ckey: acc.get(ckey, tuple()) + (control_item[1],)}
 
     return (reduce(## for identical control traits
@@ -181,8 +181,8 @@ def tissue_correlation(
     assert len(primary_trait_values) == len(target_trait_values), (
         "The lengths of the `primary_trait_values` and `target_trait_values` "
         "must be equal")
-    assert method in method_fns.keys(), (
-        "Method must be one of: {}".format(",".join(method_fns.keys())))
+    assert method in method_fns, (
+        "Method must be one of: {','.join(method_fns.keys())}")
 
     corr, pvalue = method_fns[method](primary_trait_values, target_trait_values)
     return (corr, pvalue)
@@ -241,7 +241,7 @@ def partial_correlations_fast(# pylint: disable=[R0913, R0914]
     function in GeneNetwork1.
     """
     assert method in ("spearman", "pearson")
-    with open(database_filename, "r") as dataset_file:
+    with open(database_filename, "r") as dataset_file: # pytest: disable=[W1514]
         dataset = tuple(dataset_file.readlines())
 
     good_dataset_samples = good_dataset_samples_indexes(
@@ -290,12 +290,15 @@ def build_data_frame(
     if isinstance(zdata[0], float):
         return x_y_df.join(pandas.DataFrame({"z": zdata}))
     interm_df = x_y_df.join(pandas.DataFrame(
-        {"z{}".format(i): val for i, val in enumerate(zdata)}))
+        {f"z{i}": val for i, val in enumerate(zdata)}))
     if interm_df.shape[1] == 3:
         return interm_df.rename(columns={"z0": "z"})
     return interm_df
 
 def compute_trait_info(primary_vals, control_vals, target, method):
+    """
+    Compute the correlation values for the given arguments.
+    """
     targ_vals = target[0]
     targ_name = target[1]
     primary = [
@@ -629,7 +632,7 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
             "status": "not-found",
             "message": "None of the requested control traits were found."}
     for trait in cntrl_traits:
-        if trait["haveinfo"] == False:
+        if trait["haveinfo"] is False:
             warnings.warn(
                 (f"Control traits {trait['trait_fullname']} was not found "
                  "- continuing without it."),

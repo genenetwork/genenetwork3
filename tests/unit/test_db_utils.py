@@ -2,9 +2,9 @@
 
 from unittest import TestCase
 from unittest import mock
+from types import SimpleNamespace
 
 import pytest
-from types import SimpleNamespace
 
 from gn3.db_utils import database_connector
 from gn3.db_utils import parse_db_url

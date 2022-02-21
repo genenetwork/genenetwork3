@@ -83,8 +83,7 @@ def retrieve_geno_trait_dataset_name(
             cursor.fetchone()))
 
 def retrieve_dataset_name(
-        trait_type: str, threshold: int, trait_name: str, dataset_name: str,
-        conn: Any):
+        trait_type: str, threshold: int, dataset_name: str, conn: Any):
     """
     Retrieve the name of a trait given the trait's name
 
@@ -184,7 +183,6 @@ def retrieve_temp_trait_dataset():
     """
     Retrieve the dataset that relates to `Temp` traits
     """
-    # pylint: disable=[C0330]
     return {
         "searchfield": ["name", "description"],
         "disfield": ["name", "description"],
@@ -198,7 +196,6 @@ def retrieve_geno_trait_dataset():
     """
     Retrieve the dataset that relates to `Geno` traits
     """
-    # pylint: disable=[C0330]
     return {
         "searchfield": ["name", "chr"],
 	"disfield": ["name", "chr", "mb", "source2", "sequence"],
@@ -209,7 +206,6 @@ def retrieve_publish_trait_dataset():
     """
     Retrieve the dataset that relates to `Publish` traits
     """
-    # pylint: disable=[C0330]
     return {
         "searchfield": [
             "name", "post_publication_description", "abstract", "title",
@@ -228,7 +224,6 @@ def retrieve_probeset_trait_dataset():
     """
     Retrieve the dataset that relates to `ProbeSet` traits
     """
-    # pylint: disable=[C0330]
     return {
         "searchfield": [
             "name", "description", "probe_target_description", "symbol",
@@ -259,8 +254,7 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
         "dataset_id": None,
         "dataset_name": trait["db"]["dataset_name"],
         **retrieve_dataset_name(
-            trait_type, threshold, trait["trait_name"],
-            trait["db"]["dataset_name"], conn)
+            trait_type, threshold, trait["db"]["dataset_name"], conn)
     }
     group = retrieve_group_fields(
         trait_type, trait["trait_name"], dataset_name_info, conn)

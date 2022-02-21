@@ -48,9 +48,8 @@ def temp_traits_data(conn, traits):
         "FROM TempData, Temp, Strain "
         "WHERE TempData.StrainId = Strain.Id "
         "AND TempData.Id = Temp.DataId "
-        "AND Temp.name IN ({}) "
-        "ORDER BY Strain.Name").format(
-            ", ".join(["%s"] * len(traits)))
+        "AND Temp.name IN ({', '.join(['%s'] * len(traits))}) "
+        "ORDER BY Strain.Name")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -79,12 +78,11 @@ def publish_traits_data(conn, traits):
         "AND NStrain.StrainId = PublishData.StrainId) "
         "WHERE PublishXRef.InbredSetId = PublishFreeze.InbredSetId "
         "AND PublishData.Id = PublishXRef.DataId "
-        "AND PublishXRef.Id  IN ({trait_names}) "
-        "AND PublishFreeze.Id IN ({dataset_ids}) "
+        f"AND PublishXRef.Id  IN ({', '.join(['%s'] * len(traits))}) "
+        "AND PublishFreeze.Id IN "
+        f"({', '.join(['%s'] * len(dataset_ids))}) "
         "AND PublishData.StrainId = Strain.Id "
-        "ORDER BY Strain.Name").format(
-            trait_names=", ".join(["%s"] * len(traits)),
-            dataset_ids=", ".join(["%s"] * len(dataset_ids)))
+        "ORDER BY Strain.Name")
     if len(dataset_ids) > 0:
         with conn.cursor(cursorclass=DictCursor) as cursor:
             cursor.execute(
@@ -109,19 +107,16 @@ def cellid_traits_data(conn, traits):
         "LEFT JOIN ProbeSE "
         "ON (ProbeSE.DataId = ProbeData.Id "
         "AND ProbeSE.StrainId = ProbeData.StrainId) "
-        "WHERE Probe.Name IN ({cellids}) "
-        "AND ProbeSet.Name IN ({trait_names}) "
+        f"WHERE Probe.Name IN ({', '.join(['%s'] * len(cellids))}) "
+        f"AND ProbeSet.Name IN ({', '.join(['%s'] * len(traits))}) "
         "AND Probe.ProbeSetId = ProbeSet.Id "
         "AND ProbeXRef.ProbeId = Probe.Id "
         "AND ProbeXRef.ProbeFreezeId = ProbeFreeze.Id "
         "AND ProbeSetFreeze.ProbeFreezeId = ProbeFreeze.Id "
-        "AND ProbeSetFreeze.Name IN ({dataset_names}) "
+        f"AND ProbeSetFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))}) "
         "AND ProbeXRef.DataId = ProbeData.Id "
         "AND ProbeData.StrainId = Strain.Id "
-        "ORDER BY Strain.Name").format(
-            cellids=", ".join(["%s"] * len(cellids)),
-            trait_names=", ".join(["%s"] * len(traits)),
-            dataset_names=", ".join(["%s"] * len(dataset_names)))
+        "ORDER BY Strain.Name")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -143,15 +138,13 @@ def probeset_traits_data(conn, traits):
         "LEFT JOIN ProbeSetSE ON "
         "(ProbeSetSE.DataId = ProbeSetData.Id "
         "AND ProbeSetSE.StrainId = ProbeSetData.StrainId) "
-        "WHERE ProbeSet.Name IN ({trait_names}) "
+        f"WHERE ProbeSet.Name IN ({', '.join(['%s'] * len(traits))})"
         "AND ProbeSetXRef.ProbeSetId = ProbeSet.Id "
         "AND ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id "
-        "AND ProbeSetFreeze.Name IN ({dataset_names}) "
+        f"AND ProbeSetFreeze.Name IN ({', '.join(['%s']*len(dataset_names))}) "
         "AND ProbeSetXRef.DataId = ProbeSetData.Id "
         "AND ProbeSetData.StrainId = Strain.Id "
-        "ORDER BY Strain.Name").format(
-            trait_names=", ".join(["%s"] * len(traits)),
-            dataset_names=", ".join(["%s"] * len(dataset_names)))
+        "ORDER BY Strain.Name")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -170,8 +163,7 @@ def species_ids(conn, traits):
     query = (
         "SELECT Name AS `group`, SpeciesId AS species_id "
         "FROM InbredSet "
-        "WHERE Name IN ({groups})").format(
-            groups=", ".join(["%s"] * len(groups)))
+        f"WHERE Name IN ({', '.join(['%s'] * len(groups))})")
     if len(groups) > 0:
         with conn.cursor(cursorclass=DictCursor) as cursor:
             cursor.execute(query, groups)
@@ -190,16 +182,14 @@ def geno_traits_data(conn, traits):
         "FROM (GenoData, GenoFreeze, Strain, Geno, GenoXRef) "
         "LEFT JOIN GenoSE ON "
         "(GenoSE.DataId = GenoData.Id AND GenoSE.StrainId = GenoData.StrainId) "
-        "WHERE Geno.SpeciesId IN ({species_ids}) "
-        "AND Geno.Name IN ({trait_names}) AND GenoXRef.GenoId = Geno.Id "
+        f"WHERE Geno.SpeciesId IN ({', '.join(['%s'] * len(sp_ids))}) "
+        f"AND Geno.Name IN ({', '.join(['%s'] * len(traits))}) "
+        "AND GenoXRef.GenoId = Geno.Id "
         "AND GenoXRef.GenoFreezeId = GenoFreeze.Id "
-        "AND GenoFreeze.Name IN ({dataset_names}) "
+        f"AND GenoFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))}) "
         "AND GenoXRef.DataId = GenoData.Id "
         "AND GenoData.StrainId = Strain.Id "
-        "ORDER BY Strain.Name").format(
-            species_ids=", ".join(["%s"] * len(sp_ids)),
-            trait_names=", ".join(["%s"] * len(traits)),
-            dataset_names=", ".join(["%s"] * len(dataset_names)))
+        "ORDER BY Strain.Name")
     if len(sp_ids) > 0 and len(dataset_names) > 0:
         with conn.cursor(cursorclass=DictCursor) as cursor:
             cursor.execute(
@@ -309,18 +299,16 @@ def publish_traits_info(
         "PublishXRef.Sequence, Phenotype.Units, PublishXRef.comments")
     query = (
         "SELECT "
-        "PublishXRef.Id AS trait_name, {columns} "
+        f"PublishXRef.Id AS trait_name, {columns} "
         "FROM "
         "PublishXRef, Publication, Phenotype, PublishFreeze "
         "WHERE "
-        "PublishXRef.Id IN ({trait_names}) "
+        f"PublishXRef.Id IN ({', '.join(['%s'] * len(traits))}) "
         "AND Phenotype.Id = PublishXRef.PhenotypeId "
         "AND Publication.Id = PublishXRef.PublicationId "
         "AND PublishXRef.InbredSetId = PublishFreeze.InbredSetId "
-        "AND PublishFreeze.Id IN ({trait_dataset_ids})").format(
-            columns=columns,
-            trait_names=", ".join(["%s"] * len(traits)),
-            trait_dataset_ids=", ".join(["%s"] * len(trait_dataset_ids)))
+        "AND PublishFreeze.Id IN "
+        f"({', '.join(['%s'] * len(trait_dataset_ids))})")
     if trait_dataset_ids:
         with conn.cursor(cursorclass=DictCursor) as cursor:
             cursor.execute(
@@ -337,25 +325,24 @@ def probeset_traits_info(
     Retrieve information for the probeset traits
     """
     dataset_names = set(trait["db"]["dataset_name"] for trait in traits)
-    keys = (
-        "name", "symbol", "description", "probe_target_description", "chr",
-        "mb", "alias", "geneid", "genbankid", "unigeneid", "omim",
-        "refseq_transcriptid", "blatseq", "targetseq", "chipid", "comments",
-        "strand_probe", "strand_gene", "probe_set_target_region", "proteinid",
-        "probe_set_specificity", "probe_set_blat_score",
-        "probe_set_blat_mb_start", "probe_set_blat_mb_end", "probe_set_strand",
-        "probe_set_note_by_rw", "flag")
+    columns = ", ".join(
+        [f"ProbeSet.{x}" for x in
+         ("name", "symbol", "description", "probe_target_description", "chr",
+          "mb", "alias", "geneid", "genbankid", "unigeneid", "omim",
+          "refseq_transcriptid", "blatseq", "targetseq", "chipid", "comments",
+          "strand_probe", "strand_gene", "probe_set_target_region", "proteinid",
+          "probe_set_specificity", "probe_set_blat_score",
+          "probe_set_blat_mb_start", "probe_set_blat_mb_end",
+          "probe_set_strand", "probe_set_note_by_rw", "flag")])
     query = (
-        "SELECT ProbeSet.Name AS trait_name, {columns} "
+        f"SELECT ProbeSet.Name AS trait_name, {columns} "
         "FROM ProbeSet INNER JOIN ProbeSetXRef "
         "ON ProbeSetXRef.ProbeSetId = ProbeSet.Id "
         "INNER JOIN ProbeSetFreeze "
         "ON ProbeSetFreeze.Id = ProbeSetXRef.ProbeSetFreezeId "
-        "WHERE ProbeSetFreeze.Name IN ({dataset_names}) "
-        "AND ProbeSet.Name IN ({trait_names})").format(
-            columns=", ".join(["ProbeSet.{}".format(x) for x in keys]),
-            dataset_names=", ".join(["%s"] * len(dataset_names)),
-            trait_names=", ".join(["%s"] * len(traits)))
+        "WHERE ProbeSetFreeze.Name IN "
+        f"({', '.join(['%s'] * len(dataset_names))}) "
+        f"AND ProbeSet.Name IN ({', '.join(['%s'] * len(traits))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -372,18 +359,16 @@ def geno_traits_info(
     This is a rework of the `gn3.db.traits.retrieve_geno_trait_info` function.
     """
     dataset_names = set(trait["db"]["dataset_name"] for trait in traits)
-    keys = ("name", "chr", "mb", "source2", "sequence")
+    columns = ", ".join([
+        f"Geno.{x}" for x in ("name", "chr", "mb", "source2", "sequence")])
     query = (
         "SELECT "
-        "Geno.Name AS trait_name, {columns} "
+        f"Geno.Name AS trait_name, {columns} "
         "FROM "
         "Geno INNER JOIN GenoXRef ON GenoXRef.GenoId = Geno.Id "
         "INNER JOIN GenoFreeze ON GenoFreeze.Id = GenoXRef.GenoFreezeId "
-        "WHERE GenoFreeze.Name IN ({dataset_names}) "
-        "AND Geno.Name IN ({trait_names})").format(
-            columns=", ".join(["Geno.{}".format(x) for x in keys]),
-            dataset_names=", ".join(["%s"] * len(dataset_names)),
-            trait_names=", ".join(["%s"] * len(traits)))
+        f"WHERE GenoFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))}) "
+        f"AND Geno.Name IN ({', '.join(['%s'] * len(traits))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -399,12 +384,9 @@ def temp_traits_info(
 
     A rework of the `gn3.db.traits.retrieve_temp_trait_info` function.
     """
-    keys = ("name", "description")
     query = (
-        "SELECT Name as trait_name, {columns} FROM Temp "
-        "WHERE Name = ({trait_names})").format(
-            columns=", ".join(keys),
-            trait_names=", ".join(["%s"] * len(traits)))
+        "SELECT Name as trait_name, name, description FROM Temp "
+        "WHERE Name IN ({', '.join(['%s'] * len(traits))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -468,8 +450,7 @@ def publish_datasets_groups(conn: Any, dataset_names: Tuple[str]):
         "InbredSet.Id "
         "FROM InbredSet, PublishFreeze "
         "WHERE PublishFreeze.InbredSetId = InbredSet.Id "
-        "AND PublishFreeze.Name IN ({dataset_names})").format(
-            dataset_names=", ".join(["%s"] * len(dataset_names)))
+        "AND PublishFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())
@@ -519,8 +500,7 @@ def probeset_datasets_groups(conn, dataset_names):
         "FROM InbredSet, ProbeSetFreeze, ProbeFreeze "
         "WHERE ProbeFreeze.InbredSetId = InbredSet.Id "
         "AND ProbeFreeze.Id = ProbeSetFreeze.ProbeFreezeId "
-        "AND ProbeSetFreeze.Name IN ({names})").format(
-            names=", ".join(["%s"] * len(dataset_names)))
+        "AND ProbeSetFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())
@@ -567,8 +547,7 @@ def geno_datasets_groups(conn, dataset_names):
         "SELECT GenoFreeze.Name AS dataset_name, InbredSet.Name, InbredSet.Id "
         "FROM InbredSet, GenoFreeze "
         "WHERE GenoFreeze.InbredSetId = InbredSet.Id "
-        "AND GenoFreeze.Name IN ({names})").format(
-            names=", ".join(["%s"] * len(dataset_names)))
+        "AND GenoFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())
@@ -596,14 +575,13 @@ def temp_datasets_groups(conn, dataset_names):
         "SELECT Temp.Name AS dataset_name, InbredSet.Name, InbredSet.Id "
         "FROM InbredSet, Temp "
         "WHERE Temp.InbredSetId = InbredSet.Id "
-        "AND Temp.Name IN ({names})").format(
-            names=", ".join(["%s"] * len(dataset_names)))
+        "AND Temp.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())
     return {}
 
-def temp_traits_datasets(conn: Any, threshold: int, traits: Tuple[Dict]):
+def temp_traits_datasets(conn: Any, threshold: int, traits: Tuple[Dict]): #pylint: disable=[W0613]
     """
     Retrieve datasets for 'Temp' traits.
     """
@@ -657,11 +635,9 @@ def set_publish_qtl_info(conn, qtl, traits):
             "SELECT PublishXRef.Id AS trait_name, PublishXRef.Locus, "
             "PublishXRef.LRS, PublishXRef.additive "
             "FROM PublishXRef, PublishFreeze "
-            "WHERE PublishXRef.Id IN ({trait_names}) "
+            f"WHERE PublishXRef.Id IN ({', '.join(['%s'] * len(traits))}) "
             "AND PublishXRef.InbredSetId = PublishFreeze.InbredSetId "
-            "AND PublishFreeze.Id IN ({dataset_ids})").format(
-                trait_names=", ".join(["%s"] * len(traits)),
-                dataset_ids=", ".join(["%s"] * len(dataset_ids)))
+            f"AND PublishFreeze.Id IN ({', '.join(['%s'] * len(dataset_ids))})")
         return query_qtl_info(conn, query, traits, tuple(dataset_ids))
     return traits
 
@@ -677,10 +653,9 @@ def set_probeset_qtl_info(conn, qtl, traits):
             "ProbeSetXRef.mean, ProbeSetXRef.additive "
             "FROM ProbeSetXRef, ProbeSet "
             "WHERE ProbeSetXRef.ProbeSetId = ProbeSet.Id "
-            " AND ProbeSet.Name IN ({trait_names}) "
-            "AND ProbeSetXRef.ProbeSetFreezeId IN ({dataset_ids})").format(
-                trait_names=", ".join(["%s"] * len(traits)),
-                dataset_ids=", ".join(["%s"] * len(dataset_ids)))
+            f"AND ProbeSet.Name IN ({', '.join(['%s'] * len(traits))}) "
+            "AND ProbeSetXRef.ProbeSetFreezeId IN "
+            f"({', '.join(['%s'] * len(dataset_ids))})")
         return query_qtl_info(conn, query, traits, tuple(dataset_ids))
     return traits
 
@@ -694,10 +669,8 @@ def set_sequence(conn, traits):
         "FROM ProbeSet, ProbeSetFreeze, ProbeSetXRef "
         "WHERE ProbeSet.Id=ProbeSetXRef.ProbeSetId "
         "AND ProbeSetFreeze.Id = ProbeSetXRef.ProbeSetFreezeId "
-        "AND ProbeSet.Name IN ({trait_names}) "
-        "AND ProbeSetFreeze.Name IN ({dataset_names})").format(
-            trait_names=", ".join(["%s"] * len(traits)),
-            dataset_names=", ".join(["%s"] * len(dataset_names)))
+        f"AND ProbeSet.Name IN ({', '.join(['%s'] * len(traits))}) "
+        f"AND ProbeSetFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -727,12 +700,10 @@ def set_homologene_id(conn, traits):
             "SELECT InbredSet.Name AS `group`, Homologene.GeneId AS geneid, "
             "HomologeneId "
             "FROM Homologene, Species, InbredSet "
-            "WHERE Homologene.GeneId IN ({geneids}) "
-            "AND InbredSet.Name IN ({groups}) "
+            f"WHERE Homologene.GeneId IN ({', '.join(['%s'] * len(geneids))}) "
+            f"AND InbredSet.Name IN ({', '.join(['%s'] * len(groups))}) "
             "AND InbredSet.SpeciesId = Species.Id "
-            "AND Species.TaxonomyId = Homologene.TaxonomyId").format(
-                geneids=", ".join(["%s"] * len(geneids)),
-                groups=", ".join(["%s"] * len(groups)))
+            "AND Species.TaxonomyId = Homologene.TaxonomyId")
         with conn.cursor(cursorclass=DictCursor) as cursor:
             cursor.execute(query, (tuple(geneids) + tuple(groups)))
             results = {

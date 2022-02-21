@@ -1,7 +1,11 @@
+"""Property tests for `gn3.computations.partial_correlations.dictify_by_samples`
+ function"""
 from math import isnan
-import pytest
 from collections.abc import Sequence
+
+import pytest
 from hypothesis import given, strategies as st
+
 from gn3.computations.partial_correlations import dictify_by_samples
 
 
@@ -53,22 +57,22 @@ def check_values(samples, values, variances, row):
         for smp, val, var in zip(samples, values, variances)
         if smp != "")
 
-non_empty_samples = st.lists(
+generated_non_empty_samples = st.lists(
     st.text(min_size=1, max_size=15).map(
         lambda s: s.strip()))
-empty_samples = st.text(
+generated_empty_samples = st.text(
     alphabet=" \t\n\r\f\v", min_size=1, max_size=15).filter(
         lambda s: len(s.strip()) == 0)
-values = st.lists(st.floats())
-variances = st.lists(st.one_of(st.none(), st.floats()))
-other = st.lists(st.integers())
+generated_values = st.lists(st.floats())
+generated_variances = st.lists(st.one_of(st.none(), st.floats()))
+generated_other = st.lists(st.integers())
 
 @pytest.mark.unit_test
 @given(svv=st.tuples(
-    st.lists(non_empty_samples),
-    st.lists(values),
-    st.lists(variances),
-    st.lists(other)))
+    st.lists(generated_non_empty_samples),
+    st.lists(generated_values),
+    st.lists(generated_variances),
+    st.lists(generated_other)))
 def test_dictifify_by_samples_with_nonempty_samples_strings(svv):
     """
     Test for `dictify_by_samples`.
@@ -94,7 +98,7 @@ def test_dictifify_by_samples_with_nonempty_samples_strings(svv):
 @pytest.mark.unit_test
 @given(svv=st.tuples(
     st.lists(
-        st.lists(empty_samples,min_size=1),
+        st.lists(generated_empty_samples,min_size=1),
         min_size=1),
     st.lists(st.lists(st.floats(), min_size=1), min_size=1),
     st.lists(

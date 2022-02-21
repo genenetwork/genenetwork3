@@ -42,7 +42,7 @@ def query_executor(query: str,
 def fetch_probeset_query(dataset_name: str):
     """contains queries for datasets"""
 
-    query = """SELECT * from ProbeSetData
+    query = f"""SELECT * from ProbeSetData
             where StrainID in (4, 5, 6, 7, 8, 9, 10, 11, 12,
             14, 15, 17, 18, 19, 20, 21, 22, 24, 25, 26, 28,
              29, 30, 31, 35, 36, 37, 39, 98, 99, 100, 103,
@@ -53,8 +53,8 @@ def fetch_probeset_query(dataset_name: str):
             and id in (SELECT ProbeSetXRef.DataId
             FROM (ProbeSet, ProbeSetXRef, ProbeSetFreeze)
             WHERE ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id
-            and ProbeSetFreeze.Name = '{}'
-            and ProbeSet.Id = ProbeSetXRef.ProbeSetId)""".format(dataset_name)
+            and ProbeSetFreeze.Name = '{dataset_name}'
+            and ProbeSet.Id = ProbeSetXRef.ProbeSetId)"""
 
     return query
 

@@ -92,7 +92,8 @@ extracting the file"""
         test_dir = "/tmp/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc-test"
         if not os.path.exists(test_dir):
             os.mkdir(test_dir)
-        open(f"{test_dir}/genotype.txt", "a").close()
+        with open(f"{test_dir}/genotype.txt", "a", encoding="utf8"):
+            pass
         file_loc = cache_ipfs_file(
             ipfs_file=("/ipfs/"
                        "QmQPeNsJPyVWPFDVHb"

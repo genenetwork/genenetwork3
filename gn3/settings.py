@@ -27,11 +27,11 @@ GN2_BASE_URL = "http://www.genenetwork.org/"
 # wgcna script
 WGCNA_RSCRIPT = "wgcna_analysis.R"
 # qtlreaper command
-REAPER_COMMAND = "{}/bin/qtlreaper".format(os.environ.get("GUIX_ENVIRONMENT"))
+REAPER_COMMAND = f"{os.environ.get('GUIX_ENVIRONMENT')}/bin/qtlreaper"
 
 # genotype files
 GENOTYPE_FILES = os.environ.get(
-    "GENOTYPE_FILES", "{}/genotype_files/genotype".format(os.environ.get("HOME")))
+    "GENOTYPE_FILES", f"{os.environ.get('HOME')}/genotype_files/genotype")
 
 # CROSS-ORIGIN SETUP
 def parse_env_cors(default):

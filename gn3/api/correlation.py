@@ -1,9 +1,10 @@
 """Endpoints for running correlations"""
 import json
+from functools import reduce
+
 from flask import jsonify
 from flask import Blueprint
 from flask import request
-from functools import reduce
 from flask import make_response
 
 from gn3.computations.correlations import compute_all_sample_correlation
