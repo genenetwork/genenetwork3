@@ -48,7 +48,7 @@ def temp_traits_data(conn, traits):
         "FROM TempData, Temp, Strain "
         "WHERE TempData.StrainId = Strain.Id "
         "AND TempData.Id = Temp.DataId "
-        "AND Temp.name IN ({', '.join(['%s'] * len(traits))}) "
+        f"AND Temp.name IN ({', '.join(['%s'] * len(traits))}) "
         "ORDER BY Strain.Name")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
@@ -386,7 +386,7 @@ def temp_traits_info(
     """
     query = (
         "SELECT Name as trait_name, name, description FROM Temp "
-        "WHERE Name IN ({', '.join(['%s'] * len(traits))})")
+        f"WHERE Name IN ({', '.join(['%s'] * len(traits))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query,
@@ -450,7 +450,7 @@ def publish_datasets_groups(conn: Any, dataset_names: Tuple[str]):
         "InbredSet.Id "
         "FROM InbredSet, PublishFreeze "
         "WHERE PublishFreeze.InbredSetId = InbredSet.Id "
-        "AND PublishFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
+        f"AND PublishFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())
@@ -500,7 +500,7 @@ def probeset_datasets_groups(conn, dataset_names):
         "FROM InbredSet, ProbeSetFreeze, ProbeFreeze "
         "WHERE ProbeFreeze.InbredSetId = InbredSet.Id "
         "AND ProbeFreeze.Id = ProbeSetFreeze.ProbeFreezeId "
-        "AND ProbeSetFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
+        f"AND ProbeSetFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())
@@ -547,7 +547,7 @@ def geno_datasets_groups(conn, dataset_names):
         "SELECT GenoFreeze.Name AS dataset_name, InbredSet.Name, InbredSet.Id "
         "FROM InbredSet, GenoFreeze "
         "WHERE GenoFreeze.InbredSetId = InbredSet.Id "
-        "AND GenoFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
+        f"AND GenoFreeze.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())
@@ -575,7 +575,7 @@ def temp_datasets_groups(conn, dataset_names):
         "SELECT Temp.Name AS dataset_name, InbredSet.Name, InbredSet.Id "
         "FROM InbredSet, Temp "
         "WHERE Temp.InbredSetId = InbredSet.Id "
-        "AND Temp.Name IN ({', '.join(['%s'] * len(dataset_names))})")
+        f"AND Temp.Name IN ({', '.join(['%s'] * len(dataset_names))})")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(query, tuple(dataset_names))
         return organise_groups_by_dataset(cursor.fetchall())

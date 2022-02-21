@@ -402,7 +402,7 @@ def retrieve_probeset_trait_info(trait_data_source: Dict[str, Any], conn: Any):
         "probe_set_note_by_rw", "flag")
     columns = (f"ProbeSet.{x}" for x in keys)
     query = (
-        f"SELECT {','.join(columns)} "
+        f"SELECT {', '.join(columns)} "
         "FROM "
         "ProbeSet, ProbeSetFreeze, ProbeSetXRef "
         "WHERE "

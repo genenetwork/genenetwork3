@@ -137,11 +137,10 @@ class TestTraitsDBFunctions(TestCase):
                     "SELECT "
                     "Geno.name, Geno.chr, Geno.mb, Geno.source2, Geno.sequence "
                     "FROM "
-                    "Geno, GenoFreeze, GenoXRef "
+                    "Geno INNER JOIN GenoXRef ON GenoXRef.GenoId = Geno.Id "
+                    "INNER JOIN GenoFreeze ON GenoFreeze.Id = GenoXRef.GenoFreezeId "
                     "WHERE "
-                    "GenoXRef.GenoFreezeId = GenoFreeze.Id "
-                    "AND GenoXRef.GenoId = Geno.Id "
-                    "AND GenoFreeze.Name = %(trait_dataset_name)s "
+                    "GenoFreeze.Name = %(trait_dataset_name)s "
                     "AND Geno.Name = %(trait_name)s"),
                 trait_source)
 
@@ -232,20 +231,21 @@ class TestTraitsDBFunctions(TestCase):
                 error=2.3, count=2),
                              (1, 1, 1))
             cursor.execute.assert_has_calls(
-                [mock.call('SELECT Strain.Id, PublishData.Id FROM'
-                           ' (PublishData, Strain, PublishXRef, '
-                           'PublishFreeze) LEFT JOIN PublishSE ON '
-                           '(PublishSE.DataId = PublishData.Id '
-                           'AND PublishSE.StrainId = '
-                           'PublishData.StrainId) LEFT JOIN NStrain ON '
-                           '(NStrain.DataId = PublishData.Id AND '
-                           'NStrain.StrainId = PublishData.StrainId) WHERE '
-                           'PublishXRef.InbredSetId = '
-                           'PublishFreeze.InbredSetId AND PublishData.Id = '
-                           'PublishXRef.DataId AND PublishXRef.Id = 1 AND '
-                           'PublishXRef.PhenotypeId = 10 AND '
-                           'PublishData.StrainId = Strain.Id AND '
-                           'Strain.Name = "BXD11"'),
+                [mock.call(('SELECT Strain.Id, PublishData.Id FROM'
+                            ' (PublishData, Strain, PublishXRef, '
+                            'PublishFreeze) LEFT JOIN PublishSE ON '
+                            '(PublishSE.DataId = PublishData.Id '
+                            'AND PublishSE.StrainId = '
+                            'PublishData.StrainId) LEFT JOIN NStrain ON '
+                            '(NStrain.DataId = PublishData.Id AND '
+                            'NStrain.StrainId = PublishData.StrainId) WHERE '
+                            'PublishXRef.InbredSetId = '
+                            'PublishFreeze.InbredSetId AND PublishData.Id = '
+                            'PublishXRef.DataId AND PublishXRef.Id = %s AND '
+                            'PublishXRef.PhenotypeId = %s AND '
+                            'PublishData.StrainId = Strain.Id AND '
+                            'Strain.Name = %s'),
+                           ("1", 10, "BXD11")),
                  mock.call(PUBLISH_DATA_SQL, (18.7, 1, 1)),
                  mock.call(PUBLISH_SE_SQL, (2.3, 1, 1)),
                  mock.call(N_STRAIN_SQL, (2, 1, 1))]

@@ -141,7 +141,7 @@ def find_identical_traits(
         return acc + ident[1]
 
     def __dictify_controls__(acc, control_item):
-        ckey = tuple("{item:.3f}" for item in control_item[0])
+        ckey = tuple(f"{item:.3f}" for item in control_item[0])
         return {**acc, ckey: acc.get(ckey, tuple()) + (control_item[1],)}
 
     return (reduce(## for identical control traits
