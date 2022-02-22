@@ -1,6 +1,8 @@
 """module contains pca implementation using python"""
 
 import numpy
+import datetime
+
 from scipy import stats
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
@@ -57,11 +59,9 @@ def process_factor_loadings_tdata(factor_loadings, traits_list_num: int):
 def generate_pca_temp_dataset(species: str, group: str,
                               traits_data: list, dataset_samples, shared_samples):
 
-    pca_traits = generate_pca_traits_data(traits_data)
-
     pca_trait_dict = {}
 
-    for (idx, pca_trait) in generate_pca_traits(traits_data):
+    for (idx, pca_trait) in enumerate(generate_pca_traits_data(traits_data)):
         trait_id = f"PCA{str(idx+1)}-{species}{group}{datetime.datetime.now().strftime('%m%d%H%M%S')}"
         sample_vals = []
 
@@ -74,7 +74,7 @@ def generate_pca_temp_dataset(species: str, group: str,
 
             else:
                 sample_vals.append("x")
-        sample_vals = " ".join(sample_vals)
+        sample_vals = " ".join(str(sample_vals))
 
         pca_trait_dict[trait_id] = sample_vals
 
