@@ -84,7 +84,7 @@ def get_trait_csv_sample_data(conn: Any,
     """Fetch a trait and return it as a csv string"""
     __query = ("SELECT concat(st.Name, ',', ifnull(pd.value, 'x'), ',', "
                "ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) as 'Data' "
-               "ifnull(ca.Name, 'x') as 'CaseAttr', "
+               ",ifnull(ca.Name, 'x') as 'CaseAttr', "
                "ifnull(cxref.value, 'x') as 'Value' "
                "FROM PublishFreeze pf "
                "JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId "
@@ -97,7 +97,7 @@ def get_trait_csv_sample_data(conn: Any,
                "LEFT JOIN CaseAttributeXRefNew cxref ON "
                "(cxref.InbredSetId = px.InbredSetId AND "
                "cxref.StrainId = st.Id) "
-               "LEFT JOIN CaseAttribute ca ON ca.Id = cxref.CaseAttributeId"
+               "LEFT JOIN CaseAttribute ca ON ca.Id = cxref.CaseAttributeId "
                "WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name")
     case_attr_columns = set()
     csv_data = {}
