@@ -3,19 +3,20 @@
 import numpy
 from scipy import stats
 from sklearn.decomposition import PCA
+from sklearn import preprocessing
 
 
 def compute_pca(matrix):
 
-    pca = PCA()
+    pca_obj = PCA()
     scaled_data = preprocessing.scale(matrix)
 
-    pca.fit(scaled_data)
+    pca_obj.fit(scaled_data)
 
     return {
-        "pca": pca
+        "pca": pca_obj,
         "components": pca_obj.components_,
-        "scores": pca.transform(scaled_data)
+        "scores": pca_obj.transform(scaled_data)
     }
 
 
@@ -25,9 +26,7 @@ def generate_scree_plot_data(variance_ratio):
 
     x_coordinates = [f"PC{val}" for val in range(1, len(perc_var)+1)]
 
-    y_coordinates = np.round(pca_obj.explained_variance_ratio_*100, decimals=1)
-
-    return list(zip(x_coordinates, y_coordinates))
+    return list(zip(x_coordinates, perc_var))
 
 
 def generate_pca_traits_data(trait_data_array: list):
@@ -47,18 +46,18 @@ def generate_pca_traits_data(trait_data_array: list):
 
 def process_factor_loadings_tdata(factor_loadings, traits_list_num: int):
 
-    target_columns = 3 if trait_list_num > 2 else 2
+    target_columns = 3 if traits_list_num > 2 else 2
 
     trait_loadings = list(factor_loadings.T)
 
     return [list(trait_loading[:target_columns])
-            for trait_loading in traits_loadings]
+            for trait_loading in trait_loadings]
 
 
 def generate_pca_temp_dataset(species: str, group: str,
                               traits_data: list, dataset_samples, shared_samples):
 
-    pca_traits = generate_pca_traits_data()
+    pca_traits = generate_pca_traits_data(traits_data)
 
     pca_trait_dict = {}
 
