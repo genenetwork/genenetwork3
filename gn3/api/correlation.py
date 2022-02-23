@@ -1,17 +1,22 @@
 """Endpoints for running correlations"""
+import sys
 import json
 from functools import reduce
 
+import redis
 from flask import jsonify
 from flask import Blueprint
 from flask import request
-from flask import make_response
+from flask import current_app
 
-from gn3.computations.correlations import compute_all_sample_correlation
-from gn3.computations.correlations import compute_all_lit_correlation
-from gn3.computations.correlations import compute_tissue_correlation
-from gn3.computations.correlations import map_shared_keys_to_values
+from gn3.settings import SQL_URI
+from gn3.commands import queue_cmd, compose_pcorrs_command
 from gn3.db_utils import database_connector
+from gn3.responses.pcorrs_responses import build_response
+from gn3.computations.correlations import map_shared_keys_to_values
+from gn3.computations.correlations import compute_tissue_correlation
+from gn3.computations.correlations import compute_all_lit_correlation
+from gn3.computations.correlations import compute_all_sample_correlation
 from gn3.computations.partial_correlations import partial_correlations_entry
 
 correlation = Blueprint("correlation", __name__)
@@ -93,7 +98,7 @@ def compute_tissue_corr(corr_method="pearson"):
 def partial_correlation():
     """API endpoint for partial correlations."""
     def trait_fullname(trait):
-        return f"{trait['dataset']}::{trait['name']}"
+        return f"{trait['dataset']}::{trait['trait_name']}"
 
     def __field_errors__(args):
         def __check__(acc, field):
@@ -107,37 +112,29 @@ def partial_correlation():
         if request_data is None:
             return ("No request data",)
 
-        return reduce(__field_errors__(args), fields, errors)
+        return reduce(__field_errors__(request_data), fields, errors)
 
-    class OutputEncoder(json.JSONEncoder):
-        """
-        Class to encode output into JSON, for objects which the default
-        json.JSONEncoder class does not have default encoding for.
-        """
-        def default(self, o):
-            if isinstance(o, bytes):
-                return str(o, encoding="utf-8")
-            return json.JSONEncoder.default(self, o)
-
-    def __build_response__(data):
-        status_codes = {"error": 400, "not-found": 404, "success": 200}
-        response = make_response(
-            json.dumps(data, cls=OutputEncoder),
-            status_codes[data["status"]])
-        response.headers["Content-Type"] = "application/json"
-        return response
-
-    args = request.get_json()
+    args = json.loads(request.get_json())
     request_errors = __errors__(
         args, ("primary_trait", "control_traits", "target_db", "method"))
     if request_errors:
-        return __build_response__({
+        return build_response({
             "status": "error",
             "messages": request_errors,
             "error_type": "Client Error"})
-    conn, _cursor_object = database_connector()
-    corr_results = partial_correlations_entry(
-        conn, trait_fullname(args["primary_trait"]),
-        tuple(trait_fullname(trait) for trait in args["control_traits"]),
-        args["method"], int(args.get("criteria", 500)), args["target_db"])
-    return __build_response__(corr_results)
+    return build_response({
+        "status": "success",
+        "results": queue_cmd(
+            conn=redis.Redis(),
+            cmd=compose_pcorrs_command(
+                trait_fullname(args["primary_trait"]),
+                tuple(
+                    trait_fullname(trait) for trait in args["control_traits"]),
+                args["method"], args["target_db"],
+                int(args.get("criteria", 500))),
+            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+            env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})})
+
+@correlation.route("/partial/<job_id>", methods=["GET"])
+def partial_correlation_results():
+    raise Exception("Not implemented!!")

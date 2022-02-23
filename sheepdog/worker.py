@@ -5,9 +5,12 @@ import time
 import redis
 import redis.connection
 
-# Enable importing from one dir up since gn3 isn't installed as a globally
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Enable importing from one dir up: put as first to override any other globally
+# accessible GN3
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+def update_status(conn, cmd_id, status):
+    conn.hset(name=f"{cmd_id}", key="status", value=f"{status}")
 
 def run_jobs(conn):
     """Process the redis using a redis connection, CONN"""
@@ -17,13 +20,14 @@ def run_jobs(conn):
     if bool(cmd_id):
         cmd = conn.hget(name=cmd_id, key="cmd")
         if cmd and (conn.hget(cmd_id, "status") == b"queued"):
-            result = run_cmd(cmd.decode("utf-8"))
+            update_status(conn, cmd_id, "running")
+            result = run_cmd(
+                cmd.decode("utf-8"), env=conn.hget(name=cmd_id, key="env"))
             conn.hset(name=cmd_id, key="result", value=result.get("output"))
             if result.get("code") == 0:  # Success
-                conn.hset(name=cmd_id, key="status", value="success")
+                update_status(conn, cmd_id, "success")
             else:
-                conn.hset(name=cmd_id, key="status", value="error")
-
+                update_status(conn, cmd_id, "error")
 
 if __name__ == "__main__":
     redis_conn = redis.Redis()
