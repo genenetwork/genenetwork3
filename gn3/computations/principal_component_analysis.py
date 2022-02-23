@@ -57,12 +57,13 @@ def process_factor_loadings_tdata(factor_loadings, traits_list_num: int):
 
 
 def generate_pca_temp_dataset(species: str, group: str,
-                              traits_data: list, dataset_samples, shared_samples):
+                              traits_data: list, dataset_samples: list,
+                              shared_samples: list, str_datetime: list):
 
     pca_trait_dict = {}
 
     for (idx, pca_trait) in enumerate(generate_pca_traits_data(traits_data)):
-        trait_id = f"PCA{str(idx+1)}-{species}{group}{datetime.datetime.now().strftime('%m%d%H%M%S')}"
+        trait_id = f"PCA{str(idx+1)}-{species}{group}{str_datetime}"
         sample_vals = []
 
         pointer = 0
