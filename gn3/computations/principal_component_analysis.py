@@ -75,8 +75,19 @@ def generate_pca_temp_dataset(species: str, group: str,
 
             else:
                 sample_vals.append("x")
-        sample_vals = " ".join(str(sample_vals))
 
         pca_trait_dict[trait_id] = sample_vals
 
     return pca_trait_dict
+
+
+def cache_pca_dataset(redis_conn, exp_days: int, pca_trait_dict: dict):
+
+    # store associative arrays python redis????
+
+    for trait_id, trait_sample_data in pca_trait_dict.items():
+
+        samples_str = " ".join([str(x) for x in trait_sample_data])
+        redis_conn.set(trait_id, samples_str, ex=exp_days)
+
+    return True
