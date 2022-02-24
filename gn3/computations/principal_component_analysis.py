@@ -13,10 +13,12 @@ from typing import TypedDict
 from typing import Callable
 
 
-def compute_pca(matrix) -> dict[str, Any]:
+def compute_pca(array: list[list[float]]) -> dict[str, Any]:
+
+    corr_matrix = np.matrix(array)
 
     pca_obj = PCA()
-    scaled_data = preprocessing.scale(matrix)
+    scaled_data = preprocessing.scale(corr_matrix)
 
     pca_obj.fit(scaled_data)
 
@@ -36,18 +38,22 @@ def generate_scree_plot_data(variance_ratio: list[float]) -> list[tuple[str, flo
     return list(zip(x_coordinates, perc_var))
 
 
-def generate_pca_traits_data(trait_data_array: list) ->list[list[Any]]:
+def generate_pca_traits_vals(trait_data_array: list,
+                             corr_array: list[list[float]]) -> list[list[Any]]:
     """function generates new pca traits data from
     zscores and eigen vectors"""
 
-    (corr_eigen_vectors, _eigen_values) = np.linalg.eig(np.array(trait_data_array))
+    (_eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
 
-    # sort the above
+    # sort the eigens
 
     trait_zscores = stats.zscore(trait_data_array)
 
-    pca_traits_values = np.dot(corr_eigen_vectors, trait_zscores)
+    if len(trait_data_array[0]) < 10:
 
+        trait_zscores = trait_data_array
+
+    pca_traits_values = np.dot(corr_eigen_vectors, trait_zscores)
     return pca_traits_values
 
 
