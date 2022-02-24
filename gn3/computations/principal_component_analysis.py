@@ -1,11 +1,19 @@
 """module contains pca implementation using python"""
 
-import numpy
+import numpy as np
+import numpy.typing as npt
+
+
 import datetime
 
 from scipy import stats
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
+
+from typing import Union
+from typing import Any
+from typing import TypedDict
+from typing import Callable
 
 
 def compute_pca(matrix):
@@ -22,7 +30,7 @@ def compute_pca(matrix):
     }
 
 
-def generate_scree_plot_data(variance_ratio):
+def generate_scree_plot_data(variance_ratio: list[float]) -> list[tuple[str, float]]:
 
     perc_var = np.round(variance_ratio*100, decimals=1)
 
@@ -31,7 +39,7 @@ def generate_scree_plot_data(variance_ratio):
     return list(zip(x_coordinates, perc_var))
 
 
-def generate_pca_traits_data(trait_data_array: list):
+def generate_pca_traits_data(trait_data_array: list) ->list[list[Any]]:
     """function generates new pca traits data from
     zscores and eigen vectors"""
 
@@ -43,12 +51,12 @@ def generate_pca_traits_data(trait_data_array: list):
 
     pca_traits_values = np.dot(corr_eigen_vectors, trait_zscores)
 
-    return pca_trait_values
+    return pca_traits_values
 
 
-def process_factor_loadings_tdata(factor_loadings, traits_list_num: int):
+def process_factor_loadings_tdata(factor_loadings, traits_num: int):
 
-    target_columns = 3 if traits_list_num > 2 else 2
+    target_columns = 3 if traits_num > 2 else 2
 
     trait_loadings = list(factor_loadings.T)
 
@@ -57,13 +65,13 @@ def process_factor_loadings_tdata(factor_loadings, traits_list_num: int):
 
 
 def generate_pca_temp_dataset(species: str, group: str,
-                              traits_data: list, dataset_samples: list,
-                              shared_samples: list, str_datetime: list):
+                              traits_data: list[float], dataset_samples: list[str],
+                              shared_samples: list[str], create_time: str) -> dict[str, list[Any]]:
 
     pca_trait_dict = {}
 
     for (idx, pca_trait) in enumerate(generate_pca_traits_data(traits_data)):
-        trait_id = f"PCA{str(idx+1)}-{species}{group}{str_datetime}"
+        trait_id = f"PCA{str(idx+1)}-{species}{group}{create_time}"
         sample_vals = []
 
         pointer = 0
@@ -81,7 +89,7 @@ def generate_pca_temp_dataset(species: str, group: str,
     return pca_trait_dict
 
 
-def cache_pca_dataset(redis_conn, exp_days: int, pca_trait_dict: dict):
+def cache_pca_dataset(redis_conn: Any, exp_days: int, pca_trait_dict: dict[str, list[Any]]):
 
     # store associative arrays python redis????
 
