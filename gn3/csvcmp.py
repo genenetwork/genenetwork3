@@ -16,11 +16,9 @@ def remove_insignificant_edits(diff_data, epsilon=0.001):
         original = mod.get("Original").split(",")
         current = mod.get("Current").split(",")
         for i, (x, y) in enumerate(zip(original, current)):
-            if all([
-                    x.replace('.', '').isdigit(),
-                    y.replace('.', '').isdigit(),
-                    abs(float(x) - float(y)) < epsilon,
-            ]):
+            if (x.replace('.', '').isdigit() and
+                y.replace('.', '').isdigit() and
+                    abs(float(x) - float(y)) < epsilon):
                 current[i] = x
         if not (__o := ",".join(original)) == (__c := ",".join(current)):
             _mod.append({
