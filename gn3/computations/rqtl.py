@@ -56,7 +56,7 @@ def process_rqtl_output(file_name: str) -> List:
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
     with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
-                           "output", file_name), "r") as the_file:
+                           "output", file_name), "r", encoding="utf-8") as the_file:
         for line in the_file:
             line_items = line.split(",")
             if line_items[1][1:-1] == "chr" or not line_items:
@@ -88,7 +88,7 @@ def process_perm_output(file_name: str):
     """
     perm_results = []
     with open(os.path.join(current_app.config.get("TMPDIR", "/tmp"),
-                           "output", "PERM_" + file_name), "r") as the_file:
+                           "output", "PERM_" + file_name), "r", encoding="utf-8") as the_file:
         for i, line in enumerate(the_file):
             if i == 0:
                 # Skip header line

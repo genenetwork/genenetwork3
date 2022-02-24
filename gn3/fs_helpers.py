@@ -41,7 +41,7 @@ def get_dir_hash(directory: str) -> str:
 
 def jsonfile_to_dict(json_file: str) -> Dict:
     """Give a JSON_FILE, return a python dict"""
-    with open(json_file) as _file:
+    with open(json_file, encoding="utf-8") as _file:
         data = json.load(_file)
         return data
     raise FileNotFoundError

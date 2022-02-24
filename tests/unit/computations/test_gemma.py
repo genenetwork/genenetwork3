@@ -22,7 +22,7 @@ class TestGemma(unittest.TestCase):
             self.assertEqual(_file, ("/tmp/gn2/phenotype_"
                                      "P7y6QWnwBPedSZdL0+m/GQ.txt"))
         open_mock.assert_called_with(("/tmp/gn2/phenotype_"
-                                      "P7y6QWnwBPedSZdL0+m/GQ.txt"), "w")
+                                      "P7y6QWnwBPedSZdL0+m/GQ.txt"), "w", encoding="utf-8")
         open_mock.return_value.write.assert_has_calls([
             mock.call("NA\n"),
             mock.call("NA\n"),

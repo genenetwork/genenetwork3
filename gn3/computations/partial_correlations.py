@@ -241,7 +241,7 @@ def partial_correlations_fast(# pylint: disable=[R0913, R0914]
     function in GeneNetwork1.
     """
     assert method in ("spearman", "pearson")
-    with open(database_filename, "r") as dataset_file: # pytest: disable=[W1514]
+    with open(database_filename, "r", encoding="utf-8") as dataset_file: # pytest: disable=[W1514]
         dataset = tuple(dataset_file.readlines())
 
     good_dataset_samples = good_dataset_samples_indexes(

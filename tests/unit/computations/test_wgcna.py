@@ -166,7 +166,7 @@ class TestWgcna(TestCase):
                 expected_input)
 
             file_handler.assert_called_once_with(
-                "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json", 'w')
+                "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json", 'w', encoding='utf-8')
 
             self.assertEqual(
                 results, "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json")
