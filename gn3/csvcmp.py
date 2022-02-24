@@ -67,3 +67,14 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp"):
     if os.path.exists(file_name2):
         os.remove(file_name2)
     return _r
+
+
+def fill_csv(csv_text, width, value="x"):
+    data = []
+    for line in csv_text.strip().split("\n"):
+        if line.startswith("Strain") or line.startswith("#"):
+            data.append(line)
+        elif line:
+            data.append(
+                ",".join((_n:=line.split(",")) + [value] * (width - len(_n))))
+    return "\n".join(data)

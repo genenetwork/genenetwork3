@@ -1,8 +1,25 @@
 from gn3.csvcmp import csv_diff
+from gn3.csvcmp import fill_csv
 from gn3.csvcmp import remove_insignificant_edits
 
 import pytest
 
+
+@pytest.mark.unit_test
+def test_fill_csv():
+    test_input = """
+Strain Name,Value,SE,Count
+BXD1,18,x,0
+BXD12,16,x,x
+BXD14,15,x,x
+BXD15,14,x,x
+"""
+    expected_output = """Strain Name,Value,SE,Count,Sex
+BXD1,18,x,0,x
+BXD12,16,x,x,x
+BXD14,15,x,x,x
+BXD15,14,x,x,x"""
+    assert(fill_csv(test_input, width=5, value="x"))
 
 @pytest.mark.unit_test
 def test_remove_insignificant_data():
