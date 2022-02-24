@@ -16,7 +16,7 @@ from typing import TypedDict
 from typing import Callable
 
 
-def compute_pca(matrix):
+def compute_pca(matrix) -> dict[str, Any]:
 
     pca_obj = PCA()
     scaled_data = preprocessing.scale(matrix)
