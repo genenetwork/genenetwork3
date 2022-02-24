@@ -59,7 +59,10 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp"):
                       f"'{file_name1}' '{file_name2}' "
                       "--format json"))
     if _r.get("code") == 0:
-        _r["output"] = json.loads(_r.get("output"))
+        _r = json.loads(_r.get("output"))
+        _r["Columns"] = max(_header1, _header2)
+    else:
+        _r = {}
     # Clean Up!
     if os.path.exists(file_name1):
         os.remove(file_name1)
