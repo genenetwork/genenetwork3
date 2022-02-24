@@ -1,12 +1,9 @@
 """module contains pca implementation using python"""
 
 import numpy as np
-import numpy.typing as npt
-
-
 import datetime
-
 from scipy import stats
+
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
 
