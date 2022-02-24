@@ -4,9 +4,6 @@ from unittest.mock import patch
 from unittest.mock import Mock
 
 import numpy as np
-
-from scipy.stats import random_correlation
-
 from gn3.computations.principal_component_analysis import compute_pca
 from gn3.computations.principal_component_analysis import process_factor_loadings_tdata
 from gn3.computations.principal_component_analysis import generate_pca_temp_dataset
@@ -15,33 +12,6 @@ from gn3.computations.principal_component_analysis import cache_pca_dataset
 
 class TestPCA(unittest.TestCase):
     """pca testcase class"""
-
-    def test_compute_zscores(self):
-        """test for computing zscores"""
-
-        for test_array, axis, ddof, _expected in [([0.7972,  0.0767,  0.4383,  0.7866,  0.8091,
-                                                    0.1954,  0.6307,  0.6599,  0.1065,  0.0508],
-                                                   0, 0,
-                                                   [1.127246, -1.246996, -0.055426,  1.092316,
-                                                    1.166459, -0.855847,
-                                                    0.578583,  0.674805, -1.148797, -1.332343])]:
-            with self.subTest(nums=test_array, axis=axis, ddof=ddof):
-                pass
-
-                # assert_allclose(
-                #     compute_zscores(test_array, axis, ddof), expected)
-
-    def test_compute_pca(self):
-        """test for computing pca"""
-
-        rng = np.random.default_rng()
-
-        corr_matrix = random_correlation.rvs(
-            (.5, .8, 1.2, 1.5), random_state=rng)
-
-        _results = compute_pca(corr_matrix)
-
-        return self
 
     def test_process_factor_loadings(self):
         """test for processing factor loadings"""
