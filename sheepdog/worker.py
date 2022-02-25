@@ -10,7 +10,31 @@ import redis.connection
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 def update_status(conn, cmd_id, status):
+    """Helper to update command status"""
     conn.hset(name=f"{cmd_id}", key="status", value=f"{status}")
+
+def make_incremental_backoff(init_val: float=0.1, maximum: int=420):
+    """
+    Returns a closure that can be used to increment the returned value up to
+    `maximum` or reset it to `init_val`.
+    """
+    current = init_val
+
+    def __increment_or_reset__(command: str, value: float=0.1):
+        nonlocal current
+        if command == "reset":
+            current = init_val
+            return current
+
+        if command == "increment":
+            current = current + abs(value)
+            if current > maximum:
+                current = maximum
+            return current
+
+        return current
+
+    return __increment_or_reset__
 
 def run_jobs(conn):
     """Process the redis using a redis connection, CONN"""
@@ -28,9 +52,13 @@ def run_jobs(conn):
                 update_status(conn, cmd_id, "success")
             else:
                 update_status(conn, cmd_id, "error")
+        return cmd_id
 
 if __name__ == "__main__":
     redis_conn = redis.Redis()
+    sleep_time = make_incremental_backoff()
     while True:  # Daemon that keeps running forever:
-        run_jobs(redis_conn)
-        time.sleep(0.1)
+        if run_jobs(redis_conn):
+            time.sleep(sleep_time("reset"))
+            continue
+        time.sleep(sleep_time("increment", sleep_time("return_current")))
