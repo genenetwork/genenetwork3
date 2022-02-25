@@ -52,6 +52,23 @@ def get_trait_csv_sample_data(conn: Any,
     return "No Sample Data Found"
 
 
+def get_sample_data_ids(conn: Any, publishxref_id: int,
+                                phenotype_id: int,
+                                strain_name: str) -> Tuple:
+    strain_id, publishdata_id = None, None
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT st.id, pd.Id FROM PublishData pd "
+                       "JOIN Strain st ON pd.StrainId = st.Id "
+                       "JOIN PublishXRef px ON px.DataId = pd.Id "
+                       "JOIN PublishFreeze pf ON pf.InbredSetId "
+                       "= px.InbredSetId WHERE px.Id = %s "
+                       "AND px.PhenotypeId = %s AND st.Name = %s",
+                       (publishxref_id, phenotype_id, strain_name))
+        if _result := cursor.fetchone():
+            strain_id, publishdata_id = _result
+    return (strain_id, publishdata_id)
+
+
 def update_sample_data(conn: Any,  # pylint: disable=[R0913]
                        trait_name: str,
                        strain_name: str,
@@ -61,28 +78,10 @@ def update_sample_data(conn: Any,  # pylint: disable=[R0913]
                        count: Union[int, str]):
     """Given the right parameters, update sample-data from the relevant
     table."""
-    strain_id, data_id = "", ""
+    strain_id, data_id = get_sample_data_ids(
+        conn=conn, publishxref_id=trait_name,
+        phenotype_id=phenotype_id, strain_name=strain_name)
 
-    with conn.cursor() as cursor:
-        cursor.execute(
-            ("SELECT Strain.Id, PublishData.Id FROM "
-             "(PublishData, Strain, PublishXRef, PublishFreeze) "
-             "LEFT JOIN PublishSE ON "
-             "(PublishSE.DataId = PublishData.Id AND "
-             "PublishSE.StrainId = PublishData.StrainId) "
-             "LEFT JOIN NStrain ON "
-             "(NStrain.DataId = PublishData.Id AND "
-             "NStrain.StrainId = PublishData.StrainId) "
-             "WHERE PublishXRef.InbredSetId = "
-             "PublishFreeze.InbredSetId AND "
-             "PublishData.Id = PublishXRef.DataId AND "
-             "PublishXRef.Id = %s AND "
-             "PublishXRef.PhenotypeId = %s "
-             "AND PublishData.StrainId = Strain.Id "
-             "AND Strain.Name = \"%s\"") % (trait_name,
-                                            phenotype_id,
-                                            str(strain_name)))
-        strain_id, data_id = cursor.fetchone()
     updated_published_data: int = 0
     updated_se_data: int = 0
     updated_n_strains: int = 0
@@ -167,7 +166,10 @@ def delete_sample_data(conn: Any,
                        phenotype_id: int):
     """Given the right parameters, delete sample-data from the relevant
     table."""
-    strain_id, data_id = "", ""
+    strain_id, data_id = get_sample_data_ids(
+        conn=conn, publishxref_id=trait_name,
+        phenotype_id=phenotype_id,
+        strain_name=strain_name)
 
     deleted_published_data: int = 0
     deleted_se_data: int = 0
@@ -176,29 +178,6 @@ def delete_sample_data(conn: Any,
     with conn.cursor() as cursor:
         # Delete the PublishData table
         try:
-            cursor.execute(
-                ("SELECT Strain.Id, PublishData.Id FROM "
-                 "(PublishData, Strain, PublishXRef, PublishFreeze) "
-                 "LEFT JOIN PublishSE ON "
-                 "(PublishSE.DataId = PublishData.Id AND "
-                 "PublishSE.StrainId = PublishData.StrainId) "
-                 "LEFT JOIN NStrain ON "
-                 "(NStrain.DataId = PublishData.Id AND "
-                 "NStrain.StrainId = PublishData.StrainId) "
-                 "WHERE PublishXRef.InbredSetId = "
-                 "PublishFreeze.InbredSetId AND "
-                 "PublishData.Id = PublishXRef.DataId AND "
-                 "PublishXRef.Id = %s AND "
-                 "PublishXRef.PhenotypeId = %s "
-                 "AND PublishData.StrainId = Strain.Id "
-                 "AND Strain.Name = \"%s\"") % (trait_name,
-                                                phenotype_id,
-                                                str(strain_name)))
-
-            # Check if it exists if the data was already deleted:
-            if _result := cursor.fetchone():
-                strain_id, data_id = _result
-
             # Only run if the strain_id and data_id exist
             if strain_id and data_id:
                 cursor.execute(("DELETE FROM PublishData "
@@ -240,16 +219,13 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
     """
 
     inserted_published_data, inserted_se_data, inserted_n_strains = 0, 0, 0
+    strain_id, data_id = get_sample_data_ids(
+        conn=conn, publishxref_id=trait_name,
+        phenotype_id=phenotype_id,
+        strain_name=strain_name)
+
     with conn.cursor() as cursor:
         try:
-            cursor.execute("SELECT DataId FROM PublishXRef WHERE Id = %s AND "
-                           "PhenotypeId = %s", (trait_name, phenotype_id))
-            data_id = cursor.fetchone()
-
-            cursor.execute("SELECT Id FROM Strain WHERE Name = %s",
-                           (strain_name,))
-            strain_id = cursor.fetchone()
-
             # Return early if an insert already exists!
             cursor.execute("SELECT Id FROM PublishData where Id = %s "
                            "AND StrainId = %s",
