@@ -66,7 +66,8 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp"):
                       "--format json"))
     if _r.get("code") == 0:
         _r = json.loads(_r.get("output"))
-        _r["Columns"] = max(base_csv_header, delta_csv_header)
+        if any(_r.values()):
+            _r["Columns"] = max(base_csv_header, delta_csv_header)
     else:
         _r = {}
 
