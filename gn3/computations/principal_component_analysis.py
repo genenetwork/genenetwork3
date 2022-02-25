@@ -1,16 +1,13 @@
 """module contains pca implementation using python"""
 
-import numpy as np
-import datetime
+
+from typing import Any
 from scipy import stats
 
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
 
-from typing import Union
-from typing import Any
-from typing import TypedDict
-from typing import Callable
+import numpy as np
 
 
 from typing_extensions import TypeAlias
@@ -19,6 +16,19 @@ fArray: TypeAlias = list[float]
 
 
 def compute_pca(array: list[fArray]) -> dict[str, Any]:
+    """
+    computes the principal component analysis
+
+    Parameters:
+
+          array(list[list]):a list of lists contains data to perform  pca
+
+
+    Returns:
+           pca_dict(dict):dict contains the pca_object,pca components,pca scores
+
+
+    """
 
     corr_matrix = np.matrix(array)
 
@@ -35,6 +45,19 @@ def compute_pca(array: list[fArray]) -> dict[str, Any]:
 
 
 def generate_scree_plot_data(variance_ratio: fArray) -> list[tuple[str, float]]:
+    """
+    generates the scree data for plotting
+
+    Parameters:
+
+            variance_ratio(list[floats]):ratios for contribution of each pca
+
+    Returns:
+
+            coordinates(list[(x_coor,y_coord)])
+
+
+    """
 
     perc_var = np.round(variance_ratio*100, decimals=1)
 
@@ -45,8 +68,22 @@ def generate_scree_plot_data(variance_ratio: fArray) -> list[tuple[str, float]]:
 
 def generate_pca_traits_vals(trait_data_array: list[fArray],
                              corr_array: list[fArray]) -> list[list[Any]]:
-    """function generates new pca traits data from
-    zscores of and eigen vectors"""
+    """
+
+    generates datasets from zscores of the traits and eigen_vectors 
+    of correlation matrix
+
+    Parameters:
+
+            trait_data_array(list[floats]):an list of the traits
+            corr_array(list[list]): list of arrays for computing eigen_vectors
+
+    Returns:
+
+            pca_vals[list[list]]:
+
+
+    """
 
     (_eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
 
@@ -63,6 +100,13 @@ def generate_pca_traits_vals(trait_data_array: list[fArray],
 
 
 def process_factor_loadings_tdata(factor_loadings, traits_num: int):
+    """
+
+    transform loadings for tables visualization
+
+
+
+    """
 
     target_columns = 3 if traits_num > 2 else 2
 
@@ -72,8 +116,15 @@ def process_factor_loadings_tdata(factor_loadings, traits_num: int):
             for trait_loading in trait_loadings]
 
 
-def generate_pca_temp_dataset(species: str, group: str, traits_data: list[fArray],
-                              corr_array: list[fArray], dataset_samples: list[str], shared_samples: list[str], create_time: str) -> dict[str, list[Any]]:
+def generate_pca_temp_dataset(species: str, group: str,
+                              traits_data: list[fArray], corr_array: list[fArray],
+                              dataset_samples: list[str], shared_samples: list[str],
+                              create_time: str) -> dict[str, list[Any]]:
+    """
+
+    generate pca temp datasets
+
+    """
 
     pca_trait_dict = {}
 
@@ -96,7 +147,24 @@ def generate_pca_temp_dataset(species: str, group: str, traits_data: list[fArray
     return pca_trait_dict
 
 
-def cache_pca_dataset(redis_conn: Any, exp_days: int, pca_trait_dict: dict[str, list[Any]]):
+def cache_pca_dataset(redis_conn: Any, exp_days: int,
+                      pca_trait_dict: dict[str, list[Any]]):
+    """
+
+    caches pca dataset to redis
+
+    Parameters:
+
+            redis_conn(object)
+            exp_days(int): fo redis cache
+            pca_trait_dict(Dict):contains traits and traits vals to cache
+
+    Returns:
+
+            boolean(True)
+
+
+    """
 
     # store associative arrays python redis????
 
