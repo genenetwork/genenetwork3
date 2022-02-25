@@ -87,7 +87,7 @@ def generate_pca_traits_vals(trait_data_array: list[fArray],
 
     (_eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
 
-    # sort the eigens
+    # sort the eigens ?/regression tests gn2
 
     trait_zscores = stats.zscore(trait_data_array)
 
@@ -96,6 +96,7 @@ def generate_pca_traits_vals(trait_data_array: list[fArray],
         trait_zscores = trait_data_array
 
     pca_traits_values = np.dot(corr_eigen_vectors, trait_zscores)
+
     return pca_traits_values
 
 
@@ -104,8 +105,12 @@ def process_factor_loadings_tdata(factor_loadings, traits_num: int):
 
     transform loadings for tables visualization
 
+    Parameters:
+           factor_loading(numpy.ndarray)
+           traits_num(int):number of traits
 
-
+    Returns:
+           tabular_loadings(list[list[float]])
     """
 
     target_columns = 3 if traits_num > 2 else 2
@@ -128,15 +133,19 @@ def generate_pca_temp_dataset(species: str, group: str,
 
     pca_trait_dict = {}
 
-    for (idx, pca_trait) in enumerate(generate_pca_traits_vals(traits_data, corr_array)):
-        trait_id = f"PCA{str(idx+1)}-{species}{group}{create_time}"
+    results = generate_pca_traits_vals(traits_data, corr_array).tolist()
+
+    for (idx, pca_trait) in enumerate(results):
+
+        trait_id = f"PCA{str(idx+1)}_{species}_{group}_{create_time}"
         sample_vals = []
 
         pointer = 0
 
         for sample in dataset_samples:
             if sample in shared_samples:
-                sample_vals.append(pca_trait[pointer])
+
+                sample_vals.append(str(pca_trait[pointer]))
                 pointer += 1
 
             else:
@@ -165,8 +174,6 @@ def cache_pca_dataset(redis_conn: Any, exp_days: int,
 
 
     """
-
-    # store associative arrays python redis????
 
     for trait_id, trait_sample_data in pca_trait_dict.items():
 
