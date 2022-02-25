@@ -13,7 +13,12 @@ from typing import TypedDict
 from typing import Callable
 
 
-def compute_pca(array: list[list[float]]) -> dict[str, Any]:
+from typing_extensions import TypeAlias
+
+fArray: TypeAlias = list[float]
+
+
+def compute_pca(array: list[fArray]) -> dict[str, Any]:
 
     corr_matrix = np.matrix(array)
 
@@ -29,7 +34,7 @@ def compute_pca(array: list[list[float]]) -> dict[str, Any]:
     }
 
 
-def generate_scree_plot_data(variance_ratio: list[float]) -> list[tuple[str, float]]:
+def generate_scree_plot_data(variance_ratio: fArray) -> list[tuple[str, float]]:
 
     perc_var = np.round(variance_ratio*100, decimals=1)
 
@@ -38,10 +43,10 @@ def generate_scree_plot_data(variance_ratio: list[float]) -> list[tuple[str, flo
     return list(zip(x_coordinates, perc_var))
 
 
-def generate_pca_traits_vals(trait_data_array: list,
-                             corr_array: list[list[float]]) -> list[list[Any]]:
+def generate_pca_traits_vals(trait_data_array: list[fArray],
+                             corr_array: list[fArray]) -> list[list[Any]]:
     """function generates new pca traits data from
-    zscores and eigen vectors"""
+    zscores of and eigen vectors"""
 
     (_eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
 
@@ -67,13 +72,12 @@ def process_factor_loadings_tdata(factor_loadings, traits_num: int):
             for trait_loading in trait_loadings]
 
 
-def generate_pca_temp_dataset(species: str, group: str,
-                              traits_data: list[float], dataset_samples: list[str],
-                              shared_samples: list[str], create_time: str) -> dict[str, list[Any]]:
+def generate_pca_temp_dataset(species: str, group: str, traits_data: list[fArray],
+                              corr_array: list[fArray], dataset_samples: list[str], shared_samples: list[str], create_time: str) -> dict[str, list[Any]]:
 
     pca_trait_dict = {}
 
-    for (idx, pca_trait) in enumerate(generate_pca_traits_data(traits_data)):
+    for (idx, pca_trait) in enumerate(generate_pca_traits_vals(traits_data, corr_array)):
         trait_id = f"PCA{str(idx+1)}-{species}{group}{create_time}"
         sample_vals = []
 
