@@ -77,3 +77,25 @@ BXD15,14,x,x"""
                         'Deletions': [],
                         'Modifications': [{'Current': 'BXD12,16,x,x,1',
                                            'Original': 'BXD12,16,x,x,x'}]})
+
+
+@pytest.mark.unit_test
+def test_csv_diff_only_column_change():
+    base_csv = """
+Strain Name,Value,SE,Count
+BXD1,18,x,0
+BXD12,16,x,x
+BXD14,15,x,x
+BXD15,14,x,x
+"""
+    delta_csv = """Strain Name,Value,SE,Count,Sex
+BXD1,18,x,0
+BXD12,16,x,x
+BXD14,15,x,x
+BXD15,14,x,x
+"""
+    assert(csv_diff(base_csv=base_csv,
+                    delta_csv=delta_csv) == {
+                        'Additions': [],
+                        'Deletions': [],
+                        'Modifications': []})
