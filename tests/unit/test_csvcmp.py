@@ -46,13 +46,34 @@ def test_remove_insignificant_data():
 
 
 @pytest.mark.unit_test
-def test_csv_diff():
-    test_results = csv_diff(base_csv="a,b\n1,2\n",
-                            delta_csv="a,b\n1,3")
-    _json = {
-        'Additions': [],
-        'Deletions': [],
-        'Modifications': [{'Current': '1,3', 'Original': '1,2'}]
-    }
-    assert(test_results.get("code") == 0 and
-           test_results.get("output") == _json)
+def test_csv_diff_same_columns():
+    assert(csv_diff(base_csv="a,b\n1,2\n",
+                    delta_csv="a,b\n1,3") == {
+                        'Additions': [],
+                        'Deletions': [],
+                        'Columns': '',
+                        'Modifications': [{'Current': '1,3',
+                                           'Original': '1,2'}]})
+
+
+@pytest.mark.unit_test
+def test_csv_diff_different_columns():
+    base_csv = """
+Strain Name,Value,SE,Count
+BXD1,18,x,0
+BXD12,16,x,x
+BXD14,15,x,x
+BXD15,14,x,x
+"""
+    delta_csv = """Strain Name,Value,SE,Count,Sex
+BXD1,18,x,0
+BXD12,16,x,x,1
+BXD14,15,x,x
+BXD15,14,x,x"""
+    assert(csv_diff(base_csv=base_csv,
+                    delta_csv=delta_csv) == {
+                        'Additions': [],
+                        'Columns': 'Strain Name,Value,SE,Count,Sex',
+                        'Deletions': [],
+                        'Modifications': [{'Current': 'BXD12,16,x,x,1',
+                                           'Original': 'BXD12,16,x,x,x'}]})
