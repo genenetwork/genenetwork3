@@ -33,24 +33,32 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp"):
     base_csv_list = base_csv.strip().split("\n")
     delta_csv_list = delta_csv.strip().split("\n")
 
-    _header1, _header2 = "", ""
+    base_csv_header, delta_csv_header, header = "", "", ""
     for i, line in enumerate(base_csv_list):
         if line.startswith("Strain Name,Value,SE,Count"):
-            _header1, _header2 = line, delta_csv_list[i]
+            header = line
+            base_csv_header, delta_csv_header= line, delta_csv_list[i]
             break
+    longest_header = max(base_csv_header, delta_csv_header)
 
-    if _header1 != _header2:
-        header = max(_header1, _header2)
-        base_csv = base_csv.replace("Strain Name,Value,SE,Count",
-                                    header, 1)
-        delta_csv = delta_csv.replace("Strain Name,Value,SE,Count",
-                                      header, 1)
+    if base_csv_header != delta_csv_header:
+        if longest_header != base_csv_header:
+            base_csv = base_csv.replace("Strain Name,Value,SE,Count",
+                                        longest_header, 1)
+        else:
+            delta_csv = delta_csv.replace("Strain Name,Value,SE,Count",
+                                          longest_header, 1)
+        print(delta_csv)
     file_name1 = os.path.join(tmp_dir, str(uuid.uuid4()))
     file_name2 = os.path.join(tmp_dir, str(uuid.uuid4()))
+
     with open(file_name1, "w") as f_:
-        f_.write(base_csv)
+        _l = len(longest_header.split(","))
+        f_.write(fill_csv(csv_text=base_csv,
+                          width=_l))
     with open(file_name2, "w") as f_:
-        f_.write(delta_csv)
+        f_.write(fill_csv(delta_csv,
+                          width=_l))
 
     # Now we can run the diff!
     _r = run_cmd(cmd=("csvdiff "
@@ -58,9 +66,10 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp"):
                       "--format json"))
     if _r.get("code") == 0:
         _r = json.loads(_r.get("output"))
-        _r["Columns"] = max(_header1, _header2)
+        _r["Columns"] = max(base_csv_header, delta_csv_header)
     else:
         _r = {}
+
     # Clean Up!
     if os.path.exists(file_name1):
         os.remove(file_name1)
