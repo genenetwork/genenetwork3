@@ -47,7 +47,7 @@ def normalize_values(a_values: List, b_values: List) -> Generator:
     """
 
     for a_val, b_val in zip(a_values, b_values):
-        if (a_val and b_val is not None):
+        if (a_val is not None) and (b_val is not None):
             yield a_val, b_val
 
 
