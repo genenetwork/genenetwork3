@@ -68,6 +68,15 @@ def get_sample_data_ids(conn: Any, publishxref_id: int,
                        (publishxref_id, phenotype_id, strain_name))
         if _result := cursor.fetchone():
             strain_id, publishdata_id, inbredset_id = _result
+        if not all([strain_id, publishdata_id, inbredset_id]):
+            # Applies for data to be inserted:
+            cursor.execute("SELECT DataId, InbredSetId FROM PublishXRef "
+                           "WHERE Id = %s AND PhenotypeId = %s",
+                           (publishxref_id, phenotype_id))
+            publishdata_id, inbredset_id = cursor.fetchone()
+            cursor.execute("SELECT Id FROM Strain WHERE Name = %s",
+                           (strain_name,))
+            strain_id = cursor.fetchone()
     return (strain_id, publishdata_id, inbredset_id)
 
 
