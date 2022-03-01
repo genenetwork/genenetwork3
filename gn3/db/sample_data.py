@@ -1,3 +1,4 @@
+from gn3.csvcmp import extract_strain_name
 from typing import Any, Tuple, Union
 
 import MySQLdb
@@ -200,7 +201,7 @@ def delete_sample_data(conn: Any,
     strain_id, data_id, inbredset_id = get_sample_data_ids(
         conn=conn, publishxref_id=trait_name,
         phenotype_id=phenotype_id,
-        strain_name=strain_name)
+        strain_name=extract_strain_name(csv_header, data))
 
     none_case_attrs = {
         "Strain Name": lambda: 0,
@@ -273,7 +274,7 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
     strain_id, data_id, inbredset_id = get_sample_data_ids(
         conn=conn, publishxref_id=trait_name,
         phenotype_id=phenotype_id,
-        strain_name=strain_name)
+        strain_name=extract_strain_name(csv_header, data))
 
     none_case_attrs = {
         "Strain Name": lambda _: 0,
