@@ -9,10 +9,10 @@ import pytest
 @pytest.mark.unit_test
 def test_fill_csv():
     test_input = """
-Strain Name,Value,SE,Count
-BXD1,18,x,0
-BXD12,16,x,x
-BXD14,15,x,x
+Strain Name,Value,SE,Count,Sex
+BXD1,18,x,0,
+BXD12,16,x,x,
+BXD14,15,x,x,
 BXD15,14,x,x
 """
     expected_output = """Strain Name,Value,SE,Count,Sex
@@ -20,7 +20,7 @@ BXD1,18,x,0,x
 BXD12,16,x,x,x
 BXD14,15,x,x,x
 BXD15,14,x,x,x"""
-    assert(fill_csv(test_input, width=5, value="x"))
+    assert(fill_csv(test_input, width=5, value="x") == expected_output)
 
 @pytest.mark.unit_test
 def test_remove_insignificant_data():
