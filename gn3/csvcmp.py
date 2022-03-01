@@ -92,6 +92,10 @@ def fill_csv(csv_text, width, value="x"):
         if line.startswith("Strain") or line.startswith("#"):
             data.append(line)
         elif line:
+            _n = line.split(",")
+            for i, val in enumerate(_n):
+                if not val.strip():
+                    _n[i] = value
             data.append(
-                ",".join((_n:=line.split(",")) + [value] * (width - len(_n))))
+                ",".join(_n + [value] * (width - len(_n))))
     return "\n".join(data)
