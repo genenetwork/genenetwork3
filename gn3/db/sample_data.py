@@ -53,11 +53,12 @@ def get_trait_csv_sample_data(conn: Any,
 
 
 def get_sample_data_ids(conn: Any, publishxref_id: int,
-                                phenotype_id: int,
-                                strain_name: str) -> Tuple:
-    strain_id, publishdata_id = None, None
+                        phenotype_id: int,
+                        strain_name: str) -> Tuple:
+    strain_id, publishdata_id, inbredset_id = None, None, None
     with conn.cursor() as cursor:
-        cursor.execute("SELECT st.id, pd.Id FROM PublishData pd "
+        cursor.execute("SELECT st.id, pd.Id, pf.InbredSetId "
+                       "FROM PublishData pd "
                        "JOIN Strain st ON pd.StrainId = st.Id "
                        "JOIN PublishXRef px ON px.DataId = pd.Id "
                        "JOIN PublishFreeze pf ON pf.InbredSetId "
@@ -65,8 +66,8 @@ def get_sample_data_ids(conn: Any, publishxref_id: int,
                        "AND px.PhenotypeId = %s AND st.Name = %s",
                        (publishxref_id, phenotype_id, strain_name))
         if _result := cursor.fetchone():
-            strain_id, publishdata_id = _result
-    return (strain_id, publishdata_id)
+            strain_id, publishdata_id, inbredset_id = _result
+    return (strain_id, publishdata_id, inbredset_id)
 
 
 def update_sample_data(conn: Any,  # pylint: disable=[R0913]
@@ -78,7 +79,7 @@ def update_sample_data(conn: Any,  # pylint: disable=[R0913]
                        count: Union[int, str]):
     """Given the right parameters, update sample-data from the relevant
     table."""
-    strain_id, data_id = get_sample_data_ids(
+    strain_id, data_id, _ = get_sample_data_ids(
         conn=conn, publishxref_id=trait_name,
         phenotype_id=phenotype_id, strain_name=strain_name)
 
@@ -166,7 +167,7 @@ def delete_sample_data(conn: Any,
                        phenotype_id: int):
     """Given the right parameters, delete sample-data from the relevant
     table."""
-    strain_id, data_id = get_sample_data_ids(
+    strain_id, data_id, _ = get_sample_data_ids(
         conn=conn, publishxref_id=trait_name,
         phenotype_id=phenotype_id,
         strain_name=strain_name)
