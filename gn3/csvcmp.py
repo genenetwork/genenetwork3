@@ -4,6 +4,13 @@ import uuid
 from gn3.commands import run_cmd
 
 
+def extract_strain_name(csv_header, data, seek="Strain Name"):
+    for column, value in zip(csv_header.split(","), data.split(",")):
+        if seek in column:
+            return value
+    return ""
+
+
 def create_dirs_if_not_exists(dirs: list):
     for dir_ in dirs:
         if not os.path.exists(dir_):

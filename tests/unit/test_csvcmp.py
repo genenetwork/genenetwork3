@@ -1,6 +1,7 @@
 from gn3.csvcmp import csv_diff
 from gn3.csvcmp import fill_csv
 from gn3.csvcmp import remove_insignificant_edits
+from gn3.csvcmp import extract_strain_name
 
 import pytest
 
@@ -99,3 +100,10 @@ BXD15,14,x,x
                         'Additions': [],
                         'Deletions': [],
                         'Modifications': []})
+
+
+@pytest.mark.unit_test
+def test_extract_strain_name():
+    assert(extract_strain_name(csv_header="Strain Name,Value,SE,Count",
+                               data="BXD1,18,x,0") ==
+           "BXD1")
