@@ -210,52 +210,72 @@ def delete_sample_data(conn: Any,
 
 def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
                        trait_name: str,
-                       strain_name: str,
-                       phenotype_id: int,
-                       value: Union[int, float, str],
-                       error: Union[int, float, str],
-                       count: Union[int, str]):
+                       data: str,
+                       csv_header: str,
+                       phenotype_id: int):
     """Given the right parameters, insert sample-data to the relevant table.
 
     """
+    def __insert_data(conn, table, value):
+        if value and value != "x":
+            _map = {
+                "PublishData": "(StrainId, Id, value)",
+                "PublishSE": "(StrainId, DataId, error)",
+                "NStrain": "(StrainId, DataId, count)",
+            }
+            _query = (f"INSERT INTO {table} "
+                      f"{_map.get(table)} "
+                      f"VALUES %s %s %s")
+            with conn.cursor() as cursor:
+                cursor.execute((f"INSERT INTO {table} "
+                                f"{_map.get(table)} "
+                                f"VALUES (%s, %s, %s)"),
+                               (strain_id, data_id, value))
+                return cursor.rowcount
+        return 0
 
-    inserted_published_data, inserted_se_data, inserted_n_strains = 0, 0, 0
-    strain_id, data_id = get_sample_data_ids(
+    def __insert_case_attribute(conn, strain_id,
+                                case_attr, value, inbredset_id):
+        if value != "x":
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    (f"INSERT INTO CaseAttributeXRefNew "
+                     "StrainId, CaseAttributeId, Value, InbredSetId "
+                     "VALUES ("
+                     f"{strain_id}, "
+                     "(SELECT CaseAttributeId FROM "
+                     f"CaseAttribute WHERE NAME = %s), "
+                     "%s)" , (strain_id, case_attr, value, inbredset_id)))
+                return cursor.rowcount
+        return 0
+
+    strain_id, data_id, inbredset_id = get_sample_data_ids(
         conn=conn, publishxref_id=trait_name,
         phenotype_id=phenotype_id,
         strain_name=strain_name)
 
-    with conn.cursor() as cursor:
-        try:
-            # Return early if an insert already exists!
-            cursor.execute("SELECT Id FROM PublishData where Id = %s "
-                           "AND StrainId = %s",
-                           (data_id, strain_id))
-            if cursor.fetchone():  # This strain already exists
-                return (0, 0, 0)
+    none_case_attrs = {
+        "Strain Name": lambda _: 0,
+        "Value": lambda x: __insert_data(conn, "PublishData", x),
+        "SE": lambda x: __insert_data(conn, "PublishSE", x),
+        "Count": lambda x: __insert_data(conn, "NStrain", x),
+    }
 
-            # Insert the PublishData table
-            cursor.execute(("INSERT INTO PublishData (Id, StrainId, value)"
-                            "VALUES (%s, %s, %s)"),
-                           (data_id, strain_id, value))
-            inserted_published_data = cursor.rowcount
-
-            # Insert into the PublishSE table if error is specified
-            if error and error != "x":
-                cursor.execute(("INSERT INTO PublishSE (StrainId, DataId, "
-                                " error) VALUES (%s, %s, %s)") %
-                               (strain_id, data_id, error))
-            inserted_se_data = cursor.rowcount
-
-            # Insert into the NStrain table
-            if count and count != "x":
-                cursor.execute(("INSERT INTO NStrain "
-                                "(StrainId, DataId, count) "
-                                "VALUES (%s, %s, %s)") %
-                               (strain_id, data_id, count))
-            inserted_n_strains = cursor.rowcount
-        except Exception:  # pylint: disable=[C0103, W0612]
-            conn.rollback()
-            raise MySQLdb.Error
-    return (inserted_published_data,
-            inserted_se_data, inserted_n_strains)
+    try:
+        count = 0
+        for header, value in zip(csv_header.split(","), data.split(",")):
+            header = header.strip()
+            value = value.strip()
+            if header in none_case_attrs:
+                count += none_case_attrs.get(header)(value)
+            else:
+                count += __insert_case_attribute(
+                    conn=conn,
+                    strain_id=strain_id,
+                    case_attr=header,
+                    value=value,
+                    inbredset_id=inbredset_id)
+        return count
+    except Exception as e:  # pylint: disable=[C0103, W0612]
+        conn.rollback()
+        raise MySQLdb.Error
