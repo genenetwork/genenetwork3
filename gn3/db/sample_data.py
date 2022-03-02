@@ -3,6 +3,14 @@ from typing import Any, Tuple, Union
 
 import MySQLdb
 
+
+_MAP = {
+    "PublishData": ("StrainId", "Id", "value"),
+    "PublishSE": ("StrainId", "DataId", "error"),
+    "NStrain": ("StrainId", "DataId", "count"),
+}
+
+
 def get_trait_csv_sample_data(conn: Any,
                               trait_name: int, phenotype_id: int) -> str:
     """Fetch a trait and return it as a csv string"""
@@ -180,14 +188,10 @@ def delete_sample_data(conn: Any,
     tables."""
     def __delete_data(conn, table):
         if value and value != "x":
-            _map = {
-                "PublishData": "StrainId = %s AND Id = %s",
-                "PublishSE": "StrainId = %s AND DataId = %s",
-                "NStrain": "StrainId = %s AND DataId = %s",
-            }
+            sub_query = (" = %s AND ".join(_MAP.get(table)[:2]) + " = %s")
             with conn.cursor() as cursor:
                 cursor.execute((f"DELETE FROM {table} "
-                                f"WHERE {_map.get(table)}"),
+                                f"WHERE {sub_query}"),
                                (strain_id, data_id))
                 return cursor.rowcount
         return 0
@@ -248,19 +252,16 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
     """
     def __insert_data(conn, table, value):
         if value and value != "x":
-            _map = {
-                "PublishData": "(StrainId, Id, value)",
-                "PublishSE": "(StrainId, DataId, error)",
-                "NStrain": "(StrainId, DataId, count)",
-            }
+
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT Id FROM PublishData where Id = %s "
                     "AND StrainId = %s",
                     (data_id, strain_id))
                 if not cursor.fetchone():
+                    columns = ", ".join(_MAP.get(table))
                     cursor.execute((f"INSERT INTO {table} "
-                                    f"{_map.get(table)} "
+                                    f"({columns}) "
                                     f"VALUES (%s, %s, %s)"),
                                    (strain_id, data_id, value))
                     return cursor.rowcount
