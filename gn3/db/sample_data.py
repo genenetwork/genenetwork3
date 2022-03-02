@@ -258,11 +258,16 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
                       f"{_map.get(table)} "
                       f"VALUES %s %s %s")
             with conn.cursor() as cursor:
-                cursor.execute((f"INSERT INTO {table} "
-                                f"{_map.get(table)} "
-                                f"VALUES (%s, %s, %s)"),
-                               (strain_id, data_id, value))
-                return cursor.rowcount
+                cursor.execute(
+                    "SELECT Id FROM PublishData where Id = %s "
+                    "AND StrainId = %s",
+                    (data_id, strain_id))
+                if not cursor.fetchone():
+                    cursor.execute((f"INSERT INTO {table} "
+                                    f"{_map.get(table)} "
+                                    f"VALUES (%s, %s, %s)"),
+                                   (strain_id, data_id, value))
+                    return cursor.rowcount
         return 0
 
     def __insert_case_attribute(conn, strain_id,
