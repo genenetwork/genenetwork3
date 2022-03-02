@@ -59,7 +59,9 @@ def generate_scree_plot_data(variance_ratio: fArray) -> list[tuple[str, float]]:
 
     """
 
-    perc_var = np.round(variance_ratio*100, decimals=1)
+    perc_var = [round(ratio*100, 1) for ratio in variance_ratio]
+
+    # perc_var = np.round(variance_ratio*100, decimals=1)
 
     x_coordinates = [f"PC{val}" for val in range(1, len(perc_var)+1)]
 
