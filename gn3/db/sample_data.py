@@ -254,9 +254,6 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
                 "PublishSE": "(StrainId, DataId, error)",
                 "NStrain": "(StrainId, DataId, count)",
             }
-            _query = (f"INSERT INTO {table} "
-                      f"{_map.get(table)} "
-                      f"VALUES %s %s %s")
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT Id FROM PublishData where Id = %s "
