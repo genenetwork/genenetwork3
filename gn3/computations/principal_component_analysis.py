@@ -85,19 +85,18 @@ def generate_pca_traits_vals(trait_data_array: list[fArray],
 
     """
 
-    (_eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
+    (eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
 
-    # sort the eigens ?/regression tests gn2
+    # sort the eigens ?/ add regression tests gn2
+
+    if len(trait_data_array[0]) < 10:
+        return trait_data_array
 
     trait_zscores = stats.zscore(trait_data_array)
 
-    if len(trait_data_array[0]) < 10:
+    idx = eigen_values.argsort()[::-1]
 
-        trait_zscores = trait_data_array
-
-    pca_traits_values = np.dot(corr_eigen_vectors, trait_zscores)
-
-    return pca_traits_values
+    return np.dot(corr_eigen_vectors[:, idx], trait_zscores)
 
 
 def process_factor_loadings_tdata(factor_loadings, traits_num: int):
@@ -133,9 +132,9 @@ def generate_pca_temp_dataset(species: str, group: str,
 
     pca_trait_dict = {}
 
-    results = generate_pca_traits_vals(traits_data, corr_array).tolist()
+    pca_vals = generate_pca_traits_vals(traits_data, corr_array).tolist()
 
-    for (idx, pca_trait) in enumerate(results):
+    for (idx, pca_trait) in enumerate(pca_vals):
 
         trait_id = f"PCA{str(idx+1)}_{species}_{group}_{create_time}"
         sample_vals = []
