@@ -267,8 +267,7 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
                     return cursor.rowcount
         return 0
 
-    def __insert_case_attribute(conn, strain_id,
-                                case_attr, value, inbredset_id):
+    def __insert_case_attribute(conn, case_attr, value):
         if value != "x":
             with conn.cursor() as cursor:
                 cursor.execute(
@@ -304,10 +303,8 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
             else:
                 count += __insert_case_attribute(
                     conn=conn,
-                    strain_id=strain_id,
                     case_attr=header,
-                    value=value,
-                    inbredset_id=inbredset_id)
+                    value=value)
         return count
     except Exception as e:  # pylint: disable=[C0103, W0612]
         conn.rollback()
