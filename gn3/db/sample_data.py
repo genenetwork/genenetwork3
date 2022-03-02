@@ -270,15 +270,24 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
     def __insert_case_attribute(conn, case_attr, value):
         if value != "x":
             with conn.cursor() as cursor:
-                cursor.execute(
-                    (f"INSERT INTO CaseAttributeXRefNew "
-                     "StrainId, CaseAttributeId, Value, InbredSetId "
-                     "VALUES ("
-                     f"{strain_id}, "
-                     "(SELECT CaseAttributeId FROM "
-                     f"CaseAttribute WHERE NAME = %s), "
-                     "%s)" , (strain_id, case_attr, value, inbredset_id)))
-                return cursor.rowcount
+                cursor.execute("SELECT Id FROM "
+                               "CaseAttribute WHERE Name = %s",
+                               (case_attr,))
+                if case_attr_id := cursor.fetchone():
+                    case_attr_id = case_attr_id[0]
+                cursor.execute("SELECT StrainId FROM "
+                               "CaseAttributeXRefNew WHERE StrainId = %s "
+                               "AND CaseAttributeId = %s "
+                               "AND InbredSetId = %s",
+                               (strain_id, case_attr_id, inbredset_id))
+                if (not cursor.fetchone()) and case_attr_id:
+                    cursor.execute(
+                        "INSERT INTO CaseAttributeXRefNew "
+                        "(StrainId, CaseAttributeId, Value, InbredSetId) "
+                        "VALUES (%s, %s, %s, %s)",
+                        (strain_id, case_attr_id, value, inbredset_id))
+                    row_count = cursor.rowcount
+                    return row_count
         return 0
 
     strain_id, data_id, inbredset_id = get_sample_data_ids(
