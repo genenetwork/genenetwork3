@@ -85,15 +85,13 @@ def generate_pca_traits_vals(trait_data_array: list[fArray],
 
     """
 
-    (eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
-
     # sort the eigens ?/ add regression tests gn2
-
-    if len(trait_data_array[0]) < 10:
-        return trait_data_array
-
     trait_zscores = stats.zscore(trait_data_array)
 
+    if len(trait_data_array[0]) < 10:
+        trait_zscores = trait_data_array
+
+    (eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
     idx = eigen_values.argsort()[::-1]
 
     return np.dot(corr_eigen_vectors[:, idx], trait_zscores)
