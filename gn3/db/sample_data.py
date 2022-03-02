@@ -197,13 +197,12 @@ def delete_sample_data(conn: Any,
         if value != "x":
             with conn.cursor() as cursor:
                 cursor.execute(
-                    ("DELETE FROM CaseAttributeXRefNew "
-                     "WHERE StrainId = "
-                     "(SELECT CaseAttributeId FROM "
-                     f"CaseAttribute WHERE NAME = %s) "
-                     "AND InbredSetId = %s"),
-                    (strain_id, case_attr, inbredset_id)
-                )
+                    "DELETE FROM CaseAttributeXRefNew "
+                    "WHERE StrainId = %s AND CaseAttributeId = "
+                    "(SELECT CaseAttributeId FROM "
+                    "CaseAttribute WHERE Name = %s) "
+                    "AND InbredSetId = %s",
+                    (strain_id, case_attr, inbredset_id))
                 return cursor.rowcount
         return 0
 
