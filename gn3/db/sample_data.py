@@ -252,19 +252,13 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
     """
     def __insert_data(conn, table, value):
         if value and value != "x":
-
             with conn.cursor() as cursor:
-                cursor.execute(
-                    "SELECT Id FROM PublishData where Id = %s "
-                    "AND StrainId = %s",
-                    (data_id, strain_id))
-                if not cursor.fetchone():
-                    columns = ", ".join(_MAP.get(table))
-                    cursor.execute((f"INSERT INTO {table} "
-                                    f"({columns}) "
-                                    f"VALUES (%s, %s, %s)"),
-                                   (strain_id, data_id, value))
-                    return cursor.rowcount
+                columns = ", ".join(_MAP.get(table))
+                cursor.execute((f"INSERT INTO {table} "
+                                f"({columns}) "
+                                f"VALUES (%s, %s, %s)"),
+                               (strain_id, data_id, value))
+                return cursor.rowcount
         return 0
 
     def __insert_case_attribute(conn, case_attr, value):
@@ -304,6 +298,16 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
 
     try:
         count = 0
+
+        # Check if the data already exists:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                    "SELECT Id FROM PublishData where Id = %s "
+                    "AND StrainId = %s",
+                    (data_id, strain_id))
+        if cursor.fetchone():  # Data already exists
+            return count
+
         for header, value in zip(csv_header.split(","), data.split(",")):
             header = header.strip()
             value = value.strip()
