@@ -9,6 +9,7 @@ from gn3.computations.pca import process_factor_loadings_tdata
 from gn3.computations.pca import generate_pca_temp_traits
 from gn3.computations.pca import cache_pca_dataset
 from gn3.computations.pca import generate_scree_plot_data
+from gn3.computations.pca import cache_pca_dataset
 
 
 class TestPCA(unittest.TestCase):
@@ -65,3 +66,26 @@ class TestPCA(unittest.TestCase):
         expected_results = [('PC1', 92.7), ('PC2', 6.2), ('PC3', 3.1)]
 
         self.assertEqual(generate_scree_plot_data(variance), expected_results)
+
+    def test_cache_pca_datasets(self):
+        """test for caching pca datasets"""
+
+        pca_traits = {
+            "PCA_1": ["11.0",   "x",   "9.0",   "7.0"],
+            "PCA_2": ["x", "x", "1.2", "3.1"]
+        }
+
+        self.assertEqual(cache_pca_dataset(redis_conn={}, exp_days=30,
+                                           pca_trait_dict=pca_traits), False)
+
+        mock_redis = Mock()
+        mock_redis.set.return_value = True
+
+        for (test_redis, exp_day, test_traits, expected) in [({}, 30, pca_traits, False),
+                                                             (mock_redis, 30, pca_traits, True)]:
+
+            with self.subTest(redis_conn=test_redis,
+                              exp_days=exp_day, pca_trait_dict=test_traits):
+
+                self.assertEqual(cache_pca_dataset(
+                    test_redis, exp_day, test_traits), expected)

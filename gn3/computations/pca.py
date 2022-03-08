@@ -61,8 +61,6 @@ def generate_scree_plot_data(variance_ratio: fArray) -> list[tuple[str, float]]:
 
     perc_var = [round(ratio*100, 1) for ratio in variance_ratio]
 
-    # perc_var = np.round(variance_ratio*100, decimals=1)
-
     x_coordinates = [f"PC{val}" for val in range(1, len(perc_var)+1)]
 
     return list(zip(x_coordinates, perc_var))
@@ -165,11 +163,11 @@ def cache_pca_dataset(redis_conn: Any, exp_days: int,
 
             redis_conn(object)
             exp_days(int): fo redis cache
-            pca_trait_dict(Dict):contains traits and traits vals to cache
+            pca_trait_dict(Dict): contains traits and traits vals to cache
 
     Returns:
 
-            boolean(True)
+            boolean(True if correct conn object False incase of exception)
 
 
     """
@@ -177,6 +175,10 @@ def cache_pca_dataset(redis_conn: Any, exp_days: int,
     for trait_id, trait_sample_data in pca_trait_dict.items():
 
         samples_str = " ".join([str(x) for x in trait_sample_data])
-        redis_conn.set(trait_id, samples_str, ex=exp_days)
+
+        try:
+            redis_conn.set(trait_id, samples_str, ex=exp_days)
+        except Exception:
+            return False
 
     return True
