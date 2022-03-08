@@ -27,8 +27,6 @@ class TestDatabase(TestCase):
 
         mock_sql.connect.assert_called_with(
             "localhost", "guest", "4321", "users")
-        self.assertIsInstance(
-            results, tuple, "database not created successfully")
 
     @pytest.mark.unit_test
     @mock.patch("gn3.db_utils.SQL_URI",

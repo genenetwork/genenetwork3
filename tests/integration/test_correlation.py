@@ -71,7 +71,9 @@ class CorrelationIntegrationTest(TestCase):
 
         mock_compute_corr.return_value = []
 
-        database_connector.return_value = (mock.Mock(), mock.Mock())
+        database_connector.return_value = mock.Mock()
+        database_connector.return_value.__enter__ = mock.Mock()
+        database_connector.return_value.__exit__ = mock.Mock()
 
         post_data = {"1426678_at": "68031",
                      "1426679_at": "68036",

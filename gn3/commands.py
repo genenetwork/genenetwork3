@@ -84,11 +84,12 @@ Returns the name of the specific redis hash for the specific task.
                  f"{str(uuid4())}")
     conn.rpush(job_queue, unique_id)
     for key, value in {
-            "cmd": json.dumps(cmd), "result": "", "status": "queued",
-            "env": json.dumps(env)}.items():
+            "cmd": json.dumps(cmd), "result": "", "status": "queued"}.items():
         conn.hset(name=unique_id, key=key, value=value)
     if email:
         conn.hset(name=unique_id, key="email", value=email)
+    if env:
+        conn.hset(name=unique_id, key="env", value=json.dumps(env))
     return unique_id
 
 

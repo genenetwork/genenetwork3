@@ -19,4 +19,6 @@ def client():
 def db_conn():
     """Create a db connection fixture for tests"""
     ## Update this to use temp db once that is in place
-    return database_connector()[0]
+    conn = database_connector()
+    yield conn
+    conn.close()

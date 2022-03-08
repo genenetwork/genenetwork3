@@ -28,15 +28,13 @@ def timer(func):
 def query_executor(query: str,
                    fetch_all: bool = True):
     """function to execute a query"""
-    conn, _ = database_connector()
+    with database_connector() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query)
 
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute(query)
-
-        if fetch_all:
-            return cursor.fetchall()
-        return cursor.fetchone()
+            if fetch_all:
+                return cursor.fetchall()
+            return cursor.fetchone()
 
 
 def fetch_probeset_query(dataset_name: str):

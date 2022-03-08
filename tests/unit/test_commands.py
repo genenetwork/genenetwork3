@@ -96,8 +96,7 @@ class TestCommands(unittest.TestCase):
     @pytest.mark.unit_test
     @mock.patch("gn3.commands.datetime")
     @mock.patch("gn3.commands.uuid4")
-    def test_queue_cmd_correct_calls_to_redis(self, mock_uuid4,
-                                              mock_datetime):
+    def test_queue_cmd_correct_calls_to_redis(self, mock_uuid4, mock_datetime):
         """Test that the cmd is queued properly"""
         mock_uuid4.return_value = 1234
         mock_datetime.now.return_value = datetime.fromisoformat('2021-02-12 '
@@ -112,7 +111,7 @@ class TestCommands(unittest.TestCase):
                                    job_queue="GN2::job-queue"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(
-            [mock.call(name=actual_unique_id, key="cmd", value="ls"),
+            [mock.call(name=actual_unique_id, key="cmd", value='"ls"'),
              mock.call(name=actual_unique_id, key="result", value=""),
              mock.call(name=actual_unique_id, key="status", value="queued")])
         mock_redis_conn.rpush.assert_has_calls(
@@ -139,23 +138,23 @@ class TestCommands(unittest.TestCase):
                                    email="me@me.com"),
                          actual_unique_id)
         mock_redis_conn.hset.assert_has_calls(
-            [mock.call(name=actual_unique_id, key="cmd", value="ls"),
+            [mock.call(name=actual_unique_id, key="cmd", value='"ls"'),
              mock.call(name=actual_unique_id, key="result", value=""),
              mock.call(name=actual_unique_id, key="status", value="queued"),
              mock.call(name=actual_unique_id, key="email", value="me@me.com")
-             ])
+             ], any_order=True)
         mock_redis_conn.rpush.assert_has_calls(
             [mock.call("GN2::job-queue", actual_unique_id)])
 
     @pytest.mark.unit_test
     def test_run_cmd_correct_input(self):
         """Test that a correct cmd is processed correctly"""
-        self.assertEqual(run_cmd("echo test"),
+        self.assertEqual(run_cmd('"echo test"'),
                          {"code": 0, "output": "test\n"})
 
     @pytest.mark.unit_test
     def test_run_cmd_incorrect_input(self):
         """Test that an incorrect cmd is processed correctly"""
-        result = run_cmd("echoo test")
+        result = run_cmd('"echoo test"')
         self.assertEqual(127, result.get("code"))
         self.assertIn("not found", result.get("output"))
