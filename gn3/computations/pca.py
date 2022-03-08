@@ -44,7 +44,7 @@ def compute_pca(array: list[fArray]) -> dict[str, Any]:
     }
 
 
-def generate_scree_plot_data(variance_ratio: fArray) -> list[tuple[str, float]]:
+def generate_scree_plot_data(variance_ratio: fArray) -> tuple[list, fArray]:
     """
     generates the scree data for plotting
 
@@ -63,7 +63,7 @@ def generate_scree_plot_data(variance_ratio: fArray) -> list[tuple[str, float]]:
 
     x_coordinates = [f"PC{val}" for val in range(1, len(perc_var)+1)]
 
-    return list(zip(x_coordinates, perc_var))
+    return (x_coordinates, perc_var)
 
 
 def generate_pca_traits_vals(trait_data_array: list[fArray],
