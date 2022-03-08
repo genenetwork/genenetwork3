@@ -5,10 +5,10 @@ from unittest.mock import Mock
 
 import numpy as np
 
-from gn3.computations.principal_component_analysis import process_factor_loadings_tdata
-from gn3.computations.principal_component_analysis import generate_pca_temp_dataset
-from gn3.computations.principal_component_analysis import cache_pca_dataset
-from gn3.computations.principal_component_analysis import generate_scree_plot_data
+from gn3.computations.pca import process_factor_loadings_tdata
+from gn3.computations.pca import generate_pca_temp_traits
+from gn3.computations.pca import cache_pca_dataset
+from gn3.computations.pca import generate_scree_plot_data
 
 
 class TestPCA(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestPCA(unittest.TestCase):
         self.assertEqual(process_factor_loadings_tdata(
             test_array, 3), expected_results)
 
-    @patch("gn3.computations.principal_component_analysis.generate_pca_traits_vals")
+    @patch("gn3.computations.pca.generate_pca_traits_vals")
     def test_generate_pca_datasets(self, mock_pca_data):
         """test for generating temp pca dataset"""
 
@@ -50,12 +50,12 @@ class TestPCA(unittest.TestCase):
                             'PCA3_mouse_G1_now': ["22.0",   'x',   "16.0",   "0.0"],
                             'PCA4_mouse_G1_now': ["31.0",   'x',   "12.0",   "10.0"]}
 
-        self.assertEqual(generate_pca_temp_dataset(species="mouse", group="G1",
-                                                   traits_data=[],
-                                                   dataset_samples=dataset_samples,
-                                                   corr_array=[],
-                                                   shared_samples=shared_samples,
-                                                   create_time="now"), expected_results)
+        self.assertEqual(generate_pca_temp_traits(species="mouse", group="G1",
+                                                  traits_data=[],
+                                                  dataset_samples=dataset_samples,
+                                                  corr_array=[],
+                                                  shared_samples=shared_samples,
+                                                  create_time="now"), expected_results)
 
     def test_generate_scree_plot(self):
         """test scree plot data is generated"""
