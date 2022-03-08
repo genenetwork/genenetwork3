@@ -68,17 +68,15 @@ def compute_lit_corr(species=None, gene_id=None):
     might be needed for actual computing of the correlation results
     """
 
-    conn, _cursor_object = database_connector()
-    target_traits_gene_ids = request.get_json()
-    target_trait_gene_list = list(target_traits_gene_ids.items())
+    with database_connector() as conn:
+        target_traits_gene_ids = request.get_json()
+        target_trait_gene_list = list(target_traits_gene_ids.items())
 
-    lit_corr_results = compute_all_lit_correlation(
-        conn=conn, trait_lists=target_trait_gene_list,
-        species=species, gene_id=gene_id)
+        lit_corr_results = compute_all_lit_correlation(
+            conn=conn, trait_lists=target_trait_gene_list,
+            species=species, gene_id=gene_id)
 
-    conn.close()
-
-    return jsonify(lit_corr_results)
+        return jsonify(lit_corr_results)
 
 
 @correlation.route("/tissue_corr/<string:corr_method>", methods=["POST"])

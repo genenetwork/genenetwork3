@@ -35,19 +35,19 @@ def cleanup_string(the_str):
     return the_str.strip('"\t\n\r ')
 
 def run_partial_corrs(args):
-    try:
-        conn, _cursor_object = database_connector()
-        return partial_correlations_entry(
-            conn, cleanup_string(args.primary_trait),
-            tuple(cleanup_string(args.control_traits).split(",")),
-            cleanup_string(args.method), args.criteria,
-            cleanup_string(args.target_database))
-    except Exception as exc:
-        print(traceback.format_exc(), file=sys.stderr)
-        return {
-            "status": "exception",
-            "message": traceback.format_exc()
-        }
+    with database_connector() as conn:
+        try:
+            return partial_correlations_entry(
+                conn, cleanup_string(args.primary_trait),
+                tuple(cleanup_string(args.control_traits).split(",")),
+                cleanup_string(args.method), args.criteria,
+                cleanup_string(args.target_database))
+        except Exception as exc:
+            print(traceback.format_exc(), file=sys.stderr)
+            return {
+                "status": "exception",
+                "message": traceback.format_exc()
+            }
 
 def enter():
     args = process_cli_arguments()

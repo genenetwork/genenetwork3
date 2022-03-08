@@ -24,14 +24,14 @@ def clustered_heatmaps():
         return jsonify({
             "message": "You need to provide at least two trait names."
         }), 400
-    conn, _cursor = database_connector()
-    def parse_trait_fullname(trait):
-        name_parts = trait.split(":")
-        return f"{name_parts[1]}::{name_parts[0]}"
-    traits_fullnames = [parse_trait_fullname(trait) for trait in traits_names]
+    with database_connector() as conn:
+        def parse_trait_fullname(trait):
+            name_parts = trait.split(":")
+            return f"{name_parts[1]}::{name_parts[0]}"
+        traits_fullnames = [parse_trait_fullname(trait) for trait in traits_names]
 
-    with io.StringIO() as io_str:
-        figure = build_heatmap(traits_fullnames, conn, vertical=vertical)
-        figure.write_json(io_str)
-        fig_json = io_str.getvalue()
-    return fig_json, 200
+        with io.StringIO() as io_str:
+            figure = build_heatmap(traits_fullnames, conn, vertical=vertical)
+            figure.write_json(io_str)
+            fig_json = io_str.getvalue()
+        return fig_json, 200
