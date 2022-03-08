@@ -69,35 +69,6 @@ def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
         [__process_control__(trait_data) for trait_data in controls],
         (tuple(), tuple(), tuple(), tuple()))
 
-def dictify_by_samples(samples_vals_vars: Sequence[Sequence]) -> Sequence[dict]:
-    """
-    Build a sequence of dictionaries from a sequence of separate sequences of
-    samples, values and variances.
-
-    This is a partial migration of
-    `web.webqtl.correlation.correlationFunction.fixStrains` function in GN1.
-    This implementation extracts code that will find common use, and that will
-    find use in more than one place.
-    """
-    def __build_key_value_pairs__(
-            sample: str, value: Union[float, None],
-            variance: Union[float, None]) -> dict[
-                str, dict[str, Union[str, float, None]]]:
-        smp = sample.strip()
-        if smp == "":
-            warnings.warn(
-                "Empty strings for sample names is not allowed. Returning None",
-                category=RuntimeWarning)
-            return None
-        return (smp, {"sample_name": smp, "value": value, "variance": variance})
-
-    return tuple(
-        dict(item for item in
-             (__build_key_value_pairs__(sample, val, var)
-              for sample, val, var in zip(*trait_line))
-             if item is not None)
-        for trait_line in zip(*(samples_vals_vars[0:3])))
-
 def fix_samples(primary_trait: dict, control_traits: Sequence[dict]) -> Sequence[Sequence[Any]]:
     """
     Corrects sample_names, values and variance such that they all contain only

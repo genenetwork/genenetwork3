@@ -10,7 +10,6 @@ from gn3.computations.partial_correlations import (
     fix_samples,
     control_samples,
     build_data_frame,
-    dictify_by_samples,
     tissue_correlation,
     find_identical_traits,
     good_dataset_samples_indexes)
@@ -113,37 +112,6 @@ class TestPartialCorrelations(TestCase):
              ((None, None, None, None, None, None), (None, None, None, None),
               (None, None, None)),
              (6, 4, 3)))
-
-    @pytest.mark.unit_test
-    def test_dictify_by_samples(self):
-        """
-        Test that `dictify_by_samples` generates the appropriate dict
-
-        Given:
-            a sequence of sequences with sample names, values and variances, as
-            in the output of `gn3.partial_correlations.control_samples` or
-            the output of `gn3.db.traits.export_informative`
-        When:
-            the sequence is passed as an argument into the
-            `gn3.partial_correlations.dictify_by_sample`
-        Then:
-            return a sequence of dicts with keys being the values of the sample
-            names, and each of who's values being sub-dicts with the keys
-            'sample_name', 'value' and 'variance' whose values correspond to the
-            values passed in.
-        """
-        self.assertEqual(
-            dictify_by_samples(
-                ((("B6cC3-1", "BXD1", "BXD12", "BXD16", "BXD19", "BXD2"),
-                  ("BXD12", "BXD16", "BXD19", "BXD2"),
-                  ("B6cC3-1", "BXD1", "BXD2")),
-                 ((7.51879, 7.77141, 8.39265, 8.17443, 8.30401, 7.80944),
-                  (8.39265, 8.17443, 8.30401, 7.80944),
-                  (7.51879, 7.77141, 7.80944)),
-                 ((None, None, None, None, None, None), (None, None, None, None),
-                  (None, None, None)),
-                 (6, 4, 3))),
-            dictified_control_samples)
 
     @pytest.mark.unit_test
     def test_fix_samples(self):
