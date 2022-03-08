@@ -120,10 +120,10 @@ def process_factor_loadings_tdata(factor_loadings, traits_num: int):
             for trait_loading in trait_loadings]
 
 
-def generate_pca_temp_dataset(species: str, group: str,
-                              traits_data: list[fArray], corr_array: list[fArray],
-                              dataset_samples: list[str], shared_samples: list[str],
-                              create_time: str) -> dict[str, list[Any]]:
+def generate_pca_temp_traits(species: str, group: str,
+                             traits_data: list[fArray], corr_array: list[fArray],
+                             dataset_samples: list[str], shared_samples: list[str],
+                             create_time: str) -> dict[str, list[Any]]:
     """
 
     generate pca temp datasets
