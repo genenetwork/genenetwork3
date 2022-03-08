@@ -30,7 +30,7 @@ def compute_pca(array: list[fArray]) -> dict[str, Any]:
 
     """
 
-    corr_matrix = np.matrix(array)
+    corr_matrix = np.array(array)
 
     pca_obj = PCA()
     scaled_data = preprocessing.scale(corr_matrix)
@@ -85,7 +85,7 @@ def generate_pca_traits_vals(trait_data_array: list[fArray],
 
     """
 
-    # sort the eigens ?/ add regression tests gn2
+    #  add regression tests gn2
     trait_zscores = stats.zscore(trait_data_array)
 
     if len(trait_data_array[0]) < 10:
