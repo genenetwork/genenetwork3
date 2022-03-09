@@ -85,7 +85,6 @@ def generate_pca_traits_vals(trait_data_array: list[fArray],
 
     """
 
-    #  add regression tests gn2
     trait_zscores = stats.zscore(trait_data_array)
 
     if len(trait_data_array[0]) < 10:
