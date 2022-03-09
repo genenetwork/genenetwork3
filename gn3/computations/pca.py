@@ -174,7 +174,7 @@ def cache_pca_dataset(redis_conn: Any, exp_days: int,
 
     try:
         for trait_id, sample_data in pca_trait_dict.items():
-            samples_str = " ".join([str(x) for x in trait_sample_data])
+            samples_str = " ".join([str(x) for x in sample_data])
             redis_conn.set(trait_id, samples_str, ex=exp_days)
         return True
 

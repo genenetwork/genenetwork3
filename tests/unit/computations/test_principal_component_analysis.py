@@ -63,9 +63,8 @@ class TestPCA(unittest.TestCase):
 
         variance = [0.9271, 0.06232, 0.031]
 
-        expected_results = [('PC1', 92.7), ('PC2', 6.2), ('PC3', 3.1)]
-
-        self.assertEqual(generate_scree_plot_data(variance), expected_results)
+        self.assertEqual(generate_scree_plot_data(variance),
+                         (['PC1', 'PC2', 'PC3'], [92.7, 6.2, 3.1]))
 
     def test_cache_pca_datasets(self):
         """test for caching pca datasets"""
