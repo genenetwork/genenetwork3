@@ -7,7 +7,6 @@ import numpy as np
 
 from gn3.computations.pca import process_factor_loadings_tdata
 from gn3.computations.pca import generate_pca_temp_traits
-from gn3.computations.pca import cache_pca_dataset
 from gn3.computations.pca import generate_scree_plot_data
 from gn3.computations.pca import cache_pca_dataset
 
