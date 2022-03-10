@@ -87,7 +87,7 @@ def test_extract_actions():
                 "delete": {"data": "18", "csv_header": "Value"},
                 "insert": {"data": "2,F", "csv_header": "SE,Sex"},
                 "update": {"data": "1", "csv_header": "Count"},
-            })
+    })
     assert(__extract_actions(original_data="BXD1,18,x,0,x",
                              updated_data="BXD1,19,2,1,F",
                              csv_header="Strain Name,Value,SE,Count,Sex") ==
@@ -95,7 +95,7 @@ def test_extract_actions():
                "delete": None,
                "insert": {"data": "2,F", "csv_header": "SE,Sex"},
                "update": {"data": "19,1", "csv_header": "Value,Count"},
-           })
+    })
 
 
 @pytest.mark.unit_test
