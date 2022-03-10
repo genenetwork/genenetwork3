@@ -1,8 +1,10 @@
 import pytest
+import gn3
 
-from gn3.db.sample_data import insert_sample_data
-from gn3.db.sample_data import delete_sample_data
 from gn3.db.sample_data import __extract_actions
+from gn3.db.sample_data import delete_sample_data
+from gn3.db.sample_data import insert_sample_data
+from gn3.db.sample_data import update_sample_data
 
 
 @pytest.mark.unit_test
@@ -94,3 +96,40 @@ def test_extract_actions():
                "insert": {"data": "2,F", "csv_header": "SE,Sex"},
                "update": {"data": "19,1", "csv_header": "Value,Count"},
            })
+
+
+@pytest.mark.unit_test
+def test_update_sample_data(mocker):
+    mock_conn = mocker.MagicMock()
+    strain_id, data_id, inbredset_id = 1, 17373, 20
+    with mock_conn.cursor() as cursor:
+        # cursor.fetchone.side_effect = (0, [19, ], 0)
+        mocker.patch('gn3.db.sample_data.get_sample_data_ids',
+                     return_value=(strain_id, data_id, inbredset_id))
+        mocker.patch('gn3.db.sample_data.insert_sample_data',
+                     return_value=1)
+        mocker.patch('gn3.db.sample_data.delete_sample_data',
+                     return_value=1)
+        update_sample_data(conn=mock_conn,
+                           trait_name=35,
+                           original_data="BXD1,18,x,0,x",
+                           updated_data="BXD1,x,2,1,F",
+                           csv_header="Strain Name,Value,SE,Count,Sex",
+                           phenotype_id=10007)
+        gn3.db.sample_data.insert_sample_data.assert_called_once_with(
+            conn=mock_conn,
+            trait_name=35,
+            data="2,F",
+            csv_header="SE,Sex",
+            phenotype_id=10007)
+        gn3.db.sample_data.delete_sample_data.assert_called_once_with(
+            conn=mock_conn,
+            trait_name=35,
+            data="18",
+            csv_header="Value",
+            phenotype_id=10007)
+        cursor.execute.assert_has_calls(
+            [mocker.call("UPDATE NStrain SET count = %s "
+                         "WHERE StrainId = %s AND DataId = %s",
+                         ('1', strain_id, data_id))],
+            any_order=False)

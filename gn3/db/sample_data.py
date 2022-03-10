@@ -122,93 +122,92 @@ def get_sample_data_ids(conn: Any, publishxref_id: int,
 
 def update_sample_data(conn: Any,  # pylint: disable=[R0913]
                        trait_name: str,
-                       strain_name: str,
-                       phenotype_id: int,
-                       value: Union[int, float, str],
-                       error: Union[int, float, str],
-                       count: Union[int, str]):
+                       original_data: str,
+                       updated_data: str,
+                       csv_header: str,
+                       phenotype_id: int) -> int:
     """Given the right parameters, update sample-data from the relevant
     table."""
-    strain_id, data_id, _ = get_sample_data_ids(
+    def __update_data(conn, table, value):
+        if value and value != "x":
+            with conn.cursor() as cursor:
+                sub_query = (" = %s AND ".join(_MAP.get(table)[:2]) + " = %s")
+                _val = _MAP.get(table)[-1]
+                cursor.execute((f"UPDATE {table} SET {_val} = %s "
+                                f"WHERE {sub_query}"),
+                               (value, strain_id, data_id))
+                return cursor.rowcount
+
+    def __update_case_attribute(conn, value, strain_id,
+                                case_attr, inbredset_id):
+        if value != "x":
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE CaseAttributeXRefNew "
+                    "SET Value = %s "
+                    "WHERE StrainId = %s AND CaseAttributeId = "
+                    "(SELECT CaseAttributeId FROM "
+                    "CaseAttribute WHERE Name = %s) "
+                    "AND InbredSetId = %s",
+                    (value, strain_id, case_attr, inbredset_id))
+                return cursor.rowcount
+        return 0
+
+    strain_id, data_id, inbredset_id = get_sample_data_ids(
         conn=conn, publishxref_id=trait_name,
-        phenotype_id=phenotype_id, strain_name=strain_name)
+        phenotype_id=phenotype_id,
+        strain_name=extract_strain_name(csv_header, original_data))
 
-    updated_published_data: int = 0
-    updated_se_data: int = 0
-    updated_n_strains: int = 0
-
-    with conn.cursor() as cursor:
-        # Update the PublishData table
-        if value == "x":
-            cursor.execute(("DELETE FROM PublishData "
-                            "WHERE StrainId = %s AND Id = %s")
-                           % (strain_id, data_id))
-            updated_published_data = cursor.rowcount
-        else:
-            cursor.execute(("UPDATE PublishData SET value = %s "
-                        "WHERE StrainId = %s AND Id = %s"),
-                       (value, strain_id, data_id))
-            updated_published_data = cursor.rowcount
-
-            if not updated_published_data:
-                cursor.execute(
-                    "SELECT * FROM "
-                    "PublishData WHERE StrainId = "
-                    "%s AND Id = %s" % (strain_id, data_id))
-                if not cursor.fetchone():
-                    cursor.execute(("INSERT INTO PublishData (Id, StrainId, "
-                                    " value) VALUES (%s, %s, %s)") %
-                                   (data_id, strain_id, value))
-                    updated_published_data = cursor.rowcount
-
-        # Update the PublishSE table
-        if error == "x":
-            cursor.execute(("DELETE FROM PublishSE "
-                            "WHERE StrainId = %s AND DataId = %s") %
-                           (strain_id, data_id))
-            updated_se_data = cursor.rowcount
-        else:
-            cursor.execute(("UPDATE PublishSE SET error = %s "
-                            "WHERE StrainId = %s AND DataId = %s"),
-                           (None if error == "x" else error,
-                            strain_id, data_id))
-            updated_se_data = cursor.rowcount
-            if not updated_se_data:
-                cursor.execute(
-                        "SELECT * FROM "
-                        "PublishSE WHERE StrainId = "
-                        "%s AND DataId = %s" % (strain_id, data_id))
-                if not cursor.fetchone():
-                    cursor.execute(("INSERT INTO PublishSE (StrainId, DataId, "
-                                    " error) VALUES (%s, %s, %s)") %
-                                   (strain_id, data_id,
-                                    None if error == "x" else error))
-                    updated_se_data = cursor.rowcount
-
-        # Update the NStrain table
-        if count == "x":
-            cursor.execute(("DELETE FROM NStrain "
-                                "WHERE StrainId = %s AND DataId = %s" %
-                                (strain_id, data_id)))
-            updated_n_strains = cursor.rowcount
-        else:
-            cursor.execute(("UPDATE NStrain SET count = %s "
-                            "WHERE StrainId = %s AND DataId = %s"),
-                           (count, strain_id, data_id))
-            updated_n_strains = cursor.rowcount
-            if not updated_n_strains:
-                cursor.execute(
-                        "SELECT * FROM "
-                        "NStrain WHERE StrainId = "
-                        "%s AND DataId = %s" % (strain_id, data_id))
-                if not cursor.fetchone():
-                    cursor.execute(("INSERT INTO NStrain "
-                                    "(StrainId, DataId, count) "
-                                    "VALUES (%s, %s, %s)") %
-                                   (strain_id, data_id, count))
-                    updated_n_strains = cursor.rowcount
-    return (updated_published_data,
-            updated_se_data, updated_n_strains)
+    none_case_attrs = {
+        "Strain Name": lambda x: 0,
+        "Value": lambda x: __update_data(conn, "PublishData", x),
+        "SE": lambda x: __update_data(conn, "PublishSE", x),
+        "Count": lambda x: __update_data(conn, "NStrain", x),
+    }
+    count = 0
+    try:
+        __actions = __extract_actions(original_data=original_data,
+                                      updated_data=updated_data,
+                                      csv_header=csv_header)
+        if __actions.get("update"):
+            _csv_header = __actions["update"]["csv_header"]
+            _data = __actions["update"]["data"]
+            for header, value in zip(_csv_header.split(","),
+                                     _data.split(",")):
+                header = header.strip()
+                value = value.strip()
+                if header in none_case_attrs:
+                    count += none_case_attrs.get(header)(value)
+                else:
+                    count += __update_case_attribute(
+                        conn=conn,
+                        value=none_case_attrs.get(header)(value),
+                        strain_id=strain_id,
+                        case_attr=header,
+                        inbredset_id=inbredset_id)
+        if __actions.get("delete"):
+            _rowcount = delete_sample_data(
+                conn=conn,
+                trait_name=trait_name,
+                data=__actions["delete"]["data"],
+                csv_header=__actions["delete"]["csv_header"],
+                phenotype_id=phenotype_id)
+            if _rowcount:
+                count += 1
+        if __actions.get("insert"):
+            _rowcount = insert_sample_data(
+                conn=conn,
+                trait_name=trait_name,
+                data=__actions["insert"]["data"],
+                csv_header=__actions["insert"]["csv_header"],
+                phenotype_id=phenotype_id)
+            if _rowcount:
+                count += 1
+    except Exception as e:  # pylint: disable=[C0103, W0612]
+        conn.rollback()
+        raise MySQLdb.Error
+    conn.commit()
+    return count
 
 
 def delete_sample_data(conn: Any,
