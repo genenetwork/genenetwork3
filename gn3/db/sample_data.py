@@ -1,5 +1,5 @@
 from gn3.csvcmp import extract_strain_name
-from typing import Any, Tuple, Union
+from typing import Any, Tuple
 
 import MySQLdb
 
@@ -333,9 +333,9 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
         # Check if the data already exists:
         with conn.cursor() as cursor:
             cursor.execute(
-                    "SELECT Id FROM PublishData where Id = %s "
-                    "AND StrainId = %s",
-                    (data_id, strain_id))
+                "SELECT Id FROM PublishData where Id = %s "
+                "AND StrainId = %s",
+                (data_id, strain_id))
         if cursor.fetchone():  # Data already exists
             return count
 
