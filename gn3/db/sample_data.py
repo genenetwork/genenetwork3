@@ -11,6 +11,38 @@ _MAP = {
 }
 
 
+def __extract_actions(original_data: str,
+                      updated_data: str,
+                      csv_header: str) -> dict:
+    original_data = original_data.strip().split(",")
+    updated_data = updated_data.strip().split(",")
+    csv_header = csv_header.strip().split(",")
+    result = {
+        "delete": {"data": [], "csv_header": []},
+        "insert": {"data": [], "csv_header": []},
+        "update": {"data": [], "csv_header": []},
+    }
+    for _o, _u, _h in zip(original_data, updated_data, csv_header):
+        if _o == _u:  # No change
+            continue
+        elif _o and _u == "x":  # Deletion
+            result["delete"]["data"].append(_o)
+            result["delete"]["csv_header"].append(_h)
+        elif _o == "x" and _u:  # Insert
+            result["insert"]["data"].append(_u)
+            result["insert"]["csv_header"].append(_h)
+        elif _o and _u:  # Update
+            result["update"]["data"].append(_u)
+            result["update"]["csv_header"].append(_h)
+    for key, val in result.items():
+        if not val["data"]:
+            result[key] = None
+        else:
+            result[key]["data"] = ",".join(result[key]["data"])
+            result[key]["csv_header"] = ",".join(result[key]["csv_header"])
+    return result
+
+
 def get_trait_csv_sample_data(conn: Any,
                               trait_name: int, phenotype_id: int) -> str:
     """Fetch a trait and return it as a csv string"""

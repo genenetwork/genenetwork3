@@ -2,6 +2,7 @@ import pytest
 
 from gn3.db.sample_data import insert_sample_data
 from gn3.db.sample_data import delete_sample_data
+from gn3.db.sample_data import __extract_actions
 
 
 @pytest.mark.unit_test
@@ -73,3 +74,23 @@ def test_delete_sample_data(mocker):
                              (strain_id, "Sex", inbredset_id)),
                  ]
         cursor.execute.assert_has_calls(calls, any_order=False)
+
+
+@pytest.mark.unit_test
+def test_extract_actions():
+    assert (__extract_actions(original_data="BXD1,18,x,0,x",
+                              updated_data="BXD1,x,2,1,F",
+                              csv_header="Strain Name,Value,SE,Count,Sex") ==
+            {
+                "delete": {"data": "18", "csv_header": "Value"},
+                "insert": {"data": "2,F", "csv_header": "SE,Sex"},
+                "update": {"data": "1", "csv_header": "Count"},
+            })
+    assert(__extract_actions(original_data="BXD1,18,x,0,x",
+                             updated_data="BXD1,19,2,1,F",
+                             csv_header="Strain Name,Value,SE,Count,Sex") ==
+           {
+               "delete": None,
+               "insert": {"data": "2,F", "csv_header": "SE,Sex"},
+               "update": {"data": "19,1", "csv_header": "Value,Count"},
+           })
