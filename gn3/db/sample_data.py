@@ -214,7 +214,7 @@ def delete_sample_data(conn: Any,
                        trait_name: str,
                        data: str,
                        csv_header: str,
-                       phenotype_id: int):
+                       phenotype_id: int) -> int:
     """Given the right parameters, delete sample-data from the relevant
     tables."""
     def __delete_data(conn, table):
@@ -277,7 +277,7 @@ def insert_sample_data(conn: Any,  # pylint: disable=[R0913]
                        trait_name: str,
                        data: str,
                        csv_header: str,
-                       phenotype_id: int):
+                       phenotype_id: int) -> int:
     """Given the right parameters, insert sample-data to the relevant table.
 
     """
