@@ -67,9 +67,9 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp"):
                           width=_l))
 
     # Now we can run the diff!
-    _r = run_cmd(cmd=("csvdiff "
-                      f"'{file_name1}' '{file_name2}' "
-                      "--format json"))
+    _r = run_cmd(cmd=('"csvdiff '
+                      f'{file_name1} {file_name2} '
+                      '--format json"'))
     if _r.get("code") == 0:
         _r = json.loads(_r.get("output"))
         if any(_r.values()):
