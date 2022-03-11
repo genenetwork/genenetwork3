@@ -55,7 +55,6 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp"):
         else:
             delta_csv = delta_csv.replace("Strain Name,Value,SE,Count",
                                           longest_header, 1)
-        print(delta_csv)
     file_name1 = os.path.join(tmp_dir, str(uuid.uuid4()))
     file_name2 = os.path.join(tmp_dir, str(uuid.uuid4()))
 
