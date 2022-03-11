@@ -121,7 +121,7 @@ def get_sample_data_ids(conn: Any, publishxref_id: int,
             publishdata_id, inbredset_id = cursor.fetchone()
             cursor.execute("SELECT Id FROM Strain WHERE Name = %s",
                            (strain_name,))
-            strain_id = cursor.fetchone()
+            strain_id = cursor.fetchone()[0]
     return (strain_id, publishdata_id, inbredset_id)
 
 
