@@ -60,7 +60,7 @@ def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
             __process_sample__, sampleslist, (tuple(), tuple(), tuple()))
 
     return reduce(
-        lambda acc, item: (
+        lambda acc, item: (# type: ignore[arg-type, return-value]
             acc[0] + (item[0],),
             acc[1] + (item[1],),
             acc[2] + (item[2],),

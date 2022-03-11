@@ -50,8 +50,8 @@ def __load_genotype_samples_from_geno(genotype_filename: str):
 
     gzipped_filename = f"{genotype_filename}.gz"
     if os.path.isfile(gzipped_filename):
-        with gzip.open(gzipped_filename) as genofile:
-            rows = __remove_comments_and_empty_lines__(genofile.readlines())
+        with gzip.open(gzipped_filename) as gz_genofile:
+            rows = __remove_comments_and_empty_lines__(gz_genofile.readlines())
     else:
         with open(genotype_filename, encoding="utf8") as genofile:
             rows = __remove_comments_and_empty_lines__(genofile.readlines())
