@@ -1,6 +1,5 @@
 """Endpoints for running correlations"""
 import sys
-import json
 from functools import reduce
 
 import redis
@@ -17,7 +16,6 @@ from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
-from gn3.computations.partial_correlations import partial_correlations_entry
 
 correlation = Blueprint("correlation", __name__)
 
@@ -132,7 +130,3 @@ def partial_correlation():
                 int(args.get("criteria", 500))),
             job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
             env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})})
-
-@correlation.route("/partial/<job_id>", methods=["GET"])
-def partial_correlation_results():
-    raise Exception("Not implemented!!")

@@ -54,6 +54,7 @@ def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
 def compose_pcorrs_command(
         primary_trait: str, control_traits: Tuple[str, ...], method: str,
         target_database: str, criteria: int = 500):
+    """Compose the command to run partias correlations"""
     rundir = os.path.abspath(".")
     return (
         f"{sys.executable}", f"{rundir}/scripts/partial_correlations.py",

@@ -17,7 +17,4 @@ def parse_db_url() -> Tuple:
 def database_connector() -> mdb.Connection:
     """function to create db connector"""
     host, user, passwd, db_name = parse_db_url()
-    conn = mdb.connect(host, user, passwd, db_name)
-    cursor = conn.cursor()
-
-    return conn
+    return mdb.connect(host, user, passwd, db_name)
