@@ -84,17 +84,22 @@ def test_extract_actions():
                               updated_data="BXD1,x,2,1,F",
                               csv_header="Strain Name,Value,SE,Count,Sex") ==
             {
-                "delete": {"data": "18", "csv_header": "Value"},
-                "insert": {"data": "2,F", "csv_header": "SE,Sex"},
-                "update": {"data": "1", "csv_header": "Count"},
+                "delete": {"data": "BXD1,18",
+                           "csv_header": "Strain Name,Value"},
+                "insert": {"data": "BXD1,2,F",
+                           "csv_header": "Strain Name,SE,Sex"},
+                "update": {"data": "BXD1,1",
+                           "csv_header": "Strain Name,Count"},
     })
     assert(__extract_actions(original_data="BXD1,18,x,0,x",
                              updated_data="BXD1,19,2,1,F",
                              csv_header="Strain Name,Value,SE,Count,Sex") ==
            {
                "delete": None,
-               "insert": {"data": "2,F", "csv_header": "SE,Sex"},
-               "update": {"data": "19,1", "csv_header": "Value,Count"},
+               "insert": {"data": "BXD1,2,F",
+                          "csv_header": "Strain Name,SE,Sex"},
+               "update": {"data": "BXD1,19,1",
+                          "csv_header": "Strain Name,Value,Count"},
     })
 
 
@@ -119,14 +124,14 @@ def test_update_sample_data(mocker):
         gn3.db.sample_data.insert_sample_data.assert_called_once_with(
             conn=mock_conn,
             trait_name=35,
-            data="2,F",
-            csv_header="SE,Sex",
+            data="BXD1,2,F",
+            csv_header="Strain Name,SE,Sex",
             phenotype_id=10007)
         gn3.db.sample_data.delete_sample_data.assert_called_once_with(
             conn=mock_conn,
             trait_name=35,
-            data="18",
-            csv_header="Value",
+            data="BXD1,18",
+            csv_header="Strain Name,Value",
             phenotype_id=10007)
         cursor.execute.assert_has_calls(
             [mocker.call("UPDATE NStrain SET count = %s "
