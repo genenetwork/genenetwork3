@@ -22,7 +22,10 @@ def __extract_actions(original_data: str,
         "insert": {"data": [], "csv_header": []},
         "update": {"data": [], "csv_header": []},
     }
+    strain_name = ""
     for _o, _u, _h in zip(original_data, updated_data, csv_header):
+        if _h == "Strain Name":
+            strain_name = _o
         if _o == _u:  # No change
             continue
         elif _o and _u == "x":  # Deletion
@@ -38,8 +41,10 @@ def __extract_actions(original_data: str,
         if not val["data"]:
             result[key] = None
         else:
-            result[key]["data"] = ",".join(result[key]["data"])
-            result[key]["csv_header"] = ",".join(result[key]["csv_header"])
+            result[key]["data"] = (f"{strain_name}," +
+                                   ",".join(result[key]["data"]))
+            result[key]["csv_header"] = ("Strain Name," +
+                                         ",".join(result[key]["csv_header"]))
     return result
 
 
