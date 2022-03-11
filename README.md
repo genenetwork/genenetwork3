@@ -87,7 +87,13 @@ See also instructions in [.guix.scm](.guix.scm).
 To run tests:
 
 ```bash
-python -m unittest discover -v
+pytest
+```
+
+To specify unit-tests:
+
+```bash
+pytest -k unit_test
 ```
 
 Running pylint:
