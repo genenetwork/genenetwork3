@@ -1,9 +1,7 @@
 """This class contains functions relating to trait data manipulation"""
 import os
 from functools import reduce
-from typing import Any, Dict, Union, Sequence
-
-import MySQLdb
+from typing import Any, Dict, Sequence
 
 from gn3.settings import TMPDIR
 from gn3.random import random_string
