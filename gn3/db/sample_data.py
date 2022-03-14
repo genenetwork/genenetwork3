@@ -2,6 +2,7 @@
 from typing import Any, Tuple, Dict, Callable
 
 import MySQLdb
+
 from gn3.csvcmp import extract_strain_name
 
 
