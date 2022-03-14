@@ -118,3 +118,17 @@ def get_allowable_sampledata_headers(conn: Any) -> List:
         attributes += [attributes[0] for attributes in
                        cursor.fetchall()]
     return attributes
+
+
+def extract_invalid_csv_headers(allowed_headers: List, csv_text: str) -> List:
+    """Check whether a csv text's columns contains valid headers"""
+    csv_header = []
+    for line in csv_text.split("\n"):
+        if line.startswith("Strain Name"):
+            csv_header = [_l.strip() for _l in line.split(",")]
+            break
+    invalid_headers = []
+    for header in csv_header:
+        if header not in allowed_headers:
+            invalid_headers.append(header)
+    return invalid_headers

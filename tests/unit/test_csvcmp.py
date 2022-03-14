@@ -2,6 +2,7 @@
 import pytest
 
 from gn3.csvcmp import csv_diff
+from gn3.csvcmp import extract_invalid_csv_headers
 from gn3.csvcmp import fill_csv
 from gn3.csvcmp import get_allowable_sampledata_headers
 from gn3.csvcmp import remove_insignificant_edits
@@ -132,3 +133,17 @@ def test_get_allowable_csv_headers(mocker):
         assert get_allowable_sampledata_headers(mock_conn) == expected_values
         cursor.execute.assert_called_once_with(
             "SELECT Name from CaseAttribute")
+
+
+@pytest.mark.unit_test
+def test_extract_invalid_csv_headers_with_some_wrong_headers():
+    """Test that invalid column headers are extracted correctly from a csv
+string"""
+    allowed_headers = [
+        "Strain Name", "Value", "SE", "Count",
+        "Condition", "Tissue", "Sex", "Age",
+        "Ethn.", "PMI (hrs)", "pH", "Color",
+    ]
+
+    csv_text = "Strain Name, Value, SE, Colour"
+    assert extract_invalid_csv_headers(allowed_headers, csv_text) == ["Colour"]
