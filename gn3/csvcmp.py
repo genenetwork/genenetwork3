@@ -1,5 +1,7 @@
 """This module contains functions for manipulating and working with csv
 texts"""
+from typing import Any, List
+
 import json
 import os
 import uuid
@@ -106,3 +108,13 @@ def fill_csv(csv_text, width, value="x"):
                     _n[i] = value
             data.append(",".join(_n + [value] * (width - len(_n))))
     return "\n".join(data)
+
+
+def get_allowable_sampledata_headers(conn: Any) -> List:
+    """Get a list of all the case-attributes stored in the database"""
+    attributes = ["Strain Name", "Value", "SE", "Count"]
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT Name from CaseAttribute")
+        attributes += [attributes[0] for attributes in
+                       cursor.fetchall()]
+    return attributes
