@@ -26,24 +26,25 @@ def create_dirs_if_not_exists(dirs: list) -> None:
 def remove_insignificant_edits(diff_data, epsilon=0.001):
     """Remove or ignore edits that are not within ε"""
     __mod = []
-    for mod in diff_data.get("Modifications"):
-        original = mod.get("Original").split(",")
-        current = mod.get("Current").split(",")
-        for i, (_x, _y) in enumerate(zip(original, current)):
-            if (
-                _x.replace(".", "").isdigit()
-                and _y.replace(".", "").isdigit()
-                and abs(float(_x) - float(_y)) < epsilon
-            ):
-                current[i] = _x
-        if not (__o := ",".join(original)) == (__c := ",".join(current)):
-            __mod.append(
-                {
-                    "Original": __o,
-                    "Current": __c,
-                }
-            )
-    diff_data["Modifications"] = __mod
+    if diff_data.get("Modifications"):
+        for mod in diff_data.get("Modifications"):
+            original = mod.get("Original").split(",")
+            current = mod.get("Current").split(",")
+            for i, (_x, _y) in enumerate(zip(original, current)):
+                if (
+                    _x.replace(".", "").isdigit()
+                    and _y.replace(".", "").isdigit()
+                    and abs(float(_x) - float(_y)) < epsilon
+                ):
+                    current[i] = _x
+            if not (__o := ",".join(original)) == (__c := ",".join(current)):
+                __mod.append(
+                    {
+                        "Original": __o,
+                        "Current": __c,
+                    }
+                )
+        diff_data["Modifications"] = __mod
     return diff_data
 
 
