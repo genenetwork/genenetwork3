@@ -1,8 +1,10 @@
 """Test cases for authentication.py"""
 import json
 import unittest
-
 from unittest import mock
+
+import pytest
+
 from gn3.authentication import AdminRole
 from gn3.authentication import DataRole
 from gn3.authentication import get_highest_user_access_role
@@ -24,6 +26,7 @@ class TestGetUserMembership(unittest.TestCase):
                 '"created_timestamp": "Oct 06 2021 06:39PM"}')}
         self.conn = conn
 
+    @pytest.mark.unit_test
     def test_user_is_group_member_only(self):
         """Test that a user is only a group member"""
         self.assertEqual(
@@ -34,6 +37,7 @@ class TestGetUserMembership(unittest.TestCase):
             {"member": True,
              "admin": False})
 
+    @pytest.mark.unit_test
     def test_user_is_group_admin_only(self):
         """Test that a user is a group admin only"""
         self.assertEqual(
@@ -44,6 +48,7 @@ class TestGetUserMembership(unittest.TestCase):
             {"member": False,
              "admin": True})
 
+    @pytest.mark.unit_test
     def test_user_is_both_group_member_and_admin(self):
         """Test that a user is both an admin and member of a group"""
         self.assertEqual(
@@ -58,6 +63,7 @@ class TestGetUserMembership(unittest.TestCase):
 class TestCheckUserAccessRole(unittest.TestCase):
     """Test cases for `get_highest_user_access_role`"""
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.authentication.requests.get")
     def test_edit_access(self, requests_mock):
         """Test that the right access roles are set if the user has edit access"""
@@ -79,6 +85,7 @@ class TestCheckUserAccessRole(unittest.TestCase):
                 "admin": AdminRole.EDIT_ACCESS,
             })
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.authentication.requests.get")
     def test_no_access(self, requests_mock):
         """Test that the right access roles are set if the user has no access"""

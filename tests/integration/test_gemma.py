@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from typing import Callable
 from unittest import mock
 
+import pytest
+
 from gn3.app import create_app
 
 
@@ -30,6 +32,7 @@ class GemmaAPITest(unittest.TestCase):
             "TMPDIR": "/tmp"
         }).test_client()
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.run_cmd")
     def test_get_version(self, mock_run_cmd):
         """Test that the correct response is returned"""
@@ -38,6 +41,7 @@ class GemmaAPITest(unittest.TestCase):
         self.assertEqual(response.get_json(), {"status": 0, "output": "v1.9"})
         self.assertEqual(response.status_code, 200)
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.redis.Redis")
     def test_check_cmd_status(self, mock_redis):
         """Test that you can check the status of a given command"""
@@ -52,6 +56,7 @@ class GemmaAPITest(unittest.TestCase):
             name="cmd::2021-02-1217-3224-3224-1234", key="status")
         self.assertEqual(response.get_json(), {"status": "test"})
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -94,6 +99,7 @@ class GemmaAPITest(unittest.TestCase):
                 "unique_id": "my-unique-id"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -137,6 +143,7 @@ class GemmaAPITest(unittest.TestCase):
                 "unique_id": "my-unique-id"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -187,6 +194,7 @@ class GemmaAPITest(unittest.TestCase):
                 "output_file": "hash-output.json"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -240,6 +248,7 @@ class GemmaAPITest(unittest.TestCase):
                 "output_file": "hash-output.json"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -292,6 +301,7 @@ class GemmaAPITest(unittest.TestCase):
                 "output_file": "hash-output.json"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -346,6 +356,7 @@ class GemmaAPITest(unittest.TestCase):
                 "output_file": "hash-output.json"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -401,6 +412,7 @@ class GemmaAPITest(unittest.TestCase):
                 "output_file": "hash-output.json"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -465,6 +477,7 @@ class GemmaAPITest(unittest.TestCase):
                 "output_file": "hash-output.json"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
@@ -530,6 +543,7 @@ class GemmaAPITest(unittest.TestCase):
                 "output_file": "hash-output.json"
             })
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")

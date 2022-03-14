@@ -2,10 +2,12 @@
 import unittest
 
 from unittest import mock
+import pytest
 from gn3.computations.rqtl import generate_rqtl_cmd
 
 class TestRqtl(unittest.TestCase):
     """Test cases for computations.rqtl module"""
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.rqtl.generate_hash_of_string")
     @mock.patch("gn3.computations.rqtl.get_hash_of_files")
     def test_generate_rqtl_command(self, mock_get_hash_files, mock_generate_hash_string):

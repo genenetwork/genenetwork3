@@ -40,16 +40,15 @@ def trait_display_name(trait: Dict):
         if trait["db"]["dataset_type"] == "Temp":
             desc = trait["description"]
             if desc.find("PCA") >= 0:
-                return "%s::%s" % (
-                    trait["db"]["displayname"],
-                    desc[desc.rindex(':')+1:].strip())
-            return "%s::%s" % (
-                trait["db"]["displayname"],
-                desc[:desc.index('entered')].strip())
-        prefix = "%s::%s" % (
-            trait["db"]["dataset_name"], trait["trait_name"])
+                return (
+                    f'{trait["db"]["displayname"]}::'
+                    f'{desc[desc.rindex(":")+1:].strip()}')
+            return (
+                f'{trait["db"]["displayname"]}::'
+                f'{desc[:desc.index("entered")].strip()}')
+        prefix = f'{trait["db"]["dataset_name"]}::{trait["trait_name"]}'
         if trait["cellid"]:
-            return "%s::%s" % (prefix, trait["cellid"])
+            return '{prefix}::{trait["cellid"]}'
         return prefix
     return trait["description"]
 
@@ -132,8 +131,7 @@ def build_heatmap(
     traits_order = compute_traits_order(slinked)
     samples_and_values = retrieve_samples_and_values(
         traits_order, samples, exported_traits_data_list)
-    traits_filename = "{}/traits_test_file_{}.txt".format(
-        TMPDIR, random_string(10))
+    traits_filename = f"{TMPDIR}/traits_test_file_{random_string(10)}.txt"
     generate_traits_file(
         samples_and_values[0][1],
         [t[2] for t in samples_and_values],
@@ -310,7 +308,7 @@ def clustered_heatmap(
         vertical_spacing=0.010,
         horizontal_spacing=0.001,
         subplot_titles=["" if vertical else x_axis["label"]] + [
-            "Chromosome: {}".format(chromo) if vertical else chromo
+            f"Chromosome: {chromo}" if vertical else chromo
             for chromo in x_axis_data],#+ x_axis_data,
         figure=ff.create_dendrogram(
             np.array(clustering_data),
@@ -332,7 +330,7 @@ def clustered_heatmap(
             col=(1 if vertical else (i + 2)))
 
     axes_layouts = {
-        "{axis}axis{count}".format(
+        "{axis}axis{count}".format( # pylint: disable=[C0209]
             axis=("y" if vertical else "x"),
             count=(i+1 if i > 0 else "")): {
                 "mirror": False,
@@ -341,12 +339,10 @@ def clustered_heatmap(
             }
         for i in range(num_plots)}
 
-    print("vertical?: {} ==> {}".format("T" if vertical else "F", axes_layouts))
-
     fig.update_layout({
         "width": 800 if vertical else 4000,
         "height": 4000 if vertical else 800,
-        "{}axis".format("x" if vertical else "y"): {
+        "{}axis".format("x" if vertical else "y"): { # pylint: disable=[C0209]
             "mirror": False,
             "ticks": "",
             "side": "top" if vertical else "left",
@@ -354,7 +350,7 @@ def clustered_heatmap(
             "tickangle": 90 if vertical else 0,
             "ticklabelposition": "outside top" if vertical else "outside left"
         },
-        "{}axis".format("y" if vertical else "x"): {
+        "{}axis".format("y" if vertical else "x"): { # pylint: disable=[C0209]
             "mirror": False,
             "showgrid": True,
             "title": "Distance",

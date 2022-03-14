@@ -2,6 +2,8 @@
 from unittest import TestCase
 from unittest import mock
 
+import pytest
+
 from gn3.computations.wgcna import dump_wgcna_data
 from gn3.computations.wgcna import compose_wgcna_cmd
 from gn3.computations.wgcna import call_wgcna_script
@@ -10,6 +12,7 @@ from gn3.computations.wgcna import call_wgcna_script
 class TestWgcna(TestCase):
     """test class for wgcna"""
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.wgcna.process_image")
     @mock.patch("gn3.computations.wgcna.run_cmd")
     @mock.patch("gn3.computations.wgcna.compose_wgcna_cmd")
@@ -95,6 +98,7 @@ class TestWgcna(TestCase):
 
             self.assertEqual(results, expected_output)
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.wgcna.run_cmd")
     @mock.patch("gn3.computations.wgcna.compose_wgcna_cmd")
     @mock.patch("gn3.computations.wgcna.dump_wgcna_data")
@@ -117,6 +121,7 @@ class TestWgcna(TestCase):
             self.assertEqual(call_wgcna_script(
                 "input_file.R", ""), expected_error)
 
+    @pytest.mark.unit_test
     def test_compose_wgcna_cmd(self):
         """test for composing wgcna cmd"""
         wgcna_cmd = compose_wgcna_cmd(
@@ -124,6 +129,7 @@ class TestWgcna(TestCase):
         self.assertEqual(
             wgcna_cmd, "Rscript ./scripts/wgcna.r  /tmp/wgcna.json")
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.wgcna.TMPDIR", "/tmp")
     @mock.patch("gn3.computations.wgcna.uuid.uuid4")
     def test_create_json_file(self, file_name_generator):
@@ -160,7 +166,7 @@ class TestWgcna(TestCase):
                 expected_input)
 
             file_handler.assert_called_once_with(
-                "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json", 'w')
+                "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json", 'w', encoding='utf-8')
 
             self.assertEqual(
                 results, "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json")

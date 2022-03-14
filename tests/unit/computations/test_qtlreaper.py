@@ -1,5 +1,6 @@
 """Module contains tests for gn3.computations.qtlreaper"""
 from unittest import TestCase
+import pytest
 from gn3.computations.qtlreaper import (
     parse_reaper_main_results,
     organise_reaper_main_results,
@@ -9,6 +10,7 @@ from tests.unit.sample_test_data import organised_trait_1
 class TestQTLReaper(TestCase):
     """Class for testing qtlreaper interface functions."""
 
+    @pytest.mark.unit_test
     def test_parse_reaper_main_results(self):
         """Test that the main results file is parsed correctly."""
         self.assertEqual(
@@ -67,6 +69,7 @@ class TestQTLReaper(TestCase):
                 }
             ])
 
+    @pytest.mark.unit_test
     def test_parse_reaper_permutation_results(self):
         """Test that the permutations results file is parsed correctly."""
         self.assertEqual(
@@ -77,6 +80,7 @@ class TestQTLReaper(TestCase):
              5.63874, 5.71346, 5.71936, 5.74275, 5.76764, 5.79815, 5.81671,
              5.82775, 5.89659, 5.92117, 5.93396, 5.93396, 5.94957])
 
+    @pytest.mark.unit_test
     def test_organise_reaper_main_results(self):
         """Check that results are organised correctly."""
         self.assertEqual(

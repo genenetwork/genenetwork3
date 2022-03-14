@@ -6,6 +6,7 @@ GeneNetwork1.
 """
 
 import math
+import warnings
 from functools import reduce, partial
 from typing import Any, Tuple, Union, Sequence
 
@@ -59,7 +60,7 @@ def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
             __process_sample__, sampleslist, (tuple(), tuple(), tuple()))
 
     return reduce(
-        lambda acc, item: (
+        lambda acc, item: (# type: ignore[arg-type, return-value]
             acc[0] + (item[0],),
             acc[1] + (item[1],),
             acc[2] + (item[2],),
@@ -67,22 +68,6 @@ def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
         ),
         [__process_control__(trait_data) for trait_data in controls],
         (tuple(), tuple(), tuple(), tuple()))
-
-def dictify_by_samples(samples_vals_vars: Sequence[Sequence]) -> Sequence[dict]:
-    """
-    Build a sequence of dictionaries from a sequence of separate sequences of
-    samples, values and variances.
-
-    This is a partial migration of
-    `web.webqtl.correlation.correlationFunction.fixStrains` function in GN1.
-    This implementation extracts code that will find common use, and that will
-    find use in more than one place.
-    """
-    return tuple(
-        {
-            sample: {"sample_name": sample, "value": val, "variance": var}
-            for sample, val, var in zip(*trait_line)
-        } for trait_line in zip(*(samples_vals_vars[0:3])))
 
 def fix_samples(primary_trait: dict, control_traits: Sequence[dict]) -> Sequence[Sequence[Any]]:
     """
@@ -127,7 +112,7 @@ def find_identical_traits(
         return acc + ident[1]
 
     def __dictify_controls__(acc, control_item):
-        ckey = tuple("{:.3f}".format(item) for item in control_item[0])
+        ckey = tuple(f"{item:.3f}" for item in control_item[0])
         return {**acc, ckey: acc.get(ckey, tuple()) + (control_item[1],)}
 
     return (reduce(## for identical control traits
@@ -167,8 +152,8 @@ def tissue_correlation(
     assert len(primary_trait_values) == len(target_trait_values), (
         "The lengths of the `primary_trait_values` and `target_trait_values` "
         "must be equal")
-    assert method in method_fns.keys(), (
-        "Method must be one of: {}".format(",".join(method_fns.keys())))
+    assert method in method_fns, (
+        "Method must be one of: {','.join(method_fns.keys())}")
 
     corr, pvalue = method_fns[method](primary_trait_values, target_trait_values)
     return (corr, pvalue)
@@ -227,7 +212,7 @@ def partial_correlations_fast(# pylint: disable=[R0913, R0914]
     function in GeneNetwork1.
     """
     assert method in ("spearman", "pearson")
-    with open(database_filename, "r") as dataset_file:
+    with open(database_filename, "r", encoding="utf-8") as dataset_file: # pytest: disable=[W1514]
         dataset = tuple(dataset_file.readlines())
 
     good_dataset_samples = good_dataset_samples_indexes(
@@ -276,12 +261,15 @@ def build_data_frame(
     if isinstance(zdata[0], float):
         return x_y_df.join(pandas.DataFrame({"z": zdata}))
     interm_df = x_y_df.join(pandas.DataFrame(
-        {"z{}".format(i): val for i, val in enumerate(zdata)}))
+        {f"z{i}": val for i, val in enumerate(zdata)}))
     if interm_df.shape[1] == 3:
         return interm_df.rename(columns={"z0": "z"})
     return interm_df
 
 def compute_trait_info(primary_vals, control_vals, target, method):
+    """
+    Compute the correlation values for the given arguments.
+    """
     targ_vals = target[0]
     targ_name = target[1]
     primary = [
@@ -602,14 +590,30 @@ def partial_correlations_entry(# pylint: disable=[R0913, R0914, R0911]
     primary_trait = tuple(
         trait for trait in all_traits
         if trait["trait_fullname"] == primary_trait_name)[0]
+    if not primary_trait["haveinfo"]:
+        return {
+            "status": "not-found",
+            "message": f"Could not find primary trait {primary_trait['trait_fullname']}"
+        }
+    cntrl_traits = tuple(
+        trait for trait in all_traits
+        if trait["trait_fullname"] != primary_trait_name)
+    if not any(trait["haveinfo"] for trait in cntrl_traits):
+        return {
+            "status": "not-found",
+            "message": "None of the requested control traits were found."}
+    for trait in cntrl_traits:
+        if trait["haveinfo"] is False:
+            warnings.warn(
+                (f"Control traits {trait['trait_fullname']} was not found "
+                 "- continuing without it."),
+                category=UserWarning)
+
     group = primary_trait["db"]["group"]
     primary_trait_data = all_traits_data[primary_trait["trait_name"]]
     primary_samples, primary_values, _primary_variances = export_informative(
         primary_trait_data)
 
-    cntrl_traits = tuple(
-        trait for trait in all_traits
-        if trait["trait_fullname"] != primary_trait_name)
     cntrl_traits_data = tuple(
         data for trait_name, data in all_traits_data.items()
         if trait_name != primary_trait["trait_name"])

@@ -3,6 +3,8 @@
 from unittest import TestCase
 from unittest import mock
 
+import pytest
+
 from gn3.app import create_app
 
 
@@ -12,6 +14,7 @@ class WgcnaIntegrationTest(TestCase):
     def setUp(self):
         self.app = create_app().test_client()
 
+    @pytest.mark.integration_test
     @mock.patch("gn3.api.wgcna.call_wgcna_script")
     def test_wgcna_endpoint(self, mock_wgcna_script):
         """test /api/wgcna/run_wgcna endpoint"""

@@ -1,9 +1,7 @@
 """This class contains functions relating to trait data manipulation"""
 import os
 from functools import reduce
-from typing import Any, Dict, Union, Sequence
-
-import MySQLdb
+from typing import Any, Dict, Sequence
 
 from gn3.settings import TMPDIR
 from gn3.random import random_string
@@ -69,7 +67,7 @@ def export_trait_data(
                 return accumulator + (trait_data["data"][sample]["ndata"], )
             if dtype == "all":
                 return accumulator + __export_all_types(trait_data["data"], sample)
-            raise KeyError("Type `%s` is incorrect" % dtype)
+            raise KeyError(f"Type `{dtype}` is incorrect")
         if var_exists and n_exists:
             return accumulator + (None, None, None)
         if var_exists or n_exists:
@@ -77,257 +75,6 @@ def export_trait_data(
         return accumulator + (None,)
 
     return reduce(__exporter, samplelist, tuple())
-
-
-def get_trait_csv_sample_data(conn: Any,
-                              trait_name: int, phenotype_id: int):
-    """Fetch a trait and return it as a csv string"""
-    def __float_strip(num_str):
-        if str(num_str)[-2:] == ".0":
-            return str(int(num_str))
-        return str(num_str)
-    def __process_for_csv__(record):
-        return ",".join([
-            __float_strip(record[key]) if record[key] is not None else "x"
-            for key in ("sample_name", "value", "se_error", "nstrain")])
-    csv_data = ["Strain Name,Value,SE,Count"] + [
-        __process_for_csv__(record) for record in
-        retrieve_publish_trait_data(
-            {"trait_name": trait_name, "db": {"dataset_id": phenotype_id}},
-            conn)]
-    return "\n".join(csv_data)
-
-
-def update_sample_data(conn: Any, #pylint: disable=[R0913]
-                       trait_name: str,
-                       strain_name: str,
-                       phenotype_id: int,
-                       value: Union[int, float, str],
-                       error: Union[int, float, str],
-                       count: Union[int, str]):
-    """Given the right parameters, update sample-data from the relevant
-    table."""
-    strain_id, data_id = "", ""
-
-    with conn.cursor() as cursor:
-        cursor.execute(
-            ("SELECT Strain.Id, PublishData.Id FROM "
-             "(PublishData, Strain, PublishXRef, PublishFreeze) "
-             "LEFT JOIN PublishSE ON "
-             "(PublishSE.DataId = PublishData.Id AND "
-             "PublishSE.StrainId = PublishData.StrainId) "
-             "LEFT JOIN NStrain ON "
-             "(NStrain.DataId = PublishData.Id AND "
-             "NStrain.StrainId = PublishData.StrainId) "
-             "WHERE PublishXRef.InbredSetId = "
-             "PublishFreeze.InbredSetId AND "
-             "PublishData.Id = PublishXRef.DataId AND "
-             "PublishXRef.Id = %s AND "
-             "PublishXRef.PhenotypeId = %s "
-             "AND PublishData.StrainId = Strain.Id "
-             "AND Strain.Name = \"%s\"") % (trait_name,
-                                            phenotype_id,
-                                            str(strain_name)))
-        strain_id, data_id = cursor.fetchone()
-    updated_published_data: int = 0
-    updated_se_data: int = 0
-    updated_n_strains: int = 0
-
-    with conn.cursor() as cursor:
-        # Update the PublishData table
-        if value == "x":
-            cursor.execute(("DELETE FROM PublishData "
-                            "WHERE StrainId = %s AND Id = %s")
-                           % (strain_id, data_id))
-            updated_published_data = cursor.rowcount
-        else:
-            cursor.execute(("UPDATE PublishData SET value = %s "
-                        "WHERE StrainId = %s AND Id = %s"),
-                       (value, strain_id, data_id))
-            updated_published_data = cursor.rowcount
-
-            if not updated_published_data:
-                cursor.execute(
-                    "SELECT * FROM "
-                    "PublishData WHERE StrainId = "
-                    "%s AND Id = %s" % (strain_id, data_id))
-                if not cursor.fetchone():
-                    cursor.execute(("INSERT INTO PublishData (Id, StrainId, "
-                                    " value) VALUES (%s, %s, %s)") %
-                                   (data_id, strain_id, value))
-                    updated_published_data = cursor.rowcount
-
-        # Update the PublishSE table
-        if error == "x":
-            cursor.execute(("DELETE FROM PublishSE "
-                            "WHERE StrainId = %s AND DataId = %s") %
-                           (strain_id, data_id))
-            updated_se_data = cursor.rowcount
-        else:
-            cursor.execute(("UPDATE PublishSE SET error = %s "
-                            "WHERE StrainId = %s AND DataId = %s"),
-                           (None if error == "x" else error,
-                            strain_id, data_id))
-            updated_se_data = cursor.rowcount
-            if not updated_se_data:
-                cursor.execute(
-                        "SELECT * FROM "
-                        "PublishSE WHERE StrainId = "
-                        "%s AND DataId = %s" % (strain_id, data_id))
-                if not cursor.fetchone():
-                    cursor.execute(("INSERT INTO PublishSE (StrainId, DataId, "
-                                    " error) VALUES (%s, %s, %s)") %
-                                   (strain_id, data_id,
-                                    None if error == "x" else error))
-                    updated_se_data = cursor.rowcount
-
-        # Update the NStrain table
-        if count == "x":
-            cursor.execute(("DELETE FROM NStrain "
-                                "WHERE StrainId = %s AND DataId = %s" %
-                                (strain_id, data_id)))
-            updated_n_strains = cursor.rowcount
-        else:
-            cursor.execute(("UPDATE NStrain SET count = %s "
-                            "WHERE StrainId = %s AND DataId = %s"),
-                           (count, strain_id, data_id))
-            updated_n_strains = cursor.rowcount
-            if not updated_n_strains:
-                cursor.execute(
-                        "SELECT * FROM "
-                        "NStrain WHERE StrainId = "
-                        "%s AND DataId = %s" % (strain_id, data_id))
-                if not cursor.fetchone():
-                    cursor.execute(("INSERT INTO NStrain "
-                                    "(StrainId, DataId, count) "
-                                    "VALUES (%s, %s, %s)") %
-                                   (strain_id, data_id, count))
-                    updated_n_strains = cursor.rowcount
-    return (updated_published_data,
-            updated_se_data, updated_n_strains)
-
-
-def delete_sample_data(conn: Any,
-                       trait_name: str,
-                       strain_name: str,
-                       phenotype_id: int):
-    """Given the right parameters, delete sample-data from the relevant
-    table."""
-    strain_id, data_id = "", ""
-
-    deleted_published_data: int = 0
-    deleted_se_data: int = 0
-    deleted_n_strains: int = 0
-
-    with conn.cursor() as cursor:
-        # Delete the PublishData table
-        try:
-            cursor.execute(
-                ("SELECT Strain.Id, PublishData.Id FROM "
-                 "(PublishData, Strain, PublishXRef, PublishFreeze) "
-                 "LEFT JOIN PublishSE ON "
-                 "(PublishSE.DataId = PublishData.Id AND "
-                 "PublishSE.StrainId = PublishData.StrainId) "
-                 "LEFT JOIN NStrain ON "
-                 "(NStrain.DataId = PublishData.Id AND "
-                 "NStrain.StrainId = PublishData.StrainId) "
-                 "WHERE PublishXRef.InbredSetId = "
-                 "PublishFreeze.InbredSetId AND "
-                 "PublishData.Id = PublishXRef.DataId AND "
-                 "PublishXRef.Id = %s AND "
-                 "PublishXRef.PhenotypeId = %s "
-                 "AND PublishData.StrainId = Strain.Id "
-                 "AND Strain.Name = \"%s\"") % (trait_name,
-                                                phenotype_id,
-                                                str(strain_name)))
-
-            # Check if it exists if the data was already deleted:
-            if _result := cursor.fetchone():
-                strain_id, data_id = _result
-
-            # Only run if the strain_id and data_id exist
-            if strain_id and data_id:
-                cursor.execute(("DELETE FROM PublishData "
-                                "WHERE StrainId = %s AND Id = %s")
-                               % (strain_id, data_id))
-                deleted_published_data = cursor.rowcount
-
-                # Delete the PublishSE table
-                cursor.execute(("DELETE FROM PublishSE "
-                                "WHERE StrainId = %s AND DataId = %s") %
-                               (strain_id, data_id))
-                deleted_se_data = cursor.rowcount
-
-                # Delete the NStrain table
-                cursor.execute(("DELETE FROM NStrain "
-                                "WHERE StrainId = %s AND DataId = %s" %
-                                (strain_id, data_id)))
-                deleted_n_strains = cursor.rowcount
-        except Exception as e:  #pylint: disable=[C0103, W0612]
-            conn.rollback()
-            raise MySQLdb.Error
-        conn.commit()
-        cursor.close()
-        cursor.close()
-
-    return (deleted_published_data,
-            deleted_se_data, deleted_n_strains)
-
-
-def insert_sample_data(conn: Any, #pylint: disable=[R0913]
-                       trait_name: str,
-                       strain_name: str,
-                       phenotype_id: int,
-                       value: Union[int, float, str],
-                       error: Union[int, float, str],
-                       count: Union[int, str]):
-    """Given the right parameters, insert sample-data to the relevant table.
-
-    """
-
-    inserted_published_data, inserted_se_data, inserted_n_strains = 0, 0, 0
-    with conn.cursor() as cursor:
-        try:
-            cursor.execute("SELECT DataId FROM PublishXRef WHERE Id = %s AND "
-                           "PhenotypeId = %s", (trait_name, phenotype_id))
-            data_id = cursor.fetchone()
-
-            cursor.execute("SELECT Id FROM Strain WHERE Name = %s",
-                           (strain_name,))
-            strain_id = cursor.fetchone()
-
-            # Return early if an insert already exists!
-            cursor.execute("SELECT Id FROM PublishData where Id = %s "
-                           "AND StrainId = %s",
-                           (data_id, strain_id))
-            if cursor.fetchone():  # This strain already exists
-                return (0, 0, 0)
-
-            # Insert the PublishData table
-            cursor.execute(("INSERT INTO PublishData (Id, StrainId, value)"
-                            "VALUES (%s, %s, %s)"),
-                           (data_id, strain_id, value))
-            inserted_published_data = cursor.rowcount
-
-            # Insert into the PublishSE table if error is specified
-            if error and error != "x":
-                cursor.execute(("INSERT INTO PublishSE (StrainId, DataId, "
-                                " error) VALUES (%s, %s, %s)") %
-                               (strain_id, data_id, error))
-            inserted_se_data = cursor.rowcount
-
-            # Insert into the NStrain table
-            if count and count != "x":
-                cursor.execute(("INSERT INTO NStrain "
-                                "(StrainId, DataId, count) "
-                                "VALUES (%s, %s, %s)") %
-                               (strain_id, data_id, count))
-            inserted_n_strains = cursor.rowcount
-        except Exception as e: #pylint: disable=[C0103, W0612]
-            conn.rollback()
-            raise MySQLdb.Error
-    return (inserted_published_data,
-            inserted_se_data, inserted_n_strains)
 
 
 def retrieve_publish_trait_info(trait_data_source: Dict[str, Any], conn: Any):
@@ -356,14 +103,14 @@ def retrieve_publish_trait_info(trait_data_source: Dict[str, Any], conn: Any):
         "PublishXRef.comments")
     query = (
         "SELECT "
-        "{columns} "
+        f"{columns} "
         "FROM "
         "PublishXRef, Publication, Phenotype "
         "WHERE "
         "PublishXRef.Id = %(trait_name)s AND "
         "Phenotype.Id = PublishXRef.PhenotypeId AND "
         "Publication.Id = PublishXRef.PublicationId AND "
-        "PublishXRef.InbredSetId = %(trait_dataset_id)s").format(columns=columns)
+        "PublishXRef.InbredSetId = %(trait_dataset_id)s")
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -399,17 +146,16 @@ def retrieve_probeset_trait_info(trait_data_source: Dict[str, Any], conn: Any):
         "probe_set_specificity", "probe_set_blat_score",
         "probe_set_blat_mb_start", "probe_set_blat_mb_end", "probe_set_strand",
         "probe_set_note_by_rw", "flag")
+    columns = (f"ProbeSet.{x}" for x in keys)
     query = (
-        "SELECT "
-        "{columns} "
+        f"SELECT {', '.join(columns)} "
         "FROM "
         "ProbeSet, ProbeSetFreeze, ProbeSetXRef "
         "WHERE "
         "ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id AND "
         "ProbeSetXRef.ProbeSetId = ProbeSet.Id AND "
         "ProbeSetFreeze.Name = %(trait_dataset_name)s AND "
-        "ProbeSet.Name = %(trait_name)s").format(
-            columns=", ".join(["ProbeSet.{}".format(x) for x in keys]))
+        "ProbeSet.Name = %(trait_name)s")
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -425,16 +171,15 @@ def retrieve_geno_trait_info(trait_data_source: Dict[str, Any], conn: Any):
 
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L438-L449"""
     keys = ("name", "chr", "mb", "source2", "sequence")
+    columns = ", ".join(f"Geno.{x}" for x in keys)
     query = (
-        "SELECT "
-        "{columns} "
+        f"SELECT {columns} "
         "FROM "
-        "Geno, GenoFreeze, GenoXRef "
+        "Geno INNER JOIN GenoXRef ON GenoXRef.GenoId = Geno.Id "
+        "INNER JOIN GenoFreeze ON GenoFreeze.Id = GenoXRef.GenoFreezeId "
         "WHERE "
-        "GenoXRef.GenoFreezeId = GenoFreeze.Id AND GenoXRef.GenoId = Geno.Id AND "
         "GenoFreeze.Name = %(trait_dataset_name)s AND "
-        "Geno.Name = %(trait_name)s").format(
-            columns=", ".join(["Geno.{}".format(x) for x in keys]))
+        "Geno.Name = %(trait_name)s")
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -451,8 +196,8 @@ def retrieve_temp_trait_info(trait_data_source: Dict[str, Any], conn: Any):
     https://github.com/genenetwork/genenetwork1/blob/master/web/webqtl/base/webqtlTrait.py#L450-452"""
     keys = ("name", "description")
     query = (
-        "SELECT {columns} FROM Temp "
-        "WHERE Name = %(trait_name)s").format(columns=", ".join(keys))
+        f"SELECT {', '.join(keys)} FROM Temp "
+        "WHERE Name = %(trait_name)s")
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -577,7 +322,7 @@ def load_qtl_info(qtl, trait_type, trait_info, conn):
         "Publish": load_publish_qtl_info,
         "ProbeSet": load_probeset_qtl_info
     }
-    if trait_info["name"] not in qtl_info_functions.keys():
+    if trait_info["name"] not in qtl_info_functions:
         return trait_info
 
     return qtl_info_functions[trait_type](trait_info, conn)
@@ -772,7 +517,7 @@ def retrieve_publish_trait_data(trait_info: Dict, conn: Any):
         "AND NStrain.StrainId = PublishData.StrainId) "
         "WHERE PublishData.Id = PublishXRef.DataId "
         "AND PublishXRef.Id = %(trait_name)s "
-        "AND PublishXRef.PhenotypeId = %(dataset_id)s "
+        "AND PublishXRef.InbredSetId = %(dataset_id)s "
         "AND PublishData.StrainId = Strain.Id "
         "ORDER BY Strain.Name")
     with conn.cursor() as cursor:
@@ -947,8 +692,8 @@ def retrieve_trait_data(trait: dict, conn: Any, samplelist: Sequence[str] = tupl
 
 def generate_traits_filename(base_path: str = TMPDIR):
     """Generate a unique filename for use with generated traits files."""
-    return "{}/traits_test_file_{}.txt".format(
-        os.path.abspath(base_path), random_string(10))
+    return (
+        f"{os.path.abspath(base_path)}/traits_test_file_{random_string(10)}.txt")
 
 
 def export_informative(trait_data: dict, inc_var: bool = False) -> tuple:

@@ -26,9 +26,9 @@ def get_filename(conn: Any, target_db_name: str, text_files_dir: str) -> Union[
             (target_db_name,))
         result = cursor.fetchone()
         if result:
-            filename = "ProbeSetFreezeId_{tid}_FullName_{fname}.txt".format(
-                tid=result[0],
-                fname=result[1].replace(' ', '_').replace('/', '_'))
+            filename = (
+                f"ProbeSetFreezeId_{result[0]}_FullName_"
+                f"{result[1].replace(' ', '_').replace('/', '_')}.txt")
             full_filename = f"{text_files_dir}/{filename}"
             return (
                 os.path.exists(full_filename) and
@@ -53,7 +53,7 @@ def build_temporary_literature_table(
         query = {
             "rat": "SELECT rat FROM GeneIDXRef WHERE mouse=%s",
             "human": "SELECT human FROM GeneIDXRef WHERE mouse=%d"}
-        if species in query.keys():
+        if species in query:
             cursor.execute(query[species], row[1])
             record = cursor.fetchone()
             if record:
@@ -160,8 +160,10 @@ def fetch_symbol_value_pair_dict(
         symbol: data_id_dict.get(symbol) for symbol in symbol_list
         if data_id_dict.get(symbol) is not None
     }
-    query = "SELECT Id, value FROM TissueProbeSetData WHERE Id IN ({})".format(
-        ",".join(f"%(id{i})s" for i in range(len(data_ids.values()))))
+    data_ids_fields = (f"%(id{i})s" for i in range(len(data_ids.values())))
+    query = (
+        "SELECT Id, value FROM TissueProbeSetData "
+        f"WHERE Id IN ({','.join(data_ids_fields)})")
     with conn.cursor() as cursor:
         cursor.execute(
             query,
@@ -408,12 +410,12 @@ def fetch_sample_ids(
     `web.webqtl.correlation.CorrelationPage.fetchAllDatabaseData` function in
     GeneNetwork1.
     """
+    samples_fields = (f"%(s{i})s" for i in range(len(sample_names)))
     query = (
         "SELECT Strain.Id FROM Strain, Species "
-        "WHERE Strain.Name IN ({}) "
+        f"WHERE Strain.Name IN ({','.join(samples_fields)}) "
         "AND Strain.SpeciesId=Species.Id "
-        "AND Species.name=%(species_name)s").format(
-            ",".join(f"%(s{i})s" for i in range(len(sample_names))))
+        "AND Species.name=%(species_name)s")
     with conn.cursor() as cursor:
         cursor.execute(
             query,

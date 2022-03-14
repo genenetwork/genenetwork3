@@ -2,6 +2,8 @@
 from unittest import TestCase
 from unittest import mock
 
+import pytest
+
 from gn3.db import fetchall
 from gn3.db import fetchone
 from gn3.db import update
@@ -14,6 +16,7 @@ from gn3.db.metadata_audit import MetadataAudit
 class TestCrudMethods(TestCase):
     """Test cases for CRUD methods"""
 
+    @pytest.mark.unit_test
     def test_update_phenotype_with_no_data(self):
         """Test that a phenotype is updated correctly if an empty Phenotype dataclass
         is provided
@@ -24,6 +27,7 @@ class TestCrudMethods(TestCase):
             conn=db_mock, table="Phenotype",
             data=Phenotype(), where=Phenotype()), None)
 
+    @pytest.mark.unit_test
     def test_update_phenotype_with_data(self):
         """
         Test that a phenotype is updated correctly if some
@@ -46,6 +50,7 @@ class TestCrudMethods(TestCase):
                 "Submitter = %s WHERE id = %s AND Owner = %s",
                 ('Test Pre Pub', 'Test Post Pub', 'Rob', 1, 'Rob'))
 
+    @pytest.mark.unit_test
     def test_fetch_phenotype(self):
         """Test that a single phenotype is fetched properly
 
@@ -68,6 +73,7 @@ class TestCrudMethods(TestCase):
                 "SELECT * FROM Phenotype WHERE id = %s AND Owner = %s",
                 (35, 'Rob'))
 
+    @pytest.mark.unit_test
     def test_fetchall_metadataaudit(self):
         """Test that multiple metadata_audit entries are fetched properly
 
@@ -96,6 +102,7 @@ class TestCrudMethods(TestCase):
                  "dataset_id = %s AND editor = %s"),
                 (35, 'Rob'))
 
+    @pytest.mark.unit_test
     # pylint: disable=R0201
     def test_probeset_called_with_right_columns(self):
         """Given a columns argument, test that the correct sql query is
@@ -112,6 +119,7 @@ class TestCrudMethods(TestCase):
                 "Name = %s",
                 ("1446112_at",))
 
+    @pytest.mark.unit_test
     def test_diff_from_dict(self):
         """Test that a correct diff is generated"""
         self.assertEqual(diff_from_dict({"id": 1, "data": "a"},

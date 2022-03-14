@@ -1,6 +1,7 @@
 """Module contains tests for gn3.heatmaps.heatmaps"""
 from unittest import TestCase
 
+import pytest
 from numpy.testing import assert_allclose
 
 from gn3.heatmaps import (
@@ -27,6 +28,7 @@ slinked = (
 class TestHeatmap(TestCase):
     """Class for testing heatmap computation functions"""
 
+    @pytest.mark.unit_test
     def test_cluster_traits(self): # pylint: disable=R0201
         """
         Test that the clustering is working as expected.
@@ -76,11 +78,13 @@ class TestHeatmap(TestCase):
               1.7413442197913358, 0.33370067057028485, 1.3256191648260216,
               0.0)))
 
+    @pytest.mark.unit_test
     def test_compute_heatmap_order(self):
         """Test the orders."""
         self.assertEqual(
             compute_traits_order(slinked), (0, 2, 1, 7, 5, 9, 3, 6, 8, 4))
 
+    @pytest.mark.unit_test
     def test_retrieve_samples_and_values(self):
         """Test retrieval of samples and values."""
         for orders, slist, tdata, expected in [
@@ -106,6 +110,7 @@ class TestHeatmap(TestCase):
                 self.assertEqual(
                     retrieve_samples_and_values(orders, slist, tdata), expected)
 
+    @pytest.mark.unit_test
     def test_get_lrs_from_chr(self):
         """Check that function gets correct LRS values"""
         for trait, chromosome, expected in [
@@ -120,6 +125,7 @@ class TestHeatmap(TestCase):
             with self.subTest(trait=trait, chromosome=chromosome):
                 self.assertEqual(get_lrs_from_chr(trait, chromosome), expected)
 
+    @pytest.mark.unit_test
     def test_process_traits_data_for_heatmap(self):
         """Check for correct processing of data for heatmap generation."""
         self.assertEqual(
@@ -132,6 +138,7 @@ class TestHeatmap(TestCase):
              [[0.5, 0.579, 0.5],
               [0.5, 0.5, 0.5]]])
 
+    @pytest.mark.unit_test
     def test_get_loci_names(self):
         """Check that loci names are retrieved correctly."""
         for organised, expected in (

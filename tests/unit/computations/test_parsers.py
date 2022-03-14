@@ -2,17 +2,21 @@
 import unittest
 import os
 
+import pytest
+
 from gn3.computations.parsers import parse_genofile
 
 
 class TestParsers(unittest.TestCase):
     """Test cases for some various parsers"""
 
+    @pytest.mark.unit_test
     def test_parse_genofile_without_existing_file(self):
         """Assert that an error is raised if the genotype file is absent"""
         self.assertRaises(FileNotFoundError, parse_genofile,
                           "/non-existent-file")
 
+    @pytest.mark.unit_test
     def test_parse_genofile_with_existing_file(self):
         """Test that a genotype file is parsed correctly"""
         samples = ["bxd1", "bxd2"]

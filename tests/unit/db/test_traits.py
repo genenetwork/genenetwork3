@@ -1,11 +1,11 @@
 """Tests for gn3/db/traits.py"""
 from unittest import mock, TestCase
+import pytest
 from gn3.db.traits import (
     build_trait_name,
     export_trait_data,
     export_informative,
     set_haveinfo_field,
-    update_sample_data,
     retrieve_trait_info,
     set_confidential_field,
     set_homologene_id_field,
@@ -49,6 +49,7 @@ trait_data = {
 class TestTraitsDBFunctions(TestCase):
     "Test cases for traits functions"
 
+    @pytest.mark.unit_test
     def test_retrieve_publish_trait_info(self):
         """Test retrieval of type `Publish` traits."""
         db_mock = mock.MagicMock()
@@ -83,6 +84,7 @@ class TestTraitsDBFunctions(TestCase):
                  " AND PublishXRef.InbredSetId = %(trait_dataset_id)s"),
                 trait_source)
 
+    @pytest.mark.unit_test
     def test_retrieve_probeset_trait_info(self):
         """Test retrieval of type `Probeset` traits."""
         db_mock = mock.MagicMock()
@@ -118,6 +120,7 @@ class TestTraitsDBFunctions(TestCase):
                     "AND ProbeSetFreeze.Name = %(trait_dataset_name)s "
                     "AND ProbeSet.Name = %(trait_name)s"), trait_source)
 
+    @pytest.mark.unit_test
     def test_retrieve_geno_trait_info(self):
         """Test retrieval of type `Geno` traits."""
         db_mock = mock.MagicMock()
@@ -133,14 +136,14 @@ class TestTraitsDBFunctions(TestCase):
                     "SELECT "
                     "Geno.name, Geno.chr, Geno.mb, Geno.source2, Geno.sequence "
                     "FROM "
-                    "Geno, GenoFreeze, GenoXRef "
+                    "Geno INNER JOIN GenoXRef ON GenoXRef.GenoId = Geno.Id "
+                    "INNER JOIN GenoFreeze ON GenoFreeze.Id = GenoXRef.GenoFreezeId "
                     "WHERE "
-                    "GenoXRef.GenoFreezeId = GenoFreeze.Id "
-                    "AND GenoXRef.GenoId = Geno.Id "
-                    "AND GenoFreeze.Name = %(trait_dataset_name)s "
+                    "GenoFreeze.Name = %(trait_dataset_name)s "
                     "AND Geno.Name = %(trait_name)s"),
                 trait_source)
 
+    @pytest.mark.unit_test
     def test_retrieve_temp_trait_info(self):
         """Test retrieval of type `Temp` traits."""
         db_mock = mock.MagicMock()
@@ -153,6 +156,7 @@ class TestTraitsDBFunctions(TestCase):
                 "SELECT name, description FROM Temp WHERE Name = %(trait_name)s",
                 trait_source)
 
+    @pytest.mark.unit_test
     def test_build_trait_name_with_good_fullnames(self):
         """
         Check that the name is built correctly.
@@ -169,6 +173,7 @@ class TestTraitsDBFunctions(TestCase):
             with self.subTest(fullname=fullname):
                 self.assertEqual(build_trait_name(fullname), expected)
 
+    @pytest.mark.unit_test
     def test_build_trait_name_with_bad_fullnames(self):
         """
         Check that an exception is raised if the full name format is wrong.
@@ -178,6 +183,7 @@ class TestTraitsDBFunctions(TestCase):
                 with self.assertRaises(AssertionError, msg="Name format error"):
                     build_trait_name(fullname)
 
+    @pytest.mark.unit_test
     def test_retrieve_trait_info(self):
         """Test that information on traits is retrieved as appropriate."""
         for threshold, trait_fullname, expected in [
@@ -194,54 +200,7 @@ class TestTraitsDBFunctions(TestCase):
                             threshold, trait_fullname, db_mock),
                         expected)
 
-    def test_update_sample_data(self):
-        """Test that the SQL queries when calling update_sample_data are called with
-        the right calls.
-
-        """
-        # pylint: disable=C0103
-        db_mock = mock.MagicMock()
-        PUBLISH_DATA_SQL: str = (
-            "UPDATE PublishData SET value = %s "
-            "WHERE StrainId = %s AND Id = %s")
-        PUBLISH_SE_SQL: str = (
-            "UPDATE PublishSE SET error = %s "
-            "WHERE StrainId = %s AND DataId = %s")
-        N_STRAIN_SQL: str = (
-            "UPDATE NStrain SET count = %s "
-            "WHERE StrainId = %s AND DataId = %s")
-
-        with db_mock.cursor() as cursor:
-            type(cursor).rowcount = 1
-            mock_fetchone = mock.MagicMock()
-            mock_fetchone.return_value = (1, 1)
-            type(cursor).fetchone = mock_fetchone
-            self.assertEqual(update_sample_data(
-                conn=db_mock, strain_name="BXD11",
-                trait_name="1",
-                phenotype_id=10, value=18.7,
-                error=2.3, count=2),
-                             (1, 1, 1))
-            cursor.execute.assert_has_calls(
-                [mock.call('SELECT Strain.Id, PublishData.Id FROM'
-                           ' (PublishData, Strain, PublishXRef, '
-                           'PublishFreeze) LEFT JOIN PublishSE ON '
-                           '(PublishSE.DataId = PublishData.Id '
-                           'AND PublishSE.StrainId = '
-                           'PublishData.StrainId) LEFT JOIN NStrain ON '
-                           '(NStrain.DataId = PublishData.Id AND '
-                           'NStrain.StrainId = PublishData.StrainId) WHERE '
-                           'PublishXRef.InbredSetId = '
-                           'PublishFreeze.InbredSetId AND PublishData.Id = '
-                           'PublishXRef.DataId AND PublishXRef.Id = 1 AND '
-                           'PublishXRef.PhenotypeId = 10 AND '
-                           'PublishData.StrainId = Strain.Id AND '
-                           'Strain.Name = "BXD11"'),
-                 mock.call(PUBLISH_DATA_SQL, (18.7, 1, 1)),
-                 mock.call(PUBLISH_SE_SQL, (2.3, 1, 1)),
-                 mock.call(N_STRAIN_SQL, (2, 1, 1))]
-            )
-
+    @pytest.mark.unit_test
     def test_set_haveinfo_field(self):
         """Test that the `haveinfo` field is set up correctly"""
         for trait_info, expected in [
@@ -250,6 +209,7 @@ class TestTraitsDBFunctions(TestCase):
             with self.subTest(trait_info=trait_info, expected=expected):
                 self.assertEqual(set_haveinfo_field(trait_info), expected)
 
+    @pytest.mark.unit_test
     def test_set_homologene_id_field(self):
         """Test that the `homologene_id` field is set up correctly"""
         for trait_type, trait_info, expected in [
@@ -264,6 +224,7 @@ class TestTraitsDBFunctions(TestCase):
                     self.assertEqual(
                         set_homologene_id_field(trait_type, trait_info, db_mock), expected)
 
+    @pytest.mark.unit_test
     def test_set_confidential_field(self):
         """Test that the `confidential` field is set up correctly"""
         for trait_type, trait_info, expected in [
@@ -275,6 +236,7 @@ class TestTraitsDBFunctions(TestCase):
                 self.assertEqual(
                     set_confidential_field(trait_type, trait_info), expected)
 
+    @pytest.mark.unit_test
     def test_export_trait_data_dtype(self):
         """
         Test `export_trait_data` with different values for the `dtype` keyword
@@ -290,6 +252,7 @@ class TestTraitsDBFunctions(TestCase):
                     export_trait_data(trait_data, samplelist, dtype=dtype),
                     expected)
 
+    @pytest.mark.unit_test
     def test_export_trait_data_dtype_all_flags(self):
         """
         Test `export_trait_data` with different values for the `dtype` keyword
@@ -331,6 +294,7 @@ class TestTraitsDBFunctions(TestCase):
                         n_exists=nflag),
                     expected)
 
+    @pytest.mark.unit_test
     def test_export_informative(self):
         """Test that the function exports appropriate data."""
         # pylint: disable=W0621

@@ -2,6 +2,8 @@
 import unittest
 import os
 
+import pytest
+
 from gn3.computations.diff import generate_diff
 
 TESTDIFF = """3,4c3,4
@@ -19,6 +21,7 @@ TESTDIFF = """3,4c3,4
 
 class TestDiff(unittest.TestCase):
     """Test cases for computations.diff"""
+    @pytest.mark.unit_test
     def test_generate_diff(self):
         """Test that the correct diff is generated"""
         data = os.path.join(os.path.dirname(__file__).split("unit")[0],

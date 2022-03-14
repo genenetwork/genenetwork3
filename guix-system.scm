@@ -111,10 +111,11 @@ function."
                       %base-file-systems))
   (users %base-user-accounts)
   (packages %base-packages)
-  (services (cons* (service virtuoso-service-type
-                            (virtuoso-configuration
-                             (http-server-port 8891)))
-                   (service genenetwork3-service-type
-                            (genenetwork3-configuration
-                             (port 5000)))
-                   %base-services)))
+  (services (cons*
+             ;; (service virtuoso-service-type
+             ;;          (virtuoso-configuration
+             ;;           (http-server-port 8891)))
+             (service genenetwork3-service-type
+                      (genenetwork3-configuration
+                       (port 5000)))
+             %base-services)))

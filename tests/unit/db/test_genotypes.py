@@ -1,5 +1,6 @@
 """Tests gn3.db.genotypes"""
 from unittest import TestCase
+import pytest
 from gn3.db.genotypes import (
     parse_genotype_file,
     parse_genotype_labels,
@@ -10,6 +11,7 @@ from gn3.db.genotypes import (
 class TestGenotypes(TestCase):
     """Tests for functions in `gn3.db.genotypes`."""
 
+    @pytest.mark.unit_test
     def test_parse_genotype_labels(self):
         """Test that the genotype labels are parsed correctly."""
         self.assertEqual(
@@ -22,6 +24,7 @@ class TestGenotypes(TestCase):
              ("type", "test_type"), ("mat", "test_mat"), ("pat", "test_pat"),
              ("het", "test_het"), ("unk", "test_unk")))
 
+    @pytest.mark.unit_test
     def test_parse_genotype_header(self):
         """Test that the genotype header is parsed correctly."""
         for header, expected in [
@@ -43,6 +46,7 @@ class TestGenotypes(TestCase):
             with self.subTest(header=header):
                 self.assertEqual(parse_genotype_header(header), expected)
 
+    @pytest.mark.unit_test
     def test_parse_genotype_data_line(self):
         """Test parsing of data lines."""
         for line, geno_obj, parlist, expected in [
@@ -76,6 +80,7 @@ class TestGenotypes(TestCase):
                     parse_genotype_marker(line, geno_obj, parlist),
                     expected)
 
+    @pytest.mark.unit_test
     def test_build_genotype_chromosomes(self):
         """
         Given `markers` and `geno_obj`, test that `build_genotype_chromosomes`
@@ -115,6 +120,7 @@ class TestGenotypes(TestCase):
                     build_genotype_chromosomes(geno_obj, markers),
                     expected)
 
+    @pytest.mark.unit_test
     def test_parse_genotype_file(self):
         """Test the parsing of genotype files. """
         self.assertEqual(

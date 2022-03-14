@@ -5,9 +5,9 @@ data structures.
 
 from math import ceil
 from functools import reduce
-from typing import Any, Tuple, Sequence, Optional
+from typing import Any, Tuple, Sequence, Optional, Generator
 
-def partition_all(num: int, items: Sequence[Any]) -> Tuple[Tuple[Any, ...], ...]:
+def partition_all(num: int, items: Sequence[Any]) -> Generator:
     """
     Given a sequence `items`, return a new sequence of the same type as `items`
     with the data partitioned into sections of `n` items per partition.
@@ -19,10 +19,9 @@ def partition_all(num: int, items: Sequence[Any]) -> Tuple[Tuple[Any, ...], ...]
         return acc + ((start, start + num),)
 
     iterations = range(ceil(len(items) / num))
-    return tuple([# type: ignore[misc]
-        tuple(items[start:stop]) for start, stop # type: ignore[has-type]
-        in reduce(
-            __compute_start_stop__, iterations, tuple())])
+    for start, stop in reduce(# type: ignore[misc]
+            __compute_start_stop__, iterations, tuple()):
+        yield tuple(items[start:stop]) # type: ignore[has-type]
 
 def partition_by(partition_fn, items):
     """
@@ -49,4 +48,4 @@ def parse_csv_line(
     function in GeneNetwork1.
     """
     return tuple(
-        col.strip("{} \t\n".format(quoting)) for col in line.split(delimiter))
+        col.strip(f"{quoting} \t\n") for col in line.split(delimiter))

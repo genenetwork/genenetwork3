@@ -1,7 +1,9 @@
 """Test cases for procedures defined in computations.gemma"""
 import unittest
-
 from unittest import mock
+
+import pytest
+
 from gn3.computations.gemma import generate_gemma_cmd
 from gn3.computations.gemma import generate_hash_of_string
 from gn3.computations.gemma import generate_pheno_txt_file
@@ -9,6 +11,7 @@ from gn3.computations.gemma import generate_pheno_txt_file
 
 class TestGemma(unittest.TestCase):
     """Test cases for computations.gemma module"""
+    @pytest.mark.unit_test
     def test_generate_pheno_txt_file(self):
         """Test that the pheno text file is generated correctly"""
         open_mock = mock.mock_open()
@@ -19,18 +22,20 @@ class TestGemma(unittest.TestCase):
             self.assertEqual(_file, ("/tmp/gn2/phenotype_"
                                      "P7y6QWnwBPedSZdL0+m/GQ.txt"))
         open_mock.assert_called_with(("/tmp/gn2/phenotype_"
-                                      "P7y6QWnwBPedSZdL0+m/GQ.txt"), "w")
+                                      "P7y6QWnwBPedSZdL0+m/GQ.txt"), "w", encoding="utf-8")
         open_mock.return_value.write.assert_has_calls([
             mock.call("NA\n"),
             mock.call("NA\n"),
             mock.call("BXD07 438.700\n")
         ])
 
+    @pytest.mark.unit_test
     def test_generate_hash_of_string(self):
         """Test that a string is hashed correctly"""
         self.assertEqual(generate_hash_of_string("I^iQP&TlSR^z"),
                          "hMVRw8kbEp49rOmoIkhMjA")
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     def test_compute_k_values_without_loco(self, mock_get_hash):
         """Test computing k values without loco"""
@@ -52,6 +57,7 @@ class TestGemma(unittest.TestCase):
                                     "-gk > /tmp/my-token/my-hash-output.json")
                                })
 
+    @pytest.mark.unit_test
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     def test_generate_gemma_cmd_with_loco(self, mock_get_hash):
         """Test computing k values with loco"""

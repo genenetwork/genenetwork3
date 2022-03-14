@@ -3,6 +3,8 @@ import json
 from unittest import TestCase
 from unittest import mock
 
+import pytest
+
 from gn3.db import insert
 from gn3.db.metadata_audit import MetadataAudit
 
@@ -10,6 +12,7 @@ from gn3.db.metadata_audit import MetadataAudit
 class TestMetadatAudit(TestCase):
     """Test cases for fetching chromosomes"""
 
+    @pytest.mark.unit_test
     def test_insert_into_metadata_audit(self):
         """Test that data is inserted correctly in the audit table
 

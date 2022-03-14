@@ -16,7 +16,7 @@ def call_ctl_script(data):
     cmd = compose_wgcna_cmd("ctl_analysis.R", temp_file_name)
 
     cmd_results = run_cmd(cmd)
-    with open(temp_file_name, "r") as outputfile:
+    with open(temp_file_name, "r", encoding="utf-8") as outputfile:
         if cmd_results["code"] != 0:
             return (cmd_results, None)
         output_file_data = json.load(outputfile)

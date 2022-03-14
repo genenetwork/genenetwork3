@@ -2,7 +2,6 @@
 
 import os
 import gzip
-from typing import Union, TextIO
 
 from gn3.settings import GENOTYPE_FILES
 
@@ -10,7 +9,7 @@ def build_genotype_file(
         geno_name: str, base_dir: str = GENOTYPE_FILES,
         extension: str = "geno"):
     """Build the absolute path for the genotype file."""
-    return "{}/{}.{}".format(os.path.abspath(base_dir), geno_name, extension)
+    return f"{os.path.abspath(base_dir)}/{geno_name}.{extension}"
 
 def load_genotype_samples(genotype_filename: str, file_type: str = "geno"):
     """
@@ -44,22 +43,23 @@ def __load_genotype_samples_from_geno(genotype_filename: str):
 
     Loads samples from '.geno' files.
     """
-    gzipped_filename = "{}.gz".format(genotype_filename)
+    def __remove_comments_and_empty_lines__(rows):
+        return(
+            line for line in rows
+            if line and not line.startswith(("#", "@")))
+
+    gzipped_filename = f"{genotype_filename}.gz"
     if os.path.isfile(gzipped_filename):
-        genofile: Union[TextIO, gzip.GzipFile] = gzip.open(gzipped_filename)
+        with gzip.open(gzipped_filename) as gz_genofile:
+            rows = __remove_comments_and_empty_lines__(gz_genofile.readlines())
     else:
-        genofile = open(genotype_filename)
+        with open(genotype_filename, encoding="utf8") as genofile:
+            rows = __remove_comments_and_empty_lines__(genofile.readlines())
 
-    for row in genofile:
-        line = row.strip()
-        if (not line) or (line.startswith(("#", "@"))): # type: ignore[arg-type]
-            continue
-        break
-
-    headers = line.split("\t") # type: ignore[arg-type]
+    headers = next(rows).split() # type: ignore[arg-type]
     if headers[3] == "Mb":
-        return headers[4:]
-    return headers[3:]
+        return tuple(headers[4:])
+    return tuple(headers[3:])
 
 def __load_genotype_samples_from_plink(genotype_filename: str):
     """
@@ -67,8 +67,8 @@ def __load_genotype_samples_from_plink(genotype_filename: str):
 
     Loads samples from '.plink' files.
     """
-    genofile = open(genotype_filename)
-    return [line.split(" ")[1] for line in genofile]
+    with open(genotype_filename, encoding="utf8") as genofile:
+        return tuple(line.split()[1] for line in genofile)
 
 def parse_genotype_labels(lines: list):
     """
@@ -129,7 +129,7 @@ def parse_genotype_marker(line: str, geno_obj: dict, parlist: tuple):
 
     alleles = marker_row[start_pos:]
     genotype = tuple(
-        (geno_table[allele] if allele in geno_table.keys() else "U")
+        (geno_table[allele] if allele in geno_table else "U")
         for allele in alleles)
     if len(parlist) > 0:
         genotype = (-1, 1) + genotype
@@ -164,7 +164,7 @@ def parse_genotype_file(filename: str, parlist: tuple = tuple()):
     """
     Parse the provided genotype file into a usable pytho3 data structure.
     """
-    with open(filename, "r") as infile:
+    with open(filename, "r", encoding="utf8") as infile:
         contents = infile.readlines()
 
     lines = tuple(line for line in contents if
@@ -175,10 +175,10 @@ def parse_genotype_file(filename: str, parlist: tuple = tuple()):
     data_lines = tuple(line for line in lines if not line.startswith("@"))
     header = parse_genotype_header(data_lines[0], parlist)
     geno_obj = dict(labels + header)
-    markers = tuple(
-        [parse_genotype_marker(line, geno_obj, parlist)
-         for line in data_lines[1:]])
+    markers = (
+        parse_genotype_marker(line, geno_obj, parlist)
+        for line in data_lines[1:])
     chromosomes = tuple(
         dict(chromosome) for chromosome in
-        build_genotype_chromosomes(geno_obj, markers))
+        build_genotype_chromosomes(geno_obj, tuple(markers)))
     return {**geno_obj, "chromosomes": chromosomes}

@@ -1,6 +1,8 @@
 """Module contains tests for slink"""
 from unittest import TestCase
 
+import pytest
+
 from gn3.computations.slink import slink
 from gn3.computations.slink import nearest
 from gn3.computations.slink import LengthError
@@ -9,6 +11,7 @@ from gn3.computations.slink import MirrorError
 class TestSlink(TestCase):
     """Class for testing slink functions"""
 
+    @pytest.mark.unit_test
     def test_nearest_expects_list_of_lists(self):
         """Test that function only accepts a list of lists."""
         # This might be better handled with type-hints and mypy
@@ -18,6 +21,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(ValueError, msg="Expected list or tuple"):
                     nearest(item, 1, 1)
 
+    @pytest.mark.unit_test
     def test_nearest_does_not_allow_empty_lists(self):
         """Test that function does not accept an empty list, or any of the child
         lists to be empty."""
@@ -29,6 +33,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(ValueError):
                     nearest(lst, 1, 1)
 
+    @pytest.mark.unit_test
     def test_nearest_expects_children_are_same_length_as_parent(self):
         """Test that children lists are same length as parent list."""
         for lst in [[[0, 1]],
@@ -40,6 +45,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(LengthError):
                     nearest(lst, 1, 1)
 
+    @pytest.mark.unit_test
     def test_nearest_expects_member_is_zero_distance_from_itself(self):
         """Test that distance of a member from itself is zero"""
         for lst in [[[1]],
@@ -50,6 +56,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(ValueError):
                     nearest(lst, 1, 1)
 
+    @pytest.mark.unit_test
     def test_nearest_expects_distance_atob_is_equal_to_distance_btoa(self):
         """Test that the distance from member A to member B is the same as that
         from member B to member A."""
@@ -60,6 +67,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(MirrorError):
                     nearest(lst, 1, 1)
 
+    @pytest.mark.unit_test
     def test_nearest_expects_zero_or_positive_distances(self):
         """Test that all distances are either zero, or greater than zero."""
         # Based on:
@@ -74,6 +82,7 @@ class TestSlink(TestCase):
                 with self.assertRaises(ValueError, msg="Distances should be positive."):
                     nearest(lst, 1, 1)
 
+    @pytest.mark.unit_test
     def test_nearest_returns_shortest_distance_given_coordinates_to_both_group_members(self):
         """Test that the shortest distance is returned."""
         # This test is named wrong - at least I think it is, from the expected results
@@ -234,6 +243,7 @@ class TestSlink(TestCase):
             with self.subTest(lst=lst):
                 self.assertEqual(nearest(lst, i, j), expected)
 
+    @pytest.mark.unit_test
     def test_nearest_gives_shortest_distance_between_list_of_members_and_member(self):
         """Test that the shortest distance is returned."""
         for members_distances, members_list, member_coordinate, expected_distance in [
@@ -260,6 +270,7 @@ class TestSlink(TestCase):
                         members_distances, member_coordinate, members_list),
                     expected_distance)
 
+    @pytest.mark.unit_test
     def test_nearest_returns_shortest_distance_given_two_lists_of_members(self):
         """Test that the shortest distance is returned."""
         for members_distances, members_list, member_list2, expected_distance in [
@@ -289,12 +300,14 @@ class TestSlink(TestCase):
                         members_distances, member_list2, members_list),
                     expected_distance)
 
+    @pytest.mark.unit_test
     def test_slink_wrong_data_returns_empty_list(self):
         """Test that empty list is returned for wrong data."""
         for data in [1, "test", [], 2.945, nearest, [0]]:
             with self.subTest(data=data):
                 self.assertEqual(slink(data), [])
 
+    @pytest.mark.unit_test
     def test_slink_with_data(self):
         """Test slink with example data, and expected results for each data
         sample."""

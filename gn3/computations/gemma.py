@@ -31,7 +31,7 @@ def generate_pheno_txt_file(trait_filename: str,
     # Early return if this already exists!
     if os.path.isfile(f"{tmpdir}/gn2/{trait_filename}"):
         return f"{tmpdir}/gn2/{trait_filename}"
-    with open(f"{tmpdir}/gn2/{trait_filename}", "w") as _file:
+    with open(f"{tmpdir}/gn2/{trait_filename}", "w", encoding="utf-8") as _file:
         for value in values:
             if value == "x":
                 _file.write("NA\n")

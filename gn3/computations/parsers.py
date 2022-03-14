@@ -15,7 +15,7 @@ def parse_genofile(file_path: str) -> Tuple[List[str],
         'u': None,
     }
     genotypes, samples = [], []
-    with open(file_path, "r") as _genofile:
+    with open(file_path, "r", encoding="utf-8") as _genofile:
         for line in _genofile:
             line = line.strip()
             if line.startswith(("#", "@")):

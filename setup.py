@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 """Basic setup script for gn3"""
 from setuptools import setup  # type: ignore
+from setup_commands import RunTests
 
+def long_description():
+    """Retrieve long description from the README file."""
+    with open('README.md', encoding="utf-8") as readme:
+        return readme.read()
 
 setup(author='Bonface M. K.',
       author_email='me@bonfacemunyoki.com',
@@ -23,7 +28,7 @@ setup(author='Bonface M. K.',
           "flask-cors==3.0.9"
       ],
       license='GPLV3',
-      long_description=open('README.md').read(),
+      long_description=long_description(),
       long_description_content_type='text/markdown',
       name='gn3',
       packages=[
@@ -34,4 +39,8 @@ setup(author='Bonface M. K.',
           'tests'
       ],
       url='https://github.com/genenetwork/genenetwork3',
-      version='0.1')
+      version='0.1',
+      tests_require=["pytest", "hypothesis"],
+      cmdclass={
+          "run_tests": RunTests ## testing
+      })

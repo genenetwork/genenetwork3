@@ -87,7 +87,13 @@ See also instructions in [.guix.scm](.guix.scm).
 To run tests:
 
 ```bash
-python -m unittest discover -v
+pytest
+```
+
+To specify unit-tests:
+
+```bash
+pytest -k unit_test
 ```
 
 Running pylint:
@@ -201,3 +207,12 @@ T2	6.4471	6.7191	5.98015	6.68051	...
 ```
 
 It is very important that the column header names for the strains correspond to the genotype file used.
+
+## Partial Correlations
+
+The partial correlations feature depends on the following external systems to run correctly:
+
+- Redis: Acts as a communications broker between the webserver and external processes
+- `sheepdog/worker.py`: Actually runs the external processes that do the computations
+
+These two systems should be running in the background for the partial correlations feature to work correctly.
