@@ -8,6 +8,7 @@ from sklearn.decomposition import PCA
 from sklearn import preprocessing
 
 import numpy as np
+import redis
 
 
 from typing_extensions import TypeAlias
@@ -69,8 +70,7 @@ def generate_scree_plot_data(variance_ratio: fArray) -> tuple[list, fArray]:
 def generate_pca_traits_vals(trait_data_array: list[fArray],
                              corr_array: list[fArray]) -> list[list[Any]]:
     """
-
-    generates datasets from zscores of the traits and eigen_vectors 
+    generates datasets from zscores of the traits and eigen_vectors\
     of correlation matrix
 
     Parameters:
@@ -117,21 +117,29 @@ def process_factor_loadings_tdata(factor_loadings, traits_num: int):
             for trait_loading in trait_loadings]
 
 
-def generate_pca_temp_traits(species: str, group: str,
-                             traits_data: list[fArray], corr_array: list[fArray],
-                             dataset_samples: list[str], shared_samples: list[str],
-                             create_time: str) -> dict[str, list[Any]]:
+def generate_pca_temp_traits(
+    species: str,
+    group: str,
+    traits_data: list[fArray],
+    corr_array: list[fArray],
+    dataset_samples: list[str],
+    shared_samples: list[str],
+    create_time: str
+) -> dict[str, list[Any]]:
     """
+
 
     generate pca temp datasets
 
     """
 
+    # pylint: disable=too-many-arguments
+
     pca_trait_dict = {}
 
-    pca_vals = generate_pca_traits_vals(traits_data, corr_array).tolist()
+    pca_vals = generate_pca_traits_vals(traits_data, corr_array)
 
-    for (idx, pca_trait) in enumerate(pca_vals):
+    for (idx, pca_trait) in enumerate(list(pca_vals)):
 
         trait_id = f"PCA{str(idx+1)}_{species}_{group}_{create_time}"
         sample_vals = []
@@ -177,5 +185,5 @@ def cache_pca_dataset(redis_conn: Any, exp_days: int,
             redis_conn.set(trait_id, samples_str, ex=exp_days)
         return True
 
-    except Exception:
+    except (redis.ConnectionError, AttributeError):
         return False
