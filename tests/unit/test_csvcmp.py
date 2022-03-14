@@ -3,10 +3,10 @@ import pytest
 
 from gn3.csvcmp import csv_diff
 from gn3.csvcmp import extract_invalid_csv_headers
+from gn3.csvcmp import extract_strain_name
 from gn3.csvcmp import fill_csv
 from gn3.csvcmp import get_allowable_sampledata_headers
 from gn3.csvcmp import remove_insignificant_edits
-from gn3.csvcmp import extract_strain_name
 
 
 @pytest.mark.unit_test
