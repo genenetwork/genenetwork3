@@ -1,10 +1,10 @@
 # genenetwork3
 
 [![GeneNetwork3 CI
-badge](https://penguin2.genenetwork.org/badge/genenetwork3.svg)](https://penguin2.genenetwork.org/jobs/genenetwork3)
+badge](https://ci.genenetwork.org/badge/genenetwork3.svg)](https://ci.genenetwork.org/jobs/genenetwork3)
 [![GeneNetwork3 pylint CI
-badge](https://penguin2.genenetwork.org/badge/genenetwork3-pylint.svg)](https://penguin2.genenetwork.org/jobs/genenetwork3-pylint)
-[![GeneNetwork3 mypy CI badge](https://penguin2.genenetwork.org/badge/genenetwork3-mypy.svg)](https://penguin2.genenetwork.org/jobs/genenetwork3-mypy)
+badge](https://ci.genenetwork.org/badge/genenetwork3-pylint.svg)](https://ci.genenetwork.org/jobs/genenetwork3-pylint)
+[![GeneNetwork3 mypy CI badge](https://ci.genenetwork.org/badge/genenetwork3-mypy.svg)](https://ci.genenetwork.org/jobs/genenetwork3-mypy)
 
 GeneNetwork3 REST API for data science and machine  learning
 
