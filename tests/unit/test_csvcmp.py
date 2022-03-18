@@ -1,6 +1,7 @@
 """Tests for gn3.csvcmp"""
 import pytest
 
+from gn3.csvcmp import clean_csv_text
 from gn3.csvcmp import csv_diff
 from gn3.csvcmp import extract_invalid_csv_headers
 from gn3.csvcmp import extract_strain_name
@@ -147,3 +148,23 @@ string"""
 
     csv_text = "Strain Name, Value, SE, Colour"
     assert extract_invalid_csv_headers(allowed_headers, csv_text) == ["Colour"]
+
+
+@pytest.mark.unit_test
+def test_clean_csv():
+    """Test that csv text input is cleaned properly"""
+    csv_text = """
+Strain Name,Value,SE,Count 
+BXD1,18,x ,0
+BXD12, 16,x,x
+BXD14,15 ,x,x
+BXD15,14,x,
+"""
+    expected_csv = """Strain Name,Value,SE,Count
+BXD1,18,x,0
+BXD12,16,x,x
+BXD14,15,x,x
+BXD15,14,x,"""
+
+    assert clean_csv_text(csv_text) == expected_csv
+    assert clean_csv_text("a,b \n1,2\n") == "a,b\n1,2"
