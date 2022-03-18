@@ -55,7 +55,7 @@ def test_remove_insignificant_data():
 @pytest.mark.unit_test
 def test_csv_diff_same_columns():
     """Test csv diffing on data with the same number of columns"""
-    assert csv_diff(base_csv="a,b\n1,2\n", delta_csv="a,b\n1,3") == {
+    assert csv_diff(base_csv="a,b \n1,2\n", delta_csv="a,b\n1,3") == {
         "Additions": [],
         "Deletions": [],
         "Columns": "",
