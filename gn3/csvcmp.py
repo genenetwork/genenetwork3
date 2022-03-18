@@ -59,8 +59,10 @@ def clean_csv_text(csv_text: str) -> str:
 
 def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
     """Diff 2 csv strings"""
-    base_csv_list = base_csv.strip().split("\n")
-    delta_csv_list = delta_csv.strip().split("\n")
+    base_csv = clean_csv_text(base_csv)
+    delta_csv = clean_csv_text(delta_csv)
+    base_csv_list = base_csv.split("\n")
+    delta_csv_list = delta_csv.split("\n")
 
     base_csv_header, delta_csv_header = "", ""
     for i, line in enumerate(base_csv_list):
