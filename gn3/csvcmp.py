@@ -48,6 +48,15 @@ def remove_insignificant_edits(diff_data, epsilon=0.001):
     return diff_data
 
 
+def clean_csv_text(csv_text: str) -> str:
+    """Remove extra white space elements in all elements of the CSV file"""
+    _csv_text = []
+    for line in csv_text.strip().split("\n"):
+        _csv_text.append(
+            ",".join([el.strip() for el in line.split(",")]))
+    return "\n".join(_csv_text)
+
+
 def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
     """Diff 2 csv strings"""
     base_csv_list = base_csv.strip().split("\n")
