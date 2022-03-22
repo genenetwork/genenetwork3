@@ -12,6 +12,7 @@ option_list = list(
   make_option(c("--covarstruct"), type="character", help="File detailing which covariates are categorical or numerical"),
   make_option(c("--model"), type="character", default="normal", help="Mapping Model - Normal or Non-Parametric"),
   make_option(c("--method"), type="character", default="hk", help="Mapping Method - hk (Haley Knott), ehk (Extended Haley Knott), mr (Marker Regression), em (Expectation-Maximization), imp (Imputation)"),
+  make_option(c("--pairscan"), action="store_true", default=NULL, help="Run Pair Scan - the R/qtl function scantwo"),
   make_option(c("-i", "--interval"), action="store_true", default=NULL, help="Use interval mapping"),
   make_option(c("--nperm"), type="integer", default=0, help="Number of permutations"),
   make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata (stored as final column/vector in phenotype input file)"),
@@ -171,9 +172,15 @@ verbose_print('Generating cross object\n')
 cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file, type)
 
 # Calculate genotype probabilities
-if (!is.null(opt$interval)) {
+if (!is.null(opt$pairscan)) {
+  verbose_print('Calculating genotype probabilities for pair-scan\n')
+  cross_object <- calc.genoprob(cross_object, step=10)
+} else if (!is.null(opt$interval)) {
   verbose_print('Calculating genotype probabilities with interval mapping\n')
   cross_object <- calc.genoprob(cross_object, step=5, stepwidth="max")
+} else if (!is.null(opt$pairscan)) {
+  verbose_print('Calculating genotype probabilities for pair-scan\n')
+  cross_object <- calc.genoprob(cross_object, step=10)
 } else {
   verbose_print('Calculating genotype probabilities\n')
   cross_object <- calc.genoprob(cross_object)
@@ -188,6 +195,7 @@ if (type == "4-way") {
 # Pull covariates out of cross object, if they exist
 covars <- c() # Holds the covariates which should be passed to R/qtl
 if (!is.null(opt$addcovar)) {
+  verbose_print('Pulling covariates out of cross object\n')
   # If perm strata are being used, it'll be included as the final column in the phenotype file
   if (!is.null(opt$pstrata)) {
     covar_names = trait_names[2:(length(trait_names)-1)]
@@ -223,14 +231,28 @@ if (!is.null(opt$addcovar)) {
 # Pull permutation strata out of cross object, if it is being used
 perm_strata = vector()
 if (!is.null(opt$pstrata)) {
+  verbose_print('Pulling permutation strata out of cross object\n')
   strata_col = trait_names[length(trait_names)]
   perm_strata <- pull.pheno(cross_object, strata_col)
 }
 
 # If a marker name is supplied as covariate, get its vector of values and add them as a covariate
 if (!is.null(opt$control)) {
+  verbose_print('Creating marker covariates and binding them to covariates vector\n')
   marker_covars = create_marker_covars(cross_object, opt$control)
   covars <- cbind(covars, marker_covars)
+}
+
+if (!is.null(opt$pairscan)) {
+  verbose_print("Running scantwo")
+  scan_func <- function(...){
+    scantwo(...)
+  }
+} else {
+  verbose_print("Running scanone")
+  scan_func <- function(...){
+    scanone(...)
+  }
 }
 
 # Calculate permutations
@@ -243,19 +265,19 @@ if (opt$nperm > 0) {
 
   if (!is.null(opt$addcovar) || !is.null(opt$control)){
     if (!is.null(opt$pstrata)) {
-      verbose_print('Running ', opt$nperm, ' permutations with cofactors and strata\n')
-      perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
+      verbose_print('Running permutations with cofactors and strata\n')
+      perm_results = scan_func(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
     } else {
-      verbose_print('Running ', opt$nperm, ' permutations with cofactors\n')
-      perm_results = scanone(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, model=opt$model, method=opt$method)
+      verbose_print('Running permutations with cofactors\n')
+      perm_results = scan_func(cross_object, pheno.col=1, addcovar=covars, n.perm=opt$nperm, model=opt$model, method=opt$method)
     }
   } else {
     if (!is.null(opt$pstrata)) {
-      verbose_print('Running ', opt$nperm, ' permutations with strata\n')
-      perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
+      verbose_print('Running permutations with strata\n')
+      perm_results = scan_func(cross_object, pheno.col=1, n.perm=opt$nperm, perm.strata=perm_strata, model=opt$model, method=opt$method)
     } else {
-      verbose_print('Running ', opt$nperm, ' permutations\n')
-      perm_results = scanone(cross_object, pheno.col=1, n.perm=opt$nperm, model=opt$model, method=opt$method)
+      verbose_print('Running permutations\n')
+      perm_results = scan_func(cross_object, pheno.col=1, n.perm=opt$nperm, model=opt$model, method=opt$method)
     }
   }
   write.csv(perm_results, perm_out_file)
@@ -268,57 +290,64 @@ if (!is.null(opt$filename)){
 }
 
 if (!is.null(opt$addcovar) || !is.null(opt$control)){
-  verbose_print('Running scanone with cofactors\n')
-  qtl_results = scanone(cross_object, pheno.col=1, addcovar=covars, model=opt$model, method=opt$method)
+  verbose_print('Running scan with cofactors\n')
+  qtl_results = scan_func(cross_object, pheno.col=1, addcovar=covars, model=opt$model, method=opt$method)
 } else {
-  verbose_print('Running scanone\n')
-  qtl_results = scanone(cross_object, pheno.col=1, model=opt$model, method=opt$method)
+  verbose_print('Running scan\n')
+  qtl_results = scan_func(cross_object, pheno.col=1, model=opt$model, method=opt$method)
 }
 
-#QTL main effects on adjusted longevity
-getEffects <- function(sdata, gtsprob, marker = "1_24042124", model = "longevity ~ sex + site + cohort + treatment", trait = "longevity"){
-  rownames(sdata) <- 1:nrow(sdata)
-  rownames(gtsprob) <- 1:nrow(gtsprob)
-  mp <- gtsprob[, grep(marker, colnames(gtsprob))]
-  gts <- unlist(lapply(lapply(lapply(apply(mp,1,function(x){which(x > 0.85)}),names), strsplit, ":"), function(x){
-    if(length(x) > 0){ return(x[[1]][2]); }else{ return(NA) }
-  }))
+verbose_print('Writing results to CSV file\n')
+if (!is.null(opt$pairscan)) {
+  map_out_file = file.path(opt$outdir, paste("MAP_", opt$filename, sep = "" ))
+  write.csv(qtl_results[1], out_file)
+  write.csv(qtl_results[2], map_out_file)
+} else {
+  # QTL main effects on adjusted longevity
+  getEffects <- function(sdata, gtsprob, marker = "1_24042124", model = "longevity ~ sex + site + cohort + treatment", trait = "longevity"){
+    rownames(sdata) <- 1:nrow(sdata)
+    rownames(gtsprob) <- 1:nrow(gtsprob)
+    mp <- gtsprob[, grep(marker, colnames(gtsprob))]
+    gts <- unlist(lapply(lapply(lapply(apply(mp,1,function(x){which(x > 0.85)}),names), strsplit, ":"), function(x){
+      if(length(x) > 0){ return(x[[1]][2]); }else{ return(NA) }
+    }))
 
-  ismissing <- which(apply(sdata, 1, function(x){any(is.na(x))}))
-  if(length(ismissing) > 0){
-    sdata <- sdata[-ismissing, ]
-    gts <- gts[-ismissing]
+    ismissing <- which(apply(sdata, 1, function(x){any(is.na(x))}))
+    if(length(ismissing) > 0){
+      sdata <- sdata[-ismissing, ]
+      gts <- gts[-ismissing]
+    }
+
+    mlm <- lm(as.formula(model), data = sdata)
+    pheAdj <- rep(NA, nrow(sdata))
+    adj <- residuals(mlm) + mean(sdata[, trait])
+    pheAdj[as.numeric(names(adj))] <- adj
+    means <- c(mean(pheAdj[which(gts == "AC")],na.rm=TRUE),mean(pheAdj[which(gts == "AD")],na.rm=TRUE),mean(pheAdj[which(gts == "BC")],na.rm=TRUE),mean(pheAdj[which(gts == "BD")],na.rm=TRUE))
+    std <- function(x) sd(x,na.rm=TRUE)/sqrt(length(x))
+    stderrs <- c(std(pheAdj[which(gts == "AC")]),std(pheAdj[which(gts == "AD")]),std(pheAdj[which(gts == "BC")]),std(pheAdj[which(gts == "BD")]))
+    paste0(round(means,0), " ± ", round(stderrs,2))
   }
 
-  mlm <- lm(as.formula(model), data = sdata)
-  pheAdj <- rep(NA, nrow(sdata))
-  adj <- residuals(mlm) + mean(sdata[, trait])
-  pheAdj[as.numeric(names(adj))] <- adj
-  means <- c(mean(pheAdj[which(gts == "AC")],na.rm=TRUE),mean(pheAdj[which(gts == "AD")],na.rm=TRUE),mean(pheAdj[which(gts == "BC")],na.rm=TRUE),mean(pheAdj[which(gts == "BD")],na.rm=TRUE))
-  std <- function(x) sd(x,na.rm=TRUE)/sqrt(length(x))
-  stderrs <- c(std(pheAdj[which(gts == "AC")]),std(pheAdj[which(gts == "AD")]),std(pheAdj[which(gts == "BC")]),std(pheAdj[which(gts == "BD")]))
-  paste0(round(means,0), " ± ", round(stderrs,2))
+  if (type == "4-way") {
+    verbose_print("Get phenotype name + genoprob + all phenotypes + models for 4-way crosses")
+    traitname <- colnames(pull.pheno(cross_object))[1]
+    gtsp <- pull.genoprob(cross_object)
+    allpheno <- pull.pheno(cross_object)
+    if (!is.null(opt$addcovar)) {
+      model <- paste0(traitname, " ~ ", paste0(covar_names, sep="", collapse=" + "))
+    } else {
+      model <- paste0(traitname, " ~ 1 ")
+    }
+
+    meffects <- c()
+    verbose_print("Getting QTL main effects for 4-way crosses")
+    for(marker in  rownames(qtl_results)){
+      meff <- getEffects(allpheno, gtsp, marker = marker, model, trait = traitname)
+      meffects <- rbind(meffects, meff)
+    }
+    qtl_results <- cbind(data.frame(qtl_results[,1:3]), meffects)
+    colnames(qtl_results)[4:7] <- c("AC", "AD", "BC", "BD")
+  }
+
+  write.csv(qtl_results, out_file)
 }
-
-if (type == "4-way") {
-  verbose_print("Get phenotype name + genoprob + all phenotypes + models for 4-way crosses")
-  traitname <- colnames(pull.pheno(cross_object))[1]
-  gtsp <- pull.genoprob(cross_object)
-  allpheno <- pull.pheno(cross_object)
-  if (!is.null(opt$addcovar)) {
-    model <- paste0(traitname, " ~ ", paste0(covar_names, sep="", collapse=" + "))
-  } else {
-    model <- paste0(traitname, " ~ 1 ")
-  }
-
-  meffects <- c()
-  verbose_print("Getting QTL main effects for 4-way crosses")
-  for(marker in  rownames(qtl_results)){
-    meff <- getEffects(allpheno, gtsp, marker = marker, model, trait = traitname)
-    meffects <- rbind(meffects, meff)
-  }
-  qtl_results <- cbind(data.frame(qtl_results[,1:3]), meffects)
-  colnames(qtl_results)[4:7] <- c("AC", "AD", "BC", "BD")
-}
-
-write.csv(qtl_results, out_file)

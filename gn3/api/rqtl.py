@@ -6,7 +6,8 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_output, process_perm_output
+from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_mapping, \
+                                  process_rqtl_pairscan, process_perm_output
 from gn3.computations.gemma import do_paths_exist
 
 rqtl = Blueprint("rqtl", __name__)
@@ -25,7 +26,7 @@ run the rqtl_wrapper script and return the results as JSON
 
     # Split kwargs by those with values and boolean ones that just convert to True/False
     kwargs = ["covarstruct", "model", "method", "nperm", "scale", "control_marker"]
-    boolean_kwargs = ["addcovar", "interval", "pstrata"]
+    boolean_kwargs = ["addcovar", "interval", "pstrata", "pairscan"]
     all_kwargs = kwargs + boolean_kwargs
 
     rqtl_kwargs = {"geno": genofile, "pheno": phenofile}
@@ -48,9 +49,11 @@ run the rqtl_wrapper script and return the results as JSON
                                        "output", rqtl_cmd.get('output_file'))):
         os.system(rqtl_cmd.get('rqtl_cmd'))
 
-    rqtl_output['results'] = process_rqtl_output(rqtl_cmd.get('output_file'))
+    if "pairscan" in rqtl_bool_kwargs:
+        rqtl_output['results'] = process_rqtl_pairscan(rqtl_cmd.get('output_file'), genofile)
+    else:
+        rqtl_output['results'] = process_rqtl_mapping(rqtl_cmd.get('output_file'))
 
-    rqtl_output['results'] = process_rqtl_output(rqtl_cmd.get('output_file'))
     if int(rqtl_kwargs['nperm']) > 0:
         rqtl_output['perm_results'], rqtl_output['suggestive'], rqtl_output['significant'] = \
         process_perm_output(rqtl_cmd.get('output_file'))
