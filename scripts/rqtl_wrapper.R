@@ -178,6 +178,9 @@ if (!is.null(opt$pairscan)) {
 } else if (!is.null(opt$interval)) {
   verbose_print('Calculating genotype probabilities with interval mapping\n')
   cross_object <- calc.genoprob(cross_object, step=5, stepwidth="max")
+} else if (!is.null(opt$pairscan)) {
+  verbose_print('Calculating genotype probabilities for pair-scan\n')
+  cross_object <- calc.genoprob(cross_object, step=10)
 } else {
   verbose_print('Calculating genotype probabilities\n')
   cross_object <- calc.genoprob(cross_object)
@@ -294,57 +297,57 @@ if (!is.null(opt$addcovar) || !is.null(opt$control)){
   qtl_results = scan_func(cross_object, pheno.col=1, model=opt$model, method=opt$method)
 }
 
-#QTL main effects on adjusted longevity
-getEffects <- function(sdata, gtsprob, marker = "1_24042124", model = "longevity ~ sex + site + cohort + treatment", trait = "longevity"){
-  rownames(sdata) <- 1:nrow(sdata)
-  rownames(gtsprob) <- 1:nrow(gtsprob)
-  mp <- gtsprob[, grep(marker, colnames(gtsprob))]
-  gts <- unlist(lapply(lapply(lapply(apply(mp,1,function(x){which(x > 0.85)}),names), strsplit, ":"), function(x){
-    if(length(x) > 0){ return(x[[1]][2]); }else{ return(NA) }
-  }))
-
-  ismissing <- which(apply(sdata, 1, function(x){any(is.na(x))}))
-  if(length(ismissing) > 0){
-    sdata <- sdata[-ismissing, ]
-    gts <- gts[-ismissing]
-  }
-
-  mlm <- lm(as.formula(model), data = sdata)
-  pheAdj <- rep(NA, nrow(sdata))
-  adj <- residuals(mlm) + mean(sdata[, trait])
-  pheAdj[as.numeric(names(adj))] <- adj
-  means <- c(mean(pheAdj[which(gts == "AC")],na.rm=TRUE),mean(pheAdj[which(gts == "AD")],na.rm=TRUE),mean(pheAdj[which(gts == "BC")],na.rm=TRUE),mean(pheAdj[which(gts == "BD")],na.rm=TRUE))
-  std <- function(x) sd(x,na.rm=TRUE)/sqrt(length(x))
-  stderrs <- c(std(pheAdj[which(gts == "AC")]),std(pheAdj[which(gts == "AD")]),std(pheAdj[which(gts == "BC")]),std(pheAdj[which(gts == "BD")]))
-  paste0(round(means,0), " ± ", round(stderrs,2))
-}
-
-if (type == "4-way") {
-  verbose_print("Get phenotype name + genoprob + all phenotypes + models for 4-way crosses")
-  traitname <- colnames(pull.pheno(cross_object))[1]
-  gtsp <- pull.genoprob(cross_object)
-  allpheno <- pull.pheno(cross_object)
-  if (!is.null(opt$addcovar)) {
-    model <- paste0(traitname, " ~ ", paste0(covar_names, sep="", collapse=" + "))
-  } else {
-    model <- paste0(traitname, " ~ 1 ")
-  }
-
-  meffects <- c()
-  verbose_print("Getting QTL main effects for 4-way crosses")
-  for(marker in  rownames(qtl_results)){
-    meff <- getEffects(allpheno, gtsp, marker = marker, model, trait = traitname)
-    meffects <- rbind(meffects, meff)
-  }
-  qtl_results <- cbind(data.frame(qtl_results[,1:3]), meffects)
-  colnames(qtl_results)[4:7] <- c("AC", "AD", "BC", "BD")
-}
-
 verbose_print('Writing results to CSV file\n')
 if (!is.null(opt$pairscan)) {
   map_out_file = file.path(opt$outdir, paste("MAP_", opt$filename, sep = "" ))
   write.csv(qtl_results[1], out_file)
   write.csv(qtl_results[2], map_out_file)
 } else {
+  # QTL main effects on adjusted longevity
+  getEffects <- function(sdata, gtsprob, marker = "1_24042124", model = "longevity ~ sex + site + cohort + treatment", trait = "longevity"){
+    rownames(sdata) <- 1:nrow(sdata)
+    rownames(gtsprob) <- 1:nrow(gtsprob)
+    mp <- gtsprob[, grep(marker, colnames(gtsprob))]
+    gts <- unlist(lapply(lapply(lapply(apply(mp,1,function(x){which(x > 0.85)}),names), strsplit, ":"), function(x){
+      if(length(x) > 0){ return(x[[1]][2]); }else{ return(NA) }
+    }))
+
+    ismissing <- which(apply(sdata, 1, function(x){any(is.na(x))}))
+    if(length(ismissing) > 0){
+      sdata <- sdata[-ismissing, ]
+      gts <- gts[-ismissing]
+    }
+
+    mlm <- lm(as.formula(model), data = sdata)
+    pheAdj <- rep(NA, nrow(sdata))
+    adj <- residuals(mlm) + mean(sdata[, trait])
+    pheAdj[as.numeric(names(adj))] <- adj
+    means <- c(mean(pheAdj[which(gts == "AC")],na.rm=TRUE),mean(pheAdj[which(gts == "AD")],na.rm=TRUE),mean(pheAdj[which(gts == "BC")],na.rm=TRUE),mean(pheAdj[which(gts == "BD")],na.rm=TRUE))
+    std <- function(x) sd(x,na.rm=TRUE)/sqrt(length(x))
+    stderrs <- c(std(pheAdj[which(gts == "AC")]),std(pheAdj[which(gts == "AD")]),std(pheAdj[which(gts == "BC")]),std(pheAdj[which(gts == "BD")]))
+    paste0(round(means,0), " ± ", round(stderrs,2))
+  }
+
+  if (type == "4-way") {
+    verbose_print("Get phenotype name + genoprob + all phenotypes + models for 4-way crosses")
+    traitname <- colnames(pull.pheno(cross_object))[1]
+    gtsp <- pull.genoprob(cross_object)
+    allpheno <- pull.pheno(cross_object)
+    if (!is.null(opt$addcovar)) {
+      model <- paste0(traitname, " ~ ", paste0(covar_names, sep="", collapse=" + "))
+    } else {
+      model <- paste0(traitname, " ~ 1 ")
+    }
+
+    meffects <- c()
+    verbose_print("Getting QTL main effects for 4-way crosses")
+    for(marker in  rownames(qtl_results)){
+      meff <- getEffects(allpheno, gtsp, marker = marker, model, trait = traitname)
+      meffects <- rbind(meffects, meff)
+    }
+    qtl_results <- cbind(data.frame(qtl_results[,1:3]), meffects)
+    colnames(qtl_results)[4:7] <- c("AC", "AD", "BC", "BD")
+  }
+
   write.csv(qtl_results, out_file)
 }
