@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from gn3.computations.wgcna import dump_wgcna_data
-from gn3.computations.wgcna import compose_wgcna_cmd
+from gn3.computations.wgcna import compose_rscript_cmd
 from gn3.computations.wgcna import call_wgcna_script
 
 
@@ -15,7 +15,7 @@ class TestWgcna(TestCase):
     @pytest.mark.unit_test
     @mock.patch("gn3.computations.wgcna.process_image")
     @mock.patch("gn3.computations.wgcna.run_cmd")
-    @mock.patch("gn3.computations.wgcna.compose_wgcna_cmd")
+    @mock.patch("gn3.computations.wgcna.compose_rscript_cmd")
     @mock.patch("gn3.computations.wgcna.dump_wgcna_data")
     def test_call_wgcna_script(self,
                                mock_dumping_data,
@@ -100,7 +100,7 @@ class TestWgcna(TestCase):
 
     @pytest.mark.unit_test
     @mock.patch("gn3.computations.wgcna.run_cmd")
-    @mock.patch("gn3.computations.wgcna.compose_wgcna_cmd")
+    @mock.patch("gn3.computations.wgcna.compose_rscript_cmd")
     @mock.patch("gn3.computations.wgcna.dump_wgcna_data")
     def test_call_wgcna_script_fails(self, mock_dumping_data, mock_compose_wgcna, mock_run_cmd):
         """test for calling wgcna script\
@@ -122,9 +122,9 @@ class TestWgcna(TestCase):
                 "input_file.R", ""), expected_error)
 
     @pytest.mark.unit_test
-    def test_compose_wgcna_cmd(self):
+    def test_compose_rscript_cmd(self):
         """test for composing wgcna cmd"""
-        wgcna_cmd = compose_wgcna_cmd(
+        wgcna_cmd = compose_rscript_cmd(
             "wgcna.r", "/tmp/wgcna.json")
         self.assertEqual(
             wgcna_cmd, "Rscript ./scripts/wgcna.r  /tmp/wgcna.json")

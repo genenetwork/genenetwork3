@@ -3,7 +3,7 @@ import json
 from gn3.commands import run_cmd
 
 from gn3.computations.wgcna import dump_wgcna_data
-from gn3.computations.wgcna import compose_wgcna_cmd
+from gn3.computations.wgcna import compose_rscript_cmd
 from gn3.computations.wgcna import process_image
 
 from gn3.settings import TMPDIR
@@ -13,7 +13,7 @@ def call_ctl_script(data):
     """function to call ctl script"""
     data["imgDir"] = TMPDIR
     temp_file_name = dump_wgcna_data(data)
-    cmd = compose_wgcna_cmd("ctl_analysis.R", temp_file_name)
+    cmd = compose_rscript_cmd("ctl_analysis.R", temp_file_name)
 
     cmd_results = run_cmd(cmd)
     with open(temp_file_name, "r", encoding="utf-8") as outputfile:

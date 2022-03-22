@@ -55,17 +55,17 @@ def process_image(image_loc: str) -> bytes:
         return b""
 
 
-def compose_wgcna_cmd(rscript_path: str, temp_file_path: str):
+def compose_rscript_cmd(rscript_path: str, temp_file_path: str):
     """function to componse wgcna cmd"""
     # (todo):issue relative paths to abs paths
-    cmd = f"Rscript ./scripts/{rscript_path}  {temp_file_path}"
+    cmd = f'"Rscript ./scripts/{rscript_path}  {temp_file_path}"'
     return cmd
 
 
 def call_wgcna_script(rscript_path: str, request_data: dict):
     """function to call wgcna script"""
     generated_file = dump_wgcna_data(request_data)
-    cmd = compose_wgcna_cmd(rscript_path, generated_file)
+    cmd = compose_rscript_cmd(rscript_path, generated_file)
 
     # stream_cmd_output(request_data, cmd)  disable streaming of data
 
