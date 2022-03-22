@@ -172,12 +172,12 @@ verbose_print('Generating cross object\n')
 cross_object = geno_to_csvr(geno_file, trait_names, trait_vals, cross_file, type)
 
 # Calculate genotype probabilities
-if (!is.null(opt$interval)) {
-  verbose_print('Calculating genotype probabilities with interval mapping\n')
-  cross_object <- calc.genoprob(cross_object, step=5, stepwidth="max")
-} else if (!is.null(opt$pairscan)) {
+if (!is.null(opt$pairscan)) {
   verbose_print('Calculating genotype probabilities for pair-scan\n')
   cross_object <- calc.genoprob(cross_object, step=10)
+} else if (!is.null(opt$interval)) {
+  verbose_print('Calculating genotype probabilities with interval mapping\n')
+  cross_object <- calc.genoprob(cross_object, step=5, stepwidth="max")
 } else {
   verbose_print('Calculating genotype probabilities\n')
   cross_object <- calc.genoprob(cross_object)
@@ -241,10 +241,12 @@ if (!is.null(opt$control)) {
 }
 
 if (!is.null(opt$pairscan)) {
+  verbose_print("Running scantwo")
   scan_func <- function(...){
     scantwo(...)
   }
 } else {
+  verbose_print("Running scanone")
   scan_func <- function(...){
     scanone(...)
   }
