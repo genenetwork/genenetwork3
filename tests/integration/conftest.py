@@ -78,3 +78,27 @@ def db_conn():
             #
             #   b.) Delete the test database
             db_cursor.execute(f"DROP DATABASE IF EXISTS {test_db_name}")
+
+@pytest.fixture(scope="function")
+def db_conn_with_pcorrs_data(db_conn):
+    """Fixture with data for partial correlations tests"""
+    with open(
+            "tests/integration/test_data/pcorrs_data.json",
+            encoding="utf8") as data_file:
+        data = json.loads(data_file.read())
+        with db_conn.cursor() as cursor:
+            for item in data:
+                row_keys = item["rows"][0].keys()
+                query = (
+                    f"INSERT INTO {item['dbtable']}({', '.join(row_keys)}) "
+                    f"VALUES ({', '.join(['%s' for key in row_keys])})")
+                cursor.executemany(
+                    query,
+                    tuple(
+                        tuple(row[key] for key in row_keys)
+                        for row in item["rows"]))
+
+            yield db_conn
+
+            for item in data:
+                cursor.execute(f"DELETE FROM {item['dbtable']}")

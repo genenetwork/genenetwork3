@@ -213,7 +213,7 @@ def test_partial_correlation_api_with_non_existent_control_traits(client, post_d
     #         traits data set to something we are in control of
      )
 def test_part_corr_api_with_mix_of_existing_and_non_existing_control_traits(
-        db_conn, primary, controls, method, target):
+        db_conn_with_pcorrs_data, primary, controls, method, target):
     """
     Check that calling the function with a mix of existing and missing control
     traits raises an warning.
@@ -221,4 +221,5 @@ def test_part_corr_api_with_mix_of_existing_and_non_existing_control_traits(
     criteria = 10
     with pytest.warns(UserWarning):
         partial_correlations_entry(
-            db_conn, primary, controls, method, criteria, target)
+            db_conn_with_pcorrs_data, primary, controls, method, criteria,
+            target)
