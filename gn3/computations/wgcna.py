@@ -8,6 +8,7 @@ import base64
 
 
 from gn3.settings import TMPDIR
+from gn3.settings import R_SCRIPTS
 from gn3.commands import run_cmd
 
 
@@ -55,16 +56,18 @@ def process_image(image_loc: str) -> bytes:
         return b""
 
 
-def compose_rscript_cmd(rscript_path: str, temp_file_path: str):
-    """function to componse wgcna cmd"""
-    # (todo):issue relative paths to abs paths
-    cmd = f'"Rscript ./scripts/{rscript_path}  {temp_file_path}"'
+def compose_rscript_cmd(script_path: str,
+                        file_name: str,
+                        temp_file_path: str):
+
+    cmd = f'"Rscript {os.path.join(script_path,file_name)}  {temp_file_path}"'
     return cmd
 
 
 def call_wgcna_script(rscript_path: str, request_data: dict):
     """function to call wgcna script"""
     generated_file = dump_wgcna_data(request_data)
+
     cmd = compose_rscript_cmd(rscript_path, generated_file)
 
     # stream_cmd_output(request_data, cmd)  disable streaming of data
