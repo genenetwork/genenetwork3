@@ -1,12 +1,16 @@
 """module contains python code for wgcna"""
+
 from unittest import TestCase
 from unittest import mock
 
 import pytest
 
+import os.path
+
 from gn3.computations.wgcna import dump_wgcna_data
 from gn3.computations.wgcna import compose_rscript_cmd
 from gn3.computations.wgcna import call_wgcna_script
+from gn3.settings import R_SCRIPTS
 
 
 class TestWgcna(TestCase):
@@ -124,14 +128,18 @@ class TestWgcna(TestCase):
     @pytest.mark.unit_test
     def test_compose_rscript_cmd(self):
         """test for composing wgcna cmd"""
-        wgcna_cmd = compose_rscript_cmd(
-            "wgcna.r", "/tmp/wgcna.json")
-        self.assertEqual(
-            wgcna_cmd, '"Rscript ./scripts/wgcna.r  /tmp/wgcna.json"')
 
-    @pytest.mark.unit_test
-    @mock.patch("gn3.computations.wgcna.TMPDIR", "/tmp")
-    @mock.patch("gn3.computations.wgcna.uuid.uuid4")
+        expected_cmd = '"Rscript /home/scripts/test_script.R  tmp/wgcna.json"'
+
+        cmd = compose_rscript_cmd(script_path="/home/scripts",
+                                  file_name="test_script.R",
+                                  temp_file_path="tmp/wgcna.json")
+
+        self.assertEqual(cmd, expected_cmd)
+
+    @ pytest.mark.unit_test
+    @ mock.patch("gn3.computations.wgcna.TMPDIR", "/tmp")
+    @ mock.patch("gn3.computations.wgcna.uuid.uuid4")
     def test_create_json_file(self, file_name_generator):
         """test for writing the data to a csv file"""
         # # All the traits we have data for (should not contain duplicates)
@@ -170,3 +178,17 @@ class TestWgcna(TestCase):
 
             self.assertEqual(
                 results, "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json")
+
+    def test_if_scripts_file_exists(self):
+        """check if certain script files exists"""
+
+        files_data = [
+            ("wgcna_analysis.R", True),
+            ("ctl_analysis.R", True),
+            ("control_experiment.R", False)
+        ]
+
+        for file_name, file_exists in files_data:
+            file_path = os.path.join(R_SCRIPTS, file_name)
+            self.assertIs(os.path.exists(file_path), file_exists,
+                          f"the file {file_path} doesn't exist in path")
