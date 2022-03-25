@@ -2,6 +2,7 @@
 
 import tempfile
 import os
+import pathlib
 
 BCRYPT_SALT = "$2b$12$mxLvu9XRLlIaaSeDxt8Sle"  # Change this!
 DATA_DIR = ""
@@ -24,7 +25,9 @@ SECRET_KEY = "password"
 
 GN2_BASE_URL = "http://www.genenetwork.org/"
 
-# wgcna script
+# R script
+R_SCRIPTS = pathlib.Path("./scripts/").absolute()
+
 WGCNA_RSCRIPT = "wgcna_analysis.R"
 # qtlreaper command
 REAPER_COMMAND = f"{os.environ.get('GUIX_ENVIRONMENT')}/bin/qtlreaper"
