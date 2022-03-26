@@ -18,7 +18,7 @@ class TestDatabase(TestCase):
     @mock.patch("gn3.db_utils.parse_db_url")
     def test_database_connector(self, mock_db_parser, mock_sql):
         """test for creating database connection"""
-        mock_db_parser.return_value = ("localhost", "guest", "4321", "users")
+        mock_db_parser.return_value = ("localhost", "guest", "4321", "users", None)
         callable_cursor = lambda: SimpleNamespace(execute=3)
         cursor_object = SimpleNamespace(cursor=callable_cursor)
         mock_sql.connect.return_value = cursor_object
@@ -26,7 +26,7 @@ class TestDatabase(TestCase):
         results = database_connector()
 
         mock_sql.connect.assert_called_with(
-            "localhost", "guest", "4321", "users")
+            host="localhost", user="guest", passwd="4321", db="users")
         self.assertIsInstance(
             results, SimpleNamespace, "database not created successfully")
 
@@ -35,6 +35,6 @@ class TestDatabase(TestCase):
                 "mysql://username:4321@localhost/test")
     def test_parse_db_url(self):
         """test for parsing db_uri env variable"""
-        results = parse_db_url()
-        expected_results = ("localhost", "username", "4321", "test")
+        results = parse_db_url("mysql://username:4321@localhost/test")
+        expected_results = ("localhost", "username", "4321", "test", None)
         self.assertEqual(results, expected_results)
