@@ -1,4 +1,5 @@
 """Endpoints for running correlations"""
+import json
 import sys
 from functools import reduce
 
@@ -110,7 +111,7 @@ def partial_correlation():
 
         return reduce(__field_errors__(request_data), fields, errors)
 
-    args = request.get_json()
+    args = json.loads(request.get_json())
     request_errors = __errors__(
         args, ("primary_trait", "control_traits", "target_db", "method"))
     if request_errors:
