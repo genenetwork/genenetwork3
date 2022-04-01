@@ -82,7 +82,9 @@ BXD15,14,x,x"""
         "Additions": [],
         "Columns": "Strain Name,Value,SE,Count,Sex",
         "Deletions": [],
-        "Modifications": [{"Current": "BXD12,16,x,x,1", "Original": "BXD12,16,x,x,x"}],
+        "Modifications": [
+            {"Current": "BXD12,16,x,x,1", "Original": "BXD12,16,x,x,x"}
+        ],
     }
 
 
@@ -113,7 +115,9 @@ BXD15,14,x,x
 def test_extract_strain_name():
     """Test that the strain's name is extracted given a csv header"""
     assert (
-        extract_strain_name(csv_header="Strain Name,Value,SE,Count", data="BXD1,18,x,0")
+        extract_strain_name(
+            csv_header="Strain Name,Value,SE,Count", data="BXD1,18,x,0"
+        )
         == "BXD1"
     )
 
@@ -123,27 +127,53 @@ def test_get_allowable_csv_headers(mocker):
     """Test that all the csv headers are fetched properly"""
     mock_conn = mocker.MagicMock()
     expected_values = [
-        "Strain Name", "Value", "SE", "Count",
-        "Condition", "Tissue", "Sex", "Age",
-        "Ethn.", "PMI (hrs)", "pH", "Color",
+        "Strain Name",
+        "Value",
+        "SE",
+        "Count",
+        "Condition",
+        "Tissue",
+        "Sex",
+        "Age",
+        "Ethn.",
+        "PMI (hrs)",
+        "pH",
+        "Color",
     ]
     with mock_conn.cursor() as cursor:
         cursor.fetchall.return_value = (
-            ('Condition',), ('Tissue',), ('Sex',),
-            ('Age',), ('Ethn.',), ('PMI (hrs)',), ('pH',), ('Color',))
+            ("Condition",),
+            ("Tissue",),
+            ("Sex",),
+            ("Age",),
+            ("Ethn.",),
+            ("PMI (hrs)",),
+            ("pH",),
+            ("Color",),
+        )
         assert get_allowable_sampledata_headers(mock_conn) == expected_values
         cursor.execute.assert_called_once_with(
-            "SELECT Name from CaseAttribute")
+            "SELECT Name from CaseAttribute"
+        )
 
 
 @pytest.mark.unit_test
 def test_extract_invalid_csv_headers_with_some_wrong_headers():
     """Test that invalid column headers are extracted correctly from a csv
-string"""
+    string"""
     allowed_headers = [
-        "Strain Name", "Value", "SE", "Count",
-        "Condition", "Tissue", "Sex", "Age",
-        "Ethn.", "PMI (hrs)", "pH", "Color",
+        "Strain Name",
+        "Value",
+        "SE",
+        "Count",
+        "Condition",
+        "Tissue",
+        "Sex",
+        "Age",
+        "Ethn.",
+        "PMI (hrs)",
+        "pH",
+        "Color",
     ]
 
     csv_text = "Strain Name, Value, SE, Colour"

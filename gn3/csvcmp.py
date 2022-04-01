@@ -52,8 +52,7 @@ def clean_csv_text(csv_text: str) -> str:
     """Remove extra white space elements in all elements of the CSV file"""
     _csv_text = []
     for line in csv_text.strip().split("\n"):
-        _csv_text.append(
-            ",".join([el.strip() for el in line.split(",")]))
+        _csv_text.append(",".join([el.strip() for el in line.split(",")]))
     return "\n".join(_csv_text)
 
 
@@ -73,8 +72,9 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
 
     if base_csv_header != delta_csv_header:
         if longest_header != base_csv_header:
-            base_csv = base_csv.replace("Strain Name,Value,SE,Count",
-                                        longest_header, 1)
+            base_csv = base_csv.replace(
+                "Strain Name,Value,SE,Count", longest_header, 1
+            )
         else:
             delta_csv = delta_csv.replace(
                 "Strain Name,Value,SE,Count", longest_header, 1
@@ -89,9 +89,9 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
         _f.write(fill_csv(delta_csv, width=_l))
 
     # Now we can run the diff!
-    _r = run_cmd(cmd=('"csvdiff '
-                      f"{file_name1} {file_name2} "
-                      '--format json"'))
+    _r = run_cmd(
+        cmd=('"csvdiff ' f"{file_name1} {file_name2} " '--format json"')
+    )
     if _r.get("code") == 0:
         _r = json.loads(_r.get("output", ""))
         if any(_r.values()):
@@ -127,8 +127,7 @@ def get_allowable_sampledata_headers(conn: Any) -> List:
     attributes = ["Strain Name", "Value", "SE", "Count"]
     with conn.cursor() as cursor:
         cursor.execute("SELECT Name from CaseAttribute")
-        attributes += [attributes[0] for attributes in
-                       cursor.fetchall()]
+        attributes += [attributes[0] for attributes in cursor.fetchall()]
     return attributes
 
 

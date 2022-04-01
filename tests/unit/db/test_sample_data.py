@@ -34,11 +34,13 @@ def test_insert_sample_data(mocker):
         )
         calls = [
             mocker.call(
-                "SELECT Id FROM PublishData where Id = %s " "AND StrainId = %s",
+                "SELECT Id FROM PublishData where Id = %s "
+                "AND StrainId = %s",
                 (data_id, strain_id),
             ),
             mocker.call(
-                "INSERT INTO PublishData " "(StrainId, Id, value) VALUES (%s, %s, %s)",
+                "INSERT INTO PublishData "
+                "(StrainId, Id, value) VALUES (%s, %s, %s)",
                 (strain_id, data_id, "18"),
             ),
             mocker.call(
@@ -47,10 +49,13 @@ def test_insert_sample_data(mocker):
                 (strain_id, data_id, "3"),
             ),
             mocker.call(
-                "INSERT INTO NStrain " "(StrainId, DataId, count) VALUES (%s, %s, %s)",
+                "INSERT INTO NStrain "
+                "(StrainId, DataId, count) VALUES (%s, %s, %s)",
                 (strain_id, data_id, "0"),
             ),
-            mocker.call("SELECT Id FROM CaseAttribute WHERE Name = %s", ("Sex",)),
+            mocker.call(
+                "SELECT Id FROM CaseAttribute WHERE Name = %s", ("Sex",)
+            ),
             mocker.call(
                 "SELECT StrainId FROM CaseAttributeXRefNew "
                 "WHERE StrainId = %s AND "
@@ -135,7 +140,10 @@ def test_extract_actions():
     ) == {
         "delete": None,
         "insert": {"data": "BXD1,2,F", "csv_header": "Strain Name,SE,Sex"},
-        "update": {"data": "BXD1,19,1", "csv_header": "Strain Name,Value,Count"},
+        "update": {
+            "data": "BXD1,19,1",
+            "csv_header": "Strain Name,Value,Count",
+        },
     }
 
 
