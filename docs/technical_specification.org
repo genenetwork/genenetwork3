@@ -1,0 +1,221 @@
+#+STARTUP: contents inlineimages shrink
+#+OPTIONS: ^:{}
+#+TITLE: Technical Specification for GeneNetwork
+#+AUTHOR: Frederick Muriuki Muriithi
+
+* Introduction
+
+This document will detail the internal implementation for the software.
+
+- Data structures
+- Programming languages
+- Database schema(s)
+- Programming Language(s)
+
+* Data
+
+Below is a flowchart of the data and the dependencies between the data:
+
+** TODO Complete this flowchart
+
+#+BEGIN_SRC dot :cmd dot :cmdline -Tpng :file images/data_flow.png :exports results
+  digraph Data {
+        Node[shape=none,margin=0];
+
+        species [label=<
+        <b>Species</b><br />
+        <i>e.g. mouse, rat, human, etc.</i>
+        >];
+
+        group [label=<<b>Group</b>>];
+
+        datasets [label=<<b>Datasets</b>>];
+
+        traits [label=<<b>Traits</b>>];
+
+        sample_data [label=<
+        <b>Sample Data</b><br />
+        <i>The actual data for each sample (individual/strain mean).</i>
+        >];
+
+
+          species -> group [style=dotted];
+          group -> datasets [style=dotted];
+          species -> datasets;
+          datasets -> traits;
+          traits -> sample_data;
+  }
+#+END_SRC
+
+#+RESULTS:
+[[file:images/data_flow.png]]
+  
+** Species
+
+This is a string that denotes which biological species the data in consideration belongs to.
+Examples of these are:
+- mouse
+- rat
+- human
+
+** Group
+
+A "category" for datasets with unique samplelists.
+
+A group can contain data from a single study or from many studies.
+
+This is a crutch due to the database design, and is not a true representation of
+the data. We should strive to get rid of it.
+
+Group information is found in the *InbredSet* table in the database
+
+** TODO Datasets
+
+These are groupings for the traits. The main differences between the datasets
+has to do with the relevant metadata for each grouping.
+
+There are three main groupings, which are:
+
+- Phenotype
+- Genotype
+- mRNA Expression (ProbeSet)
+
+*** Phenotype
+
+This grouping is for traits that are *NOT* expressions of genotype data (e.g.
+sex, weight, etc).
+
+Phenotype traits are authenticated at the trait level, since there are no
+sub-groupings of them within a group.
+
+*** Genotype
+
+The traits in this category are markers. Their sample data are the genotypes
+(encoded 1/0/1, though genotype probabilities could also be stored).
+
+This data also exists in genotype files (in both .geno and BIMBAM formats). This
+data is stored in the database to allow for its use as cofactors when mapping.
+
+*** mRNA Expression (ProbeSet)
+
+The traits in this category are mRNA transcripts from locations in the genome.
+The sample data for these traits are expression values for the traits.
+
+Individual datasets are from individual analyses, split by tissue.
+
+*** Temp
+
+This is a pseudo-grouping which costitutes of User-generated data. These have no
+real metadata. They are just lists of samples/strains (from a specific group)
+and values
+
+The data for these is entered directly via the "Submit Trait" page or it is derived from the PCA traits generated from the "Correlation Matrix" page
+
+**** TODO Samplelists: What are they? Are they related to sample data in traits?
+
+** TODO Traits
+
+A trait is a set of values for each sample/strain.
+
+A trait can have metadata. The metadata varies with the dataset in which the trait belongs.
+
+The metadata is not useful, for most part, in any computations, but it is useful
+for the display of the traits to the user, and in search.
+
+*** Sample Data
+
+This is the actual data for each sample.
+
+A sample can be an individual, or the strain mean (average of multiple
+individuals)
+
+The following are the expected "fields" for each instance of sample data:
+
+- *value*: a numerical value. For "strain mean" items, it is the mean value.
+- *variance*: /variance/ for an individual and /standard-error/ for "strain mean"
+- *ndata*/*num_cases*: Number of samples for "strain mean" values. NIL for
+  individuals (should probably be set to 1)
+
+Sample data can have metadata, referred to as "*Case Attributes*". This is
+mostly non-numeric data e.g. sex, treatment type, etc.
+
+**** TODO Can there be a trait with no sample data? What are the consequences of such a trait existing?
+
+*** Common Metadata
+
+- *num_overlap*: When doing correlations, it sets the number of overlapping
+  samples for all target traits (number of samples where both the primary and
+  target traits have values). This is not a true attribute, rather, it is a
+  temporary attribute assigned to a trait "object".
+- *haveinfo*: Get rid of this. An implementation detail. Indicates whether there
+  was information found in the database for the given trait.
+- *mean*: Average of all sample data values
+- *description_display*/*abbreviation*: Phenotype description and abbreviated
+  version (for display in figures or as a "trait symbol"). Depends on the
+  authentication.
+
+*** Phenotype Metadata
+
+- *name*: PublishXRef ID. In GeneNetwork, it is a combination of a three-letter group code (InbredSet.InbredSetCode) and this ID makes up the displayed name
+- *lrs*: Likelihood Ratio Statistic. In the code, this is the maximim QTL[fn:1]
+  association value when the trait in question is mapped using qtlreaper[fn:2]
+- *LRS_location_repr*: The location of the top *QTL* (above) as a printable
+  string (chromosome + megabase location) e.g. "Chr2:20.019888"
+- *pvalue*: P-value for the maximum *QTL*. There's a chance that the
+  *lrs score* is derived from this. *VERIFY!!!!!*
+- *additive*: additive effect[fn:3] for the maximum *QTL*
+- *pre_publication_description*: Description of the phenotype before publication.
+  Depending on the authentication, the *pre_publication_description* (which is
+  not really human readable) is shown instead of the
+  *post_publication_description*.
+- *post_publication_description*: For published phenotypes, this is the
+  description of the phenotype after publication.
+- *pubmed_id*/*pubmed_link*/*pubmed_text*: For published phenotypes, these are
+  the identifier, link to, and text of the publication on the PubMed[fn:4] site
+
+*** mRNA Expression (ProbeSet) Metadata
+
+- *name*: Transcript name
+- *location*: Location of the mRNA transcript in the genome (chromosome +
+  megabase location)
+- *lrs*: Likelihood Ratio Statistic. In the code, this is the maximim QTL[fn:1]
+  association value when the trait in question is mapped using qtlreaper[fn:2]
+- *LRS_location_repr*: The location of the top *QTL* (above) as a printable
+  string (chromosome + megabase location) e.g. "Chr2:20.019888"
+- *pvalue*: P-value for the maximum *QTL*. There's a chance that the
+  *lrs score* is derived from this. *VERIFY!!!!!*
+- *additive*: additive effect[fn:3] for the maximum *QTL*
+- *symbol*: gene symbol
+- *sequence*: The DNA sequence
+- *probe_target_description*/*strand_probe*/*cell_id*: *VERIFY!!!!*
+
+*** Genotype
+
+- *location*: Location of the genetic marker
+
+* Operations on Traits
+
+**** TODO What are the valid operations on traits?
+**** TODO What data is expected for each operation?
+
+* Operations on Datasets
+
+**** TODO Are there operations on whole datasets?
+**** TODO If yes, what are they and what data does each operation expect?
+
+* Database Design and Schema
+
+....
+
+* Other headlines go here ...
+
+* Footnotes
+
+[fn:1] Quantitative Trait Locus (QTL): A genetic region that most strongly modulates a particular trait. https://en.wikipedia.org/wiki/Genome-wide_association_study (-log10 p-value is basically an alternative measure of association to LRS). The mapping results that lrs/LRS_location_repr/additive are derived from are usually represented by a Manhattan Plot (as shown in the first figure of the wiki page). The max QTL would be the peak value in that figure (and its associated chromosome location)
+
+[fn:2] qtlreaper: <provide link to qtlreaper>
+
+[fn:3] https://genenetwork.org/glossary/#a (Additive Allele Effect) – the GN glossary entry for this can explain it better than I can.
+It’s basically another value associated with the max QTL.
+
+[fn:4] PubMed https://pubmed.ncbi.nlm.nih.gov/
