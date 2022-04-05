@@ -7,6 +7,7 @@ from gn3.csvcmp import extract_invalid_csv_headers
 from gn3.csvcmp import extract_strain_name
 from gn3.csvcmp import fill_csv
 from gn3.csvcmp import get_allowable_sampledata_headers
+from gn3.csvcmp import parse_csv_column
 from gn3.csvcmp import remove_insignificant_edits
 
 
@@ -198,3 +199,14 @@ BXD15,14,x,"""
 
     assert clean_csv_text(csv_text) == expected_csv
     assert clean_csv_text("a,b \n1,2\n") == "a,b\n1,2"
+
+
+@pytest.mark.unit_test
+def test_parse_column_string():
+    """Test that a column is parsed correctly"""
+    assert parse_csv_column("Header") == (None, "Header")
+    assert parse_csv_column("Header (1)") == ("1", "Header")
+    assert parse_csv_column("Some Other Header   (1)") == (
+        "1",
+        "Some Other Header",
+    )

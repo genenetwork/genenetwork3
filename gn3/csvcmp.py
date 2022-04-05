@@ -2,6 +2,7 @@
 texts"""
 from typing import Any, List
 
+import re
 import json
 import os
 import uuid
@@ -143,3 +144,15 @@ def extract_invalid_csv_headers(allowed_headers: List, csv_text: str) -> List:
         if header not in allowed_headers:
             invalid_headers.append(header)
     return invalid_headers
+
+
+def parse_csv_column(column: str) -> tuple:
+    """Give a column, for example: 'Header(1)' or 'Header', return the
+    column name i.e the column name outside the brackets, and the ID, the number
+    inside the brackets."""
+    id_ = re.search(r"\((\w+)\)", column)
+    name = column.strip()
+    if id_:
+        id_ = id_.groups()[0].strip()
+        name = column.split(f"({id_})")[0].strip()
+    return (id_, name)
