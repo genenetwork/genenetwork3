@@ -343,25 +343,28 @@ def insert_sample_data(
     def __insert_case_attribute(conn, case_attr, value):
         if value != "x":
             with conn.cursor() as cursor:
-                cursor.execute(
-                    "SELECT Id FROM " "CaseAttribute WHERE Name = %s",
-                    (case_attr,),
-                )
-                if case_attr_id := cursor.fetchone():
-                    case_attr_id = case_attr_id[0]
+                (id_, name) = parse_csv_column(case_attr)
+                if not id_:
+                    cursor.execute(
+                        "SELECT Id FROM CaseAttribute WHERE Name = %s",
+                        (case_attr,),
+                    )
+                    if case_attr_id := cursor.fetchone():
+                        id_ = case_attr_id[0]
+
                 cursor.execute(
                     "SELECT StrainId FROM "
                     "CaseAttributeXRefNew WHERE StrainId = %s "
                     "AND CaseAttributeId = %s "
                     "AND InbredSetId = %s",
-                    (strain_id, case_attr_id, inbredset_id),
+                    (strain_id, id_, inbredset_id),
                 )
-                if (not cursor.fetchone()) and case_attr_id:
+                if (not cursor.fetchone()) and id_:
                     cursor.execute(
                         "INSERT INTO CaseAttributeXRefNew "
                         "(StrainId, CaseAttributeId, Value, InbredSetId) "
                         "VALUES (%s, %s, %s, %s)",
-                        (strain_id, case_attr_id, value, inbredset_id),
+                        (strain_id, id_, value, inbredset_id),
                     )
                     row_count = cursor.rowcount
                     return row_count
