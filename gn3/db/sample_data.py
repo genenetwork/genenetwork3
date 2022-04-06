@@ -5,6 +5,7 @@ import collections
 import MySQLdb
 
 from gn3.csvcmp import extract_strain_name
+from gn3.csvcmp import parse_csv_column
 
 
 _MAP = {
@@ -169,16 +170,26 @@ def update_sample_data(
         conn, value, strain_id, case_attr, inbredset_id
     ):
         if value != "x":
+            (id_, name) = parse_csv_column(case_attr)
             with conn.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE CaseAttributeXRefNew "
-                    "SET Value = %s "
-                    "WHERE StrainId = %s AND CaseAttributeId = "
-                    "(SELECT CaseAttributeId FROM "
-                    "CaseAttribute WHERE Name = %s) "
-                    "AND InbredSetId = %s",
-                    (value, strain_id, case_attr, inbredset_id),
-                )
+                if id_:
+                    cursor.execute(
+                        "UPDATE CaseAttributeXRefNew "
+                        "SET Value = %s "
+                        f"WHERE StrainId = %s AND CaseAttributeId = %s "
+                        "AND InbredSetId = %s",
+                        (value, strain_id, id_, inbredset_id),
+                    )
+                else:
+                    cursor.execute(
+                        "UPDATE CaseAttributeXRefNew "
+                        "SET Value = %s "
+                        "WHERE StrainId = %s AND CaseAttributeId = "
+                        "(SELECT CaseAttributeId FROM "
+                        "CaseAttribute WHERE Name = %s) "
+                        "AND InbredSetId = %s",
+                        (value, strain_id, name, inbredset_id),
+                    )
                 return cursor.rowcount
         return 0
 
@@ -202,6 +213,7 @@ def update_sample_data(
             updated_data=updated_data,
             csv_header=csv_header,
         )
+
         if __actions.get("update"):
             _csv_header = __actions["update"]["csv_header"]
             _data = __actions["update"]["data"]
@@ -214,7 +226,7 @@ def update_sample_data(
                 else:
                     count += __update_case_attribute(
                         conn=conn,
-                        value=none_case_attrs[header](value),
+                        value=value,
                         strain_id=strain_id,
                         case_attr=header,
                         inbredset_id=inbredset_id,
