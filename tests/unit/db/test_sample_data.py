@@ -154,7 +154,6 @@ def test_update_sample_data(mocker):
     mock_conn = mocker.MagicMock()
     strain_id, data_id, inbredset_id = 1, 17373, 20
     with mock_conn.cursor() as cursor:
-        # cursor.fetchone.side_effect = (0, [19, ], 0)
         mocker.patch(
             "gn3.db.sample_data.get_sample_data_ids",
             return_value=(strain_id, data_id, inbredset_id),
@@ -164,19 +163,20 @@ def test_update_sample_data(mocker):
         update_sample_data(
             conn=mock_conn,
             trait_name=35,
-            original_data="BXD1,18,x,0,x",
-            updated_data="BXD1,x,2,1,F",
-            csv_header="Strain Name,Value,SE,Count,Sex",
+            original_data="BXD1,18,x,0,x,M,x,Red",
+            updated_data="BXD1,x,2,1,2,F,2,Green",
+            csv_header="Strain Name,Value,SE,Count,pH,Sex (13),Age,Color",
             phenotype_id=10007,
         )
         # pylint: disable=[E1101]
         gn3.db.sample_data.insert_sample_data.assert_called_once_with(
             conn=mock_conn,
             trait_name=35,
-            data="BXD1,2,F",
-            csv_header="Strain Name,SE,Sex",
+            data="BXD1,2,2,2",
+            csv_header="Strain Name,SE,pH,Age",
             phenotype_id=10007,
         )
+
         # pylint: disable=[E1101]
         gn3.db.sample_data.delete_sample_data.assert_called_once_with(
             conn=mock_conn,
@@ -185,12 +185,27 @@ def test_update_sample_data(mocker):
             csv_header="Strain Name,Value",
             phenotype_id=10007,
         )
+
         cursor.execute.assert_has_calls(
             [
                 mocker.call(
                     "UPDATE NStrain SET count = %s "
                     "WHERE StrainId = %s AND DataId = %s",
                     ("1", strain_id, data_id),
+                ),
+                mocker.call(
+                    "UPDATE CaseAttributeXRefNew SET Value = %s "
+                    "WHERE StrainId = %s AND CaseAttributeId = %s AND "
+                    "InbredSetId = %s",
+                    ("F", strain_id, "13", inbredset_id),
+                ),
+                mocker.call(
+                    "UPDATE CaseAttributeXRefNew SET Value = %s "
+                    "WHERE StrainId = %s AND CaseAttributeId = "
+                    "(SELECT CaseAttributeId FROM "
+                    "CaseAttribute WHERE Name = %s) "
+                    "AND InbredSetId = %s",
+                    ("Green", strain_id, "Color", inbredset_id),
                 )
             ],
             any_order=False,
