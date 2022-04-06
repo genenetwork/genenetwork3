@@ -90,13 +90,6 @@ def test_delete_sample_data(mocker):
     mock_conn = mocker.MagicMock()
     strain_id, data_id, inbredset_id = 1, 17373, 20
     with mock_conn.cursor() as cursor:
-        cursor.fetchone.side_effect = (
-            0,
-            [
-                19,
-            ],
-            0,
-        )
         mocker.patch(
             "gn3.db.sample_data.get_sample_data_ids",
             return_value=(strain_id, data_id, inbredset_id),
@@ -104,21 +97,21 @@ def test_delete_sample_data(mocker):
         delete_sample_data(
             conn=mock_conn,
             trait_name=35,
-            data="BXD1,18,3,0,M",
-            csv_header="Strain Name,Value,SE,Count,Sex",
+            data="BXD1,18,3,0,Red,M",
+            csv_header="Strain Name,Value,SE,Count,Color,Sex (17)",
             phenotype_id=10007,
         )
         calls = [
             mocker.call(
-                "DELETE FROM PublishData WHERE " "StrainId = %s AND Id = %s",
+                "DELETE FROM PublishData WHERE StrainId = %s AND Id = %s",
                 (strain_id, data_id),
             ),
             mocker.call(
-                "DELETE FROM PublishSE WHERE " "StrainId = %s AND DataId = %s",
+                "DELETE FROM PublishSE WHERE StrainId = %s AND DataId = %s",
                 (strain_id, data_id),
             ),
             mocker.call(
-                "DELETE FROM NStrain WHERE " "StrainId = %s AND DataId = %s",
+                "DELETE FROM NStrain WHERE StrainId = %s AND DataId = %s",
                 (strain_id, data_id),
             ),
             mocker.call(
@@ -127,7 +120,13 @@ def test_delete_sample_data(mocker):
                 "(SELECT CaseAttributeId FROM "
                 "CaseAttribute WHERE Name = %s) "
                 "AND InbredSetId = %s",
-                (strain_id, "Sex", inbredset_id),
+                (strain_id, "Color", inbredset_id),
+            ),
+            mocker.call(
+                "DELETE FROM CaseAttributeXRefNew WHERE "
+                "StrainId = %s AND CaseAttributeId = %s "
+                "AND InbredSetId = %s",
+                (strain_id, "17", inbredset_id),
             ),
         ]
         cursor.execute.assert_has_calls(calls, any_order=False)

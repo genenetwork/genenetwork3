@@ -275,14 +275,23 @@ def delete_sample_data(
 
     def __delete_case_attribute(conn, strain_id, case_attr, inbredset_id):
         with conn.cursor() as cursor:
-            cursor.execute(
-                "DELETE FROM CaseAttributeXRefNew "
-                "WHERE StrainId = %s AND CaseAttributeId = "
-                "(SELECT CaseAttributeId FROM "
-                "CaseAttribute WHERE Name = %s) "
-                "AND InbredSetId = %s",
-                (strain_id, case_attr, inbredset_id),
-            )
+            (id_, name) = parse_csv_column(case_attr)
+            if id_:
+                cursor.execute(
+                    "DELETE FROM CaseAttributeXRefNew "
+                    "WHERE StrainId = %s AND CaseAttributeId = %s "
+                    "AND InbredSetId = %s",
+                    (strain_id, id_, inbredset_id),
+                )
+            else:
+                cursor.execute(
+                    "DELETE FROM CaseAttributeXRefNew "
+                    "WHERE StrainId = %s AND CaseAttributeId = "
+                    "(SELECT CaseAttributeId FROM "
+                    "CaseAttribute WHERE Name = %s) "
+                    "AND InbredSetId = %s",
+                    (strain_id, name, inbredset_id),
+                )
             return cursor.rowcount
 
     strain_id, data_id, inbredset_id = get_sample_data_ids(
