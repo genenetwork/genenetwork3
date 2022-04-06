@@ -21,6 +21,7 @@ def test_insert_sample_data(mocker):
                 19,
             ],
             0,
+            0,
         )
         mocker.patch(
             "gn3.db.sample_data.get_sample_data_ids",
@@ -29,45 +30,55 @@ def test_insert_sample_data(mocker):
         insert_sample_data(
             conn=mock_conn,
             trait_name=35,
-            data="BXD1,18,3,0,M",
-            csv_header="Strain Name,Value,SE,Count,Sex",
+            data="BXD1,18,3,0,Red,M",
+            csv_header="Strain Name,Value,SE,Count,Color,Sex (13)",
             phenotype_id=10007,
         )
         calls = [
             mocker.call(
-                "SELECT Id FROM PublishData where Id = %s "
-                "AND StrainId = %s",
-                (data_id, strain_id),
+                "SELECT Id FROM PublishData where Id = %s AND StrainId = %s",
+                (17373, 1),
             ),
             mocker.call(
-                "INSERT INTO PublishData "
-                "(StrainId, Id, value) VALUES (%s, %s, %s)",
-                (strain_id, data_id, "18"),
+                "INSERT INTO PublishData (StrainId, Id, value) "
+                "VALUES (%s, %s, %s)",
+                (1, 17373, "18"),
             ),
             mocker.call(
-                "INSERT INTO PublishSE "
-                "(StrainId, DataId, error) VALUES (%s, %s, %s)",
-                (strain_id, data_id, "3"),
+                "INSERT INTO PublishSE (StrainId, DataId, error) VALUES "
+                "(%s, %s, %s)",
+                (1, 17373, "3"),
             ),
             mocker.call(
-                "INSERT INTO NStrain "
-                "(StrainId, DataId, count) VALUES (%s, %s, %s)",
-                (strain_id, data_id, "0"),
+                "INSERT INTO NStrain (StrainId, DataId, count) VALUES "
+                "(%s, %s, %s)",
+                (1, 17373, "0"),
             ),
             mocker.call(
-                "SELECT Id FROM CaseAttribute WHERE Name = %s", ("Sex",)
+                "SELECT Id FROM CaseAttribute WHERE Name = %s", ("Color",)
             ),
             mocker.call(
-                "SELECT StrainId FROM CaseAttributeXRefNew "
-                "WHERE StrainId = %s AND "
-                "CaseAttributeId = %s AND InbredSetId = %s",
-                (strain_id, 19, inbredset_id),
+                "SELECT StrainId FROM CaseAttributeXRefNew WHERE "
+                "StrainId = %s AND CaseAttributeId = %s AND InbredSetId = %s",
+                (1, 19, 20),
             ),
             mocker.call(
-                "INSERT INTO CaseAttributeXRefNew "
-                "(StrainId, CaseAttributeId, Value, "
-                "InbredSetId) VALUES (%s, %s, %s, %s)",
-                (strain_id, 19, "M", inbredset_id),
+                "INSERT INTO CaseAttributeXRefNew (StrainId, "
+                "CaseAttributeId, Value, InbredSetId) VALUES "
+                "(%s, %s, %s, %s)",
+                (1, 19, "Red", 20),
+            ),
+            mocker.call(
+                "SELECT StrainId FROM CaseAttributeXRefNew WHERE "
+                "StrainId = %s AND CaseAttributeId = %s AND "
+                "InbredSetId = %s",
+                (1, "13", 20),
+            ),
+            mocker.call(
+                "INSERT INTO CaseAttributeXRefNew (StrainId, "
+                "CaseAttributeId, Value, InbredSetId) VALUES "
+                "(%s, %s, %s, %s)",
+                (1, "13", "M", 20),
             ),
         ]
         cursor.execute.assert_has_calls(calls, any_order=False)
@@ -206,7 +217,7 @@ def test_update_sample_data(mocker):
                     "CaseAttribute WHERE Name = %s) "
                     "AND InbredSetId = %s",
                     ("Green", strain_id, "Color", inbredset_id),
-                )
+                ),
             ],
             any_order=False,
         )
