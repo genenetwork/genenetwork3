@@ -150,9 +150,9 @@ def parse_csv_column(column: str) -> tuple:
     """Give a column, for example: 'Header(1)' or 'Header', return the
     column name i.e the column name outside the brackets, and the ID, the number
     inside the brackets."""
-    id_ = re.search(r"\((\w+)\)", column)
+    case_attr_id = None
     name = column.strip()
-    if id_:
-        id_ = id_.groups()[0].strip()
-        name = column.split(f"({id_})")[0].strip()
-    return (id_, name)
+    if (id_ := re.search(r"\((\w+)\)", column)):
+        case_attr_id = id_.groups()[0].strip()
+        name = column.split(f"({case_attr_id})")[0].strip()
+    return (case_attr_id, name)
