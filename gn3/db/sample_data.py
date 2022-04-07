@@ -176,7 +176,7 @@ def update_sample_data(
                     cursor.execute(
                         "UPDATE CaseAttributeXRefNew "
                         "SET Value = %s "
-                        f"WHERE StrainId = %s AND CaseAttributeId = %s "
+                        "WHERE StrainId = %s AND CaseAttributeId = %s "
                         "AND InbredSetId = %s",
                         (value, strain_id, id_, inbredset_id),
                     )
@@ -356,7 +356,7 @@ def insert_sample_data(
                 if not id_:
                     cursor.execute(
                         "SELECT Id FROM CaseAttribute WHERE Name = %s",
-                        (case_attr,),
+                        (name,),
                     )
                     if case_attr_id := cursor.fetchone():
                         id_ = case_attr_id[0]
