@@ -123,15 +123,6 @@ def fill_csv(csv_text, width, value="x"):
     return "\n".join(data)
 
 
-def get_allowable_sampledata_headers(conn: Any) -> List:
-    """Get a list of all the case-attributes stored in the database"""
-    attributes = ["Strain Name", "Value", "SE", "Count"]
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT Name from CaseAttribute")
-        attributes += [attributes[0] for attributes in cursor.fetchall()]
-    return attributes
-
-
 def extract_invalid_csv_headers(allowed_headers: List, csv_text: str) -> List:
     """Check whether a csv text's columns contains valid headers"""
     csv_header = []

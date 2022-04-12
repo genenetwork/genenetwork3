@@ -6,7 +6,6 @@ from gn3.csvcmp import csv_diff
 from gn3.csvcmp import extract_invalid_csv_headers
 from gn3.csvcmp import extract_strain_name
 from gn3.csvcmp import fill_csv
-from gn3.csvcmp import get_allowable_sampledata_headers
 from gn3.csvcmp import parse_csv_column
 from gn3.csvcmp import remove_insignificant_edits
 
@@ -121,41 +120,6 @@ def test_extract_strain_name():
         )
         == "BXD1"
     )
-
-
-@pytest.mark.unit_test
-def test_get_allowable_csv_headers(mocker):
-    """Test that all the csv headers are fetched properly"""
-    mock_conn = mocker.MagicMock()
-    expected_values = [
-        "Strain Name",
-        "Value",
-        "SE",
-        "Count",
-        "Condition",
-        "Tissue",
-        "Sex",
-        "Age",
-        "Ethn.",
-        "PMI (hrs)",
-        "pH",
-        "Color",
-    ]
-    with mock_conn.cursor() as cursor:
-        cursor.fetchall.return_value = (
-            ("Condition",),
-            ("Tissue",),
-            ("Sex",),
-            ("Age",),
-            ("Ethn.",),
-            ("PMI (hrs)",),
-            ("pH",),
-            ("Color",),
-        )
-        assert get_allowable_sampledata_headers(mock_conn) == expected_values
-        cursor.execute.assert_called_once_with(
-            "SELECT Name from CaseAttribute"
-        )
 
 
 @pytest.mark.unit_test
