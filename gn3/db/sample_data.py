@@ -1,6 +1,7 @@
 """Module containing functions that work with sample data"""
 from typing import Any, Tuple, Dict, Callable
 
+import re
 import collections
 import MySQLdb
 
@@ -90,10 +91,13 @@ def get_trait_csv_sample_data(
             if data[1] == "x":
                 csv_data[data[0]] = None
             else:
-                sample, case_attr, value = data[0], data[1], data[2]
+                sample, case_attr, value = [
+                    re.sub(r"(\\n|\\r|\\t|\\)", "", x).strip()
+                    for x in [data[0], data[1], data[2]]
+                ]
                 if not csv_data.get(sample):
                     csv_data[sample] = {}
-                csv_data[sample][case_attr] = None if value == "x" else value
+                csv_data[sample][case_attr] = value
                 case_attr_columns.add(case_attr)
         if not case_attr_columns:
             return "Strain Name,Value,SE,Count\n" + "\n".join(csv_data.keys())
