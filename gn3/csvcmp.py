@@ -73,13 +73,9 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
     longest_header = max(base_csv_header, delta_csv_header, key=lambda x: len(x))
     if base_csv_header != delta_csv_header:
         if longest_header != base_csv_header:
-            base_csv = base_csv.replace(
-                "Strain Name,Value,SE,Count", longest_header, 1
-            )
+            base_csv  = "\n".join([longest_header] + base_csv_list[1:])
         else:
-            delta_csv = delta_csv.replace(
-                "Strain Name,Value,SE,Count", longest_header, 1
-            )
+            delta_csv  = "\n".join([longest_header] + delta_csv_list[1:])
     file_name1 = os.path.join(tmp_dir, str(uuid.uuid4()))
     file_name2 = os.path.join(tmp_dir, str(uuid.uuid4()))
 
