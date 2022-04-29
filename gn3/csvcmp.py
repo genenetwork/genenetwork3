@@ -69,8 +69,8 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
         if line.startswith("Strain Name,Value,SE,Count"):
             base_csv_header, delta_csv_header = line, delta_csv_list[i]
             break
-    longest_header = max(base_csv_header, delta_csv_header)
 
+    longest_header = max(base_csv_header, delta_csv_header, key=lambda x: len(x))
     if base_csv_header != delta_csv_header:
         if longest_header != base_csv_header:
             base_csv = base_csv.replace(
