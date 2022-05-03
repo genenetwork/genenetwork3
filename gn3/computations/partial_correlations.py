@@ -223,21 +223,16 @@ def partial_correlations_fast(# pylint: disable=[R0913, R0914]
         trait_name = trait_line[0]
         trait_data = trait_line[1:]
         if trait_name in fetched_correlations.keys():
-            return (
-                acc[0] + (trait_name,),
-                acc[1] + tuple(
-                    trait_data[i] if i in good_dataset_samples else None
-                    for i in range(len(trait_data))))
-        return acc
+            yield acc + ((trait_name,) + tuple(
+                trait_data[i] if i in good_dataset_samples else None
+                for i in range(len(trait_data))))
+        yield acc
 
-    processed_trait_names_values: tuple = reduce(
-        __process_trait_names_and_values__, dataset[1:], (tuple(), tuple()))
-    all_target_trait_names: Tuple[str, ...] = processed_trait_names_values[0]
-    all_target_trait_values: Tuple[float, ...] = processed_trait_names_values[1]
+    processed_target_traits: tuple = reduce(
+        __process_trait_names_and_values__, dataset[1:], tuple())
 
     all_correlations = compute_partial(
-        primary_vals, control_vals, all_target_trait_names,
-        all_target_trait_values, method)
+        primary_vals, control_vals, processed_target_traits, 1, method)
     ## Line 772 to 779 in GN1 are the cause of the weird complexity in the
     ## return below. Once the surrounding code is successfully migrated and
     ## reworked, this complexity might go away, by getting rid of the
@@ -309,7 +304,7 @@ def compute_trait_info(primary_vals, control_vals, target, method):
         zero_order_corr["r"][0], zero_order_corr["p-val"][0])
 
 def compute_partial(
-        primary_vals, control_vals, target_vals, target_names,
+        primary_vals, control_vals, targets, data_start_pos,
         method: str) -> Tuple[
             Union[
                 Tuple[str, int, float, float, float, float], None],
@@ -327,8 +322,8 @@ def compute_partial(
     return tuple(
         result for result in (
             compute_trait_info(
-                primary_vals, control_vals, (tvals, tname), method)
-            for tvals, tname in zip(target_vals, target_names))
+                primary_vals, control_vals, (target[data_start_pos:], target[0]), method)
+            for target in targets)
         if result is not None)
 
 def partial_correlations_normal(# pylint: disable=R0913
@@ -358,13 +353,8 @@ def partial_correlations_normal(# pylint: disable=R0913
             return tuple(item) + (trait_database[1], trait_database[2])
         return item
 
-    target_trait_names, target_trait_vals = reduce(# type: ignore[var-annotated]
-        lambda acc, item: (acc[0]+(item[0],), acc[1]+(item[data_start_pos:],)),
-        trait_database, (tuple(), tuple()))
-
     all_correlations = compute_partial(
-        primary_vals, control_vals, target_trait_vals, target_trait_names,
-        method)
+        primary_vals, control_vals, trait_database, data_start_pos, method)
 
     if (input_trait_gene_id and db_type == "ProbeSet" and method.lower() in (
             "sgo literature correlation", "tissue correlation, pearson's r",
