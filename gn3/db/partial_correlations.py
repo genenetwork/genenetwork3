@@ -783,7 +783,7 @@ def traits_info(
             partial(temp_traits_info, conn),
             partial(temp_traits_datasets, conn, threshold))
     }
-    return tuple(
+    return (
         trait for sublist in (# type: ignore[var-annotated]
             traits_fns[dataset_type](traits)
             for dataset_type, traits

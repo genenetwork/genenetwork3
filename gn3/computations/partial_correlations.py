@@ -19,8 +19,8 @@ from gn3.settings import TEXTDIR
 from gn3.random import random_string
 from gn3.function_helpers import  compose
 from gn3.data_helpers import parse_csv_line
-from gn3.db.traits import export_informative
 from gn3.db.datasets import retrieve_trait_dataset
+from gn3.db.traits import export_trait_data, export_informative
 from gn3.db.partial_correlations import traits_info, traits_data
 from gn3.db.species import species_name, translate_to_mouse_gene_id
 from gn3.db.correlations import (
@@ -805,5 +805,58 @@ def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911]
             "correlations": tuple(
                 trait_for_output(trait) for trait in trait_list),
             "dataset_type": target_dataset["type"],
+            "method": "spearman" if "spearman" in method.lower() else "pearson"
+        }}
+
+
+def partial_correlations_with_target_traits(
+        conn: Any, primary_trait_name: str,
+        control_trait_names: Tuple[str, ...],
+        target_trait_names: Tuple[str, ...], method: str) -> dict:
+    """
+    Compute partial correlation against a specific selection of traits.
+    """
+    threshold = 0
+    check_res = check_for_common_errors(
+        conn, primary_trait_name, control_trait_names)
+    if check_res.get("status") == "error":
+        return error_check_results
+
+    target_traits = {
+        trait["name"]: trait
+        for trait in traits_info(conn, threshold, target_trait_names)}
+    target_traits_data = traits_data(conn, target_traits.values())
+
+    def __merge(trait, pcorrs):
+        return {
+            **trait,
+            "noverlap": pcorrs[1],
+            "partial_corr": pcorrs[2],
+            "partial_corr_p_value": pcorrs[3],
+            "corr": pcorrs[4],
+            "corr_p_value": pcorrs[5]}
+
+    all_pcorrs = (
+        __merge(
+            target_traits[target_name],
+            compute_trait_info(
+            check_res["primary_values"], check_res["fixed_control_values"],
+            (export_trait_data(
+                target_data,
+                samplelist=check_res["common_primary_control_samples"]),
+             target_name),
+            method))
+        for target_name, target_data in target_traits_data.items())
+
+    return {
+        "status": "success",
+        "results": {
+            "primary_trait": trait_for_output(check_res["primary_trait"]),
+            "control_traits": tuple(
+                trait_for_output(trait) for trait in
+                check_res["control_traits"]),
+            "correlations": tuple(
+                trait_for_output(trait) for trait in all_pcorrs),
+            "dataset_type": "NOT SET YET",
             "method": "spearman" if "spearman" in method.lower() else "pearson"
         }}
