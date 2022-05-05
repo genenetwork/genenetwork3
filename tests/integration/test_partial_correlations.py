@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from gn3.computations.partial_correlations import partial_correlations_entry
+from gn3.computations.partial_correlations import partial_correlations_with_target_db
 
 @pytest.mark.integration_test
 @pytest.mark.parametrize(
@@ -220,5 +220,5 @@ def test_part_corr_api_with_mix_of_existing_and_non_existing_control_traits(
     """
     criteria = 10
     with pytest.warns(UserWarning):
-        partial_correlations_entry(
+        partial_correlations_with_target_db(
             db_conn, primary, controls, method, criteria, target)

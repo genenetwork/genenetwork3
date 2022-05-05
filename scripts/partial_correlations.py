@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 
 from gn3.db_utils import database_connector
 from gn3.responses.pcorrs_responses import OutputEncoder
-from gn3.computations.partial_correlations import partial_correlations_entry
+from gn3.computations.partial_correlations import partial_correlations_with_target_db
 
 def process_cli_arguments():
     parser = ArgumentParser()
@@ -37,7 +37,7 @@ def cleanup_string(the_str):
 def run_partial_corrs(args):
     with database_connector() as conn:
         try:
-            return partial_correlations_entry(
+            return partial_correlations_with_target_db(
                 conn, cleanup_string(args.primary_trait),
                 tuple(cleanup_string(args.control_traits).split(",")),
                 cleanup_string(args.method), args.criteria,
