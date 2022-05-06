@@ -16,6 +16,8 @@ from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
+from gn3.computations.partial_correlations import (
+    partial_correlations_with_target_traits)
 
 correlation = Blueprint("correlation", __name__)
 
@@ -111,22 +113,42 @@ def partial_correlation():
         return reduce(__field_errors__(request_data), fields, errors)
 
     args = request.get_json()
-    request_errors = __errors__(
-        args, ("primary_trait", "control_traits", "target_db", "method"))
+    with_target_db = args.get("with_target_db", True)
+    request_errors = None
+    if with_target_db:
+        request_errors = __errors__(
+            args, ("primary_trait", "control_traits", "target_db", "method"))
+    else:
+        request_errors = __errors__(
+            args, ("primary_trait", "control_traits", "target_traits", "method"))
     if request_errors:
         return build_response({
             "status": "error",
             "messages": request_errors,
             "error_type": "Client Error"})
-    return build_response({
-        "status": "success",
-        "results": queue_cmd(
-            conn=redis.Redis(),
-            cmd=compose_pcorrs_command(
+
+    if with_target_db:
+        return build_response({
+            "status": "queued",
+            "results": queue_cmd(
+                conn=redis.Redis(),
+                cmd=compose_pcorrs_command(
+                    trait_fullname(args["primary_trait"]),
+                    tuple(
+                        trait_fullname(trait) for trait in args["control_traits"]),
+                    args["method"], args["target_db"],
+                    int(args.get("criteria", 500))),
+                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})})
+    else:
+        with database_connector() as conn:
+            results = partial_correlations_with_target_traits(
+                conn,
                 trait_fullname(args["primary_trait"]),
                 tuple(
                     trait_fullname(trait) for trait in args["control_traits"]),
-                args["method"], args["target_db"],
-                int(args.get("criteria", 500))),
-            job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-            env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})})
+                tuple(
+                    trait_fullname(trait) for trait in args["target_traits"]),
+                args["method"])
+
+        return build_response({"status": "success", "results": results})
