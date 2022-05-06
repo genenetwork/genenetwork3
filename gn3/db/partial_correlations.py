@@ -9,7 +9,7 @@ This module is part of the optimisation effort for the partial correlations.
 """
 
 from functools import reduce, partial
-from typing import Any, Dict, Tuple, Union, Sequence
+from typing import Any, Dict, Tuple, Union, Sequence, Generator
 
 from MySQLdb.cursors import DictCursor
 
@@ -750,7 +750,7 @@ def traits_datasets(conn, threshold, traits):
 
 def traits_info(
         conn: Any, threshold: int, traits_fullnames: Tuple[str, ...],
-        qtl=None) -> Tuple[Dict[str, Any], ...]:
+        qtl=None) -> Generator:
     """
     Retrieve basic trait information for multiple `traits`.
 

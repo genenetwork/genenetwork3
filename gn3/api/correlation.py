@@ -114,13 +114,10 @@ def partial_correlation():
 
     args = request.get_json()
     with_target_db = args.get("with_target_db", True)
-    request_errors = None
-    if with_target_db:
-        request_errors = __errors__(
-            args, ("primary_trait", "control_traits", "target_db", "method"))
-    else:
-        request_errors = __errors__(
-            args, ("primary_trait", "control_traits", "target_traits", "method"))
+    request_errors = __errors__(
+            args, ("primary_trait", "control_traits",
+                   ("target_db" if with_target_db else "target_traits"),
+                   "method"))
     if request_errors:
         return build_response({
             "status": "error",
@@ -140,15 +137,15 @@ def partial_correlation():
                     int(args.get("criteria", 500))),
                 job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
                 env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})})
-    else:
-        with database_connector() as conn:
-            results = partial_correlations_with_target_traits(
-                conn,
-                trait_fullname(args["primary_trait"]),
-                tuple(
-                    trait_fullname(trait) for trait in args["control_traits"]),
-                tuple(
-                    trait_fullname(trait) for trait in args["target_traits"]),
-                args["method"])
 
-        return build_response({"status": "success", "results": results})
+    with database_connector() as conn:
+        results = partial_correlations_with_target_traits(
+            conn,
+            trait_fullname(args["primary_trait"]),
+            tuple(
+                trait_fullname(trait) for trait in args["control_traits"]),
+            tuple(
+                trait_fullname(trait) for trait in args["target_traits"]),
+            args["method"])
+
+    return build_response({"status": "success", "results": results})

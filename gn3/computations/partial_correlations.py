@@ -555,7 +555,7 @@ def trait_for_output(trait):
     }
     return {key: val for key, val in trait.items() if val is not None}
 
-def check_for_common_errors(
+def check_for_common_errors(# pylint: disable=[R0914]
         conn, primary_trait_name, control_trait_names, threshold):
     """Check for common errors"""
     corr_min_informative = 4
@@ -676,7 +676,7 @@ def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911]
     check_res = check_for_common_errors(
         conn, primary_trait_name, control_trait_names, threshold)
     if check_res.get("status") == "error":
-        return error_check_results
+        return check_res
 
     primary_trait = check_res["primary_trait"]
     input_trait_geneid = primary_trait.get("geneid", 0)
@@ -822,12 +822,12 @@ def partial_correlations_with_target_traits(
     check_res = check_for_common_errors(
         conn, primary_trait_name, control_trait_names, threshold)
     if check_res.get("status") == "error":
-        return error_check_results
+        return check_res
 
     target_traits = {
         trait["name"]: trait
         for trait in traits_info(conn, threshold, target_trait_names)}
-    target_traits_data = traits_data(conn, target_traits.values())
+    target_traits_data = traits_data(conn, tuple(target_traits.values()))
 
     def __merge(trait, pcorrs):
         return {

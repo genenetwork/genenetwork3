@@ -1,6 +1,6 @@
 """This module contains functions for manipulating and working with csv
 texts"""
-from typing import Any, List
+from typing import List
 
 import re
 import json
@@ -70,7 +70,7 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
             base_csv_header, delta_csv_header = line, delta_csv_list[i]
             break
 
-    longest_header = max(base_csv_header, delta_csv_header, key=lambda x: len(x))
+    longest_header = max(base_csv_header, delta_csv_header, key=len)
     if base_csv_header != delta_csv_header:
         if longest_header != base_csv_header:
             base_csv  = "\n".join([longest_header] + base_csv_list[1:])
