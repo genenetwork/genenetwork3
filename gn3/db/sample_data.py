@@ -1,5 +1,5 @@
 """Module containing functions that work with sample data"""
-from typing import Any, Tuple, Dict, Callable
+from typing import Any, Tuple, Dict, Callable, Optional
 
 import re
 import collections
@@ -425,27 +425,8 @@ def insert_sample_data(
         raise MySQLdb.Error(_e) from _e
 
 
-def get_case_attributes(conn) -> dict:
-    """Get all the case attributes as a dictionary from the database. Should there
-    exist more than one case attribute with the same name, put the id in
-    brackets."""
-    results = {}
+def get_case_attributes(conn) -> Optional[Tuple]:
+    """Get all the case attributes from the database."""
     with conn.cursor() as cursor:
         cursor.execute("SELECT Id, Name, Description FROM CaseAttribute")
-        _r = cursor.fetchall()
-        _dups = [
-            item
-            for item, count in collections.Counter(
-                [name for _, name, _ in _r]
-            ).items()
-            if count > 1
-        ]
-        for _id, _name, _desc in _r:
-            _name = _name.strip()
-            _desc = _desc if _desc else ""
-            if _name in _dups:
-                results[f"{_name} ({_id})"] = _desc
-            else:
-                results[f"{_name}"] = _desc
-
-    return results
+        return cursor.fetchall()

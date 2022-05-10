@@ -239,62 +239,10 @@ def test_get_case_attributes(mocker):
         cursor.execute.assert_called_once_with(
             "SELECT Id, Name, Description FROM CaseAttribute"
         )
-        assert results == {
-            "Condition (1)": "",
-            "Tissue": "",
-            "Age": "Cum sociis natoque penatibus et magnis dis",
-            "Condition (4)": "Description A",
-            "Condition (5)": "Description B",
-        }
-
-
-@pytest.mark.unit_test
-def test_get_trait_csv_sample_data(mocker):
-    """Test fetching trait sample data"""
-    mock_conn = mocker.MagicMock()
-    with mock_conn.cursor() as cursor:
-        cursor.fetchall.return_value = [
-            ["JL00005,896.000000,x,x", "Age", "896"],
-            ["JL00005,896.000000,x,x", "DOB", "4/22/04"],
-            ["JL00005,896.000000,x,x", "Date Geno", "x"],
-            ["JL00005,896.000000,x,x", "Drug/Site", "4OHPBN_J"],
-            ["JL00005,896.000000,x,x", "MOD", "Oct"],
-            ["JL00005,896.000000,x,x", "Platform", "x"],
-            [
-                "JL00005,896.000000,x,x",
-                "SNP",
-                """0
-""",
-            ],
-            ["JL00005,896.000000,x,x", "Sex", "M"],
-            ["JL00005,896.000000,x,x", "Site", "JL"],
-            ["JL00005,896.000000,x,x", "Tx", "1"],
-            ["JL00005,896.000000,x,x", "Year", "2004"],
-            ["JL00058,686.000000,x,x", "Age", "686"],
-            ["JL00058,686.000000,x,x", "DOB", "4/22/04"],
-            ["JL00058,686.000000,x,x", "Date Geno", "2017.06"],
-            ["JL00058,686.000000,x,x", "Drug/Site", "Cont_04_J"],
-            ["JL00058,686.000000,x,x", "MOD", "Mar"],
-            ["JL00058,686.000000,x,x", "Platform", "M"],
-            [
-                "JL00058,686.000000,x,x",
-                "SNP",
-                """2
-""",
-            ],
-            ["JL00058,686.000000,x,x", "Sex", "M"],
-            ["JL00058,686.000000,x,x", "Site", "JL"],
-            ["JL00058,686.000000,x,x", "Tx", "0"],
-            ["JL00058,686.000000,x,x", "Year", "2004"],
-        ]
-        assert get_trait_csv_sample_data(
-            conn=mock_conn, trait_name=10007, phenotype_id=35
-        ) == (
-            "Strain Name,Value,SE,Count,Age,DOB,"
-            "Date Geno,Drug/Site,MOD,"
-            "Platform,SNP,Sex,Site,Tx,Year\n"
-            "JL00005,896.000000,x,x,"
-            "896,4/22/04,x,4OHPBN_J,Oct,x,0,M,JL,1,2004\n"
-            "JL00058,686.000000,x,x,"
-            "686,4/22/04,2017.06,Cont_04_J,Mar,M,2,M,JL,0,2004\n"
+        assert results == (
+            (1, "Condition", None),
+            (2, "Tissue", None),
+            (3, "Age", "Cum sociis natoque penatibus et magnis dis"),
+            (4, "Condition", "Description A"),
+            (5, "Condition", "Description B"),
         )
