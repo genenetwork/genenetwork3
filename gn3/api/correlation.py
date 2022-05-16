@@ -9,7 +9,7 @@ from flask import request
 from flask import current_app
 
 from gn3.settings import SQL_URI
-from gn3.commands import queue_cmd, compose_pcorrs_command
+from gn3.commands import queue_cmd, run_async_cmd, compose_pcorrs_command
 from gn3.db_utils import database_connector
 from gn3.responses.pcorrs_responses import build_response
 from gn3.computations.correlations import map_shared_keys_to_values
@@ -125,10 +125,9 @@ def partial_correlation():
             "error_type": "Client Error"})
 
     if with_target_db:
-        return build_response({
-            "status": "queued",
-            "results": queue_cmd(
-                conn=redis.Redis(),
+        with redis.Redis() as conn:
+            queueing_results = run_async_cmd(
+                conn=conn,
                 cmd=compose_pcorrs_command(
                     trait_fullname(args["primary_trait"]),
                     tuple(
@@ -136,7 +135,12 @@ def partial_correlation():
                     args["method"], args["target_db"],
                     int(args.get("criteria", 500))),
                 job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
-                env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})})
+                env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})
+        return build_response({
+            "status": "success",
+            "results": queueing_results,
+            "queued": True
+        })
 
     with database_connector() as conn:
         results = partial_correlations_with_target_traits(

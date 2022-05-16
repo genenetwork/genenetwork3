@@ -93,7 +93,6 @@ Returns the name of the specific redis hash for the specific task.
         conn.hset(name=unique_id, key="env", value=json.dumps(env))
     return unique_id
 
-
 def run_cmd(cmd: str, success_codes: Tuple = (0,), env: str = None) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
     parsed_cmd = json.loads(cmd)
@@ -105,3 +104,12 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: str = None) -> Dict:
     if results.returncode not in success_codes:  # Error!
         out = str(results.stderr, 'utf-8')
     return {"code": results.returncode, "output": out}
+
+def run_async_cmd(
+        conn: Redis, job_queue: str, cmd: Union[str, Sequence[str]],
+        email: Optional[str] = None, env: Optional[dict] = None) -> str:
+    """A utility function to call `gn3.commands.queue_cmd` function and run the
+    worker in the `one-shot` mode."""
+    cmd_id = queue_cmd(conn, job_queue, cmd, email, env)
+    subprocess.Popen(["python3", "sheepdog/worker.py"])
+    return cmd_id
