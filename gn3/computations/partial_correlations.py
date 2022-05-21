@@ -7,6 +7,7 @@ GeneNetwork1.
 
 import math
 import warnings
+from multiprocessing import Pool, cpu_count
 from functools import reduce, partial
 from typing import Any, Tuple, Union, Sequence, Generator
 
@@ -325,11 +326,15 @@ def compute_partial(
     This implementation reworks the child function `compute_partial` which will
     then be used in the place of `determinPartialsByR`.
     """
-    return (
-        result for result in (
-            compute_trait_info(
-                primary_vals, control_vals, (target[data_start_pos:], target[0]), method)
-            for target in targets)
+    with Pool(processes=(cpu_count() - 1)) as pool:
+        return (
+            result for result in (
+                pool.starmap(
+                    compute_trait_info,
+                    ((
+                        primary_vals, control_vals,
+                        (target[data_start_pos:], target[0]), method)
+                     for target in targets)))
         if result is not None)
 
 def partial_correlations_normal(# pylint: disable=R0913
