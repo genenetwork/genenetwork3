@@ -8,7 +8,7 @@ GeneNetwork1.
 import math
 import warnings
 from functools import reduce, partial
-from typing import Any, Tuple, Union, Sequence
+from typing import Any, Tuple, Union, Sequence, Generator
 
 import numpy
 import pandas
@@ -202,8 +202,7 @@ def good_dataset_samples_indexes(
 
 def partial_correlations_fast(# pylint: disable=[R0913, R0914]
         samples, primary_vals, control_vals, database_filename,
-        fetched_correlations, method: str, correlation_type: str) -> Tuple[
-            int, Tuple[float, ...]]:
+        fetched_correlations, method: str, correlation_type: str) -> Generator:
     """
     Computes partial correlation coefficients using data from a CSV file.
 
@@ -237,7 +236,7 @@ def partial_correlations_fast(# pylint: disable=[R0913, R0914]
     ## return below. Once the surrounding code is successfully migrated and
     ## reworked, this complexity might go away, by getting rid of the
     ## `correlation_type` parameter
-    return len(all_correlations), tuple(
+    return (
         corr + (
             (fetched_correlations[corr[0]],) # type: ignore[index]
             if correlation_type == "literature"
@@ -305,10 +304,7 @@ def compute_trait_info(primary_vals, control_vals, target, method):
 
 def compute_partial(
         primary_vals, control_vals, targets, data_start_pos,
-        method: str) -> Tuple[
-            Union[
-                Tuple[str, int, float, float, float, float], None],
-            ...]:
+        method: str) -> Generator:
     """
     Compute the partial correlations.
 
@@ -319,7 +315,7 @@ def compute_partial(
     This implementation reworks the child function `compute_partial` which will
     then be used in the place of `determinPartialsByR`.
     """
-    return tuple(
+    return (
         result for result in (
             compute_trait_info(
                 primary_vals, control_vals, (target[data_start_pos:], target[0]), method)
@@ -328,10 +324,7 @@ def compute_partial(
 
 def partial_correlations_normal(# pylint: disable=R0913
         primary_vals, control_vals, input_trait_gene_id, trait_database,
-        data_start_pos: int, db_type: str, method: str) -> Tuple[
-            int, Tuple[Union[
-                Tuple[str, int, float, float, float, float], None],
-                       ...]]:#Tuple[float, ...]
+        data_start_pos: int, db_type: str, method: str) -> Generator:
     """
     Computes the correlation coefficients.
 
@@ -360,12 +353,10 @@ def partial_correlations_normal(# pylint: disable=R0913
             "sgo literature correlation", "tissue correlation, pearson's r",
             "tissue correlation, spearman's rho")):
         return (
-            len(trait_database),
-            tuple(
-                __add_lit_and_tiss_corr__(item)
-                for idx, item in enumerate(all_correlations)))
+            __add_lit_and_tiss_corr__(item)
+            for idx, item in enumerate(all_correlations))
 
-    return len(trait_database), all_correlations
+    return all_correlations
 
 def partial_corrs(# pylint: disable=[R0913]
         conn, samples, primary_vals, control_vals, return_number, species,
@@ -744,7 +735,7 @@ def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911]
         conn)
 
     database_filename = get_filename(conn, target_db_name, TEXTDIR)
-    _total_traits, all_correlations = partial_corrs(
+    all_correlations = partial_corrs(
         conn, check_res["common_primary_control_samples"],
         check_res["fixed_primary_values"], check_res["fixed_control_values"],
         len(check_res["fixed_primary_values"]), check_res["species"],
