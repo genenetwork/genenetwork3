@@ -111,5 +111,5 @@ def run_async_cmd(
     """A utility function to call `gn3.commands.queue_cmd` function and run the
     worker in the `one-shot` mode."""
     cmd_id = queue_cmd(conn, job_queue, cmd, email, env)
-    subprocess.Popen(["python3", "sheepdog/worker.py"])
+    subprocess.Popen(["python3", "sheepdog/worker.py"]) # pylint: disable=[consider-using-with]
     return cmd_id

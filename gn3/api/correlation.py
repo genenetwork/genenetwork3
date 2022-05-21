@@ -9,7 +9,7 @@ from flask import request
 from flask import current_app
 
 from gn3.settings import SQL_URI
-from gn3.commands import queue_cmd, run_async_cmd, compose_pcorrs_command
+from gn3.commands import run_async_cmd, compose_pcorrs_command
 from gn3.db_utils import database_connector
 from gn3.responses.pcorrs_responses import build_response
 from gn3.computations.correlations import map_shared_keys_to_values
