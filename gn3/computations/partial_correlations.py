@@ -266,21 +266,31 @@ def compute_trait_info(primary_vals, control_vals, target, method):
     """
     targ_vals = target[0]
     targ_name = target[1]
-    primary = [
-        prim for targ, prim in zip(targ_vals, primary_vals)
-        if targ is not None]
+    def __remove_nones__(acc, items):
+        prim, targ, *conts = items
+        if targ is None:
+            return acc
+        old_conts = acc["controls"]
+        return {
+            "primary": acc["primary"] + [prim],
+            "targets": acc["targets"] + [targ],
+            "controls": [
+                old_conts[idx] + [cont]
+                for idx, cont in enumerate(conts)
+            ]
+        }
+    processed = reduce(
+        __remove_nones__, zip(primary_vals, targ_vals, *control_vals),
+        {
+            "primary":[], "targets": [],
+            "controls": [[] for idx in range(0, len(control_vals))]
+        })
 
-    if len(primary) < 3:
+    if len(processed["primary"]) < 4:
         return None
 
-    def __remove_controls_for_target_nones(cont_targ):
-        return tuple(cont for cont, targ in cont_targ if targ is not None)
-
     datafrm = build_data_frame(
-        primary,
-        [targ for targ in targ_vals if targ is not None],
-        [__remove_controls_for_target_nones(tuple(zip(control, targ_vals)))
-         for control in control_vals])
+        processed["primary"], processed["targets"], processed["controls"])
     covariates = "z" if datafrm.shape[1] == 3 else [
         col for col in datafrm.columns if col not in ("x", "y")]
     ppc = pingouin.partial_corr(
@@ -294,10 +304,10 @@ def compute_trait_info(primary_vals, control_vals, target, method):
 
     if math.isnan(pc_coeff):
         return (
-            targ_name, len(primary), pc_coeff, 1, zero_order_corr["r"][0],
-            zero_order_corr["p-val"][0])
+            targ_name, len(processed["primary"]), pc_coeff, 1,
+            zero_order_corr["r"][0], zero_order_corr["p-val"][0])
     return (
-        targ_name, len(primary), pc_coeff,
+        targ_name, len(processed["primary"]), pc_coeff,
         (ppc["p-val"][0] if not math.isnan(ppc["p-val"][0]) else (
             0 if (abs(pc_coeff - 1) < 0.0000001) else 1)),
         zero_order_corr["r"][0], zero_order_corr["p-val"][0])
