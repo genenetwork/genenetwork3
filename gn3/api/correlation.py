@@ -148,8 +148,8 @@ def partial_correlation():
             trait_fullname(args["primary_trait"]),
             tuple(
                 trait_fullname(trait) for trait in args["control_traits"]),
+            args["method"],
             tuple(
-                trait_fullname(trait) for trait in args["target_traits"]),
-            args["method"])
+                trait_fullname(trait) for trait in args["target_traits"]))
 
     return build_response({"status": "success", "results": results})

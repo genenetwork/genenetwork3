@@ -104,7 +104,7 @@ pytest -k unit_test
 Running pylint:
 
 ```bash
-pylint *py tests gn3
+pylint *py tests gn3 scripts sheepdog
 ```
 
 Running mypy(type-checker):

@@ -681,7 +681,7 @@ def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911]
 
     check_res = check_for_common_errors(
         conn, primary_trait_name, control_trait_names, threshold)
-    if check_res.get("status") == "error":
+    if check_res.get("status") != "success":
         return check_res
 
     primary_trait = check_res["primary_trait"]
@@ -819,15 +819,15 @@ def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911]
 
 def partial_correlations_with_target_traits(
         conn: Any, primary_trait_name: str,
-        control_trait_names: Tuple[str, ...],
-        target_trait_names: Tuple[str, ...], method: str) -> dict:
+        control_trait_names: Tuple[str, ...], method: str,
+        target_trait_names: Tuple[str, ...]) -> dict:
     """
     Compute partial correlation against a specific selection of traits.
     """
     threshold = 0
     check_res = check_for_common_errors(
         conn, primary_trait_name, control_trait_names, threshold)
-    if check_res.get("status") == "error":
+    if check_res.get("status") != "success":
         return check_res
 
     target_traits = {
