@@ -2,8 +2,9 @@
 import os
 import sys
 import time
-import redis
 import argparse
+
+import redis
 import redis.connection
 
 # Enable importing from one dir up: put as first to override any other globally
@@ -28,9 +29,7 @@ def make_incremental_backoff(init_val: float=0.1, maximum: int=420):
             return current
 
         if command == "increment":
-            current = current + abs(value)
-            if current > maximum:
-                current = maximum
+            current = min(current + abs(value), maximum)
             return current
 
         return current
@@ -54,8 +53,10 @@ def run_jobs(conn, queue_name: str = "GN3::job-queue"):
             else:
                 update_status(conn, cmd_id, "error")
         return cmd_id
+    return None
 
 def parse_cli_arguments():
+    """Parse the command-line arguments."""
     parser = argparse.ArgumentParser(
         description="Run asynchronous (service) commands.")
     parser.add_argument(
