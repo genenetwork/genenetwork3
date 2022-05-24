@@ -1,6 +1,5 @@
 """Procedures used to work with the various bio-informatics cli
 commands"""
-import os
 import sys
 import json
 import subprocess
@@ -51,15 +50,36 @@ def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
 
     return cmd
 
+def compose_pcorrs_command_for_selected_traits(
+        prefix_cmd: Tuple[str, ...], target_traits: Tuple[str, ...]) -> Tuple[
+            str, ...]:
+    """Build command for partial correlations against selected traits."""
+    return prefix_cmd + ("against-traits", ",".join(target_traits))
+
+def compose_pcorrs_command_for_database(
+        prefix_cmd: Tuple[str, ...], target_database: str,
+        criteria: int = 500) -> Tuple[str, ...]:
+    """Build command for partial correlations against an entire dataset."""
+    return prefix_cmd + (
+        "against-db", f"{target_database}", f"--criteria={criteria}")
+
 def compose_pcorrs_command(
         primary_trait: str, control_traits: Tuple[str, ...], method: str,
-        target_database: str, criteria: int = 500):
+        **kwargs):
     """Compose the command to run partias correlations"""
-    rundir = os.path.abspath(".")
-    return (
-        f"{sys.executable}", f"{rundir}/scripts/partial_correlations.py",
-        primary_trait, ",".join(control_traits), f'"{method}"',
-        f"{target_database}", f"--criteria={criteria}")
+    print(f"KWARGS: {kwargs}")
+    prefix_cmd = (
+        f"{sys.executable}", "-m", "scripts.partial_correlations",
+        primary_trait, ",".join(control_traits), f'"{method}"')
+    if (
+            kwargs.get("target_database") is not None
+            and kwargs.get("target_traits") is None):
+        return compose_pcorrs_command_for_database(prefix_cmd, **kwargs)
+    if (
+            kwargs.get("target_database") is None
+            and kwargs.get("target_traits") is not None):
+        return compose_pcorrs_command_for_selected_traits(prefix_cmd, **kwargs)
+    raise Exception("Invalid state: I don't know what command to generate!")
 
 def queue_cmd(conn: Redis,
               job_queue: str,
@@ -111,5 +131,5 @@ def run_async_cmd(
     """A utility function to call `gn3.commands.queue_cmd` function and run the
     worker in the `one-shot` mode."""
     cmd_id = queue_cmd(conn, job_queue, cmd, email, env)
-    subprocess.Popen(["python3", "sheepdog/worker.py"]) # pylint: disable=[consider-using-with]
+    subprocess.Popen([f"{sys.executable}", "-m", "sheepdog.worker"]) # pylint: disable=[consider-using-with]
     return cmd_id

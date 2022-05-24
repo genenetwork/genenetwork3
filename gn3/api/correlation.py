@@ -16,8 +16,6 @@ from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
 from gn3.computations.correlations import compute_all_sample_correlation
-from gn3.computations.partial_correlations import (
-    partial_correlations_with_target_traits)
 
 correlation = Blueprint("correlation", __name__)
 
@@ -124,16 +122,25 @@ def partial_correlation():
             "messages": request_errors,
             "error_type": "Client Error"})
 
-    if with_target_db:
-        with redis.Redis() as conn:
-            queueing_results = run_async_cmd(
+    with redis.Redis() as conn:
+        if with_target_db:
+            command = compose_pcorrs_command(
+                trait_fullname(args["primary_trait"]),
+                tuple(
+                    trait_fullname(trait) for trait in args["control_traits"]),
+                args["method"], target_database=args["target_db"],
+                criteria = int(args.get("criteria", 500)))
+        else:
+            command = compose_pcorrs_command(
+                trait_fullname(args["primary_trait"]),
+                tuple(
+                    trait_fullname(trait) for trait in args["control_traits"]),
+                args["method"], target_traits=tuple(
+                    trait_fullname(trait) for trait in args["target_traits"]))
+
+        queueing_results = run_async_cmd(
                 conn=conn,
-                cmd=compose_pcorrs_command(
-                    trait_fullname(args["primary_trait"]),
-                    tuple(
-                        trait_fullname(trait) for trait in args["control_traits"]),
-                    args["method"], args["target_db"],
-                    int(args.get("criteria", 500))),
+                cmd=command,
                 job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
                 env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})
         return build_response({
@@ -141,15 +148,3 @@ def partial_correlation():
             "results": queueing_results,
             "queued": True
         })
-
-    with database_connector() as conn:
-        results = partial_correlations_with_target_traits(
-            conn,
-            trait_fullname(args["primary_trait"]),
-            tuple(
-                trait_fullname(trait) for trait in args["control_traits"]),
-            args["method"],
-            tuple(
-                trait_fullname(trait) for trait in args["target_traits"]))
-
-    return build_response({"status": "success", "results": results})
