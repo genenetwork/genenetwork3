@@ -1,8 +1,7 @@
 """Module containing functions that work with sample data"""
-from typing import Any, Tuple, Dict, Callable, Optional
+from typing import Any, Tuple, Dict, Callable
 
 import re
-import collections
 import MySQLdb
 
 from gn3.csvcmp import extract_strain_name
@@ -423,10 +422,3 @@ def insert_sample_data(
     except Exception as _e:
         conn.rollback()
         raise MySQLdb.Error(_e) from _e
-
-
-def get_case_attributes(conn) -> Optional[Tuple]:
-    """Get all the case attributes from the database."""
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT Id, Name, Description FROM CaseAttribute")
-        return cursor.fetchall()
