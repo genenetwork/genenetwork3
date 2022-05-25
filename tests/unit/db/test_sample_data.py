@@ -4,10 +4,8 @@ import gn3
 
 from gn3.db.sample_data import __extract_actions
 from gn3.db.sample_data import delete_sample_data
-from gn3.db.sample_data import get_case_attributes
 from gn3.db.sample_data import insert_sample_data
 from gn3.db.sample_data import update_sample_data
-from gn3.db.sample_data import get_trait_csv_sample_data
 
 
 @pytest.mark.unit_test
@@ -220,29 +218,4 @@ def test_update_sample_data(mocker):
                 ),
             ],
             any_order=False,
-        )
-
-
-@pytest.mark.unit_test
-def test_get_case_attributes(mocker):
-    """Test that case attributes work well"""
-    mock_conn = mocker.MagicMock()
-    with mock_conn.cursor() as cursor:
-        cursor.fetchall.return_value = (
-            (1, "Condition", None),
-            (2, "Tissue", None),
-            (3, "Age", "Cum sociis natoque penatibus et magnis dis"),
-            (4, "Condition", "Description A"),
-            (5, "Condition", "Description B"),
-        )
-        results = get_case_attributes(mock_conn)
-        cursor.execute.assert_called_once_with(
-            "SELECT Id, Name, Description FROM CaseAttribute"
-        )
-        assert results == (
-            (1, "Condition", None),
-            (2, "Tissue", None),
-            (3, "Age", "Cum sociis natoque penatibus et magnis dis"),
-            (4, "Condition", "Description A"),
-            (5, "Condition", "Description B"),
         )
