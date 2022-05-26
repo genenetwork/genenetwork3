@@ -16,6 +16,7 @@ from gn3.api.data_entry import data_entry
 from gn3.api.wgcna import wgcna
 from gn3.api.ctl import ctl
 from gn3.api.async_commands import async_commands
+from gn3.api.menu import menu
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
     """Create a new flask object"""
@@ -49,4 +50,5 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(wgcna, url_prefix="/api/wgcna")
     app.register_blueprint(ctl, url_prefix="/api/ctl")
     app.register_blueprint(async_commands, url_prefix="/api/async_commands")
+    app.register_blueprint(menu, url_prefix="/api/menu")
     return app
