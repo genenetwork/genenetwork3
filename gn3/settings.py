@@ -29,6 +29,10 @@ WGCNA_RSCRIPT = "wgcna_analysis.R"
 # qtlreaper command
 REAPER_COMMAND = f"{os.environ.get('GUIX_ENVIRONMENT')}/bin/qtlreaper"
 
+# correlation command
+
+CORRELATION_COMMAND = f"{os.environ.get('GUIX_ENVIRONMENT')}/bin/correlation_rust"
+
 # genotype files
 GENOTYPE_FILES = os.environ.get(
     "GENOTYPE_FILES", f"{os.environ.get('HOME')}/genotype_files/genotype")
