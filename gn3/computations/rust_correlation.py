@@ -1,14 +1,56 @@
 import subprocess
+import json
 
+from gn3.computations.qtlreaper import create_output_directory
+from gn3.random import random_string
 from gn3.settings import CORRELATION_COMMAND
 from gn3.settings import TMPDIR
 
 
-def run_correlation(file_name: str, outputdir: str = TMPDIR):
+def generate_input_files(dataset: list[str], output_dir: str = TMPDIR):
+    """function generates outputfiles and inputfiles"""
 
-    command_list = [CORRELATION_COMMAND, file_name, outputdir]
+    tmpdir = create_output_directory(f"{output_dir}/correlation")
+
+    tmp_file = os.path.join(tmpdir, f"/{random_string(10)}.txt")
+
+    with open(tmp_file, "w") as file_writer:
+        file_writer.write("\n".join(dataset))
+
+    return (tmp_dir, tmp_file)
+
+
+def generate_json_file(**kwargs):
+    """generating json input file required by cargo"""
+
+    (tmp_dir, tmp_file) = generate_json_file(kwargs.get("dataset"))
+
+    tmp_json_file = os.path.join(tmp_dir, f"/{random_string(10)}.json")
+
+    correlation_args = {
+        "method": kwargs.get("method", "pearson"),
+        "file_path": tmp_file,
+        "x_vals": kwargs.get("x_vals"),
+        "file_delimiter": kwargs.get("delimiter", ",")
+    }
+
+    with open(tmp_json_file, "w") as outputfile:
+        json.dump(correlation_args, outputfile)
+
+    return tmp_json_file
+
+
+def run_correlation(dataset, trait_vals: list[str], method: str, delimiter: str):
+    """entry function to call rust correlation"""
+
+    generate_json_file = generate_json_file(
+        {"method": method, "delimiter": delimiter, "x_vals": trait_vals})
+
+    command_list = [CORRELATION_COMMAND, generate_json_file, outputdir]
 
     results = subprocess.run(command_list, check=True)
+
+    # handle errors
 
     return results
 
