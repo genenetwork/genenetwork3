@@ -70,7 +70,9 @@ def control_samples(controls: Sequence[dict], sampleslist: Sequence[str]):
         [__process_control__(trait_data) for trait_data in controls],
         (tuple(), tuple(), tuple(), tuple()))
 
-def fix_samples(primary_trait: dict, control_traits: Sequence[dict]) -> Sequence[Sequence[Any]]:
+def fix_samples(
+        primary_trait_data: dict,
+        control_traits_data: Sequence[dict]) -> Sequence[Sequence[Any]]:
     """
     Corrects sample_names, values and variance such that they all contain only
     those samples that are common to the reference trait and all control traits.
@@ -80,20 +82,26 @@ def fix_samples(primary_trait: dict, control_traits: Sequence[dict]) -> Sequence
     """
     primary_samples = tuple(
         present[0] for present in
-        ((sample, all(sample in control.keys() for control in control_traits))
-         for sample in primary_trait.keys())
+        ((sample,
+          all(sample in control["data"].keys()
+              for control in control_traits_data))
+         for sample in primary_trait_data["data"].keys())
         if present[1])
     control_vals_vars: tuple = reduce(
         lambda acc, x: (acc[0] + (x[0],), acc[1] + (x[1],)),
         ((item["value"], item["variance"])
-         for sublist in [tuple(control.values()) for control in control_traits]
+         for sublist in [
+                 tuple(control["data"].values())
+                 for control in control_traits_data]
          for item in sublist),
         (tuple(), tuple()))
     return (
         primary_samples,
-        tuple(primary_trait[sample]["value"] for sample in primary_samples),
+        tuple(primary_trait_data["data"][sample]["value"]
+              for sample in primary_samples),
         control_vals_vars[0],
-        tuple(primary_trait[sample]["variance"] for sample in primary_samples),
+        tuple(primary_trait_data["data"][sample]["variance"]
+              for sample in primary_samples),
         control_vals_vars[1])
 
 def find_identical_traits(
@@ -628,7 +636,7 @@ def check_for_common_errors(# pylint: disable=[R0914]
          fixed_primary_vals,
          fixed_control_vals,
          _primary_variances,
-         _cntrl_variances) = fix_samples(primary_trait, cntrl_traits)
+         _cntrl_variances) = fix_samples(primary_trait_data, cntrl_traits_data)
 
     if len(common_primary_control_samples) < corr_min_informative:
         return {
