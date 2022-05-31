@@ -67,7 +67,6 @@ def compose_pcorrs_command(
         primary_trait: str, control_traits: Tuple[str, ...], method: str,
         **kwargs):
     """Compose the command to run partias correlations"""
-    print(f"KWARGS: {kwargs}")
     prefix_cmd = (
         f"{sys.executable}", "-m", "scripts.partial_correlations",
         primary_trait, ",".join(control_traits), f'"{method}"')
