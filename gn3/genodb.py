@@ -3,7 +3,7 @@ import numpy as np
 
 class GenotypeDatabase:
     def __init__(self, path):
-        self.env = lmdb.open(path)
+        self.env = lmdb.open(path, create=False)
         self.txn = self.env.begin()
         # 32 bytes in a SHA256 hash
         self.hash_length = 32
