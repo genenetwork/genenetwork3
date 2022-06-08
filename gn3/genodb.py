@@ -22,7 +22,6 @@ class GenotypeDatabase:
 
 class Matrix():
     def __init__(self, db, hash):
-        # TODO: Decide on endianness.
         self.nrows = int.from_bytes(db.get_metadata(hash, 'nrows'), byteorder='little')
         self.ncols = int.from_bytes(db.get_metadata(hash, 'ncols'), byteorder='little')
         self.row_pointers = db.get(hash)
