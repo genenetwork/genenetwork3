@@ -15,9 +15,9 @@ class GenotypeDatabase:
     def get(self, hash):
         return self.txn.get(hash)
     def get_metadata(self, hash, metadata):
-        return self.txn.get(hash + b':' + metadata.encode() + b'\0')
+        return self.txn.get(hash + b':' + metadata.encode())
     def matrix(self):
-        hash = self.get(b'current\0')
+        hash = self.get(b'current')
         return Matrix(self, hash)
 
 class Matrix():
