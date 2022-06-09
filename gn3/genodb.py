@@ -17,7 +17,6 @@ with genodb.open('/tmp/bxd') as db:
     matrix = genodb.matrix(db)
     print(genodb.row(matrix, 17))
     print(genodb.column(matrix, 13))
-
 '''
 
 from collections import namedtuple
