@@ -1,3 +1,9 @@
+"""module contains code integration  correlation implemented in rust here
+
+https://github.com/Alexanderlacuna/correlation_rust
+
+"""
+
 import subprocess
 import json
 import os
@@ -18,7 +24,7 @@ def generate_input_files(dataset: list[str], output_dir: str = TMPDIR):
 
     tmp_file = os.path.join(tmp_dir, f"{random_string(10)}.txt")
 
-    with open(tmp_file, "w") as file_writer:
+    with open(tmp_file, "w", encoding="utf-8") as file_writer:
 
         file_writer.write("\n".join(dataset))
     return (tmp_dir, tmp_file)
@@ -38,19 +44,26 @@ def generate_json_file(**kwargs):
         "file_delimiter": kwargs.get("delimiter", ",")
     }
 
-    with open(tmp_json_file, "w") as outputfile:
+    with open(tmp_json_file, "w", encoding="utf-8") as outputfile:
         json.dump(correlation_args, outputfile)
 
     return tmp_json_file
 
 
-def run_correlation(dataset, trait_vals: list[str], method: str, delimiter: str):
+def run_correlation(dataset, trait_vals:
+                    list[str],
+                    method: str,
+                    delimiter: str):
     """entry function to call rust correlation"""
 
-    json_file = generate_json_file(**
-                                   {"method": method, "delimiter": delimiter, "x_vals": trait_vals})
+    (tmp_dir, tmp_file) = generate_input_files(dataset)
 
-    command_list = [CORRELATION_COMMAND, json_file, outputdir]
+    json_file = generate_json_file(**
+                                   {"tmp_dir": tmp_dir, "tmp_file": tmp_file,
+                                    "method": method, "delimiter": delimiter,
+                                    "x_vals": trait_vals})
+
+    command_list = [CORRELATION_COMMAND, json_file, TMPDIR]
 
     results = subprocess.run(command_list, check=True)
 
@@ -58,10 +71,11 @@ def run_correlation(dataset, trait_vals: list[str], method: str, delimiter: str)
 
 
 def parse_correlation_output(result_file: str):
+    """parse file output """
 
     corr_results = []
 
-    with open(result_file, "r") as file_reader:
+    with open(result_file, "r", encoding="utf-8") as file_reader:
 
         for line in file_reader:
 
