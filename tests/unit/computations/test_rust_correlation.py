@@ -1,19 +1,17 @@
+"""gn3.computations.rust_correlation unittests"""
+
 import json
 import os
 import pytest
 
-from gn3.computations.rust_correlation import CORRELATION_COMMAND
 from gn3.computations.rust_correlation import generate_json_file
 from gn3.computations.rust_correlation import generate_input_files
-from gn3.computations.rust_correlation import run_correlation
 from gn3.computations.rust_correlation import parse_correlation_output
 
 
 @pytest.mark.unit_test
 def test_run_correlation():
     """test calling rusts' correlation """
-
-    pass
 
 
 @pytest.mark.unit_test
@@ -27,9 +25,9 @@ def test_generate_input():
 
     ]
 
-    (tmpdir, tmp_file) = generate_input_files(test_dataset, output_dir="/tmp")
+    (_tmp_dir, tmp_file) = generate_input_files(test_dataset, output_dir="/tmp")
 
-    with open(tmp_file, "r") as file_reader:
+    with open(tmp_file, "r", encoding="utf-8") as file_reader:
         test_results = [line.rstrip() for line in file_reader]
 
     os.remove(tmp_file)
@@ -39,6 +37,7 @@ def test_generate_input():
 
 @pytest.mark.unit_test
 def test_json_file():
+    """test for generating json files """
 
     json_dict = {"tmp_dir": "/tmp/correlation",
 
@@ -49,7 +48,7 @@ def test_json_file():
                  "file_delimiter": ","}
     tmp_file = generate_json_file(**json_dict)
 
-    with open(tmp_file, "r+") as file_reader:
+    with open(tmp_file, "r+",encoding="utf-8") as file_reader:
         results = json.load(file_reader)
 
     assert results == {
@@ -60,15 +59,8 @@ def test_json_file():
 
 
 @pytest.mark.unit_test
-def test_kwargs():
-    def rt(**kwargs):
-        return kwargs
-
-    assert rt(**{"name": "tt", "age": 12}) == {"name": "tt", "age": 12}
-
-
-@pytest.mark.unit_test
 def test_parse_results():
+    """test for parsing file results"""
 
     raw_data = [
         ["63.62", "0.97", "0.00"],
@@ -81,5 +73,6 @@ def test_parse_results():
     expected_results = [{"trait_name": name, "corr_coeff": corr,
                          "p_val": pval} for (name, corr, pval) in raw_data]
 
-    assert parse_correlation_output(
-        "tests/unit/computations/data/correlation/sorted_results.txt") == expected_results
+    assert (parse_correlation_output(
+        "tests/unit/computations/data/correlation/sorted_results.txt")
+        == expected_results)
