@@ -5,6 +5,7 @@ database. It exports the following functions.
 
 * open - Open a genotype database
 * matrix - Get current matrix
+* nparray - Get matrix as a 2D numpy array
 * row - Get row of matrix
 * column - Get column of matrix
 
@@ -15,6 +16,7 @@ from gn3 import genodb
 
 with genodb.open('/tmp/bxd') as db:
     matrix = genodb.matrix(db)
+    print(genodb.nparray(matrix))
     print(genodb.row(matrix, 17))
     print(genodb.column(matrix, 13))
 '''
@@ -57,6 +59,11 @@ def matrix(db):
                              (nrows, ncols)),
                   np.reshape(np.frombuffer(read_optimized_blob[nrows*ncols :], dtype=np.uint8),
                              (nrows, ncols)))
+
+def nparray(matrix):
+    '''Get matrix as a 2D numpy array.'''
+    # pylint: disable=redefined-outer-name
+    return matrix.array
 
 def row(matrix, index):
     '''Get row of matrix.'''
