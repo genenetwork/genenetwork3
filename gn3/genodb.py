@@ -27,7 +27,7 @@ import numpy as np
 # pylint: disable=invalid-name,redefined-builtin
 
 GenotypeDatabase = namedtuple('GenotypeDatabase', 'txn hash_length')
-Matrix = namedtuple('Matrix', 'db nrows ncols row_pointers column_pointers')
+Matrix = namedtuple('Matrix', 'db nrows ncols array transpose')
 
 @contextmanager
 def open(path):
@@ -48,26 +48,22 @@ def get_metadata(db, hash, metadata):
 
 def matrix(db):
     '''Get current matrix from genotype database.'''
-    hash = get(db, b'current')[0:db.hash_length]
+    hash = get(db, b'versions')[0:db.hash_length]
+    read_optimized_blob = get(db, get(db, b'current'))
     nrows = int.from_bytes(get_metadata(db, hash, 'nrows'), byteorder='little')
     ncols = int.from_bytes(get_metadata(db, hash, 'ncols'), byteorder='little')
-    row_column_pointers = get(db, hash)
     return Matrix(db, nrows, ncols,
-                  row_column_pointers[0 : nrows*db.hash_length],
-                  row_column_pointers[nrows*db.hash_length :])
-
-def vector_ref(db, index, pointers):
-    '''Get vector from byte array of pointers.'''
-    start = index * db.hash_length
-    end = start + db.hash_length
-    return np.frombuffer(get(db, pointers[start:end]), dtype=np.uint8)
+                  np.reshape(np.frombuffer(read_optimized_blob[0 : nrows*ncols], dtype=np.uint8),
+                             (nrows, ncols)),
+                  np.reshape(np.frombuffer(read_optimized_blob[nrows*ncols :], dtype=np.uint8),
+                             (nrows, ncols)))
 
 def row(matrix, index):
     '''Get row of matrix.'''
     # pylint: disable=redefined-outer-name
-    return vector_ref(matrix.db, index, matrix.row_pointers)
+    return matrix.array[index,:]
 
 def column(matrix, index):
     '''Get column of matrix.'''
     # pylint: disable=redefined-outer-name
-    return vector_ref(matrix.db, index, matrix.column_pointers)
+    return matrix.transpose[index,:]
