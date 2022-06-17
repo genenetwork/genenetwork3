@@ -29,7 +29,7 @@ import numpy as np
 # pylint: disable=invalid-name,redefined-builtin
 
 GenotypeDatabase = namedtuple('GenotypeDatabase', 'txn hash_length')
-Matrix = namedtuple('Matrix', 'db nrows ncols array transpose')
+GenotypeMatrix = namedtuple('Matrix', 'db nrows ncols array transpose')
 
 @contextmanager
 def open(path):
@@ -54,11 +54,13 @@ def matrix(db):
     read_optimized_blob = get(db, get(db, b'current'))
     nrows = int.from_bytes(get_metadata(db, hash, 'nrows'), byteorder='little')
     ncols = int.from_bytes(get_metadata(db, hash, 'ncols'), byteorder='little')
-    return Matrix(db, nrows, ncols,
-                  np.reshape(np.frombuffer(read_optimized_blob[0 : nrows*ncols], dtype=np.uint8),
-                             (nrows, ncols)),
-                  np.reshape(np.frombuffer(read_optimized_blob[nrows*ncols :], dtype=np.uint8),
-                             (nrows, ncols)))
+    return GenotypeMatrix(db, nrows, ncols,
+                          np.reshape(np.frombuffer(read_optimized_blob[0 : nrows*ncols],
+                                                   dtype=np.uint8),
+                                     (nrows, ncols)),
+                          np.reshape(np.frombuffer(read_optimized_blob[nrows*ncols :],
+                                                   dtype=np.uint8),
+                                     (nrows, ncols)))
 
 def nparray(matrix):
     '''Get matrix as a 2D numpy array.'''
