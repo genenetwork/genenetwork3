@@ -69,7 +69,7 @@ def compose_pcorrs_command(
     """Compose the command to run partias correlations"""
     prefix_cmd = (
         f"{sys.executable}", "-m", "scripts.partial_correlations",
-        primary_trait, ",".join(control_traits), f'"{method}"')
+        primary_trait, ",".join(control_traits), method)
     if (
             kwargs.get("target_database") is not None
             and kwargs.get("target_traits") is None):
