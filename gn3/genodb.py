@@ -9,8 +9,8 @@ database. It exports the following functions.
 * row - Get row of matrix
 * column - Get column of matrix
 
-Here is a typical invocation to read row 17 and column 13 from a genotype
-database at `/tmp/bxd`.
+Here is a typical invocation to read the entire matrix, row 17 and column 13
+from a genotype database at `/tmp/bxd`.
 
 from gn3 import genodb
 
