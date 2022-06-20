@@ -29,7 +29,7 @@ import numpy as np
 # pylint: disable=invalid-name,redefined-builtin
 
 GenotypeDatabase = namedtuple('GenotypeDatabase', 'txn hash_length')
-GenotypeMatrix = namedtuple('Matrix', 'array transpose')
+GenotypeMatrix = namedtuple('GenotypeMatrix', 'array transpose')
 
 @contextmanager
 def open(path):
