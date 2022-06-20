@@ -40,18 +40,14 @@ def open(path):
     txn.abort()
     env.close()
 
-def get(db, key):
-    '''Get value associated with key in genotype database.'''
-    return db.txn.get(key)
-
 def get_metadata(db, hash, metadata):
     '''Get metadata associated with hash in genotype database.'''
     return db.txn.get(hash + b':' + metadata.encode())
 
 def matrix(db):
     '''Get current matrix from genotype database.'''
-    hash = get(db, b'versions')[0:db.hash_length]
-    read_optimized_blob = get(db, get(db, b'current'))
+    hash = db.txn.get(b'versions')[0:db.hash_length]
+    read_optimized_blob = db.txn.get(db.txn.get(b'current'))
     nrows = int.from_bytes(get_metadata(db, hash, 'nrows'), byteorder='little')
     ncols = int.from_bytes(get_metadata(db, hash, 'ncols'), byteorder='little')
     return GenotypeMatrix(np.reshape(np.frombuffer(read_optimized_blob[0 : nrows*ncols],
