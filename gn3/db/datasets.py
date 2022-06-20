@@ -270,7 +270,7 @@ def sparql_query(query: str) -> List[Dict[str, Any]]:
     sparql = SPARQLWrapper(SPARQL_ENDPOINT)
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
-    return sparql.queryAndConvert()['results']['bindings']
+    return sparql.queryAndConvert()['results']['bindings']  # type: ignore
 
 def dataset_metadata(accession_id: str) -> Optional[Dict[str, Any]]:
     """Return info about dataset with ACCESSION_ID."""
