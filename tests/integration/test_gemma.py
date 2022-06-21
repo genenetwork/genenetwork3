@@ -18,7 +18,7 @@ class MockRedis:
     redis: Callable
     hget: Callable
 
-
+@unittest.skip("Python ipfs fails in Python > 3.8")
 class GemmaAPITest(unittest.TestCase):
     """Test cases for the Gemma API"""
 
