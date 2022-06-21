@@ -15,7 +15,7 @@ setup(author='Bonface M. K.',
       install_requires=[
           "bcrypt>=3.1.7"
           "Flask==1.1.2"
-          "ipfshttpclient==0.7.0"
+          # "ipfshttpclient==0.7.0"
           "mypy==0.790"
           "mypy-extensions==0.4.3"
           "mysqlclient==2.0.1"
