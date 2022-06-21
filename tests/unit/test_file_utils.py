@@ -85,6 +85,7 @@ extracting the file"""
             "error": "gzip failed to unpack file"
         })
 
+    @pytest.mark.skip(reason="ipfs http client breaks in Python > 38")
     @pytest.mark.unit_test
     def test_cache_ipfs_file_cache_hit(self):
         """Test that the correct file location is returned if there's a cache hit"""
@@ -105,6 +106,7 @@ extracting the file"""
         os.rmdir(test_dir)
         self.assertEqual(file_loc, f"{test_dir}/genotype.txt")
 
+    @pytest.mark.skip(reason="ipfs http client breaks in Python > 38")
     @pytest.mark.unit_test
     @mock.patch("gn3.fs_helpers.ipfshttpclient")
     def test_cache_ipfs_file_cache_miss(self,
