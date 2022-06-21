@@ -529,7 +529,7 @@ def __build_query__(
             f"ORDER BY {db_type}.Id"),
         1)
 
-# pylint: disable=[R0913]
+# pylint: disable=too-many-arguments
 def __fetch_data__(
         conn, sample_ids: tuple, db_name: str, db_type: str, method: str,
         temp_table: Optional[str]) -> Tuple[Tuple[Any], int]:
