@@ -12,8 +12,6 @@ from typing import Dict
 from typing import List
 from werkzeug.utils import secure_filename
 
-import ipfshttpclient
-
 
 def get_hash_of_files(files: List[str]) -> str:
     """Given a list of valid of FILES, return their hash as a string"""
@@ -86,12 +84,5 @@ def cache_ipfs_file(ipfs_file: str,
     cached file location
 
     """
-    file_loc = os.path.join(cache_dir, ipfs_file.split("ipfs/")[-1])
-    if not os.path.exists(file_loc):
-        client = ipfshttpclient.connect(ipfs_addr)
-        client.get(ipfs_file,
-                   target=str(
-                       pathlib.Path
-                       (os.path.join(cache_dir,
-                                     ipfs_file.split("ipfs/")[-1])).parent))
-    return file_loc
+    # IPFS httpclient doesn't work in Python3
+    return ""
