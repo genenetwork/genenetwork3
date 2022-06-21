@@ -502,7 +502,11 @@ def __build_query__(
             for item in sample_ids)
         if method.lower() == "sgo literature correlation":
             return build_query_sgo_lit_corr(
-                sample_ids, temp_table, sample_id_columns, joins)
+                sample_ids,  # type: ignore
+                temp_table,
+                sample_id_columns,
+                joins  # type: ignore
+            )
         if method.lower() in (
                 "tissue correlation, pearson's r",
                 "tissue correlation, spearman's rho"):
@@ -525,6 +529,7 @@ def __build_query__(
             f"ORDER BY {db_type}.Id"),
         1)
 
+# pylint: disable=too-many-arguments
 def __fetch_data__(
         conn, sample_ids: tuple, db_name: str, db_type: str, method: str,
         temp_table: Optional[str]) -> Tuple[Tuple[Any], int]:
@@ -580,4 +585,4 @@ def fetch_all_database_data(# pylint: disable=[R0913, R0914]
         with conn.cursor() as cursor:
             cursor.execute(f"DROP TEMPORARY TABLE {temp_table}")
 
-    return (trait_database[0], trait_database[1])
+    return (trait_database[0], trait_database[1])  # type: ignore

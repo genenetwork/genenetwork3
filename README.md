@@ -118,7 +118,9 @@ mypy .
 To spin up the server on its own (for development):
 
 ```bash
-env FLASK_DEBUG=1 FLASK_APP="main.py" flask run --port=8080
+export FLASK_DEBUG=1
+export FLASK_APP="main.py"
+flask run --port=8080
 ```
 
 And test with

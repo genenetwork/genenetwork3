@@ -9,8 +9,8 @@ database. It exports the following functions.
 * row - Get row of matrix
 * column - Get column of matrix
 
-Here is a typical invocation to read row 17 and column 13 from a genotype
-database at `/tmp/bxd`.
+Here is a typical invocation to read the entire matrix, row 17 and column 13
+from a genotype database at `/tmp/bxd`.
 
 from gn3 import genodb
 
@@ -29,7 +29,7 @@ import numpy as np
 # pylint: disable=invalid-name,redefined-builtin
 
 GenotypeDatabase = namedtuple('GenotypeDatabase', 'txn hash_length')
-GenotypeMatrix = namedtuple('Matrix', 'db nrows ncols array transpose')
+GenotypeMatrix = namedtuple('GenotypeMatrix', 'array transpose')
 
 @contextmanager
 def open(path):
@@ -40,22 +40,17 @@ def open(path):
     txn.abort()
     env.close()
 
-def get(db, key):
-    '''Get value associated with key in genotype database.'''
-    return db.txn.get(key)
-
 def get_metadata(db, hash, metadata):
     '''Get metadata associated with hash in genotype database.'''
     return db.txn.get(hash + b':' + metadata.encode())
 
 def matrix(db):
     '''Get current matrix from genotype database.'''
-    hash = get(db, b'versions')[0:db.hash_length]
-    read_optimized_blob = get(db, get(db, b'current'))
+    hash = db.txn.get(b'versions')[0:db.hash_length]
+    read_optimized_blob = db.txn.get(db.txn.get(b'current'))
     nrows = int.from_bytes(get_metadata(db, hash, 'nrows'), byteorder='little')
     ncols = int.from_bytes(get_metadata(db, hash, 'ncols'), byteorder='little')
-    return GenotypeMatrix(db, nrows, ncols,
-                          np.reshape(np.frombuffer(read_optimized_blob[0 : nrows*ncols],
+    return GenotypeMatrix(np.reshape(np.frombuffer(read_optimized_blob[0 : nrows*ncols],
                                                    dtype=np.uint8),
                                      (nrows, ncols)),
                           np.reshape(np.frombuffer(read_optimized_blob[nrows*ncols :],
