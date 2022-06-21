@@ -5,7 +5,6 @@ import os
 import random
 import string
 import tarfile
-import pathlib
 
 from functools import partial
 from typing import Dict
@@ -77,6 +76,7 @@ contents to TARGET_DIR/<dir-hash>.
     return {"status": 0, "token": token}
 
 
+# pylint: disable=unused-argument
 def cache_ipfs_file(ipfs_file: str,
                     cache_dir: str,
                     ipfs_addr: str = "/ip4/127.0.0.1/tcp/5001") -> str:
