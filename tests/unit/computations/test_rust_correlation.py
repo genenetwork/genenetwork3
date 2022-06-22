@@ -9,7 +9,6 @@ from gn3.computations.rust_correlation import generate_input_files
 from gn3.computations.rust_correlation import parse_correlation_output
 
 
-
 @pytest.mark.unit_test
 def test_generate_input():
     """test generating text files"""
@@ -21,7 +20,8 @@ def test_generate_input():
 
     ]
 
-    (_tmp_dir, tmp_file) = generate_input_files(test_dataset, output_dir="/tmp")
+    (_tmp_dir, tmp_file) = generate_input_files(test_dataset,
+                                                output_dir="/tmp")
 
     with open(tmp_file, "r", encoding="utf-8") as file_reader:
         test_results = [line.rstrip() for line in file_reader]
@@ -35,16 +35,13 @@ def test_generate_input():
 def test_json_file():
     """test for generating json files """
 
-    json_dict = {"tmp_dir": "/tmp/correlation",
+    tmp_file = generate_json_file(tmp_dir="/tmp/correlation",
+                                  tmp_file="/data.txt",
+                                  method="pearson",
+                                  x_vals="12.1,11.3,16.5,7.5,3.2",
+                                  delimiter=",")
 
-                 "tmp_file": "/data.txt",
-                 "method": "pearson",
-                 "file_path": "/data.txt",
-                 "x_vals": "12.1,11.3,16.5,7.5,3.2",
-                 "file_delimiter": ","}
-    tmp_file = generate_json_file(**json_dict)
-
-    with open(tmp_file, "r+",encoding="utf-8") as file_reader:
+    with open(tmp_file, "r+", encoding="utf-8") as file_reader:
         results = json.load(file_reader)
 
     assert results == {
