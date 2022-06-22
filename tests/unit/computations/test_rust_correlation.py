@@ -9,10 +9,6 @@ from gn3.computations.rust_correlation import generate_input_files
 from gn3.computations.rust_correlation import parse_correlation_output
 
 
-@pytest.mark.unit_test
-def test_run_correlation():
-    """test calling rusts' correlation """
-
 
 @pytest.mark.unit_test
 def test_generate_input():
