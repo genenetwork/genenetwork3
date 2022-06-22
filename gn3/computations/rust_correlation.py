@@ -15,7 +15,8 @@ from gn3.settings import CORRELATION_COMMAND
 from gn3.settings import TMPDIR
 
 
-def generate_input_files(dataset: list[str], output_dir: str = TMPDIR):
+def generate_input_files(dataset: list[str],
+                         output_dir: str = TMPDIR) ->(str, str):
     """function generates outputfiles and inputfiles"""
 
     tmp_dir = f"{output_dir}/correlation"
@@ -65,9 +66,7 @@ def run_correlation(dataset, trait_vals:
 
     command_list = [CORRELATION_COMMAND, json_file, TMPDIR]
 
-    results = subprocess.run(command_list, check=True)
-
-    return results
+    return subprocess.run(command_list, check=True)
 
 
 def parse_correlation_output(result_file: str):
