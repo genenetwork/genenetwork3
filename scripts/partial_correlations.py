@@ -107,7 +107,7 @@ def process_cli_arguments():
         "method",
         help="The correlation method to use",
         type=str,
-        choices=("Pearson's r", "Spearman's rho"))
+        choices=("pearsons", "spearmans"))
     against_db_parser(against_traits_parser(
         parser.add_subparsers(
             title="subcommands",

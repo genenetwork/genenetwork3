@@ -67,9 +67,17 @@ def compose_pcorrs_command(
         primary_trait: str, control_traits: Tuple[str, ...], method: str,
         **kwargs):
     """Compose the command to run partias correlations"""
+    def __parse_method__(method):
+        mthd = method.lower().replace("'", "")
+        if "pearsons" in mthd:
+            return "pearsons"
+        if "spearmans" in mthd:
+            return "spearmans"
+        raise Exception(f"Invalid method '{method}'")
+
     prefix_cmd = (
         f"{sys.executable}", "-m", "scripts.partial_correlations",
-        primary_trait, ",".join(control_traits), method)
+        primary_trait, ",".join(control_traits), __parse_method__(method))
     if (
             kwargs.get("target_database") is not None
             and kwargs.get("target_traits") is None):
