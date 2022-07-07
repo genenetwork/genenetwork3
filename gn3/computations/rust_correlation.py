@@ -119,3 +119,24 @@ def get_samples(all_samples: dict[str, str],
 
     return({key: float(val) for (key, val) in all_samples.items()
             if key not in excluded and val.lower().strip() != "x"})
+
+
+def get_sample_corr_data(sample_type: str,
+                         all_samples: dict[str, str],
+                         dataset_samples: list[str]) -> dict[str, str]:
+    """dependeing on the sample_type fetch the correct sample data """
+
+    if sample_type == "samples_primary":
+
+        data = get_samples(all_samples=all_samples,
+                           base_samples=dataset_samples, excluded=[])
+
+    elif sample_type == "samples_other":
+        data = get_samples(
+            all_samples=all_samples,
+            base_samples=[],
+            excluded=dataset_samples)
+    else:
+        data = get_samples(
+            all_samples=all_samples, base_samples=[], excluded=[])
+    return data
