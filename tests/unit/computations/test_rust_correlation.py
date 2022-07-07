@@ -6,6 +6,7 @@ import pytest
 
 from gn3.computations.rust_correlation import generate_json_file
 from gn3.computations.rust_correlation import generate_input_files
+from gn3.computations.rust_correlation import get_samples
 from gn3.computations.rust_correlation import parse_correlation_output
 
 
@@ -31,7 +32,7 @@ def test_generate_input():
     assert test_results == test_dataset
 
 
-@pytest.mark.unit_test
+# @pytest.mark.unit_test
 def test_json_file():
     """test for generating json files """
 
@@ -63,9 +64,69 @@ def test_parse_results():
         ["23", "-0.91", "0.11"]
     ]
 
+    raw_dict = [{trait: {
+        "num_overlap":  00,
+                "p_value": p_val}} for (trait, corr_coeff, p_val) in raw_data]
+
     expected_results = [{"trait_name": name, "corr_coeff": corr,
                          "p_val": pval} for (name, corr, pval) in raw_data]
 
     assert (parse_correlation_output(
-        "tests/unit/computations/data/correlation/sorted_results.txt")
-        == expected_results)
+        "tests/unit/computations/data/correlation/sorted_results.txt",
+        len(raw_data))
+        == raw_dict)
+
+
+@pytest.mark.unit_test
+def test_get_samples_no_excluded():
+    """test for getting sample data"""
+
+    al_samples = {
+        "BXD": "12.1",
+        "BXD3": "16.1",
+        "BXD4": " x",
+        "BXD6": "1.1",
+        "BXD5": "1.37",
+        "BXD11": "1.91",
+        "BXD31": "1.1"
+
+    }
+
+    base = [
+        "BXD",
+        "BXD4",
+        "BXD7",
+        "BXD31"
+    ]
+
+    assert get_samples(all_samples=al_samples,
+                       base_samples=base,
+                       excluded=[]) == {
+        "BXD": 12.1,
+        "BXD31": 1.1
+    }
+
+
+@pytest.mark.unit_test
+def test_get_samples():
+    """test for getting samples with exluded"""
+
+    al_samples = {
+        "BXD": "12.1",
+        "BXD3": "16.1",
+        "BXD4": " x",
+        "BXD5": "1.1",
+        "BXD6": "1.37",
+        "BXD11": "1.91",
+        "BXD31": "1.1"
+
+    }
+
+    exluded = ["BXD", "BXD11"]
+    assert get_samples(all_samples=al_samples,
+                       base_samples=["BXD", "BXD4", "BXD5", "BXD6",
+                                     "BXD11"
+                                     ], excluded=["BXD", "BXD11"]), {
+        "BXD5": 1.1,
+        "BXD6": 1.37
+    }
