@@ -31,7 +31,8 @@ def generate_input_files(dataset: list[str],
     return (tmp_dir, tmp_file)
 
 
-def generate_json_file(tmp_dir, tmp_file, method, delimiter, x_vals) -> str:
+def generate_json_file(tmp_dir, tmp_file,
+                       method, delimiter, x_vals) -> tuple[str, str]:
     """generating json input file required by cargo"""
 
     tmp_json_file = os.path.join(tmp_dir, f"{random_string(10)}.json")

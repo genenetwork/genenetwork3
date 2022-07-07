@@ -68,9 +68,6 @@ def test_parse_results():
         "num_overlap":  00,
                 "p_value": p_val}} for (trait, corr_coeff, p_val) in raw_data]
 
-    expected_results = [{"trait_name": name, "corr_coeff": corr,
-                         "p_val": pval} for (name, corr, pval) in raw_data]
-
     assert (parse_correlation_output(
         "tests/unit/computations/data/correlation/sorted_results.txt",
         len(raw_data))
@@ -122,7 +119,6 @@ def test_get_samples():
 
     }
 
-    exluded = ["BXD", "BXD11"]
     assert get_samples(all_samples=al_samples,
                        base_samples=["BXD", "BXD4", "BXD5", "BXD6",
                                      "BXD11"
