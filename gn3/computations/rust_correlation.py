@@ -69,11 +69,11 @@ def run_correlation(dataset, trait_vals:
 
     command_list = [CORRELATION_COMMAND, json_file, TMPDIR]
 
-    rls = subprocess.run(command_list, check=True)
+    subprocess.run(command_list, check=True)
 
-    rs = parse_correlation_output(output_file,10000)
+    results = parse_correlation_output(output_file, 500)
 
-    return rs
+    return results
 
 
 def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
@@ -99,51 +99,23 @@ def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
     return corr_results
 
 
+def get_samples(all_samples: dict[str, str],
+                base_samples: list[str],
+                excluded: list[str]):
+    """filter null samples and excluded samples"""
 
+    data = {}
 
-# computation specific;sample_r,lit_corr
-def compute_top_n(first_run_results,init_type,dataset_1,dataset_2,dataset_type:str):
-    if dataset__type.lower()!= "probeset":
-        return first_run_results
+    if base_samples:
+        fls = [
+            sm for sm in base_samples if sm not in excluded]
+        for sample in fls:
+            if sample in all_samples:
+                smp_val = all_samples[sample].strip()
+                if smp_val.lower() != "x":
+                    data[sample] = float(smp_val)
 
-    if  init_type == "sample":
-        # do both lit and tissue
+        return data
 
-        results_a = run_correlation(dataset_1, x_vals_1,method,delimiter)
-
-        results_b = lit_correlation_for_trait(unkown)
-
-
-        # question how do we merge this
-
-
-
-
-
-    if  init_type == "tissue":
-        # do sample and tissue
-
-
-        file_a  =  run_correlation(dataset_1,x_vals_1,method,delimiter)
-
-        result_b = lit_correlation_for_trait(unkown)
-
-        # merge the results
-
-
-
-    if  init_type == "lit":
-
-        file_a  = run_correlation()
-
-        file_b = run_correlation()
-
-        join <(file_a) <(file_b)
-
-    # do the merge here
-        # do both  sample and tissue
-
-
-
-
-
+    return({key: float(val) for (key, val) in all_samples.items()
+            if key not in excluded and val.lower().strip() != "x"})
