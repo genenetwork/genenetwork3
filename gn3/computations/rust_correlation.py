@@ -57,7 +57,7 @@ def generate_json_file(tmp_dir, tmp_file,
 
 
 def run_correlation(dataset, trait_vals:
-                    list[str],
+                    str,
                     method: str,
                     delimiter: str):
     """entry function to call rust correlation"""
@@ -83,6 +83,10 @@ def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
     """parse file output """
 
     corr_results = []
+
+    breakpoint()
+
+
 
     with open(result_file, "r", encoding="utf-8") as file_reader:
 
@@ -120,7 +124,7 @@ def get_samples(all_samples: dict[str, str],
 
         return data
 
-    return({key: float(val) for (key, val) in all_samples.items()
+    return({key: float(val.strip()) for (key, val) in all_samples.items()
             if key not in excluded and val.lower().strip() != "x"})
 
 
@@ -145,26 +149,26 @@ def get_sample_corr_data(sample_type: str,
     return data
 
 
-def parse_tissue_corr_data(tt_symbol: list[dict[str, str]],
-                           symbols_dict: [str, str],
-                           dataset_dict):
-    """get the correct datatype"""
+def parse_tissue_corr_data(symbol_name: str,
+                           symbol_dict: dict[list[str, list[str]]],
+                           dataset_symbols: dict[str, str],
+                           dataset_vals: dict[str, list[str, str]]):
 
-    data = []
+    if symbol_name and symbol_name.lower() in symbol_dict:
+        x_vals = ",".join([str(val)
+                           for val in symbol_dict[symbol_name.lower()]])
 
-    if not (tt_symbol):
-        return [[], []]
+        data = []
 
-    for (name, symbol) in symbols_dict.items():
-        try:
-            exists = dataset_dict.get(symbol.lower())
-            if exists:
-                corr_values = insert(0, name)
-                ",".join([str(dt) for dt in data])
+        for (trait, symbol) in dataset_symbols.items():
+            try:
+                corr_vals = dataset_vals.get(symbol.lower())
 
-                data.append(corr_values)
+                corr_vals.insert(0, trait)
 
-        except Exception as e:
-            pass
+                data.append(",".join([str(val) for val in corr_vals]))
 
-    return [symbol[0], data]
+            except Exception as e:
+                pass
+
+        return (x_vals, data)
