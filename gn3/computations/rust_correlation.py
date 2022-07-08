@@ -9,6 +9,8 @@ import json
 import os
 
 
+from typing import Optional
+
 from gn3.computations.qtlreaper import create_output_directory
 from gn3.random import random_string
 from gn3.settings import CORRELATION_COMMAND
@@ -141,3 +143,28 @@ def get_sample_corr_data(sample_type: str,
         data = get_samples(
             all_samples=all_samples, base_samples=[], excluded=[])
     return data
+
+
+def parse_tissue_corr_data(tt_symbol: list[dict[str, str]],
+                           symbols_dict: [str, str],
+                           dataset_dict):
+    """get the correct datatype"""
+
+    data = []
+
+    if not (tt_symbol):
+        return [[], []]
+
+    for (name, symbol) in symbols_dict.items():
+        try:
+            exists = dataset_dict.get(symbol.lower())
+            if exists:
+                corr_values = insert(0, name)
+                ",".join([str(dt) for dt in data])
+
+                data.append(corr_values)
+
+        except Exception as e:
+            pass
+
+    return [symbol[0], data]
