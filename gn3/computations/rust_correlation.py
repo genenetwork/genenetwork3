@@ -84,10 +84,6 @@ def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
 
     corr_results = []
 
-    breakpoint()
-
-
-
     with open(result_file, "r", encoding="utf-8") as file_reader:
 
         lines = [next(file_reader) for x in range(top_n)]
@@ -164,9 +160,10 @@ def parse_tissue_corr_data(symbol_name: str,
             try:
                 corr_vals = dataset_vals.get(symbol.lower())
 
-                corr_vals.insert(0, trait)
+                if corr_vals:
+                    corr_vals = [str(trait)] + corr_vals
 
-                data.append(",".join([str(val) for val in corr_vals]))
+                    data.append(",".join([str(x) for x in corr_vals]))
 
             except Exception as e:
                 pass
