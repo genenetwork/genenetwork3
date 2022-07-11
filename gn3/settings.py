@@ -46,10 +46,7 @@ def parse_env_cors(default):
             origin.strip() for origin in origins_str.split(",") if origin != ""]
     return default
 
-CORS_ORIGINS = parse_env_cors([
-    "http://localhost:*",
-    "http://127.0.0.1:*"
-])
+CORS_ORIGINS = parse_env_cors("*")
 
 CORS_HEADERS = [
     "Content-Type",
