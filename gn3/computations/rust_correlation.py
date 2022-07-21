@@ -8,9 +8,6 @@ import subprocess
 import json
 import os
 
-
-from typing import Optional
-
 from gn3.computations.qtlreaper import create_output_directory
 from gn3.random import random_string
 from gn3.settings import CORRELATION_COMMAND
@@ -149,6 +146,9 @@ def parse_tissue_corr_data(symbol_name: str,
                            symbol_dict: dict[list[str, list[str]]],
                            dataset_symbols: dict[str, str],
                            dataset_vals: dict[str, list[str, str]]):
+    """parset tissue data input"""
+
+    results = None
 
     if symbol_name and symbol_name.lower() in symbol_dict:
         x_vals = ",".join([str(val)
@@ -165,11 +165,13 @@ def parse_tissue_corr_data(symbol_name: str,
 
                     data.append(",".join([str(x) for x in corr_vals]))
 
-            except Exception as e:
+            except AttributeError:
                 pass
 
-        return (x_vals, data)
+        results = (x_vals, data)
+
+    return results
 
 
-def parse_lit_corr_data(trait, dataset):
-    pass
+def parse_lit_corr_data(_trait, _dataset):
+    """todo:parse lit data"""
