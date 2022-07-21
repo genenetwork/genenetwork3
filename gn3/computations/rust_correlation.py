@@ -89,10 +89,9 @@ def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
         lines = [next(file_reader) for x in range(top_n)]
 
         for line in lines:
-
-            (trait_name, corr_coeff, p_val) = line.rstrip().split(",")
+            (trait_name, corr_coeff, p_val, num_overlap) = line.rstrip().split(",")
             corr_data = {
-                "num_overlap": 00,  # to be later fixed
+                "num_overlap": num_overlap,
                 "corr_coefficient": corr_coeff,
                 "p_value": p_val
             }
@@ -169,3 +168,7 @@ def parse_tissue_corr_data(symbol_name: str,
                 pass
 
         return (x_vals, data)
+
+
+def parse_lit_corr_data(trait, dataset):
+    pass
