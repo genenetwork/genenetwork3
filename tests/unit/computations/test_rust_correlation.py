@@ -57,16 +57,18 @@ def test_parse_results():
     """test for parsing file results"""
 
     raw_data = [
-        ["63.62", "0.97", "0.00"],
-        ["19", "-0.96", "0.22"],
-        ["77.92", "-0.94", "0.31"],
-        ["84.04", "0.94", "0.11"],
-        ["23", "-0.91", "0.11"]
+        ["63.62", "0.97", "0.00", "12"],
+        ["19", "-0.96", "0.22", "12"],
+        ["77.92", "-0.94", "0.31", "12"],
+        ["84.04", "0.94", "0.11", "12"],
+        ["23", "-0.91", "0.11", "12"]
     ]
 
     raw_dict = [{trait: {
-        "num_overlap":  00,
-                "p_value": p_val}} for (trait, corr_coeff, p_val) in raw_data]
+        "num_overlap":  num_overlap,
+        "corr_coefficient": corr_coeff,
+        "p_value": p_val}} for (trait, corr_coeff,
+                                p_val, num_overlap) in raw_data]
 
     assert (parse_correlation_output(
         "tests/unit/computations/data/correlation/sorted_results.txt",
