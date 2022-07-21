@@ -31,7 +31,7 @@ REAPER_COMMAND = f"{os.environ.get('GUIX_ENVIRONMENT')}/bin/qtlreaper"
 
 # correlation command
 
-CORRELATION_COMMAND = f"{os.environ.get('GUIX_ENVIRONMENT')}/bin/correlation_rust"
+CORRELATION_COMMAND = f"{os.environ.get('GN2_PROFILE')}/bin/correlation_rust"
 
 # genotype files
 GENOTYPE_FILES = os.environ.get(
