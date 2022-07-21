@@ -143,9 +143,9 @@ def get_sample_corr_data(sample_type: str,
 
 
 def parse_tissue_corr_data(symbol_name: str,
-                           symbol_dict: dict[list[str, list[str]]],
-                           dataset_symbols: dict[str, str],
-                           dataset_vals: dict[str, list[str, str]]):
+                           symbol_dict: dict,
+                           dataset_symbols: dict,
+                           dataset_vals: dict):
     """parset tissue data input"""
 
     results = None
