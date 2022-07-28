@@ -56,7 +56,9 @@ def generate_json_file(tmp_dir, tmp_file,
 def run_correlation(dataset, trait_vals:
                     str,
                     method: str,
-                    delimiter: str):
+                    delimiter: str,
+                    corr_type: str = "sample",
+                    top_n: int = 500):
     """entry function to call rust correlation"""
 
     (tmp_dir, tmp_file) = generate_input_files(dataset)
@@ -71,15 +73,16 @@ def run_correlation(dataset, trait_vals:
 
     subprocess.run(command_list, check=True)
 
-    results = parse_correlation_output(output_file, 500)
+    results = parse_correlation_output(output_file, corr_type, top_n)
 
     return results
 
 
-def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
+def parse_correlation_output(result_file: str,
+                             corr_type: str, top_n: int = 500) -> dict:
     """parse file output """
 
-    corr_results = []
+    corr_results = {}
 
     with open(result_file, "r", encoding="utf-8") as file_reader:
 
@@ -88,13 +91,23 @@ def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
         for line in lines:
             (trait_name, corr_coeff,
                 p_val, num_overlap) = line.rstrip().split(",")
-            corr_data = {
-                "num_overlap": num_overlap,
-                "corr_coefficient": corr_coeff,
-                "p_value": p_val
-            }
 
-            corr_results.append({trait_name: corr_data})
+            if corr_type == "sample":
+
+                corr_data = {
+                    "num_overlap": num_overlap,
+                    "corr_coefficient": corr_coeff,
+                    "p_value": p_val
+                }
+
+            if corr_type == "tissue":
+                corr_data = {
+                    "tissue_corr": corr_coeff,
+                    "tissue_number": num_overlap,
+                    "tissue_p_val": p_val
+                }
+
+            corr_results[trait_name] = corr_data
 
     return corr_results
 
