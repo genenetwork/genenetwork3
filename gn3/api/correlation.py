@@ -9,13 +9,13 @@ from flask import request
 from flask import current_app
 
 from gn3.settings import SQL_URI
-from gn3.commands import run_async_cmd, compose_pcorrs_command
 from gn3.db_utils import database_connector
+from gn3.commands import run_sample_corr_cmd
 from gn3.responses.pcorrs_responses import build_response
+from gn3.commands import run_async_cmd, compose_pcorrs_command
 from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
-from gn3.computations.correlations import compute_all_sample_correlation
 
 correlation = Blueprint("correlation", __name__)
 
@@ -31,9 +31,8 @@ def compute_sample_integration(corr_method="pearson"):
     this_trait_data = correlation_input.get("trait_data")
 
     results = map_shared_keys_to_values(target_samplelist, target_data_values)
-    correlation_results = compute_all_sample_correlation(corr_method=corr_method,
-                                                         this_trait=this_trait_data,
-                                                         target_dataset=results)
+    correlation_results = run_sample_corr_cmd(
+        corr_method, this_trait_data, results)
 
     return jsonify(correlation_results)
 
@@ -50,9 +49,8 @@ def compute_sample_r(corr_method="pearson"):
     this_trait_data = correlation_input.get("this_trait")
     target_dataset_data = correlation_input.get("target_dataset")
 
-    correlation_results = compute_all_sample_correlation(corr_method=corr_method,
-                                                         this_trait=this_trait_data,
-                                                         target_dataset=target_dataset_data)
+    correlation_results = run_sample_corr_cmd(
+        corr_method, this_trait_data, target_dataset_data)
 
     return jsonify({
         "corr_results": correlation_results

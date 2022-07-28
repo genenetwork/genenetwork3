@@ -2,6 +2,8 @@
 commands"""
 import sys
 import json
+import pickle
+import tempfile
 import subprocess
 
 from datetime import datetime
@@ -14,6 +16,7 @@ from typing import Sequence
 from uuid import uuid4
 from redis.client import Redis  # Used only in type hinting
 
+from gn3.random import random_string
 from gn3.exceptions import RedisConnectionError
 
 
@@ -119,6 +122,28 @@ Returns the name of the specific redis hash for the specific task.
     if env:
         conn.hset(name=unique_id, key="env", value=json.dumps(env))
     return unique_id
+
+def run_sample_corr_cmd(method, this_trait_data, target_dataset_data):
+    "Run the sample correlations in an external process, returning the results."
+    with tempfile.TemporaryDirectory() as tempdir:
+        traitfile = f"{tempdir}/traitfile_{random_string(10)}"
+        targetfile = f"{tempdir}/targetdb_{random_string(10)}"
+        destfile = f"{tempdir}/corrs_{random_string(10)}"
+        with open(traitfile, "wb") as trtfl:
+            pickle.dump(this_trait_data, trtfl)
+
+        with open(targetfile, "wb") as targfl:
+            pickle.dump(target_dataset_data, targfl)
+
+            subprocess.run(
+                ["python3", "-m", "scripts.sample_correlations", method,
+                 traitfile, targetfile, destfile],
+                check=True)
+
+            with open(destfile, "rb") as dstfl:
+                correlation_results = pickle.load(dstfl)
+
+    return correlation_results
 
 def run_cmd(cmd: str, success_codes: Tuple = (0,), env: str = None) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
