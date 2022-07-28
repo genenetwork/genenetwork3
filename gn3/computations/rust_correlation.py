@@ -188,3 +188,21 @@ def parse_tissue_corr_data(symbol_name: str,
 
 def parse_lit_corr_data(_trait, _dataset):
     """todo:parse lit data"""
+
+
+def merge_corr_results(results_a: dict, results_b: dict):
+    """merge results when computing all correlations"""
+
+    results = []
+
+    for (name, corr_values) in results_a.items():
+        if results_b.get(name):
+            tmp = results_a[name]  #dict
+            tmp.update(results_b[name])  
+
+            output = tmp
+        else:
+            output = corr_values
+
+        results.append({name: output})
+    return results
