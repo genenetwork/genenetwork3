@@ -162,7 +162,8 @@ def fast_compute_all_sample_correlation(this_trait,
         corr_results,
         key=lambda trait_name: -abs(list(trait_name.values())[0]["corr_coefficient"]))
 
-def __corr_compute__(trait_samples, target_trait, corr_method):
+def compute_one_sample_correlation(trait_samples, target_trait, corr_method):
+    """Compute sample correlation against a single trait."""
     trait_name = target_trait.get("trait_id")
     target_trait_data = target_trait["trait_sample_data"]
     try:
@@ -200,7 +201,7 @@ def compute_all_sample_correlation(this_trait,
             (
                 corr for corr in
                 pool.starmap(
-                    __corr_compute__,
+                    compute_one_sample_correlation,
                     ((this_trait_samples, trait, corr_method) for trait in target_dataset))
                 if corr is not None),
             key=lambda trait_name: -abs(
