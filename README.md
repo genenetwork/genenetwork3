@@ -110,7 +110,7 @@ pylint *py tests gn3 scripts sheepdog
 Running mypy(type-checker):
 
 ```bash
-mypy .
+mypy --show-error-codes .
 ```
 
 ## Running the GN3 web service
