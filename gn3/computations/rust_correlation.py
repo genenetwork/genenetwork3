@@ -78,25 +78,21 @@ def run_correlation(dataset, trait_vals:
 
 def parse_correlation_output(result_file: str, top_n: int = 500) -> list[dict]:
     """parse file output """
-
-    corr_results = []
-
-    with open(result_file, "r", encoding="utf-8") as file_reader:
-
-        lines = [next(file_reader) for x in range(top_n)]
-
-        for line in lines:
-            (trait_name, corr_coeff,
-                p_val, num_overlap) = line.rstrip().split(",")
-            corr_data = {
+    def __parse_line__(line):
+        (trait_name, corr_coeff, p_val, num_overlap) = line.rstrip().split(",")
+        return {
+            trait_name: {
                 "num_overlap": num_overlap,
                 "corr_coefficient": corr_coeff,
                 "p_value": p_val
-            }
+            }}
 
-            corr_results.append({trait_name: corr_data})
+    with open(result_file, "r", encoding="utf-8") as file_reader:
+        return [
+            __parse_line__(line)
+            for idx, line in enumerate(file_reader) if idx < top_n]
 
-    return corr_results
+    return []
 
 
 def get_samples(all_samples: dict[str, str],
