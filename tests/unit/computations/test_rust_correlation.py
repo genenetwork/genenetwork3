@@ -64,16 +64,19 @@ def test_parse_results():
         ["23", "-0.91", "0.11", "12"]
     ]
 
-    raw_dict = [{trait: {
-        "num_overlap":  num_overlap,
-        "corr_coefficient": corr_coeff,
-        "p_value": p_val}} for (trait, corr_coeff,
-                                p_val, num_overlap) in raw_data]
+    expected_results = {
+        trait:  {
+            "num_overlap":  num_overlap,
+            "corr_coefficient": corr_coeff,
+            "p_value": p_val}
+
+        for (trait, corr_coeff, p_val, num_overlap) in raw_data
+    }
 
     assert (parse_correlation_output(
         "tests/unit/computations/data/correlation/sorted_results.txt",
-        len(raw_data))
-        == raw_dict)
+        "sample", len(raw_data))
+        == expected_results)
 
 
 @pytest.mark.unit_test
