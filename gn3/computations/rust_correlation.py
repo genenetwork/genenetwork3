@@ -44,7 +44,6 @@ def generate_json_file(
 
     return (output_file, tmp_json_file)
 
-
 def run_correlation(
         dataset, trait_vals: str, method: str, delimiter: str,
         corr_type: str = "sample", top_n: int = 500):
@@ -75,6 +74,7 @@ def parse_correlation_output(result_file: str,
                 "corr_coefficient": corr_coeff,
                 "p_value": p_val
                 })
+
         if corr_type == "tissue":
             return (
                 trait_name,
