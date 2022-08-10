@@ -80,15 +80,16 @@ def parse_correlation_output(result_file: str,
                     "tissue_corr": corr_coeff,
                     "tissue_number": num_overlap,
                     "tissue_p_val": p_val
-                },
-                corr_data)
+                })
+
+        return tuple(trait_name, {})
 
     with open(result_file, "r", encoding="utf-8") as file_reader:
-        return [
+        return dict([
             __parse_line__(line)
-            for idx, line in enumerate(file_reader) if idx < top_n]
+            for idx, line in enumerate(file_reader) if idx < top_n])
 
-    return []
+    return {}
 
 
 def get_samples(all_samples: dict[str, str],
