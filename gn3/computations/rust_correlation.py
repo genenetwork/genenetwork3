@@ -64,6 +64,7 @@ def run_correlation(
 def parse_correlation_output(result_file: str,
                              corr_type: str, top_n: int = 500) -> dict:
     """parse file output """
+    #current types are sample and tissue
     def __parse_line__(line):
         (trait_name, corr_coeff, p_val, num_overlap) = line.rstrip().split(",")
         if corr_type == "sample":
