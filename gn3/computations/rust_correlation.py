@@ -36,7 +36,7 @@ def generate_json_file(
         json.dump({
             "method": method,
             "file_path": tmp_file,
-            "x_vals": [float(val) for val in x_vals.split(",")],
+            "x_vals": x_vals,
             "sample_values": "bxd1",
             "output_file": output_file,
             "file_delimiter": delimiter
@@ -93,6 +93,7 @@ def parse_correlation_output(result_file: str,
             idx, line) in enumerate(file_reader) if idx < top_n)}
 
 
+
 def get_samples(all_samples: dict[str, str],
                 base_samples: list[str],
                 excluded: list[str]):
@@ -145,8 +146,7 @@ def parse_tissue_corr_data(symbol_name: str,
     results = None
 
     if symbol_name and symbol_name.lower() in symbol_dict:
-        x_vals = ",".join([str(val)
-                           for val in symbol_dict[symbol_name.lower()]])
+        x_vals = [float(val) for val in symbol_dict[symbol_name.lower()]]
 
         data = []
 
