@@ -89,6 +89,7 @@ def parse_correlation_output(result_file: str,
     return []
 
 
+
 def get_samples(all_samples: dict[str, str],
                 base_samples: list[str],
                 excluded: list[str]):
@@ -141,8 +142,7 @@ def parse_tissue_corr_data(symbol_name: str,
     results = None
 
     if symbol_name and symbol_name.lower() in symbol_dict:
-        x_vals = ",".join([str(val)
-                           for val in symbol_dict[symbol_name.lower()]])
+        x_vals = [float(val) for val in symbol_dict[symbol_name.lower()]]
 
         data = []
 
