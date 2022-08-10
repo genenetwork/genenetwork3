@@ -17,38 +17,30 @@ from gn3.settings import TMPDIR
 def generate_input_files(dataset: list[str],
                          output_dir: str = TMPDIR) -> tuple[str, str]:
     """function generates outputfiles and inputfiles"""
-
     tmp_dir = f"{output_dir}/correlation"
-
     create_output_directory(tmp_dir)
-
     tmp_file = os.path.join(tmp_dir, f"{random_string(10)}.txt")
-
     with open(tmp_file, "w", encoding="utf-8") as file_writer:
-
         file_writer.write("\n".join(dataset))
+
     return (tmp_dir, tmp_file)
 
 
-def generate_json_file(tmp_dir, tmp_file,
-                       method, delimiter, x_vals) -> tuple[str, str]:
+def generate_json_file(
+        tmp_dir, tmp_file, method, delimiter, x_vals) -> tuple[str, str]:
     """generating json input file required by cargo"""
-
     tmp_json_file = os.path.join(tmp_dir, f"{random_string(10)}.json")
-
     output_file = os.path.join(tmp_dir, f"{random_string(10)}.txt")
 
-    correlation_args = {
-        "method": method,
-        "file_path": tmp_file,
-        "x_vals": x_vals,
-        "sample_values": "bxd1",
-        "output_file": output_file,
-        "file_delimiter": delimiter
-    }
-
     with open(tmp_json_file, "w", encoding="utf-8") as outputfile:
-        json.dump(correlation_args, outputfile)
+        json.dump({
+            "method": method,
+            "file_path": tmp_file,
+            "x_vals": [float(val) for val in x_vals.split(",")],
+            "sample_values": "bxd1",
+            "output_file": output_file,
+            "file_delimiter": delimiter
+        }, outputfile)
 
     return (output_file, tmp_json_file)
 
@@ -60,56 +52,45 @@ def run_correlation(dataset, trait_vals:
                     corr_type: str = "sample",
                     top_n: int = 500):
     """entry function to call rust correlation"""
-
     (tmp_dir, tmp_file) = generate_input_files(dataset)
-
-    (output_file, json_file) = generate_json_file(tmp_dir=tmp_dir,
-                                                  tmp_file=tmp_file,
-                                                  method=method,
-                                                  delimiter=delimiter,
-                                                  x_vals=trait_vals)
-
+    (output_file, json_file) = generate_json_file(
+        tmp_dir=tmp_dir, tmp_file=tmp_file, method=method, delimiter=delimiter,
+        x_vals=trait_vals)
     command_list = [CORRELATION_COMMAND, json_file, TMPDIR]
-
     subprocess.run(command_list, check=True)
 
-    results = parse_correlation_output(output_file, corr_type, top_n)
-
-    return results
+    return parse_correlation_output(output_file, corr_type, top_n)
 
 
 def parse_correlation_output(result_file: str,
                              corr_type: str, top_n: int = 500) -> dict:
     """parse file output """
 
-    corr_results = {}
+    def __parse_line__(line, corr_type):
+        (trait_name, corr_coeff,
+         p_val, num_overlap) = line.rstrip().split(",")
+
+        if corr_type == "sample":
+
+            corr_data = {
+                "num_overlap": num_overlap,
+                "corr_coefficient": corr_coeff,
+                "p_value": p_val
+            }
+
+        elif corr_type == "tissue":
+            corr_data = {
+                "tissue_corr": corr_coeff,
+                "tissue_number": num_overlap,
+                "tissue_p_val": p_val
+            }
+
+        return (trait_name, corr_data)
 
     with open(result_file, "r", encoding="utf-8") as file_reader:
 
-        lines = [next(file_reader) for x in range(top_n)]
-
-        for line in lines:
-            (trait_name, corr_coeff,
-                p_val, num_overlap) = line.rstrip().split(",")
-
-            if corr_type == "sample":
-
-                corr_data = {
-                    "num_overlap": num_overlap,
-                    "corr_coefficient": corr_coeff,
-                    "p_value": p_val
-                }
-
-            if corr_type == "tissue":
-                corr_data = {
-                    "tissue_corr": corr_coeff,
-                    "tissue_number": num_overlap,
-                    "tissue_p_val": p_val
-                }
-
-            corr_results[trait_name] = corr_data
-
-    return corr_results
+        return {item[0]: item[1] for item in (__parse_line__(line, corr_type) for (
+            idx, line) in enumerate(file_reader) if idx < top_n)}
 
 
 def get_samples(all_samples: dict[str, str],
@@ -197,8 +178,8 @@ def merge_corr_results(results_a: dict, results_b: dict):
 
     for (name, corr_values) in results_a.items():
         if results_b.get(name):
-            tmp = results_a[name]  #dict
-            tmp.update(results_b[name])  
+            tmp = results_a[name]  # dict
+            tmp.update(results_b[name])
 
             output = tmp
         else:

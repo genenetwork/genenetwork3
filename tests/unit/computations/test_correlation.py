@@ -9,7 +9,7 @@ from numpy.testing import assert_almost_equal
 
 from gn3.computations.correlations import normalize_values
 from gn3.computations.correlations import compute_sample_r_correlation
-from gn3.computations.correlations import compute_all_sample_correlation
+from gn3.computations.correlations import compute_one_sample_correlation
 from gn3.computations.correlations import filter_shared_sample_keys
 
 from gn3.computations.correlations import tissue_correlation_for_trait
@@ -164,7 +164,7 @@ class TestCorrelation(TestCase):
     @pytest.mark.unit_test
     @mock.patch("gn3.computations.correlations.compute_sample_r_correlation")
     @mock.patch("gn3.computations.correlations.filter_shared_sample_keys")
-    def test_compute_all_sample(self, filter_shared_samples, sample_r_corr):
+    def test_compute_one_sample(self, filter_shared_samples, sample_r_corr):
         """Given target dataset compute all sample r correlation"""
 
         filter_shared_samples.return_value = [iter(val) for val in [(
@@ -197,8 +197,11 @@ class TestCorrelation(TestCase):
                                               "p_value": 0.9,
                                               "num_overlap": 6}}]
 
-        self.assertEqual(compute_all_sample_correlation(
-            this_trait=this_trait_data, target_dataset=traits_dataset), sample_all_results)
+        self.assertEqual(
+            compute_one_sample_correlation(
+                this_trait_data["trait_sample_data"],
+                traits_dataset[0], "pearson"),
+            sample_all_results[0])
         sample_r_corr.assert_called_once_with(
             trait_name='1419792_at',
             corr_method="pearson", trait_vals=('1.23', '6.565', '6.456'),

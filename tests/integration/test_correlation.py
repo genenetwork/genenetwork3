@@ -12,7 +12,7 @@ class CorrelationIntegrationTest(TestCase):
         self.app = create_app().test_client()
 
     @pytest.mark.integration_test
-    @mock.patch("gn3.api.correlation.compute_all_sample_correlation")
+    @mock.patch("gn3.api.correlation.run_sample_corr_cmd")
     def test_sample_r_correlation(self, mock_compute_samples):
         """Test /api/correlation/sample_r/{method}"""
         this_trait_data = {
