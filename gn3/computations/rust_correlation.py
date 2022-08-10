@@ -52,6 +52,8 @@ def run_correlation(dataset, trait_vals:
                     corr_type: str = "sample",
                     top_n: int = 500):
     """entry function to call rust correlation"""
+
+    #pylint: disable=too-many-arguments
     (tmp_dir, tmp_file) = generate_input_files(dataset)
     (output_file, json_file) = generate_json_file(
         tmp_dir=tmp_dir, tmp_file=tmp_file, method=method, delimiter=delimiter,
@@ -66,6 +68,8 @@ def parse_correlation_output(result_file: str,
                              corr_type: str, top_n: int = 500) -> dict:
     """parse file output """
 
+    #current types are sample and tissue
+
     def __parse_line__(line, corr_type):
         (trait_name, corr_coeff,
          p_val, num_overlap) = line.rstrip().split(",")
@@ -78,12 +82,12 @@ def parse_correlation_output(result_file: str,
                 "p_value": p_val
             })
 
-        elif corr_type == "tissue":
-            return (trait_name, {
-                "tissue_corr": corr_coeff,
-                "tissue_number": num_overlap,
-                "tissue_p_val": p_val
-            }, corr_data)
+        return (trait_name, {
+            "tissue_corr": corr_coeff,
+            "tissue_number": num_overlap,
+            "tissue_p_val": p_val
+        })
+
 
     with open(result_file, "r", encoding="utf-8") as file_reader:
 
