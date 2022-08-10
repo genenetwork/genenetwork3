@@ -67,13 +67,11 @@ def parse_correlation_output(result_file: str,
     def __parse_line__(line):
         (trait_name, corr_coeff, p_val, num_overlap) = line.rstrip().split(",")
         if corr_type == "sample":
-            return (
-                trait_name,
-                {
+            return (trait_name, {
                 "num_overlap": num_overlap,
                 "corr_coefficient": corr_coeff,
                 "p_value": p_val
-                })
+            })
 
         if corr_type == "tissue":
             return (
@@ -91,7 +89,6 @@ def parse_correlation_output(result_file: str,
             for idx, line in enumerate(file_reader) if idx < top_n]
 
     return []
-
 
 
 def get_samples(all_samples: dict[str, str],
