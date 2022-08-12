@@ -79,7 +79,11 @@ def parse_correlation_output(result_file: str,
                 {
                     "tissue_corr": corr_coeff,
                     "tissue_number": num_overlap,
-                    "tissue_p_val": p_val
+                    "tissue_p_val": p_val,
+                    # The fields below are mandatory
+                    "p_value": p_val,
+                    "num_overlap": num_overlap,
+                    "corr_coefficient": corr_coeff
                 })
 
         return tuple(trait_name, {})
