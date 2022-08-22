@@ -10,11 +10,13 @@ def parse_db_url() -> Tuple:
     is a default value for SQL_URI so a tuple result is\
     always expected"""
     parsed_db = urlparse(SQL_URI)
-    return (parsed_db.hostname, parsed_db.username,
-            parsed_db.password, parsed_db.path[1:])
+    return (
+        parsed_db.hostname, parsed_db.username, parsed_db.password,
+        parsed_db.path[1:], parsed_db.port)
 
 
 def database_connector() -> mdb.Connection:
     """function to create db connector"""
-    host, user, passwd, db_name = parse_db_url()
-    return mdb.connect(host, user, passwd, db_name)
+    host, user, passwd, db_name, db_port = parse_db_url()
+
+    return mdb.connect(host, user, passwd, db_name, port=(db_port or 3306))
