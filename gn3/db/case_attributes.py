@@ -37,9 +37,7 @@ def insert_case_attribute_audit(
             )
             rowcount = cursor.rowcount
     except Exception as _e:
-        conn.rollback()
         raise MySQLdb.Error(_e) from _e
-    conn.commit()
     return rowcount
 
 
@@ -55,9 +53,7 @@ def reject_case_attribute(conn: Any, case_attr_audit_id: int) -> int:
                 (case_attr_audit_id,),
             )
             rowcount = cursor.rowcount
-        conn.commit()
     except Exception as _e:
-        conn.rollback()
         raise MySQLdb.Error(_e) from _e
     return rowcount
 
@@ -125,8 +121,6 @@ def approve_case_attribute(conn: Any, case_attr_audit_id: int) -> int:
                         (case_attr_audit_id,),
                     )
             rowcount = cursor.rowcount
-            conn.commit()
     except Exception as _e:
-        conn.rollback()
         raise MySQLdb.Error(_e) from _e
     return rowcount

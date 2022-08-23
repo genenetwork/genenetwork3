@@ -60,7 +60,6 @@ def update(conn: Any,
     with conn.cursor() as cursor:
         cursor.execute(sql,
                        tuple(data_.values()) + tuple(where_.values()))
-        conn.commit()
         return cursor.rowcount
 
 
@@ -123,7 +122,6 @@ def insert(conn: Any,
     sql += ")"
     with conn.cursor() as cursor:
         cursor.execute(sql, tuple(dict_.values()))
-        conn.commit()
         return cursor.rowcount
 
 

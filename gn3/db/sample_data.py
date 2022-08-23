@@ -255,9 +255,7 @@ def update_sample_data(
             if _rowcount:
                 count += 1
     except Exception as _e:
-        conn.rollback()
         raise MySQLdb.Error(_e) from _e
-    conn.commit()
     return count
 
 
@@ -325,9 +323,7 @@ def delete_sample_data(
                     inbredset_id=inbredset_id,
                 )
     except Exception as _e:
-        conn.rollback()
         raise MySQLdb.Error(_e) from _e
-    conn.commit()
     return count
 
 
@@ -420,5 +416,4 @@ def insert_sample_data(
                 )
         return count
     except Exception as _e:
-        conn.rollback()
         raise MySQLdb.Error(_e) from _e
