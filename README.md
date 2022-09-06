@@ -9,9 +9,9 @@ badge](https://ci.genenetwork.org/badge/genenetwork3-pylint.svg)](https://ci.gen
 GeneNetwork3 REST API for data science and machine  learning
 
 A continuously deployed instance of genenetwork3 is available at
-[https://gn3dev.genenetwork.org/](https://gn3dev.genenetwork.org/). This
-instance is redeployed on every commit provided that the [continuous
-integration tests](https://ci.genenetwork.org/jobs/genenetwork3) pass.
+[https://cd.genenetwork.org/](https://cd.genenetwork.org/). This instance is
+redeployed on every commit provided that the [continuous integration
+tests](https://ci.genenetwork.org/jobs/genenetwork3) pass.
 
 ## Installation
 
