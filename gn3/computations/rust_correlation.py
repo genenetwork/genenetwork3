@@ -6,6 +6,7 @@ https://github.com/Alexanderlacuna/correlation_rust
 
 import subprocess
 import json
+import csv
 import os
 
 from gn3.computations.qtlreaper import create_output_directory
@@ -20,8 +21,11 @@ def generate_input_files(dataset: list[str],
     tmp_dir = f"{output_dir}/correlation"
     create_output_directory(tmp_dir)
     tmp_file = os.path.join(tmp_dir, f"{random_string(10)}.txt")
-    with open(tmp_file, "w", encoding="utf-8") as file_writer:
-        file_writer.write("\n".join(dataset))
+    with open(tmp_file, "w", encoding="utf-8") as op_file:
+        writer = csv.writer(
+            op_file, delimiter=",", dialect="unix", quotechar="",
+            quoting=csv.QUOTE_NONE)
+        writer.writerows(dataset)
 
     return (tmp_dir, tmp_file)
 
