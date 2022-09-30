@@ -24,7 +24,7 @@ def generate_input_files(dataset: list[str],
     with open(tmp_file, "w", encoding="utf-8") as op_file:
         writer = csv.writer(
             op_file, delimiter=",", dialect="unix", quotechar="",
-            quoting=csv.QUOTE_NONE)
+            quoting=csv.QUOTE_NONE, escapechar="\\")
         writer.writerows(dataset)
 
     return (tmp_dir, tmp_file)
