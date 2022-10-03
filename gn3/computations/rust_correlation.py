@@ -157,9 +157,7 @@ def parse_tissue_corr_data(symbol_name: str,
                 corr_vals = dataset_vals.get(symbol.lower())
 
                 if corr_vals:
-                    corr_vals = [str(trait)] + corr_vals
-
-                    data.append(",".join([str(x) for x in corr_vals]))
+                    data.append([str(trait)] + corr_vals)
 
             except AttributeError:
                 pass
