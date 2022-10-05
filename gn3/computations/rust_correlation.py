@@ -48,6 +48,7 @@ def generate_json_file(
 
     return (output_file, tmp_json_file)
 
+
 def run_correlation(
         dataset, trait_vals: str, method: str, delimiter: str,
         corr_type: str = "sample", top_n: int = 500):
@@ -67,7 +68,6 @@ def run_correlation(
 def parse_correlation_output(result_file: str,
                              corr_type: str, top_n: int = 500) -> dict:
     """parse file output """
-    #current types are sample and tissue
     def __parse_line__(line):
         (trait_name, corr_coeff, p_val, num_overlap) = line.rstrip().split(",")
         if corr_type == "sample":
@@ -155,12 +155,8 @@ def parse_tissue_corr_data(symbol_name: str,
         for (trait, symbol) in dataset_symbols.items():
             try:
                 corr_vals = dataset_vals.get(symbol.lower())
-
                 if corr_vals:
-                    corr_vals = [str(trait)] + corr_vals
-
-                    data.append(",".join([str(x) for x in corr_vals]))
-
+                    data.append([trait] + [str(val) for val in corr_vals])
             except AttributeError:
                 pass
 
