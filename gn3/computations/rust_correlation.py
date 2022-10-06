@@ -59,7 +59,14 @@ def run_correlation(
         tmp_dir=tmp_dir, tmp_file=tmp_file, method=method, delimiter=delimiter,
         x_vals=trait_vals)
     command_list = [CORRELATION_COMMAND, json_file, TMPDIR]
-    subprocess.run(command_list, check=True)
+    try:
+        subprocess.run(command_list, check=True, capture_output=True)
+    except subprocess.CalledProcessError as cpe:
+        actual_command = (
+            os.readlink(CORRELATION_COMMAND)
+            if os.path.islink(CORRELATION_COMMAND)
+            else CORRELATION_COMMAND)
+        raise Exception(command_list, actual_command, cpe.stdout, cpe)
 
     return parse_correlation_output(output_file, corr_type, top_n)
 
