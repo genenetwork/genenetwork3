@@ -66,7 +66,7 @@ def run_correlation(
             os.readlink(CORRELATION_COMMAND)
             if os.path.islink(CORRELATION_COMMAND)
             else CORRELATION_COMMAND)
-        raise Exception(command_list, actual_command, cpe.stdout, cpe)
+        raise Exception(command_list, actual_command, cpe.stdout) from cpe
 
     return parse_correlation_output(output_file, corr_type, top_n)
 
