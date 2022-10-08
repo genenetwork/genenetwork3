@@ -6,12 +6,22 @@ badge](https://ci.genenetwork.org/badge/genenetwork3.svg)](https://ci.genenetwor
 badge](https://ci.genenetwork.org/badge/genenetwork3-pylint.svg)](https://ci.genenetwork.org/jobs/genenetwork3-pylint)
 [![GeneNetwork3 mypy CI badge](https://ci.genenetwork.org/badge/genenetwork3-mypy.svg)](https://ci.genenetwork.org/jobs/genenetwork3-mypy)
 
-GeneNetwork3 REST API for data science and machine  learning
+GeneNetwork3 REST API for data science and machine learning
+
+GeneNetwork3 is a light-weight back-end that serves different front-ends, including the GeneNetwork2 web UI.
+Transports happen in multiple ways:
+
+1. A REST API
+2. Direct python library calls (using PYTHONPATH)
+
+The main advantage is that the code is not cluttered by UX output and starting the webserver and running tests is *easier* than using GeneNetwork2. It allows for using Jupyter Notebooks and Pluto Notebooks as front-ends as well as using the API from R etc.
 
 A continuously deployed instance of genenetwork3 is available at
 [https://cd.genenetwork.org/](https://cd.genenetwork.org/). This instance is
 redeployed on every commit provided that the [continuous integration
 tests](https://ci.genenetwork.org/jobs/genenetwork3) pass.
+
+
 
 ## Installation
 
