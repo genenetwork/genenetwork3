@@ -63,29 +63,21 @@ def get_trait_csv_sample_data(
     conn: Any, trait_name: int, phenotype_id: int
 ) -> str:
     """Fetch a trait and return it as a csv string"""
-    __query = (
-        "SELECT concat(st.Name, ',', ifnull(pd.value, 'x'), ',', "
-        "ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) as 'Data' "
-        ",ifnull(ca.Name, 'x') as 'CaseAttr', "
-        "ifnull(cxref.value, 'x') as 'Value' "
-        "FROM PublishFreeze pf "
-        "JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId "
-        "JOIN PublishData pd ON pd.Id = px.DataId "
-        "JOIN Strain st ON pd.StrainId = st.Id "
-        "LEFT JOIN PublishSE ps ON ps.DataId = pd.Id "
-        "AND ps.StrainId = pd.StrainId "
-        "LEFT JOIN NStrain ns ON ns.DataId = pd.Id "
-        "AND ns.StrainId = pd.StrainId "
-        "LEFT JOIN CaseAttributeXRefNew cxref ON "
-        "(cxref.InbredSetId = px.InbredSetId AND "
-        "cxref.StrainId = st.Id) "
-        "LEFT JOIN CaseAttribute ca ON ca.Id = cxref.CaseAttributeId "
-        "WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name"
-    )
     case_attr_columns = set()
     csv_data: Dict = {}
     with conn.cursor() as cursor:
-        cursor.execute(__query, (trait_name, phenotype_id))
+        cursor.execute("""
+SELECT concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
+ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data',
+ifnull(ca.Name, 'x') AS 'CaseAttr', ifnull(cxref.value, 'x') AS 'Value'
+FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
+JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
+LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
+LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
+LEFT JOIN CaseAttributeXRefNew cxref ON (cxref.InbredSetId = px.InbredSetId
+AND cxref.StrainId = st.Id) LEFT JOIN CaseAttribute ca
+ON ca.Id = cxref.CaseAttributeId WHERE px.Id = %s
+AND px.PhenotypeId = %s ORDER BY st.Name""", (trait_name, phenotype_id))
         for data in cursor.fetchall():
             if data[1] == "x":
                 csv_data[data[0]] = None
@@ -102,11 +94,11 @@ def get_trait_csv_sample_data(
             return "Strain Name,Value,SE,Count\n" + "\n".join(csv_data.keys())
         columns = sorted(case_attr_columns)
         csv = "Strain Name,Value,SE,Count," + ",".join(columns) + "\n"
-        for key, value in csv_data.items():
-            if not value:
+        for key, _value in csv_data.items():
+            if not _value:
                 csv += key + (len(case_attr_columns) * ",x") + "\n"
             else:
-                vals = [str(value.get(column, "x")) for column in columns]
+                vals = [str(_value.get(column, "x")) for column in columns]
                 csv += key + "," + ",".join(vals) + "\n"
         return csv
     return "No Sample Data Found"
