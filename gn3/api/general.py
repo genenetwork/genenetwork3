@@ -7,7 +7,7 @@ from flask import request
 
 from gn3.fs_helpers import extract_uploaded_file
 from gn3.commands import run_cmd
-from gn3.db import datasets
+from gn3.db import rdf
 
 general = Blueprint("general", __name__)
 
@@ -72,4 +72,4 @@ def run_r_qtl(geno_filestr, pheno_filestr):
 @general.route("/dataset/<accession_id>")
 def dataset_metadata(accession_id):
     """Return info as JSON for dataset with ACCESSION_ID."""
-    return jsonify(datasets.dataset_metadata(accession_id))
+    return jsonify(rdf.get_dataset_metadata(accession_id).data)
