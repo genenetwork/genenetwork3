@@ -12,7 +12,7 @@ from collections import UserDict
 from functools import partial
 from typing import Any, Hashable, Iterator
 
-from MySQLdb.cursors import DictCursor
+from MySQLdb.cursors import DictCursor, SSDictCursor
 from pymonad.maybe import Maybe, Just, Nothing
 
 
@@ -124,9 +124,15 @@ class MonadicDict(UserDict):
             pass
 
 
-def query_sql(conn, query: str) -> Iterator[MonadicDict]:
-    """Execute SQL query and return a generator of MonadicDict objects."""
-    with conn.cursor(DictCursor) as cursor:
+def query_sql(conn, query: str, server_side: bool=False) -> Iterator[MonadicDict]:
+    """Execute SQL query and return a generator of MonadicDict objects.
+
+    If server_side is False, the result set is stored in the client. If
+    server_side is True, the result set is stored in the server. Therefore,
+    when server_side is True, this query must be completed before a new one
+    can be executed.
+    """
+    with conn.cursor(SSDictCursor if server_side else DictCursor) as cursor:
         cursor.execute(query)
         while row := cursor.fetchone():
             yield MonadicDict(row)
