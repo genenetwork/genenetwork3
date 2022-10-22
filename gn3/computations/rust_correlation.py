@@ -48,12 +48,13 @@ def generate_json_file(
 
     return (output_file, tmp_json_file)
 
+
 def run_correlation(
         dataset, trait_vals: str, method: str, delimiter: str,
         corr_type: str = "sample", top_n: int = 500):
     """entry function to call rust correlation"""
 
-    #pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
     (tmp_dir, tmp_file) = generate_input_files(dataset)
     (output_file, json_file) = generate_json_file(
         tmp_dir=tmp_dir, tmp_file=tmp_file, method=method, delimiter=delimiter,
@@ -74,7 +75,7 @@ def run_correlation(
 def parse_correlation_output(result_file: str,
                              corr_type: str, top_n: int = 500) -> dict:
     """parse file output """
-    #current types are sample and tissue
+    # current types are sample and tissue
     def __parse_line__(line):
         (trait_name, corr_coeff, p_val, num_overlap) = line.rstrip().split(",")
         if corr_type == "sample":
@@ -126,23 +127,24 @@ def get_samples(all_samples: dict[str, str],
 
 
 def get_sample_corr_data(sample_type: str,
-                         all_samples: dict[str, str],
+                         sample_data: dict[str, str],
+                         all_samples: list[str],
                          dataset_samples: list[str]) -> dict[str, str]:
     """dependeing on the sample_type fetch the correct sample data """
 
     if sample_type == "samples_primary":
 
-        data = get_samples(all_samples=all_samples,
+        data = get_samples(all_samples=sample_data,
                            base_samples=dataset_samples, excluded=[])
 
     elif sample_type == "samples_other":
         data = get_samples(
-            all_samples=all_samples,
+            all_samples=sample_data,
             base_samples=[],
             excluded=dataset_samples)
     else:
         data = get_samples(
-            all_samples=all_samples, base_samples=[], excluded=[])
+            all_samples=sample_data, base_samples=all_samples, excluded=[])
     return data
 
 
