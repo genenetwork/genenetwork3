@@ -55,7 +55,7 @@ def matrix(db):
                                      (nrows, ncols)),
                           np.reshape(np.frombuffer(read_optimized_blob[nrows*ncols :],
                                                    dtype=np.uint8),
-                                     (nrows, ncols)))
+                                     (ncols, nrows)))
 
 def nparray(matrix):
     '''Get matrix as a 2D numpy array.'''
