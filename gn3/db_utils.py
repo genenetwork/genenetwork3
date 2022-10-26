@@ -3,7 +3,8 @@ import contextlib
 from typing import Any, Iterator, Protocol, Tuple
 from urllib.parse import urlparse
 import MySQLdb as mdb
-from gn3.settings import SQL_URI
+import xapian
+from gn3.settings import SQL_URI, XAPIAN_DB_PATH
 
 
 def parse_db_url() -> Tuple:
@@ -42,3 +43,14 @@ def database_connection() -> Iterator[Connection]:
         yield connection
     finally:
         connection.close()
+
+
+@contextlib.contextmanager
+def xapian_database():
+    """Open xapian database read-only."""
+    # pylint: disable-next=invalid-name
+    db = xapian.Database(XAPIAN_DB_PATH)
+    try:
+        yield db
+    finally:
+        db.close()

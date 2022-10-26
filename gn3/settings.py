@@ -37,6 +37,9 @@ CORRELATION_COMMAND = f"{os.environ.get('GN2_PROFILE')}/bin/correlation_rust"
 GENOTYPE_FILES = os.environ.get(
     "GENOTYPE_FILES", f"{os.environ.get('HOME')}/genotype_files/genotype")
 
+# Xapian index
+XAPIAN_DB_PATH = "xapian"
+
 # CROSS-ORIGIN SETUP
 def parse_env_cors(default):
     """Parse comma-separated configuration into list of strings."""
