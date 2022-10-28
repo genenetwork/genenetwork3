@@ -3,7 +3,7 @@
 import json
 import urllib.parse
 
-from flask import abort, Blueprint, jsonify, request
+from flask import abort, Blueprint, current_app, jsonify, request
 import xapian
 
 from gn3.monads import MonadicDict
@@ -42,7 +42,7 @@ def search_results():
     query = queryparser.parse_query(querystring)
     traits = []
     # pylint: disable=invalid-name
-    with xapian_database() as db:
+    with xapian_database(current_app.config["XAPIAN_DB_PATH"]) as db:
         enquire = xapian.Enquire(db)
         # Filter documents by type.
         enquire.set_query(xapian.Query(xapian.Query.OP_FILTER,
