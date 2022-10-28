@@ -25,6 +25,7 @@ def database_connector() -> mdb.Connection:
     return mdb.connect(host, user, passwd, db_name, port=(db_port or 3306))
 
 
+# pylint: disable=missing-class-docstring, missing-function-docstring, too-few-public-methods
 class Connection(Protocol):
     def cursor(self) -> Any:
         ...
