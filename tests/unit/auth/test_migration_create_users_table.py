@@ -11,19 +11,29 @@ from tests.unit.conftest import (
 migration_path = "migrations/auth/20221103_01_js9ub-initialise-the-auth-entic-oris-ation-database.py"
 
 @pytest.mark.unit_test
-def test_initialise_the_database(auth_testdb):
-    with closing(sqlite3.connect(auth_testdb)) as conn, closing(conn.cursor()) as cursor:
+def test_create_users_table(auth_testdb_path):
+    """
+    GIVEN: A database migration script to create the `users` table
+    WHEN: The migration is applied
+    THEN: Ensure that the table is created
+    """
+    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         result = cursor.fetchall()
         assert "users" not in [row[0] for row in cursor.fetchall()]
-        apply_single_migration(auth_testdb, get_migration(migration_path))
+        apply_single_migration(auth_testdb_path, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         assert "users" in [row[0] for row in cursor.fetchall()]
 
 @pytest.mark.unit_test
-def test_rollback_initialise_the_database(auth_testdb):
-    with closing(sqlite3.connect(auth_testdb)) as conn, closing(conn.cursor()) as cursor:
-        apply_single_migration(auth_testdb, get_migration(migration_path))
-        rollback_single_migration(auth_testdb, get_migration(migration_path))
+def test_rollback_create_users_table(auth_testdb_path):
+    """
+    GIVEN: A database migration script to create the `users` table
+    WHEN: The migration is rolled back
+    THEN: Ensure that the `users` table no longer exists
+    """
+    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
+        apply_single_migration(auth_testdb_path, get_migration(migration_path))
+        rollback_single_migration(auth_testdb_path, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         assert "users" not in [row[0] for row in cursor.fetchall()]
