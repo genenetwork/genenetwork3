@@ -95,6 +95,36 @@ and try again. Also make sure your ~/guix-bioinformatics is up to date.
 
 See also instructions in [.guix.scm](.guix.scm).
 
+## Migrations
+
+**NOTE**: Do not create migration scripts manually. Use the processes indicated below.
+
+### Authentication/Authorisation Migrations
+
+The migration scripts for the authentication and authorisation system are in the *migrations/auth* folder in the root of the repository.
+
+To create an new migration, do:
+
+```bash
+$ yoyo new --config=yoyo.auth.ini -m "<description of the migration>"
+```
+
+That initialises an new migration script under the *migrations/auth* folder and gives it a name derived from the date, the sequence for that day, and the provided description.
+
+e.g.
+
+```bash
+$ yoyo new --config=yoyo.auth.ini -m "testing a new migration"
+Error: could not open editor!
+Created file ./migrations/auth/20221103_02_HBzwk-testing-a-new-migration.py
+```
+
+Now you can open and edit the scripts to provide the appropriate SQL statements to update or rollback your schema.
+
+### Running the Migrations
+
+**TODO**: Document how to run the migrations
+
 ## Running Tests
 
 (assuming you are in a guix container; otherwise use venv!)
