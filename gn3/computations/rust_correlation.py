@@ -144,7 +144,7 @@ def get_sample_corr_data(sample_type: str,
             excluded=dataset_samples)
     else:
         data = get_samples(
-            all_samples=sample_data, base_samples=all_samples, excluded=[])
+            all_samples=sample_data, base_samples=[], excluded=[])
     return data
 
 
