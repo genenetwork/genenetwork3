@@ -12,7 +12,8 @@ migrations_and_tables = (
     ("20221103_01_js9ub-initialise-the-auth-entic-oris-ation-database.py",
      "users"),
     ("20221103_02_sGrIs-create-user-credentials-table.py", "user_credentials"),
-    ("20221108_01_CoxYh-create-the-groups-table.py", "groups"))
+    ("20221108_01_CoxYh-create-the-groups-table.py", "groups"),
+    ("20221108_02_wxTr9-create-privileges-table.py", "privileges"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
