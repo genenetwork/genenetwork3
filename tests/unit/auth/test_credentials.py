@@ -86,7 +86,7 @@ def test_partially_wrong_credentials(with_credentials, email, password):
     "email,password",
     (("first@test.user", "testuser01"),
      ("second@test.user", "testuser02")))
-def test_partially_wrong_credentials(with_credentials, email, password):
+def test_partially_correct_credentials(with_credentials, email, password):
     """
     GIVEN: credentials that exist in the database
     WHEN: the credentials are checked with correct values
