@@ -56,6 +56,6 @@ def test_rollback_create_table(
         assert the_table in [row[0] for row in cursor.fetchall()]
         rollback_single_migration(auth_testdb_path, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
-        assert "the_table" not in [row[0] for row in cursor.fetchall()]
+        assert the_table not in [row[0] for row in cursor.fetchall()]
 
     rollback_migrations(backend, older_migrations)
