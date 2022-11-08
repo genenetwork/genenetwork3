@@ -5,7 +5,7 @@ import pytest
 import sqlite3
 
 from gn3.migrations import get_migration, apply_migrations, rollback_migrations
-from tests.unit.conftest import (
+from tests.unit.auth.conftest import (
     apply_single_migration, rollback_single_migration)
 
 migration_path = "migrations/auth/20221103_01_js9ub-initialise-the-auth-entic-oris-ation-database.py"
