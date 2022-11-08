@@ -11,11 +11,14 @@ def credentials_in_database(cursor, email: str, password: str) -> bool:
         ("SELECT "
          "users.email, user_credentials.password "
          "FROM users LEFT JOIN user_credentials "
-         "ON users.email = :email"),
+         "ON users.user_id = user_credentials.user_id "
+         "WHERE users.email = :email"),
         {"email": email})
     results = cursor.fetchall()
     if len(results) == 0:
         return False
 
-    assert len(results) > 1, "Expected one row."
-    return (email == row[0] and bcrypt.checkpw(value.encode("utf-8"), row[1]))
+    assert len(results) == 1, "Expected one row."
+    row = results[0]
+    return (email == row[0] and
+            bcrypt.checkpw(password.encode("utf-8"), row[1]))
