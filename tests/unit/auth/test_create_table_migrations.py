@@ -33,7 +33,7 @@ def test_create_table(
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         result = cursor.fetchall()
         assert the_table not in [row[0] for row in cursor.fetchall()]
-        apply_single_migration(auth_testdb_path, get_migration(migration_path))
+        apply_single_migration(backend, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         assert the_table in [row[0] for row in cursor.fetchall()]
 
@@ -53,10 +53,10 @@ def test_rollback_create_table(
     older_migrations = migrations_up_to(migration_path, auth_migrations_dir)
     apply_migrations(backend, older_migrations)
     with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
-        apply_single_migration(auth_testdb_path, get_migration(migration_path))
+        apply_single_migration(backend, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         assert the_table in [row[0] for row in cursor.fetchall()]
-        rollback_single_migration(auth_testdb_path, get_migration(migration_path))
+        rollback_single_migration(backend, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         assert the_table not in [row[0] for row in cursor.fetchall()]
 

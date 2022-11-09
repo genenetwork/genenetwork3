@@ -20,7 +20,7 @@ def test_apply_init_data(auth_testdb_path, auth_migrations_dir, backend):
     with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
         cursor.execute("SELECT * FROM resource_categories")
         assert len(cursor.fetchall()) == 0, "Expected empty table."
-        apply_single_migration(auth_testdb_path, the_migration)
+        apply_single_migration(backend, the_migration)
         cursor.execute("SELECT * FROM resource_categories")
         results = cursor.fetchall()
         assert len(results) == 3, "Expected 3 rows of data."
@@ -41,11 +41,11 @@ def test_rollback_init_data(auth_testdb_path, auth_migrations_dir, backend):
     with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
         cursor.execute("SELECT * FROM resource_categories")
         assert len(cursor.fetchall()) == 0, "Expected empty table."
-        apply_single_migration(auth_testdb_path, the_migration)
+        apply_single_migration(backend, the_migration)
         cursor.execute("SELECT * FROM resource_categories")
         results = cursor.fetchall()
         assert len(results) == 3, "Expected 3 rows of data."
-        rollback_single_migration(auth_testdb_path, the_migration)
+        rollback_single_migration(backend, the_migration)
         cursor.execute("SELECT * FROM resource_categories")
         assert len(cursor.fetchall()) == 0, "Expected empty table."
 

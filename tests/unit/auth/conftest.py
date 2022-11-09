@@ -5,6 +5,7 @@ from typing import Union
 from contextlib import closing
 
 import pytest
+from yoyo.backends import DatabaseBackend
 from yoyo import get_backend, read_migrations
 from yoyo.migrations import Migration, MigrationList
 
@@ -20,13 +21,13 @@ def auth_migrations_dir(test_app_config): # pylint: disable=redefined-outer-name
     """Get the test application's auth database file"""
     return test_app_config["AUTH_MIGRATIONS"]
 
-def apply_single_migration(db_uri: Union[Path, str], migration: Migration):
+def apply_single_migration(backend: DatabaseBackend, migration: Migration):
     """Utility to apply a single migration"""
-    apply_migrations(get_backend(f"sqlite:///{db_uri}"), MigrationList([migration]))
+    apply_migrations(backend, MigrationList([migration]))
 
-def rollback_single_migration(db_uri: Union[Path, str], migration: Migration):
+def rollback_single_migration(backend: DatabaseBackend, migration: Migration):
     """Utility to rollback a single migration"""
-    rollback_migrations(get_backend(f"sqlite:///{db_uri}"), MigrationList([migration]))
+    rollback_migrations(backend, MigrationList([migration]))
 
 @pytest.fixture(scope="session")
 def backend(auth_testdb_path): # pylint: disable=redefined-outer-name
