@@ -19,6 +19,7 @@ migrations_and_tables = (
     ("20221110_02_z1dWf-create-mrna-resources-table.py", "mrna_resources"),
     ("20221110_03_ka3W0-create-phenotype-resources-table.py", "phenotype_resources"),
     ("20221110_04_6PRFQ-create-genotype-resources-table.py", "genotype_resources"),
+    ("20221110_05_BaNtL-create-roles-table.py", "roles"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
