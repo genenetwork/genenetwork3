@@ -13,7 +13,11 @@ query = "SELECT sql FROM sqlite_schema WHERE name=?"
 
 test_params = (
     ("20221109_01_HbD5F-add-resource-meta-field-to-resource-categories-field.py",
-     "resource_categories", "resource_meta TEXT", True),)
+     "resource_categories", "resource_meta TEXT", True),
+    ("20221110_08_23psB-add-privilege-category-and-privilege-description-columns-to-privileges-table.py",
+     "privileges", "privilege_category TEXT", True),
+    ("20221110_08_23psB-add-privilege-category-and-privilege-description-columns-to-privileges-table.py",
+     "privileges", "privilege_description TEXT", True))
 
 def found(haystack: str, needle: str) -> bool:
     return any([
