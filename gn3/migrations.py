@@ -2,8 +2,8 @@
 from pathlib import Path
 from typing import Union
 
-from yoyo.backends import DatabaseBackend
 from yoyo import read_migrations
+from yoyo.backends import DatabaseBackend
 from yoyo.migrations import Migration, MigrationList
 
 class MigrationNotFound(Exception):

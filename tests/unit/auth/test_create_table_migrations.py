@@ -14,7 +14,8 @@ migrations_and_tables = (
     ("20221103_02_sGrIs-create-user-credentials-table.py", "user_credentials"),
     ("20221108_01_CoxYh-create-the-groups-table.py", "groups"),
     ("20221108_02_wxTr9-create-privileges-table.py", "privileges"),
-    ("20221108_03_Pbhb1-create-resource-categories-table.py", "resource_categories"))
+    ("20221108_03_Pbhb1-create-resource-categories-table.py", "resource_categories"),
+    ("20221110_01_WtZ1I-create-resources-table.py", "resources"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
@@ -31,13 +32,14 @@ def test_create_table(
     apply_migrations(backend, older_migrations)
     with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
-        result = cursor.fetchall()
-        assert the_table not in [row[0] for row in cursor.fetchall()]
+        result_before_migration = cursor.fetchall()
         apply_single_migration(backend, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
-        assert the_table in [row[0] for row in cursor.fetchall()]
+        result_after_migration = cursor.fetchall()
 
     rollback_migrations(backend, older_migrations)
+    assert the_table not in [row[0] for row in result_before_migration]
+    assert the_table in [row[0] for row in result_after_migration]
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
@@ -55,9 +57,11 @@ def test_rollback_create_table(
     with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
         apply_single_migration(backend, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
-        assert the_table in [row[0] for row in cursor.fetchall()]
+        result_after_migration = cursor.fetchall()
         rollback_single_migration(backend, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
-        assert the_table not in [row[0] for row in cursor.fetchall()]
+        result_after_rollback = cursor.fetchall()
 
     rollback_migrations(backend, older_migrations)
+    assert the_table in [row[0] for row in result_after_migration]
+    assert the_table not in [row[0] for row in result_after_rollback]
