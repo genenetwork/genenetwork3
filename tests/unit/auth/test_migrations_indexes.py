@@ -16,7 +16,9 @@ AND name= ?
 
 migrations_tables_and_indexes = (
     ("20221110_05_BaNtL-create-roles-table.py", "roles",
-     "idx_tbl_roles_cols_group_id"),)
+     "idx_tbl_roles_cols_group_id"),
+    ("20221110_07_7WGa1-create-role-privileges-table.py", "role_privileges",
+     "idx_tbl_role_privileges_cols_role_id"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
