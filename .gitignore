@@ -182,3 +182,6 @@ dmypy.json
 
 # emacs temporary files
 /**/*~
+
+# yoyo configs
+/**/yoyo*.ini
