@@ -24,7 +24,8 @@ migrations_and_tables = (
     ("20221110_07_7WGa1-create-role-privileges-table.py", "role_privileges"),
     ("20221114_01_n8gsF-create-generic-role-privileges-table.py",
      "generic_role_privileges"),
-    ("20221114_03_PtWjc-create-group-roles-table.py", "group_roles"))
+    ("20221114_03_PtWjc-create-group-roles-table.py", "group_roles"),
+    ("20221114_05_hQun6-create-user-roles-table.py", "user_roles"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)

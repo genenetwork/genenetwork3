@@ -21,7 +21,9 @@ migrations_tables_and_indexes = (
      "generic_role_privileges",
      "idx_tbl_generic_role_privileges_cols_generic_role_id"),
     ("20221114_03_PtWjc-create-group-roles-table.py", "group_roles",
-     "idx_tbl_group_roles_cols_group_id"))
+     "idx_tbl_group_roles_cols_group_id"),
+    ("20221114_06_VNFqI-create-user-roles-table.py", "user_roles",
+     "idx_tbl_user_roles_cols_user_id"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
