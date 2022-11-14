@@ -50,3 +50,20 @@ def migrations_up_to(migration, migrations_dir):
     migrations = read_migrations(migrations_dir)
     index = [mig.path for mig in migrations].index(migration)
     return MigrationList(migrations[0:index])
+
+@pytest.fixture(scope="function")
+def test_users(conn_after_auth_migrations):
+    query = "INSERT INTO users(user_id, email, name) VALUES (?, ?, ?)"
+    test_users = (
+        ("ecb52977-3004-469e-9428-2a1856725c7f", "group@lead.er",
+         "Group Leader"),
+        ("21351b66-8aad-475b-84ac-53ce528451e3", "group@mem.ber01",
+         "Group Member 01"),
+        ("ae9c6245-0966-41a5-9a5e-20885a96bea7", "group@mem.ber02",
+         "Group Member 02"),
+        ("9a0c7ce5-2f40-4e78-979e-bf3527a59579", "unaff@iliated.user",
+         "Unaffiliated User"))
+    with closing(conn_after_auth_migrations.cursor()) as cursor:
+        cursor.executemany(query, test_users)
+
+    yield conn_after_auth_migrations
