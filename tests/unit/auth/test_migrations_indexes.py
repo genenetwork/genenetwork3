@@ -15,13 +15,13 @@ AND name= ?
 """
 
 migrations_tables_and_indexes = (
-    ("20221110_05_BaNtL-create-roles-table.py", "roles",
-     "idx_tbl_roles_cols_group_id"),
     ("20221110_07_7WGa1-create-role-privileges-table.py", "role_privileges",
      "idx_tbl_role_privileges_cols_role_id"),
     ("20221114_01_n8gsF-create-generic-role-privileges-table.py",
      "generic_role_privileges",
-     "idx_tbl_generic_role_privileges_cols_generic_role_id"))
+     "idx_tbl_generic_role_privileges_cols_generic_role_id"),
+    ("20221114_03_PtWjc-create-group-roles-table.py", "group_roles",
+     "idx_tbl_group_roles_cols_group_id"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
