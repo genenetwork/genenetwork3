@@ -9,21 +9,23 @@ from string import Template
 from SPARQLWrapper import JSON, SPARQLWrapper
 from pymonad.maybe import Just
 from gn3.monads import MonadicDict
-from gn3.settings import SPARQL_ENDPOINT
 
 
-def sparql_query(query: str) -> Tuple[MonadicDict, ...]:
+def sparql_query(
+        sparql_conn: SPARQLWrapper, query: str
+) -> Tuple[MonadicDict, ...]:
     """Run a SPARQL query and return the bound variables."""
-    sparql = SPARQLWrapper(SPARQL_ENDPOINT)
-    sparql.setQuery(query)
-    sparql.setReturnFormat(JSON)
-    results = sparql.queryAndConvert()
+    sparql_conn.setQuery(query)
+    sparql_conn.setReturnFormat(JSON)
+    results = sparql_conn.queryAndConvert()
     if _r := results["results"]["bindings"]:  # type: ignore
         return (*(MonadicDict(bindings) for bindings in _r),)  # type: ignore
     return (MonadicDict(),)
 
 
-def get_dataset_metadata(accession_id: str) -> MonadicDict:
+def get_dataset_metadata(
+        sparql_conn: SPARQLWrapper, accession_id: str
+) -> MonadicDict:
     """Return info about dataset with ACCESSION_ID."""
     # Check accession_id to protect against query injection.
     # TODO: This function doesn't yet return the names of the actual dataset
@@ -94,6 +96,7 @@ WHERE {
         if not (
             # Expecting only one result
             sparql_result := sparql_query(
+                sparql_conn,
                 Template(query).substitute(accession_id=accession_id)
             )[0]
         ):
@@ -103,6 +106,7 @@ WHERE {
         result[key] = value.bind(lambda x: Just(x["value"]))
 
     investigator_query_result = sparql_query(
+        sparql_conn,
         Template(
             """
 PREFIX gn: <http://genenetwork.org/>
