@@ -21,7 +21,9 @@ migrations_and_tables = (
     ("20221110_04_6PRFQ-create-genotype-resources-table.py", "genotype_resources"),
     ("20221110_05_BaNtL-create-roles-table.py", "roles"),
     ("20221110_06_Pq2kT-create-generic-roles-table.py", "generic_roles"),
-    ("20221110_07_7WGa1-create-role-privileges-table.py", "role_privileges"))
+    ("20221110_07_7WGa1-create-role-privileges-table.py", "role_privileges"),
+    ("20221114_01_n8gsF-create-generic-role-privileges-table.py",
+     "generic_role_privileges"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
