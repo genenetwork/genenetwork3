@@ -9,8 +9,8 @@ __depends__ = {'20221114_03_PtWjc-create-group-roles-table'}
 steps = [
     step(
         """
-        INSERT INTO roles(role_id, role_name) VALUES
-            ('a0e67630-d502-4b9f-b23f-6805d0f30e30', 'group-leader')
+        INSERT INTO roles(role_id, role_name, user_editable) VALUES
+            ('a0e67630-d502-4b9f-b23f-6805d0f30e30', 'group-leader', '0')
         """,
         "DELETE FROM roles"),
     step(
