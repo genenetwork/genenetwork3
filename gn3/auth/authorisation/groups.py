@@ -1,7 +1,16 @@
 """Handle the management of resource/user groups."""
+import uuid
 
+from gn3.auth import db
 from . import authorised_p
 
-@authorised_p
-def create_group(group_name):
-    raise Exception("NOT IMPLEMENTED!")
+@authorised_p(
+    ("create-group",), success_message="Successfully created group.",
+    error_message="Failed to create group.")
+def create_group(conn, group_name):
+    with db.cursor(conn) as cursor:
+        group_id = uuid.uuid4()
+        cursor.execute(
+            "INSERT INTO groups(group_id, group_name) VALUES (?, ?)",
+            (str(group_id), group_name))
+        return group_id

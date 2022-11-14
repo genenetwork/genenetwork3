@@ -54,6 +54,7 @@ def migrations_up_to(migration, migrations_dir):
 @pytest.fixture(scope="function")
 def test_users(conn_after_auth_migrations):
     query = "INSERT INTO users(user_id, email, name) VALUES (?, ?, ?)"
+    query_user_roles = "INSERT INTO user_roles(user_id, role_id) VALUES (?, ?)"
     test_users = (
         ("ecb52977-3004-469e-9428-2a1856725c7f", "group@lead.er",
          "Group Leader"),
@@ -63,7 +64,24 @@ def test_users(conn_after_auth_migrations):
          "Group Member 02"),
         ("9a0c7ce5-2f40-4e78-979e-bf3527a59579", "unaff@iliated.user",
          "Unaffiliated User"))
+    test_user_roles = (
+        ("ecb52977-3004-469e-9428-2a1856725c7f",
+         "a0e67630-d502-4b9f-b23f-6805d0f30e30"),)
     with closing(conn_after_auth_migrations.cursor()) as cursor:
         cursor.executemany(query, test_users)
+        cursor.executemany(query_user_roles, test_user_roles)
+        conn_after_auth_migrations.commit()
 
     yield conn_after_auth_migrations
+
+    with closing(conn_after_auth_migrations.cursor()) as cursor:
+        cursor.executemany(
+            "DELETE FROM user_roles WHERE user_id=?",
+            (("ecb52977-3004-469e-9428-2a1856725c7f",),))
+        cursor.executemany(
+            "DELETE FROM users WHERE user_id=?",
+            (("ecb52977-3004-469e-9428-2a1856725c7f",),
+             ("21351b66-8aad-475b-84ac-53ce528451e3",),
+             ("ae9c6245-0966-41a5-9a5e-20885a96bea7",),
+             ("9a0c7ce5-2f40-4e78-979e-bf3527a59579",)))
+        conn_after_auth_migrations.commit()
