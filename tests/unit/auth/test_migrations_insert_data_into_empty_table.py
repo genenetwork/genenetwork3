@@ -10,7 +10,9 @@ from tests.unit.auth.conftest import (
     apply_single_migration, rollback_single_migration, migrations_up_to)
 
 test_params = (
-    ("20221113_01_7M0hv-enumerate-initial-privileges.py", "privileges", 19),)
+    ("20221113_01_7M0hv-enumerate-initial-privileges.py", "privileges", 19),
+    ("20221114_04_tLUzB-initialise-basic-roles.py", "roles", 1),
+    ("20221114_04_tLUzB-initialise-basic-roles.py", "role_privileges", 11))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
