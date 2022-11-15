@@ -2,7 +2,7 @@
 import uuid
 
 from gn3.auth import db
-from . import authorised_p
+from .checks import authorised_p
 
 @authorised_p(
     ("create-group",), success_message="Successfully created group.",
