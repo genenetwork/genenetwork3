@@ -9,6 +9,7 @@ from gn3.app import create_app
 
 @pytest.fixture(scope="session")
 def test_app():
+    """Fixture: setup the test app"""
     # Do some setup
     with TemporaryDirectory() as testdir:
         testdb = Path(testdir).joinpath(
@@ -21,7 +22,7 @@ def test_app():
         testdb.unlink(missing_ok=True)
 
 @pytest.fixture(scope="session")
-def client(test_app):
+def client(test_app): # pylint: disable=redefined-outer-name
     """Create a test client fixture for tests"""
     with test_app.app_context():
         yield test_app.test_client()

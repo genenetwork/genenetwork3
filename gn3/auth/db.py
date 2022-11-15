@@ -4,16 +4,24 @@ import contextlib
 
 @contextlib.contextmanager
 def connection(db_path: str):
-    connection = sqlite3.connect(db_path)
+    """Create the connection to the auth database."""
+    conn = sqlite3.connect(db_path)
     try:
-        yield connection
+        yield conn
+    except: # pylint: disable=bare-except
+        conn.rollback()
     finally:
-        connection.close()
+        conn.commit()
+        conn.close()
 
 @contextlib.contextmanager
-def cursor(connection):
-    cur = connection.cursor()
+def cursor(conn):
+    """Get a cursor from the given connection to the auth database."""
+    cur = conn.cursor()
     try:
         yield cur
+    except: # pylint: disable=bare-except
+        conn.rollback()
     finally:
+        conn.commit()
         cur.close()
