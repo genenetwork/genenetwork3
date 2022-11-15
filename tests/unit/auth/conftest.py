@@ -1,14 +1,10 @@
 """Fixtures for auth tests."""
-import sqlite3
-from pathlib import Path
-from typing import Union
-from contextlib import closing
-
 import pytest
 from yoyo.backends import DatabaseBackend
 from yoyo import get_backend, read_migrations
 from yoyo.migrations import Migration, MigrationList
 
+from gn3.auth import db
 from gn3.migrations import apply_migrations, rollback_migrations
 
 @pytest.fixture(scope="session")
@@ -41,7 +37,7 @@ def all_migrations(auth_migrations_dir): # pylint: disable=redefined-outer-name
 def conn_after_auth_migrations(backend, auth_testdb_path, all_migrations): # pylint: disable=redefined-outer-name
     """Run all migrations and return a connection to the database after"""
     apply_migrations(backend, all_migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn:
+    with db.connection(auth_testdb_path) as conn:
         yield conn
 
     rollback_migrations(backend, all_migrations)
@@ -67,14 +63,13 @@ def test_users(conn_after_auth_migrations):
     test_user_roles = (
         ("ecb52977-3004-469e-9428-2a1856725c7f",
          "a0e67630-d502-4b9f-b23f-6805d0f30e30"),)
-    with closing(conn_after_auth_migrations.cursor()) as cursor:
+    with db.cursor(conn_after_auth_migrations) as cursor:
         cursor.executemany(query, test_users)
         cursor.executemany(query_user_roles, test_user_roles)
-        conn_after_auth_migrations.commit()
 
     yield conn_after_auth_migrations
 
-    with closing(conn_after_auth_migrations.cursor()) as cursor:
+    with db.cursor(conn_after_auth_migrations) as cursor:
         cursor.executemany(
             "DELETE FROM user_roles WHERE user_id=?",
             (("ecb52977-3004-469e-9428-2a1856725c7f",),))
@@ -84,4 +79,3 @@ def test_users(conn_after_auth_migrations):
              ("21351b66-8aad-475b-84ac-53ce528451e3",),
              ("ae9c6245-0966-41a5-9a5e-20885a96bea7",),
              ("9a0c7ce5-2f40-4e78-979e-bf3527a59579",)))
-        conn_after_auth_migrations.commit()
