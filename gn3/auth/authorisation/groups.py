@@ -26,3 +26,16 @@ def create_group(conn: db.DbConnection, group_name: str) -> Group:
         ## Maybe assign `group-leader` role to user creating the group
 
     return group
+
+@authorised_p(("create-role",), error_message="Could not create the group role")
+def create_group_role(
+        conn: db.DbConnection, group: Group, role_name: str,
+        privileges: Iterable[Privilege]) -> Role:
+    """Create a role attached to a group."""
+    with db.cursor(conn) as cursor:
+        role = create_role(cursor, role_name, privileges)
+        cursor.execute(
+            "INSERT INTO group_roles(group_id, role_id) VALUES(?, ?)",
+            (str(group.group_id), role.role_id))
+
+    return role
