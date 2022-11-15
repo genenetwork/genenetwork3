@@ -28,7 +28,7 @@ group_leader_id = lambda : UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
     ("e614247d-84d2-491d-a048-f80b578216cb", create_group_failure)))
 def test_create_group(test_app, auth_testdb_path, mocker, test_users, user_id, expected):
     mocker.patch("gn3.auth.authorisation.groups.uuid.uuid4", group_leader_id)
-    with test_app.test_request_context() as flask_context:
+    with test_app.app_context() as flask_context:
         flask_context.g.user_id = UUID(user_id)
         with db.connection(auth_testdb_path) as conn:
             assert create_group(conn, "a_test_group") == expected
