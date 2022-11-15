@@ -1,7 +1,6 @@
 """Test functions dealing with group management."""
 from uuid import UUID
 
-import flask
 import pytest
 
 from gn3.auth import db
@@ -26,7 +25,14 @@ group_leader_id = lambda : UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
     ("ae9c6245-0966-41a5-9a5e-20885a96bea7", create_group_failure),
     ("9a0c7ce5-2f40-4e78-979e-bf3527a59579", create_group_failure),
     ("e614247d-84d2-491d-a048-f80b578216cb", create_group_failure)))
-def test_create_group(test_app, auth_testdb_path, mocker, test_users, user_id, expected):
+def test_create_group(# pylint: disable=[too-many-arguments]
+        test_app, auth_testdb_path, mocker, test_users, user_id, expected):# pylint: disable=[unused-argument]
+    """
+    GIVEN: an authenticated user
+    WHEN: the user attempts to create a group
+    THEN: verify they are only able to create the group if they have the
+          appropriate privileges
+    """
     mocker.patch("gn3.auth.authorisation.groups.uuid.uuid4", group_leader_id)
     with test_app.app_context() as flask_context:
         flask_context.g.user_id = UUID(user_id)

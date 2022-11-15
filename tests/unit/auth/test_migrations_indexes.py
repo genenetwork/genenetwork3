@@ -1,15 +1,12 @@
 """Test that indexes are created and removed."""
-
-from contextlib import closing
-
 import pytest
-import sqlite3
 
+from gn3.auth import db
 from gn3.migrations import get_migration, apply_migrations, rollback_migrations
 from tests.unit.auth.conftest import (
     apply_single_migration, rollback_single_migration, migrations_up_to)
 
-query = """
+QUERY = """
 SELECT name FROM sqlite_master WHERE type='index' AND tbl_name = ?
 AND name= ?
 """
@@ -28,7 +25,7 @@ migrations_tables_and_indexes = (
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
     "migration_file,the_table,the_index", migrations_tables_and_indexes)
-def test_index_created(
+def test_index_created(# pylint: disable=[too-many-arguments]
         auth_testdb_path, auth_migrations_dir, backend, migration_file,
         the_table, the_index):
     """
@@ -41,11 +38,11 @@ def test_index_created(
     the_migration = get_migration(migration_path)
     query_params = (the_table, the_index)
     apply_migrations(backend, older_migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
-        cursor.execute(query, query_params)
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+        cursor.execute(QUERY, query_params)
         result_before_migration = cursor.fetchall()
         apply_single_migration(backend, the_migration)
-        cursor.execute(query, query_params)
+        cursor.execute(QUERY, query_params)
         result_after_migration = cursor.fetchall()
 
     rollback_migrations(backend, older_migrations + [the_migration])
@@ -59,7 +56,7 @@ def test_index_created(
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
     "migration_file,the_table,the_index", migrations_tables_and_indexes)
-def test_index_dropped(
+def test_index_dropped(# pylint: disable=[too-many-arguments]
         auth_testdb_path, auth_migrations_dir, backend, migration_file,
         the_table, the_index):
     """
@@ -72,14 +69,14 @@ def test_index_dropped(
     the_migration = get_migration(migration_path)
     query_params = (the_table, the_index)
     apply_migrations(backend, older_migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
-        cursor.execute(query, query_params)
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+        cursor.execute(QUERY, query_params)
         result_before_migration = cursor.fetchall()
         apply_single_migration(backend, the_migration)
-        cursor.execute(query, query_params)
+        cursor.execute(QUERY, query_params)
         result_after_migration = cursor.fetchall()
         rollback_single_migration(backend, the_migration)
-        cursor.execute(query, query_params)
+        cursor.execute(QUERY, query_params)
         result_after_rollback = cursor.fetchall()
 
     rollback_migrations(backend, older_migrations)

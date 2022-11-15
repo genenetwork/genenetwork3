@@ -1,30 +1,36 @@
 """Test the credentials checks"""
-import sqlite3
-
 import pytest
-from contextlib import closing
 from yoyo.migrations import MigrationList
 from hypothesis import given, settings, strategies, HealthCheck
 
-from tests.unit.auth.conftest import migrations_up_to
+from gn3.auth import db
 from gn3.auth.authentication import credentials_in_database
 from gn3.migrations import get_migration, apply_migrations, rollback_migrations
 
+from tests.unit.auth.conftest import migrations_up_to
+
 @pytest.fixture
 def with_credentials_table(backend, auth_testdb_path):
+    """
+    Fixture: Yield a connection object with the 'user_credentials' table
+    created.
+    """
     migrations_dir = "migrations/auth"
     migration = f"{migrations_dir}/20221103_02_sGrIs-create-user-credentials-table.py"
     migrations = (migrations_up_to(migration, migrations_dir) +
                   MigrationList([get_migration(migration)]))
     apply_migrations(backend, migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn:
+    with db.connection(auth_testdb_path) as conn:
         yield conn
 
     rollback_migrations(backend, migrations)
 
 @pytest.fixture
-def with_credentials(with_credentials_table):
-    with closing(with_credentials_table.cursor()) as cursor:
+def with_credentials(with_credentials_table):# pylint: disable=redefined-outer-name
+    """
+    Fixture: Initialise the database with some user credentials.
+    """
+    with db.cursor(with_credentials_table) as cursor:
         cursor.executemany(
             "INSERT INTO users VALUES (:user_id, :email, :name)",
             ({"user_id": "82552014-21ee-4321-b96a-b8788b97b862",
@@ -56,14 +62,13 @@ def with_credentials(with_credentials_table):
 @pytest.mark.unit_test
 @given(strategies.emails(), strategies.text())
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-def test_credentials_not_in_database(with_credentials, email, password):
+def test_credentials_not_in_database(with_credentials, email, password):# pylint: disable=redefined-outer-name
     """
     GIVEN: credentials that do not exist in the database
     WHEN: the `credentials_in_database` function is run against the credentials
     THEN: check that the function returns false in all cases.
     """
-    with closing(with_credentials.cursor()) as cursor:
-        results = credentials_in_database(cursor, email, password)
+    with db.cursor(with_credentials) as cursor:
         assert credentials_in_database(cursor, email, password) is False
 
 @pytest.mark.unit_test
@@ -71,14 +76,13 @@ def test_credentials_not_in_database(with_credentials, email, password):
     "email,password",
     (("first@test.user", "wrongpassword"),
      ("first@tes.user", "testuser01")))
-def test_partially_wrong_credentials(with_credentials, email, password):
+def test_partially_wrong_credentials(with_credentials, email, password):# pylint: disable=redefined-outer-name
     """
     GIVEN: credentials that exist in the database
     WHEN: the credentials are checked with partially wrong values
     THEN: the check fails since the credentials are not correct
     """
-    with closing(with_credentials.cursor()) as cursor:
-        results = credentials_in_database(cursor, email, password)
+    with db.cursor(with_credentials) as cursor:
         assert credentials_in_database(cursor, email, password) is False
 
 @pytest.mark.unit_test
@@ -86,12 +90,11 @@ def test_partially_wrong_credentials(with_credentials, email, password):
     "email,password",
     (("first@test.user", "testuser01"),
      ("second@test.user", "testuser02")))
-def test_partially_correct_credentials(with_credentials, email, password):
+def test_partially_correct_credentials(with_credentials, email, password):# pylint: disable=redefined-outer-name
     """
     GIVEN: credentials that exist in the database
     WHEN: the credentials are checked with correct values
     THEN: the check passes
     """
-    with closing(with_credentials.cursor()) as cursor:
-        results = credentials_in_database(cursor, email, password)
+    with db.cursor(with_credentials) as cursor:
         assert credentials_in_database(cursor, email, password) is True

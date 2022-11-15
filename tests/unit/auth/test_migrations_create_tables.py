@@ -1,9 +1,7 @@
 """Test migrations that create tables"""
-from contextlib import closing
-
 import pytest
-import sqlite3
 
+from gn3.auth import db
 from gn3.migrations import get_migration, apply_migrations, rollback_migrations
 from tests.unit.auth.conftest import (
     apply_single_migration, rollback_single_migration, migrations_up_to)
@@ -30,8 +28,8 @@ migrations_and_tables = (
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
 def test_create_table(
-        auth_testdb_path, auth_migrations_dir, backend, all_migrations,
-        migration_file, the_table):
+        auth_testdb_path, auth_migrations_dir, backend, migration_file,
+        the_table):
     """
     GIVEN: A database migration script to create table, `the_table`
     WHEN: The migration is applied
@@ -40,7 +38,7 @@ def test_create_table(
     migration_path=f"{auth_migrations_dir}/{migration_file}"
     older_migrations = migrations_up_to(migration_path, auth_migrations_dir)
     apply_migrations(backend, older_migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         result_before_migration = cursor.fetchall()
         apply_single_migration(backend, get_migration(migration_path))
@@ -64,7 +62,7 @@ def test_rollback_create_table(
     migration_path=f"{auth_migrations_dir}/{migration_file}"
     older_migrations = migrations_up_to(migration_path, auth_migrations_dir)
     apply_migrations(backend, older_migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
         apply_single_migration(backend, get_migration(migration_path))
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         result_after_migration = cursor.fetchall()

@@ -1,9 +1,8 @@
 """Test data insertion when migrations are run."""
-
+import sqlite3
 from contextlib import closing
 
 import pytest
-import sqlite3
 
 from gn3.migrations import get_migration, apply_migrations, rollback_migrations
 from tests.unit.auth.conftest import (
@@ -17,7 +16,7 @@ test_params = (
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
     "migration_file,table,row_count", test_params)
-def test_apply_insert(
+def test_apply_insert(# pylint: disable=[too-many-arguments]
         auth_testdb_path, auth_migrations_dir, backend, migration_file,
         table, row_count):
     """
@@ -46,7 +45,7 @@ def test_apply_insert(
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
     "migration_file,table,row_count", test_params)
-def test_rollback_insert(
+def test_rollback_insert(# pylint: disable=[too-many-arguments]
         auth_testdb_path, auth_migrations_dir, backend, migration_file,
         table, row_count):
     """
@@ -75,4 +74,4 @@ def test_rollback_insert(
     assert result_after_migration[0][0] == row_count, (
         f"Expected {row_count} rows")
     assert result_after_rollback[0][0] == 0, (
-        f"Expected empty table after rollback")
+        "Expected empty table after rollback")

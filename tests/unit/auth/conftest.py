@@ -17,20 +17,22 @@ def auth_migrations_dir(test_app_config): # pylint: disable=redefined-outer-name
     """Get the test application's auth database file"""
     return test_app_config["AUTH_MIGRATIONS"]
 
-def apply_single_migration(backend: DatabaseBackend, migration: Migration):
+def apply_single_migration(backend: DatabaseBackend, migration: Migration):# pylint: disable=[redefined-outer-name]
     """Utility to apply a single migration"""
     apply_migrations(backend, MigrationList([migration]))
 
-def rollback_single_migration(backend: DatabaseBackend, migration: Migration):
+def rollback_single_migration(backend: DatabaseBackend, migration: Migration):# pylint: disable=[redefined-outer-name]
     """Utility to rollback a single migration"""
     rollback_migrations(backend, MigrationList([migration]))
 
 @pytest.fixture(scope="session")
-def backend(auth_testdb_path): # pylint: disable=redefined-outer-name
+def backend(auth_testdb_path):# pylint: disable=redefined-outer-name
+    """Fixture: retrieve yoyo backend for auth database"""
     return get_backend(f"sqlite:///{auth_testdb_path}")
 
 @pytest.fixture(scope="session")
 def all_migrations(auth_migrations_dir): # pylint: disable=redefined-outer-name
+    """Retrieve all the migrations"""
     return read_migrations(auth_migrations_dir)
 
 @pytest.fixture(scope="function")
@@ -43,15 +45,17 @@ def conn_after_auth_migrations(backend, auth_testdb_path, all_migrations): # pyl
     rollback_migrations(backend, all_migrations)
 
 def migrations_up_to(migration, migrations_dir):
+    """Run all the migration before `migration`."""
     migrations = read_migrations(migrations_dir)
     index = [mig.path for mig in migrations].index(migration)
     return MigrationList(migrations[0:index])
 
 @pytest.fixture(scope="function")
-def test_users(conn_after_auth_migrations):
+def test_users(conn_after_auth_migrations):# pylint: disable=[redefined-outer-name]
+    """Fixture: setup test users."""
     query = "INSERT INTO users(user_id, email, name) VALUES (?, ?, ?)"
     query_user_roles = "INSERT INTO user_roles(user_id, role_id) VALUES (?, ?)"
-    test_users = (
+    the_users = (
         ("ecb52977-3004-469e-9428-2a1856725c7f", "group@lead.er",
          "Group Leader"),
         ("21351b66-8aad-475b-84ac-53ce528451e3", "group@mem.ber01",
@@ -64,7 +68,7 @@ def test_users(conn_after_auth_migrations):
         ("ecb52977-3004-469e-9428-2a1856725c7f",
          "a0e67630-d502-4b9f-b23f-6805d0f30e30"),)
     with db.cursor(conn_after_auth_migrations) as cursor:
-        cursor.executemany(query, test_users)
+        cursor.executemany(query, the_users)
         cursor.executemany(query_user_roles, test_user_roles)
 
     yield conn_after_auth_migrations

@@ -1,9 +1,8 @@
 """Test migrations that create tables"""
-from contextlib import closing
 
 import pytest
-import sqlite3
 
+from gn3.auth import db
 from gn3.migrations import get_migration, apply_migrations, rollback_migrations
 from tests.unit.auth.conftest import (
     apply_single_migration, rollback_single_migration, migrations_up_to)
@@ -15,7 +14,7 @@ test_params = (
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", test_params)
 def test_drop_table(
-        auth_testdb_path, auth_migrations_dir, backend, all_migrations,
+        auth_testdb_path, auth_migrations_dir, backend,
         migration_file, the_table):
     """
     GIVEN: A database migration script to create table, `the_table`
@@ -26,7 +25,7 @@ def test_drop_table(
     older_migrations = migrations_up_to(migration_path, auth_migrations_dir)
     the_migration = get_migration(migration_path)
     apply_migrations(backend, older_migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         result_before_migration = cursor.fetchall()
         apply_single_migration(backend, the_migration)
@@ -51,7 +50,7 @@ def test_rollback_drop_table(
     older_migrations = migrations_up_to(migration_path, auth_migrations_dir)
     the_migration = get_migration(migration_path)
     apply_migrations(backend, older_migrations)
-    with closing(sqlite3.connect(auth_testdb_path)) as conn, closing(conn.cursor()) as cursor:
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
         apply_single_migration(backend, the_migration)
         cursor.execute("SELECT name FROM sqlite_schema WHERE type='table'")
         result_after_migration = cursor.fetchall()
