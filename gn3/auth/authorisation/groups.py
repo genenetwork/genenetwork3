@@ -7,15 +7,12 @@ from .privileges import Privilege
 from .roles import Role, create_role
 from .checks import authorised_p
 
-@authorised_p(
-    ("create-group",), success_message="Successfully created group.",
-    error_message="Failed to create group.")
-def create_group(conn, group_name):
 class Group(NamedTuple):
     """Class representing a group."""
     group_id: UUID
     group_name: str
 
+@authorised_p(("create-group",), error_message="Failed to create group.")
 def create_group(conn: db.DbConnection, group_name: str) -> Group:
     """Create a group"""
     group = Group(uuid4(), group_name)

@@ -1,6 +1,6 @@
 """Functions to check for authorisation."""
 from functools import wraps
-from typing import Union, Callable
+from typing import Callable
 
 from flask import g, current_app as app
 
@@ -9,8 +9,6 @@ from . import privileges as auth_privs
 
 def authorised_p(
         privileges: tuple[str],
-        success_message: Union[str, bool] = (
-            "Successfully authorised requested action"),
         error_message: str = (
             "You lack authorisation to perform requested action")):
     """Authorisation decorator."""
@@ -20,15 +18,15 @@ def authorised_p(
         def __authoriser__(*args, **kwargs):
             if hasattr(g, "user_id") and g.user_id:
                 with db.connection(app.config["AUTH_DB"]) as conn:
-                    user_privileges = auth_privs.user_privileges(conn, g.user_id)
+                    user_privileges = tuple(
+                        priv.privilege_name for priv in
+                        auth_privs.user_privileges(conn, g.user_id))
 
                 not_assigned = [
                     priv for priv in privileges if priv not in user_privileges]
                 if len(not_assigned) == 0:
-                    return {
-                        "status": "success",
-                        "message": success_message,
-                        "results": func(*args, **kwargs)}
+                    return func(*args, **kwargs)
+
             return {
                 "status": "error",
                 "message": f"Unauthorised: {error_message}"
