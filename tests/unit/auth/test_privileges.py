@@ -39,17 +39,12 @@ PRIVILEGES = sorted(
         ("ae9c6245-0966-41a5-9a5e-20885a96bea7", []),
         ("9a0c7ce5-2f40-4e78-979e-bf3527a59579", []),
         ("e614247d-84d2-491d-a048-f80b578216cb", [])))
-def test_user_privileges(auth_testdb_path, test_users, user_id, expected):
+def test_user_privileges(auth_testdb_path, test_users, user_id, expected):# pylint: disable=[unused-argument]
     """
     GIVEN: A user_id
     WHEN: An attempt is made to fetch the user's privileges
     THEN: Ensure only
     """
     with db.connection(auth_testdb_path) as conn:
-        privs = sorted(user_privileges(conn, UUID(user_id)), key=SORT_KEY)
-        print(f"PRIVILEGES: {privs}")
-        # assert False, "FAILURE!!!"
-        # assert privs == expected
-
-    print(f"EXPECTED: {expected}")
-    assert privs == expected
+        assert sorted(
+            user_privileges(conn, UUID(user_id)), key=SORT_KEY) == expected
