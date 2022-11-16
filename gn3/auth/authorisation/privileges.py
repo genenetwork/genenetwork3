@@ -21,4 +21,4 @@ def user_privileges(conn: db.DbConnection, user_id: UUID) -> Iterable[Privilege]
             (str(user_id),))
         results = cursor.fetchall()
 
-    return (Privilege(row[0], row[1]) for row in results)
+    return (Privilege(UUID(row[0]), row[1]) for row in results)

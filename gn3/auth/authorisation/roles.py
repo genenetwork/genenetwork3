@@ -33,9 +33,10 @@ def create_role(
 
     cursor.execute(
         "INSERT INTO roles(role_id, role_name) VALUES (?, ?)",
-        (role.role_id, role.role_name))
-    cursor.execute(
+        (str(role.role_id), role.role_name))
+    cursor.executemany(
         "INSERT INTO role_privileges(role_id, privilege_id) VALUES (?, ?)",
-        ((role.role_id, priv.privilege_id) for priv in privileges))
+        tuple((str(role.role_id), str(priv.privilege_id))
+              for priv in privileges))
 
     return role

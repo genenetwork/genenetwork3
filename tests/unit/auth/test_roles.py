@@ -15,8 +15,10 @@ create_role_failure = {
 uuid_fn = lambda : uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
 
 PRIVILEGES = (
-    Privilege(uuid.uuid4(), "view-resource"),
-    Privilege(uuid.uuid4(), "edit-resource"))
+    Privilege(uuid.UUID("7f261757-3211-4f28-a43f-a09b800b164d"),
+              "view-resource"),
+    Privilege(uuid.UUID("2f980855-959b-4339-b80e-25d1ec286e21"),
+              "edit-resource"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
@@ -28,7 +30,7 @@ PRIVILEGES = (
     ("ae9c6245-0966-41a5-9a5e-20885a96bea7", create_role_failure),
     ("9a0c7ce5-2f40-4e78-979e-bf3527a59579", create_role_failure),
     ("e614247d-84d2-491d-a048-f80b578216cb", create_role_failure)))
-def test_create_group(# pylint: disable=[too-many-arguments]
+def test_create_role(# pylint: disable=[too-many-arguments]
         test_app, auth_testdb_path, mocker, test_users, user_id, expected):# pylint: disable=[unused-argument]
     """
     GIVEN: an authenticated user
@@ -36,8 +38,9 @@ def test_create_group(# pylint: disable=[too-many-arguments]
     THEN: verify they are only able to create the role if they have the
           appropriate privileges
     """
-    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
     with test_app.app_context() as flask_context:
         flask_context.g.user_id = uuid.UUID(user_id)
-        with db.connection(auth_testdb_path) as conn:
-            assert create_role(conn, "a_test_role") == expected
+        with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+            the_role = create_role(cursor, "a_test_role", PRIVILEGES)
+            assert the_role == expected

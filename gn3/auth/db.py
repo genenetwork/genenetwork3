@@ -3,6 +3,10 @@ import sqlite3
 import contextlib
 from typing import Any, Iterator, Protocol
 
+import traceback
+
+from flask import current_app as app
+
 class DbConnection(Protocol):
     """Type annotation for a generic database connection object."""
     def cursor(self) -> Any:
@@ -48,8 +52,10 @@ def connection(db_path: str) -> Iterator[DbConnection]:
     conn = sqlite3.connect(db_path)
     try:
         yield conn
-    except: # pylint: disable=bare-except
+    except sqlite3.Error as exc:
         conn.rollback()
+        app.logger.debug(traceback.format_exc())
+        raise exc
     finally:
         conn.commit()
         conn.close()
@@ -60,8 +66,10 @@ def cursor(conn: DbConnection) -> Iterator[DbCursor]:
     cur = conn.cursor()
     try:
         yield cur
-    except: # pylint: disable=bare-except
+    except sqlite3.Error as exc:
         conn.rollback()
+        app.logger.debug(traceback.format_exc())
+        raise exc
     finally:
         conn.commit()
         cur.close()
