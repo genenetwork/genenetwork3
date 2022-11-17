@@ -47,11 +47,11 @@ def test_index_created(# pylint: disable=[too-many-arguments]
 
     rollback_migrations(backend, older_migrations + [the_migration])
     assert the_index not in [row[0] for row in result_before_migration], (
-        f"Index '{the_index}' was not found for table '{the_table}'.")
+        f"Index '{the_index}' was found for table '{the_table}' before migration.")
     assert (
         len(result_after_migration) == 1
         and result_after_migration[0][0] == the_index), (
-        f"Index '{the_index}' was not found for table '{the_table}'.")
+        f"Index '{the_index}' was not found for table '{the_table}' after migration.")
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
@@ -86,7 +86,7 @@ def test_index_dropped(# pylint: disable=[too-many-arguments]
     assert (
         len(result_after_migration) == 1
         and result_after_migration[0][0] == the_index), (
-        f"Index '{the_index}' was not found for table '{the_table}'.")
+        f"Index '{the_index}' was not found for table '{the_table}' after migration.")
     assert the_index not in [row[0] for row in result_after_rollback], (
         f"Index '{the_index}' was found for table '{the_table}' after "
         "rollback")
