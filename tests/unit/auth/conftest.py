@@ -101,22 +101,22 @@ def test_users(conn_after_auth_migrations):# pylint: disable=[redefined-outer-na
              ("9a0c7ce5-2f40-4e78-979e-bf3527a59579",)))
 
 @pytest.fixture(scope="function")
-def test_users_in_group(test_group, test_users):#pytest: disable=[redefined-outer-name]
+def test_users_in_group(test_group, test_users):# pylint: disable=[redefined-outer-name]
     """Link the users to the groups."""
     conn = test_group[0]
     group = test_group[1]
     users = test_users[1]
-    query_params = (
+    query_params = tuple(
         (str(group.group_id), str(user.user_id)) for user in users
         if user.email not in ("unaff@iliated.user",))
     with db.cursor(conn) as cursor:
-        cursor.execute(
+        cursor.executemany(
             "INSERT INTO group_users(group_id, user_id) VALUES (?, ?)",
             query_params)
 
     yield (conn, group, users)
 
     with db.cursor(conn) as cursor:
-        cursor.execute(
+        cursor.executemany(
             "DELETE FROM group_users WHERE group_id=? AND user_id=?",
             query_params)

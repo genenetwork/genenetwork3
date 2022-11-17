@@ -12,6 +12,11 @@ class Group(NamedTuple):
     group_id: UUID
     group_name: str
 
+class GroupRole(NamedTuple):
+    """Class representing a role tied/belonging to a group."""
+    group_role_id: UUID
+    role: Role
+
 @authorised_p(("create-group",), error_message="Failed to create group.")
 def create_group(conn: db.DbConnection, group_name: str) -> Group:
     """Create a group"""
@@ -30,12 +35,14 @@ def create_group(conn: db.DbConnection, group_name: str) -> Group:
 @authorised_p(("create-role",), error_message="Could not create the group role")
 def create_group_role(
         conn: db.DbConnection, group: Group, role_name: str,
-        privileges: Iterable[Privilege]) -> Role:
+        privileges: Iterable[Privilege]) -> GroupRole:
     """Create a role attached to a group."""
     with db.cursor(conn) as cursor:
+        group_role_id = uuid4()
         role = create_role(cursor, role_name, privileges)
         cursor.execute(
-            "INSERT INTO group_roles(group_id, role_id) VALUES(?, ?)",
-            (str(group.group_id), role.role_id))
+            ("INSERT INTO group_roles(group_role_id, group_id, role_id) "
+             "VALUES(?, ?, ?)"),
+            (str(group_role_id), str(group.group_id), str(role.role_id)))
 
-    return role
+    return GroupRole(group_role_id, role)
