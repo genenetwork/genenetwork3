@@ -16,7 +16,9 @@ TEST_PARAMS = (
      "privileges", "privilege_category TEXT", True),
     (("20221110_08_23psB-add-privilege-category-and-privilege-description-"
       "columns-to-privileges-table.py"),
-     "privileges", "privilege_description TEXT", True))
+     "privileges", "privilege_description TEXT", True),
+    ("20221117_01_RDlfx-modify-group-roles-add-group-role-id.py", "group_roles",
+     "group_role_id", True))
 
 def found(haystack: str, needle: str) -> bool:
     """Check whether `needle` is found in `haystack`"""
@@ -36,6 +38,13 @@ def applied_successfully(adding: bool, result_str: str, column: str) -> bool:
     if adding:
         return col_was_found
     return not col_was_found
+
+def rolled_back_successfully(adding: bool, result_str: str, column: str) -> bool:
+    """Check that the migration ran successfully"""
+    col_was_found = found(result_str, column)
+    if adding:
+        return not col_was_found
+    return col_was_found
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
@@ -64,7 +73,9 @@ def test_apply_add_remove_column(# pylint: disable=[too-many-arguments]
 
     assert pristine_before_migration(
         adding, results_before_migration[0], the_column), (
-            "Database inconsistent before applying migration.")
+            f"Column `{the_column}` exists before migration and should not"
+            if adding else
+            f"Column `{the_column}` doesn't exist before migration and it should")
     assert applied_successfully(
         adding, results_after_migration[0], the_column), "Migration failed"
 
@@ -87,15 +98,17 @@ def test_rollback_add_remove_column(# pylint: disable=[too-many-arguments]
     apply_single_migration(backend, the_migration)
     with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
         cursor.execute(QUERY, (the_table,))
-        results_before_migration = cursor.fetchone()
+        results_before_rollback = cursor.fetchone()
         rollback_single_migration(backend, the_migration)
         cursor.execute(QUERY, (the_table,))
-        results_after_migration = cursor.fetchone()
+        results_after_rollback = cursor.fetchone()
 
     rollback_migrations(backend, older_migrations + [the_migration])
 
     assert pristine_before_migration(
-        not adding, results_before_migration[0], the_column), (
-            "Database inconsistent before applying migration.")
-    assert applied_successfully(
-        not adding, results_after_migration[0], the_column), "Migration failed"
+        not adding, results_before_rollback[0], the_column), (
+            f"Column `{the_column}` doesn't exist before rollback and it should"
+            if adding else
+            f"Column `{the_column}` exists before rollback and should not")
+    assert rolled_back_successfully(
+        adding, results_after_rollback[0], the_column), "Rollback failed"
