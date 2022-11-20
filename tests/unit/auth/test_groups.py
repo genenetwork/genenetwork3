@@ -4,10 +4,11 @@ from uuid import UUID
 import pytest
 
 from gn3.auth import db
+from gn3.auth.authentication.users import User
 from gn3.auth.authorisation.roles import Role
 from gn3.auth.authorisation.privileges import Privilege
 from gn3.auth.authorisation.groups import (
-    Group, GroupRole, create_group, create_group_role)
+    Group, GroupRole, create_group, MembershipError, create_group_role)
 
 create_group_failure = {
     "status": "error",
@@ -44,7 +45,8 @@ def test_create_group(# pylint: disable=[too-many-arguments]
     with test_app.app_context() as flask_context:
         flask_context.g.user_id = UUID(user_id)
         with db.connection(auth_testdb_path) as conn:
-            assert create_group(conn, "a_test_group") == expected
+            assert create_group(conn, "a_test_group", User(
+                UUID(user_id), "some@email.address", "a_test_user")) == expected
 
 create_role_failure = {
     "status": "error",
@@ -76,3 +78,25 @@ def test_create_group_role(mocker, test_users_in_group, test_app, user_id, expec
         flask_context.g.user_id = UUID(user_id)
         assert create_group_role(
             conn, GROUP, "ResourceEditor", PRIVILEGES) == expected
+
+@pytest.mark.unit_test
+def test_create_multiple_groups(mocker, test_app, test_users):
+    """
+    GIVEN: An authenticated user with appropriate authorisation
+    WHEN: The user attempts to create a new group, while being a member of an
+      existing group
+    THEN: The system should prevent that, and respond with an appropriate error
+      message
+    """
+    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
+    user_id = UUID("ecb52977-3004-469e-9428-2a1856725c7f")
+    conn, _test_users = test_users
+    with test_app.app_context() as flask_context:
+        flask_context.g.user_id = user_id
+        user = User(user_id, "some@email.address", "a_test_user")
+        # First time, successfully creates the group
+        assert create_group(conn, "a_test_group", user) == Group(
+            UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_group")
+        # subsequent attempts should fail
+        with pytest.raises(MembershipError):
+            create_group(conn, "another_test_group", user)
