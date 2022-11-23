@@ -69,7 +69,4 @@ def run_r_qtl(geno_filestr, pheno_filestr):
            f"{geno_filestr} {pheno_filestr}")
     return jsonify(run_cmd(cmd)), 201
 
-@general.route("/dataset/<accession_id>")
-def dataset_metadata(accession_id):
-    """Return info as JSON for dataset with ACCESSION_ID."""
-    return jsonify(rdf.get_dataset_metadata(accession_id).data)
+
