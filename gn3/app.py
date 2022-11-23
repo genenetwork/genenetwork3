@@ -18,6 +18,8 @@ from gn3.api.ctl import ctl
 from gn3.api.async_commands import async_commands
 from gn3.api.menu import menu
 from gn3.api.search import search
+from gn3.api.metadata import metadata
+
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
     """Create a new flask object"""
@@ -53,4 +55,5 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(async_commands, url_prefix="/api/async_commands")
     app.register_blueprint(menu, url_prefix="/api/menu")
     app.register_blueprint(search, url_prefix="/api/search")
+    app.register_blueprint(metadata, url_prefix="/api/metadata")
     return app
