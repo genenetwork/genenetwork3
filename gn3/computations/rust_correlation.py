@@ -51,7 +51,7 @@ def generate_json_file(
 
 def run_correlation(
         dataset, trait_vals: str, method: str, delimiter: str,
-        corr_type: str = "sample", top_n: int = 500):
+        corr_type: str = "sample"):
     """entry function to call rust correlation"""
 
     # pylint: disable=too-many-arguments
@@ -69,11 +69,10 @@ def run_correlation(
             else CORRELATION_COMMAND)
         raise Exception(command_list, actual_command, cpe.stdout) from cpe
 
-    return parse_correlation_output(output_file, corr_type, top_n)
+    return parse_correlation_output(output_file, corr_type)
 
 
-def parse_correlation_output(result_file: str,
-                             corr_type: str, top_n: int = 500) -> dict:
+def parse_correlation_output(result_file: str, corr_type: str) -> dict:
     """parse file output """
     # current types are sample and tissue
     def __parse_line__(line):
@@ -97,9 +96,7 @@ def parse_correlation_output(result_file: str,
         return tuple(trait_name, {})
 
     with open(result_file, "r", encoding="utf-8") as file_reader:
-        return dict([
-            __parse_line__(line)
-            for idx, line in enumerate(file_reader) if idx < top_n])
+        return dict([__parse_line__(line) for line in file_reader])
 
     return {}
 
