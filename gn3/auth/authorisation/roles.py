@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 from typing import Iterable, NamedTuple
 
 from gn3.auth import db
+from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
 from .privileges import Privilege
@@ -13,6 +14,7 @@ class Role(NamedTuple):
     role_name: str
     privileges: Iterable[Privilege]
 
+@authenticated_p
 @authorised_p(("create-role",), error_message="Could not create role")
 def create_role(
         cursor: db.DbCursor, role_name: str,

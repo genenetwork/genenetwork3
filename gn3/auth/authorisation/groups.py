@@ -12,6 +12,7 @@ from gn3.auth.authentication.checks import authenticated_p
 from .checks import authorised_p
 from .privileges import Privilege
 from .roles import Role, create_role
+from .exceptions import AuthorisationError
 
 class Group(NamedTuple):
     """Class representing a group."""
@@ -23,7 +24,7 @@ class GroupRole(NamedTuple):
     group_role_id: UUID
     role: Role
 
-class MembershipError(Exception):
+class MembershipError(AuthorisationError):
     """Raised when there is an error with a user's membership to a group."""
 
     def __init__(self, user: User, groups: Sequence[Group]):
@@ -46,6 +47,7 @@ def user_membership(conn: db.DbConnection, user: User) -> Sequence[Group]:
 
     return groups
 
+@authenticated_p
 @authorised_p(("create-group",), error_message="Failed to create group.")
 def create_group(conn: db.DbConnection, group_name: str,
                  group_leader: User) -> Group:
@@ -65,6 +67,7 @@ def create_group(conn: db.DbConnection, group_name: str,
 
     return group
 
+@authenticated_p
 @authorised_p(("create-role",), error_message="Could not create the group role")
 def create_group_role(
         conn: db.DbConnection, group: Group, role_name: str,

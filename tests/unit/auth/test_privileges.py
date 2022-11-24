@@ -6,6 +6,8 @@ import pytest
 from gn3.auth import db
 from gn3.auth.authorisation.privileges import Privilege, user_privileges
 
+from tests.unit.auth import conftest
+
 SORT_KEY = lambda x: x.privilege_name
 
 PRIVILEGES = sorted(
@@ -33,18 +35,14 @@ PRIVILEGES = sorted(
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
-    "user_id,expected", (
-        ("ecb52977-3004-469e-9428-2a1856725c7f", PRIVILEGES),
-        ("21351b66-8aad-475b-84ac-53ce528451e3", []),
-        ("ae9c6245-0966-41a5-9a5e-20885a96bea7", []),
-        ("9a0c7ce5-2f40-4e78-979e-bf3527a59579", []),
-        ("e614247d-84d2-491d-a048-f80b578216cb", [])))
-def test_user_privileges(auth_testdb_path, test_users, user_id, expected):# pylint: disable=[unused-argument]
+    "user,expected", tuple(zip(
+        conftest.TEST_USERS, (PRIVILEGES, [], [], [], []))))
+def test_user_privileges(auth_testdb_path, test_users, user, expected):# pylint: disable=[unused-argument]
     """
-    GIVEN: A user_id
+    GIVEN: A user
     WHEN: An attempt is made to fetch the user's privileges
     THEN: Ensure only
     """
     with db.connection(auth_testdb_path) as conn:
         assert sorted(
-            user_privileges(conn, UUID(user_id)), key=SORT_KEY) == expected
+            user_privileges(conn, user), key=SORT_KEY) == expected
