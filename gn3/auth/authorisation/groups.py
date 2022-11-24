@@ -2,12 +2,16 @@
 from uuid import UUID, uuid4
 from typing import Sequence, Iterable, NamedTuple
 
+from flask import g
+from pymonad.maybe import Just, Maybe, Nothing
+
 from gn3.auth import db
 from gn3.auth.authentication.users import User
+from gn3.auth.authentication.checks import authenticated_p
 
+from .checks import authorised_p
 from .privileges import Privilege
 from .roles import Role, create_role
-from .checks import authorised_p
 
 class Group(NamedTuple):
     """Class representing a group."""
@@ -75,3 +79,27 @@ def create_group_role(
             (str(group_role_id), str(group.group_id), str(role.role_id)))
 
     return GroupRole(group_role_id, role)
+
+@authenticated_p
+def authenticated_user_group(conn) -> Maybe:
+    """
+    Returns the currently authenticated user's group.
+
+    Look into returning a Maybe object.
+    """
+    user = g.user
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            ("SELECT groups.group_id, groups.group_name FROM group_users "
+             "INNER JOIN groups ON group_users.group_id=groups.group_id "
+             "WHERE group_users.user_id = ?"),
+            (str(user.user_id),))
+        groups = tuple(Group(UUID(row[0]), row[1]) for row in cursor.fetchall())
+
+    if len(groups) > 1:
+        raise MembershipError(user, groups)
+
+    if len(groups) == 1:
+        return Just(groups[0])
+
+    return Nothing

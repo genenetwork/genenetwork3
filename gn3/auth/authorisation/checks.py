@@ -16,11 +16,11 @@ def authorised_p(
     def __build_authoriser__(func: Callable):
         @wraps(func)
         def __authoriser__(*args, **kwargs):
-            if hasattr(g, "user_id") and g.user_id:
+            if hasattr(g, "user") and g.user:
                 with db.connection(app.config["AUTH_DB"]) as conn:
                     user_privileges = tuple(
                         priv.privilege_name for priv in
-                        auth_privs.user_privileges(conn, g.user_id))
+                        auth_privs.user_privileges(conn, g.user))
 
                 not_assigned = [
                     priv for priv in privileges if priv not in user_privileges]
