@@ -7,7 +7,7 @@ from flask import request
 
 from gn3.fs_helpers import extract_uploaded_file
 from gn3.commands import run_cmd
-from gn3.db import rdf
+
 
 general = Blueprint("general", __name__)
 
@@ -68,5 +68,3 @@ def run_r_qtl(geno_filestr, pheno_filestr):
     cmd = (f"Rscript {rqtl_wrapper} "
            f"{geno_filestr} {pheno_filestr}")
     return jsonify(run_cmd(cmd)), 201
-
-
