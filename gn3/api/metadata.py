@@ -25,4 +25,3 @@ def jsonify_dataset_metadata(accession_id):
     # The virtuoso server is misconfigured or it isn't running at all
     except RemoteDisconnected:
         return jsonify({})
-
