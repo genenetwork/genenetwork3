@@ -1,5 +1,6 @@
 """API for fetching metadata using an API"""
 from http.client import RemoteDisconnected
+from urllib.error import URLError
 from flask import Blueprint
 from flask import jsonify
 from flask import current_app
@@ -23,5 +24,5 @@ def jsonify_dataset_metadata(accession_id):
             ).data
         )
     # The virtuoso server is misconfigured or it isn't running at all
-    except RemoteDisconnected:
+    except (RemoteDisconnected, URLError):
         return jsonify({})
