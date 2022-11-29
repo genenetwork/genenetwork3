@@ -15,11 +15,12 @@ def test_generate_input():
     """test generating text files"""
 
     test_dataset = [
-        "14_at,12.1,14.1,None",
-        "15_at,12.2,14.1,None",
-        "17_at,12.1,14.1,11.4"
+        ["14_at",12.1,14.1,None],
+        ["15_at",12.2,14.1,None],
+        ["17_at",12.1,14.1,11.4]
 
     ]
+    expected = ["14_at,12.1,14.1,", "15_at,12.2,14.1,", "17_at,12.1,14.1,11.4"]
 
     (_tmp_dir, tmp_file) = generate_input_files(test_dataset,
                                                 output_dir="/tmp")
@@ -29,7 +30,7 @@ def test_generate_input():
 
     os.remove(tmp_file)
 
-    assert test_results == test_dataset
+    assert test_results == expected
 
 
 # @pytest.mark.unit_test
