@@ -46,6 +46,8 @@ def generate_json_file(
             "file_delimiter": delimiter
         }, outputfile)
 
+    
+
     return (output_file, tmp_json_file)
 
 
@@ -128,7 +130,6 @@ def get_samples(all_samples: dict[str, str],
 
 def get_sample_corr_data(sample_type: str,
                          sample_data: dict[str, str],
-                         all_samples: list[str],
                          dataset_samples: list[str]) -> dict[str, str]:
     """dependeing on the sample_type fetch the correct sample data """
 
