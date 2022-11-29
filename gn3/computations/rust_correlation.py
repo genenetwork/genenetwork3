@@ -45,9 +45,6 @@ def generate_json_file(
             "output_file": output_file,
             "file_delimiter": delimiter
         }, outputfile)
-
-    
-
     return (output_file, tmp_json_file)
 
 
