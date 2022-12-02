@@ -269,9 +269,9 @@ def fetch_lit_correlation_data(
                                            *tuple(reversed(query_values))))
             lit_corr_results = cursor.fetchone()
         lit_results = (gene_id, lit_corr_results[0])\
-            if lit_corr_results else (gene_id, 0)
+            if lit_corr_results else (gene_id, None)
         return lit_results
-    return (gene_id, 0)
+    return (gene_id, None)
 
 
 def lit_correlation_for_trait(
@@ -339,14 +339,19 @@ def compute_all_lit_correlation(conn, trait_lists: List,
     """Function that acts as an abstraction for
     lit_correlation_for_trait"""
 
+    def __sorter__(trait_name):
+        val = list(trait_name.values())[0]["lit_corr"]
+        try:
+            return (0, -abs(val))
+        except TypeError:
+            return (1, val)
+
     lit_results = lit_correlation_for_trait(
         conn=conn,
         target_trait_lists=trait_lists,
         species=species,
         trait_gene_id=gene_id)
-    sorted_lit_results = sorted(
-        lit_results,
-        key=lambda trait_name: -abs(list(trait_name.values())[0]["lit_corr"]))
+    sorted_lit_results = sorted(lit_results, key=__sorter__)
 
     return sorted_lit_results
 
