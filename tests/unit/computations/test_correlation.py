@@ -58,12 +58,12 @@ class DataBase(QueryableMixin):
         """expects the expectede results value to be an array"""
         self.password = password
         self.db_name = db_name
-        self.__query_options = None # pylint: disable=[W0238]
+        self.__query_options = None  # pylint: disable=[W0238]
         self.results_generator(expected_results)
 
     def execute(self, query_options):
         """method to execute an sql query"""
-        self.__query_options = query_options # pylint: disable=[W0238]
+        self.__query_options = query_options  # pylint: disable=[W0238]
         return 1
 
     def cursor(self):
@@ -118,10 +118,8 @@ class TestCorrelation(TestCase):
         primary_values = [2.3, 4.1, 5, 4.2, None, None, 4, 1.2, 1.1]
         target_values = [3.4, 6.2, 4, 1.1, 1.2, None, 8, 1.1, 2.1]
 
-
         norm_vals.return_value = iter(
             [(2.3, 3.4), (4.1, 6.2), (5, 4), (4.2, 1.1), (4, 8), (1.2, 1.1), (1.1, 2.1)])
-
 
         compute_corr.return_value = (0.8, 0.21)
 
@@ -129,7 +127,6 @@ class TestCorrelation(TestCase):
                                                      corr_method="bicor",
                                                      trait_vals=primary_values,
                                                      target_samples_vals=target_values)
-
 
         self.assertEqual(bicor_results, ("1412_at", 0.8, 0.21, 7))
 
@@ -266,7 +263,7 @@ class TestCorrelation(TestCase):
                                              input_mouse_gene_id=None,
                                              mouse_gene_id=None)
 
-        self.assertEqual(results, ("1", 0))
+        self.assertEqual(results, ("1", None))
 
     @pytest.mark.unit_test
     def test_fetch_lit_correlation_data_db_query(self):
@@ -288,19 +285,17 @@ class TestCorrelation(TestCase):
 
     @pytest.mark.unit_test
     def test_query_lit_correlation_for_db_empty(self):
-        """Test that corr coeffient returned is 0 given the\
+        """Test that corr coeffient returned is None given the\
         db value if corr coefficient is empty
         """
         conn = mock.Mock()
         conn.cursor.return_value = DataBase()
-        conn.execute.return_value.fetchone.return_value = None
+        conn.execute.return_value.fetchone.return_value = ""
 
-        lit_results = fetch_lit_correlation_data(conn=conn,
-                                                 input_mouse_gene_id="12",
-                                                 gene_id="16",
-                                                 mouse_gene_id="12")
-
-        self.assertEqual(lit_results, ("16", 0))
+        self.assertEqual(fetch_lit_correlation_data(conn=conn,
+                                                    input_mouse_gene_id="12",
+                                                    gene_id="16",
+                                                    mouse_gene_id="12"), ("16", None))
 
     @pytest.mark.unit_test
     def test_query_formatter(self):
