@@ -240,7 +240,7 @@ def fetch_lit_correlation_data(
         conn,
         input_mouse_gene_id: Optional[str],
         gene_id: str,
-        mouse_gene_id: Optional[str] = None) -> Tuple[str, float]:
+        mouse_gene_id: Optional[str] = None) -> Tuple[str, Optional[float]]:
     """Given input trait mouse gene id and mouse gene id fetch the lit
     corr_data
 
