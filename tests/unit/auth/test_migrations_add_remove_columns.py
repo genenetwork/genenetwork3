@@ -18,7 +18,9 @@ TEST_PARAMS = (
       "columns-to-privileges-table.py"),
      "privileges", "privilege_description TEXT", True),
     ("20221117_01_RDlfx-modify-group-roles-add-group-role-id.py", "group_roles",
-     "group_role_id", True))
+     "group_role_id", True),
+    ("20221208_01_sSdHz-add-public-column-to-resources-table.py", "resources",
+     "public", True))
 
 def found(haystack: str, needle: str) -> bool:
     """Check whether `needle` is found in `haystack`"""
