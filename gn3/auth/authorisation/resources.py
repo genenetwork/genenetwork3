@@ -3,6 +3,8 @@ from uuid import UUID, uuid4
 from typing import Sequence, NamedTuple
 
 from gn3.auth import db
+from gn3.auth.authentication.users import User
+
 from .checks import authorised_p
 from .exceptions import AuthorisationError
 from .groups import Group, authenticated_user_group
@@ -70,3 +72,7 @@ def public_resources(conn: db.DbConnection) -> Sequence[Resource]:
             Resource(groups[row[0]], UUID(row[1]), row[2], categories[row[3]],
                      bool(row[4]))
             for row in results)
+
+def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:# pylint: disable=[unused-argument]
+    """List the resources available to the user"""
+    return tuple()

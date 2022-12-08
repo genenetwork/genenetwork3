@@ -51,3 +51,25 @@ def test_public_resources(test_resources):
     conn, _res = test_resources
     assert sorted(public_resources(conn), key=SORTKEY) == sorted(tuple(
         res for res in conftest.TEST_RESOURCES if res.public), key=SORTKEY)
+
+PUBLIC_RESOURCES = sorted(conftest.TEST_RESOURCES, key=SORTKEY)
+
+@pytest.mark.skip # REMOVE THIS LINE!!!
+@pytest.mark.unit_test
+@pytest.mark.parametrize(
+    "user,expected",
+    tuple(zip(
+        conftest.TEST_USERS,
+        (sorted(conftest.TEST_RESOURCES, key=SORTKEY),
+         sorted(res for res in conftest.TEST_RESOURCES
+                if str(res.resource_id) not in
+                ("2130aec0-fefd-434d-92fd-9ca342348b2d",
+                 "14496a1c-c234-49a2-978c-8859ea274054")),
+         PUBLIC_RESOURCES, PUBLIC_RESOURCES))))
+def test_user_resources(fixture_user_resources, user, expected):
+    """
+    GIVEN: some resources in the database
+    WHEN: a particular user's resources are requested
+    THEN: list only the resources for which the user can access
+    """
+    assert user_resources(fixture_user_resources, user) == expected
