@@ -1,6 +1,6 @@
 """Handle the management of resources."""
 from uuid import UUID, uuid4
-from typing import NamedTuple
+from typing import Sequence, NamedTuple
 
 from gn3.auth import db
 from .checks import authorised_p
@@ -22,6 +22,7 @@ class Resource(NamedTuple):
     resource_id: UUID
     resource_name: str
     resource_category: ResourceCategory
+    public: bool
 
 @authorised_p(("create-resource",),  error_message="Could not create resource")
 def create_resource(
@@ -41,3 +42,30 @@ def create_resource(
              str(resource.resource_category.resource_category_id)))
 
     return resource
+
+def resource_categories(conn: db.DbConnection) -> Sequence[ResourceCategory]:
+    """Retrieve all available resource categories"""
+    with db.cursor(conn) as cursor:
+        cursor.execute("SELECT * FROM resource_categories")
+        return tuple(
+            ResourceCategory(UUID(row[0]), row[1], row[2])
+            for row in cursor.fetchall())
+    return tuple()
+
+def public_resources(conn: db.DbConnection) -> Sequence[Resource]:
+    """List all resources marked as public"""
+    categories = {
+        str(cat.resource_category_id): cat for cat in resource_categories(conn)
+    }
+    with db.cursor(conn) as cursor:
+        cursor.execute("SELECT * FROM resources WHERE public=1")
+        results = cursor.fetchall()
+        group_uuids = tuple(row[0] for row in results)
+        query = ("SELECT * FROM groups WHERE group_id IN "
+                 f"({', '.join(['?'] * len(group_uuids))})")
+        cursor.execute(query, group_uuids)
+        groups = {row[0]: Group(UUID(row[0]), row[1]) for row in cursor.fetchall()}
+        return tuple(
+            Resource(groups[row[0]], UUID(row[1]), row[2], categories[row[3]],
+                     bool(row[4]))
+            for row in results)

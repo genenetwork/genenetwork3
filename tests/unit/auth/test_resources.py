@@ -5,7 +5,8 @@ import pytest
 
 from gn3.auth.authorisation.groups import Group
 from gn3.auth.authorisation.resources import (
-    Resource, create_resource, ResourceCategory)
+    Resource, user_resources, create_resource, ResourceCategory,
+    public_resources)
 
 from tests.unit.auth import conftest
 
@@ -25,7 +26,7 @@ uuid_fn = lambda : uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
         conftest.TEST_USERS,
         (Resource(
             group, uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
-            "test_resource", resource_category),
+            "test_resource", resource_category, False),
          create_resource_failure,
          create_resource_failure,
          create_resource_failure,
@@ -37,3 +38,16 @@ def test_create_resource(mocker, test_app, test_users_in_group, user, expected):
     with test_app.app_context() as flask_context:
         flask_context.g.user = user
         assert create_resource(conn, "test_resource", resource_category) == expected
+
+SORTKEY = lambda resource: resource.resource_id
+
+@pytest.mark.unit_test
+def test_public_resources(test_resources):
+    """
+    GIVEN: some resources in the database
+    WHEN: public resources are requested
+    THEN: only list the resources that are public
+    """
+    conn, _res = test_resources
+    assert sorted(public_resources(conn), key=SORTKEY) == sorted(tuple(
+        res for res in conftest.TEST_RESOURCES if res.public), key=SORTKEY)
