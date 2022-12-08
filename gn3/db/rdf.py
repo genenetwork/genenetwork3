@@ -3,7 +3,6 @@
 This module is a collection of functions that handle SPARQL queries.
 
 """
-import re
 from typing import Tuple
 from string import Template
 from SPARQLWrapper import JSON, SPARQLWrapper
