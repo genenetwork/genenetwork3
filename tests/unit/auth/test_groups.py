@@ -115,5 +115,5 @@ def test_user_group(test_users_in_group, user, expected):
     THEN: return a Maybe containing the group that the user belongs to, or
       Nothing
     """
-    conn, group, users = test_users_in_group
+    conn, _group, _users = test_users_in_group
     assert user_group(conn, user).maybe(Nothing, lambda val: val) == expected

@@ -34,12 +34,13 @@ def create_resource(
         if not group:
             raise MissingGroupError(
                 "User with no group cannot create a resource.")
-        resource = Resource(group, uuid4(), resource_name, resource_category)
+        resource = Resource(group, uuid4(), resource_name, resource_category, False)
         cursor.execute(
-            ("INSERT INTO resources VALUES (?, ?, ?, ?)"),
+            "INSERT INTO resources VALUES (?, ?, ?, ?, ?)",
             (str(resource.group.group_id), str(resource.resource_id),
              resource_name,
-             str(resource.resource_category.resource_category_id)))
+             str(resource.resource_category.resource_category_id),
+             1 if resource.public else 0))
 
     return resource
 
