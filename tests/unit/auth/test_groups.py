@@ -2,13 +2,14 @@
 from uuid import UUID
 
 import pytest
+from pymonad.maybe import Nothing
 
 from gn3.auth import db
 from gn3.auth.authentication.users import User
 from gn3.auth.authorisation.roles import Role
 from gn3.auth.authorisation.privileges import Privilege
 from gn3.auth.authorisation.groups import (
-    Group, GroupRole, create_group, MembershipError, create_group_role)
+    Group, GroupRole, user_group, create_group, MembershipError, create_group_role)
 
 from tests.unit.auth import conftest
 
@@ -98,3 +99,21 @@ def test_create_multiple_groups(mocker, test_app, test_users):
         # subsequent attempts should fail
         with pytest.raises(MembershipError):
             create_group(conn, "another_test_group", user)
+
+@pytest.mark.unit_test
+@pytest.mark.parametrize(
+    "user,expected",
+    tuple(zip(
+        conftest.TEST_USERS,
+        (([Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup")] * 3)
+         + [Nothing]))))
+def test_user_group(test_users_in_group, user, expected):
+    """
+    GIVEN: A bunch of registered users, some of whom are members of a group, and
+      others are not
+    WHEN: a particular user's group is requested,
+    THEN: return a Maybe containing the group that the user belongs to, or
+      Nothing
+    """
+    conn, group, users = test_users_in_group
+    assert user_group(conn, user).maybe(Nothing, lambda val: val) == expected

@@ -106,3 +106,21 @@ def authenticated_user_group(conn) -> Maybe:
         return Just(groups[0])
 
     return Nothing
+
+def user_group(conn: db.DbConnection, user: User) -> Maybe:
+    """Returns the given user's group"""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            ("SELECT groups.group_id, groups.group_name FROM group_users "
+             "INNER JOIN groups ON group_users.group_id=groups.group_id "
+             "WHERE group_users.user_id = ?"),
+            (str(user.user_id),))
+        groups = tuple(Group(UUID(row[0]), row[1]) for row in cursor.fetchall())
+
+    if len(groups) > 1:
+        raise MembershipError(user, groups)
+
+    if len(groups) == 1:
+        return Just(groups[0])
+
+    return Nothing
