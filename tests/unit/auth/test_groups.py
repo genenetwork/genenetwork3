@@ -117,4 +117,7 @@ def test_user_group(test_users_in_group, user, expected):
       Nothing
     """
     conn, _group, _users = test_users_in_group
-    assert user_group(conn, user).maybe(Nothing, lambda val: val) == expected
+    with db.cursor(conn) as cursor:
+        assert (
+            user_group(cursor, user).maybe(Nothing, lambda val: val)
+            == expected)
