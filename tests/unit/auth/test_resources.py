@@ -42,34 +42,37 @@ def test_create_resource(mocker, test_app, test_users_in_group, user, expected):
 SORTKEY = lambda resource: resource.resource_id
 
 @pytest.mark.unit_test
-def test_public_resources(test_resources):
+def test_public_resources(fixture_resources):
     """
     GIVEN: some resources in the database
     WHEN: public resources are requested
     THEN: only list the resources that are public
     """
-    conn, _res = test_resources
+    conn, _res = fixture_resources
     assert sorted(public_resources(conn), key=SORTKEY) == sorted(tuple(
         res for res in conftest.TEST_RESOURCES if res.public), key=SORTKEY)
 
-PUBLIC_RESOURCES = sorted(conftest.TEST_RESOURCES, key=SORTKEY)
+PUBLIC_RESOURCES = sorted(conftest.TEST_RESOURCES_PUBLIC, key=SORTKEY)
 
-@pytest.mark.skip # REMOVE THIS LINE!!!
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
     "user,expected",
     tuple(zip(
         conftest.TEST_USERS,
-        (sorted(conftest.TEST_RESOURCES, key=SORTKEY),
-         sorted(res for res in conftest.TEST_RESOURCES
-                if str(res.resource_id) not in
-                ("2130aec0-fefd-434d-92fd-9ca342348b2d",
-                 "14496a1c-c234-49a2-978c-8859ea274054")),
+        (sorted(
+            set(conftest.TEST_RESOURCES_GROUP_01).union(
+                conftest.TEST_RESOURCES_PUBLIC),
+            key=SORTKEY),
+         sorted(
+             set([conftest.TEST_RESOURCES_GROUP_01[1]]).union(
+                 conftest.TEST_RESOURCES_PUBLIC),
+             key=SORTKEY),
          PUBLIC_RESOURCES, PUBLIC_RESOURCES))))
-def test_user_resources(fixture_user_resources, user, expected):
+def test_user_resources(fixture_group_user_roles, user, expected):
     """
     GIVEN: some resources in the database
     WHEN: a particular user's resources are requested
     THEN: list only the resources for which the user can access
     """
-    assert user_resources(fixture_user_resources, user) == expected
+    conn = fixture_group_user_roles
+    assert sorted(user_resources(conn, user), key=SORTKEY) == expected
