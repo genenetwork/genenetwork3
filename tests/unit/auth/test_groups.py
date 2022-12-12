@@ -58,6 +58,7 @@ create_role_failure = {
     "user,expected", tuple(zip(conftest.TEST_USERS, (
         GroupRole(
             UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
+            GROUP,
             Role(UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
                  "ResourceEditor", PRIVILEGES)),
         create_role_failure, create_role_failure, create_role_failure,

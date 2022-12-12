@@ -22,6 +22,7 @@ class Group(NamedTuple):
 class GroupRole(NamedTuple):
     """Class representing a role tied/belonging to a group."""
     group_role_id: UUID
+    group: Group
     role: Role
 
 class MembershipError(AuthorisationError):
@@ -81,7 +82,7 @@ def create_group_role(
              "VALUES(?, ?, ?)"),
             (str(group_role_id), str(group.group_id), str(role.role_id)))
 
-    return GroupRole(group_role_id, role)
+    return GroupRole(group_role_id, group, role)
 
 @authenticated_p
 def authenticated_user_group(conn) -> Maybe:
