@@ -124,3 +124,22 @@ def user_group(cursor: db.DbCursor, user: User) -> Maybe:
         return Just(groups[0])
 
     return Nothing
+
+def is_group_leader(cursor: db.DbCursor, user: User, group: Group):
+    """Check whether the given `user` is the leader of `group`."""
+    ugroup = user_group(cursor, user).maybe(False, lambda val: val) # type: ignore[misc]
+    if not group:
+        # User cannot be a group leader if not a member of ANY group
+        return False
+
+    if not ugroup == group:
+        # User cannot be a group leader if not a member of THIS group
+        return False
+
+    cursor.execute(
+        ("SELECT roles.role_name FROM user_roles LEFT JOIN roles "
+         "ON user_roles.role_id = roles.role_id WHERE user_id = ?"),
+        (str(user.user_id),))
+    role_names = tuple(row[0] for row in cursor.fetchall())
+
+    return "group-leader" in role_names
