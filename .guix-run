@@ -1,0 +1,4 @@
+#! /bin/sh
+
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics/ ~/opt/guix-gn3/bin/guix shell -C -D --network --expose=/home/gn2/production/genotype_files/ -f guix.scm -- gunicorn --bind 0.0.0.0:8087 --workers 8 --keep-alive 6000 --max-requests 10 --max-requests-jitter 5 --timeout 1200 wsgi:app
+

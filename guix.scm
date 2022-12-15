@@ -100,8 +100,8 @@
                        ("python-redis" ,python-redis)
                        ("python-requests" ,python-requests)
                        ("python-scipy" ,python-scipy)
-                       ("python-sqlalchemy-stubs"
-                        ,python-sqlalchemy-stubs)
+                       ; ("python-sqlalchemy-stubs"
+                       ;  ,python-sqlalchemy-stubs)
                        ("r-optparse" ,r-optparse)
                        ("r-qtl" ,r-qtl)
                        ("r-stringi" ,r-stringi)
@@ -112,6 +112,9 @@
                        ("rust-qtlreaper" ,rust-qtlreaper)
                        ("python-flask-cors" ,python-flask-cors)))
   (build-system python-build-system)
+  (arguments
+	`(#:tests? #f))
+
   (home-page "https://github.com/genenetwork/genenetwork3")
   (synopsis "GeneNetwork3 API for data science and machine learning.")
   (description "GeneNetwork3 API for data science and machine learning.")
