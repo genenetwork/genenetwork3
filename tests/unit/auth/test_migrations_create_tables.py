@@ -26,7 +26,8 @@ migrations_and_tables = (
     ("20221114_05_hQun6-create-user-roles-table.py", "user_roles"),
     ("20221117_02_fmuZh-create-group-users-table.py", "group_users"),
     ("20221206_01_BbeF9-create-group-user-roles-on-resources-table.py",
-     "group_user_roles_on_resources"))
+     "group_user_roles_on_resources"),
+    ("20221219_01_CI3tN-create-oauth2-clients-table.py", "oauth2_clients"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
