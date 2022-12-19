@@ -12,6 +12,10 @@ class User(NamedTuple):
     email: str
     name: str
 
+    def get_user_id(self):
+        """Return the user's UUID. Mostly for use with Authlib."""
+        return self.user_id
+
 def user_by_email(conn: db.DbConnection, email: str) -> Maybe:
     with db.cursor(conn) as cursor:
         cursor.execute("SELECT * FROM users WHERE email=?", (email,))
