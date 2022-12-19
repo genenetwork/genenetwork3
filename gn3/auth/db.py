@@ -1,7 +1,7 @@
 """Handle connection to auth database."""
 import sqlite3
 import contextlib
-from typing import Any, Iterator, Protocol
+from typing import Any, Callable, Iterator, Protocol
 
 import traceback
 
@@ -47,9 +47,10 @@ class DbCursor(Protocol):
         ...
 
 @contextlib.contextmanager
-def connection(db_path: str) -> Iterator[DbConnection]:
+def connection(db_path: str, row_factory: Callable = sqlite3.Row) -> Iterator[DbConnection]:
     """Create the connection to the auth database."""
     conn = sqlite3.connect(db_path)
+    conn.row_factory = row_factory
     try:
         yield conn
     except sqlite3.Error as exc:
