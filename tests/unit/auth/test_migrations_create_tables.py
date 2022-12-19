@@ -29,6 +29,8 @@ migrations_and_tables = (
      "group_user_roles_on_resources"),
     ("20221219_01_CI3tN-create-oauth2-clients-table.py", "oauth2_clients"),
     ("20221219_02_buSEU-create-oauth2-tokens-table.py", "oauth2_tokens"),
+    ("20221219_03_PcTrb-create-authorisation-code-table.py",
+     "authorisation_code"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)
