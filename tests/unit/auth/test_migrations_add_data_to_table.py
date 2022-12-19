@@ -38,7 +38,7 @@ def test_apply_insert(# pylint: disable=[too-many-arguments]
     older_migrations = migrations_up_to(migration_path, auth_migrations_dir)
     the_migration = get_migration(migration_path)
     apply_migrations(backend, older_migrations)
-    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+    with db.connection(auth_testdb_path, None) as conn, db.cursor(conn) as cursor:
         cursor.execute(query, query_params)
         result_before_migration = cursor.fetchall()
         apply_single_migration(backend, the_migration)
@@ -63,7 +63,7 @@ def test_rollback_insert(# pylint: disable=[too-many-arguments]
     older_migrations = migrations_up_to(migration_path, auth_migrations_dir)
     the_migration = get_migration(migration_path)
     apply_migrations(backend, older_migrations)
-    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+    with db.connection(auth_testdb_path, None) as conn, db.cursor(conn) as cursor:
         cursor.execute(query, query_params)
         result_before_migration = cursor.fetchall()
         apply_single_migration(backend, the_migration)

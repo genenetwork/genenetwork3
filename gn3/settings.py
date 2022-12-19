@@ -67,3 +67,7 @@ MULTIPROCESSOR_PROCS = 6 # Number of processes to spawn
 AUTH_MIGRATIONS = "migrations/auth"
 AUTH_DB = os.environ.get(
     "AUTH_DB", f"{os.environ.get('HOME')}/genenetwork/gn3_files/db/auth.db")
+
+## OAuth2 Settings
+OAUTH2_ACCESS_TOKEN_GENERATOR = os.environ.get(
+    "OAUTH2_ACCESS_TOKEN_GENERATOR", True)

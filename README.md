@@ -168,13 +168,17 @@ This expects that the following two configuration variables are set in the appli
 To run tests:
 
 ```bash
-pytest
+$ export AUTHLIB_INSECURE_TRANSPORT=true
+$ export OAUTH2_ACCESS_TOKEN_GENERATOR="tests.unit.auth.test_token.gen_token"
+$ pytest
 ```
 
 To specify unit-tests:
 
 ```bash
-pytest -k unit_test
+$ export AUTHLIB_INSECURE_TRANSPORT=true
+$ export OAUTH2_ACCESS_TOKEN_GENERATOR="tests.unit.auth.test_token.gen_token"
+$ pytest -k unit_test
 ```
 
 Running pylint:

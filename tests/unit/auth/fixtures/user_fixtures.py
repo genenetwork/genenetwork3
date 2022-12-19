@@ -2,6 +2,7 @@
 import uuid
 
 import pytest
+import bcrypt
 
 from gn3.auth import db
 from gn3.auth.authentication.users import User
@@ -41,3 +42,25 @@ def test_users(conn_after_auth_migrations):# pylint: disable=[redefined-outer-na
              ("21351b66-8aad-475b-84ac-53ce528451e3",),
              ("ae9c6245-0966-41a5-9a5e-20885a96bea7",),
              ("9a0c7ce5-2f40-4e78-979e-bf3527a59579",)))
+
+@pytest.fixture(scope="function")
+def fixture_users_with_passwords(test_users): # pylint: disable=[redefined-outer-name]
+    """Fixture: add passwords to the users"""
+    conn, users = test_users
+    user_passwords_params = tuple(
+        (str(user.user_id), bcrypt.hashpw(
+            f"password_for_user_{idx:03}".encode("utf8"),
+            bcrypt.gensalt()))
+        for idx, user in enumerate(users, start=1))
+
+    with db.cursor(conn) as cursor:
+        cursor.executemany(
+            "INSERT INTO user_credentials VALUES (?, ?)",
+            user_passwords_params)
+
+    yield conn, users
+
+    with db.cursor(conn) as cursor:
+        cursor.executemany(
+            "DELETE FROM user_credentials WHERE user_id=?",
+            ((item[0],) for item in user_passwords_params))

@@ -20,7 +20,7 @@ def test_apply_init_data(auth_testdb_path, auth_migrations_dir, backend):
     older_migrations = migrations_up_to(MIGRATION_PATH, auth_migrations_dir)
     the_migration = get_migration(MIGRATION_PATH)
     apply_migrations(backend, older_migrations)
-    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+    with db.connection(auth_testdb_path, None) as conn, db.cursor(conn) as cursor:
         cursor.execute("SELECT * FROM resource_categories")
         assert len(cursor.fetchall()) == 0, "Expected empty table."
         apply_single_migration(backend, the_migration)
@@ -46,7 +46,7 @@ def test_rollback_init_data(auth_testdb_path, auth_migrations_dir, backend):
     older_migrations = migrations_up_to(MIGRATION_PATH, auth_migrations_dir)
     the_migration = get_migration(MIGRATION_PATH)
     apply_migrations(backend, older_migrations)
-    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+    with db.connection(auth_testdb_path, None) as conn, db.cursor(conn) as cursor:
         cursor.execute("SELECT * FROM resource_categories")
         assert len(cursor.fetchall()) == 0, "Expected empty table."
         apply_single_migration(backend, the_migration)
