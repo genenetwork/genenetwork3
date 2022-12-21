@@ -6,7 +6,7 @@ import os
 import subprocess
 from typing import Union
 
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.settings import TMPDIR, REAPER_COMMAND
 
 def generate_traits_file(samples, trait_values, traits_filename):

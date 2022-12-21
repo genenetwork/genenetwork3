@@ -17,7 +17,7 @@ import pingouin
 from scipy.stats import pearsonr, spearmanr
 
 from gn3.settings import TEXTDIR
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.function_helpers import  compose
 from gn3.data_helpers import parse_csv_line
 from gn3.db.datasets import retrieve_trait_dataset

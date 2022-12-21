@@ -16,7 +16,7 @@ from typing import Sequence
 from uuid import uuid4
 from redis.client import Redis  # Used only in type hinting
 
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.exceptions import RedisConnectionError
 
 

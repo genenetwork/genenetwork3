@@ -10,7 +10,7 @@ import csv
 import os
 
 from gn3.computations.qtlreaper import create_output_directory
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.settings import CORRELATION_COMMAND
 from gn3.settings import TMPDIR
 

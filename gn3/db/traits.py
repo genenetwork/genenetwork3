@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Any, Dict, Sequence
 
 from gn3.settings import TMPDIR
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.function_helpers import compose
 from gn3.db.datasets import retrieve_trait_dataset
 

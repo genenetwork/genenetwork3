@@ -6,7 +6,7 @@ import os
 from functools import reduce
 from typing import Any, Dict, Tuple, Union, Optional
 
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.data_helpers import partition_all
 from gn3.db.species import translate_to_mouse_gene_id
 

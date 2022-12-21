@@ -3,7 +3,7 @@ import pytest
 import MySQLdb
 
 from gn3.app import create_app
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.db_utils import parse_db_url, database_connector
 
 @pytest.fixture(scope="session")

@@ -12,7 +12,7 @@ import plotly.figure_factory as ff # type: ignore
 from plotly.subplots import make_subplots # type: ignore
 
 from gn3.settings import TMPDIR
-from gn3.random import random_string
+from gn3.chancy import random_string
 from gn3.computations.slink import slink
 from gn3.db.traits import export_trait_data
 from gn3.computations.correlations2 import compute_correlation
