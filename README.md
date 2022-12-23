@@ -95,6 +95,12 @@ and try again. Also make sure your ~/guix-bioinformatics is up to date.
 
 See also instructions in [.guix.scm](.guix.scm).
 
+#### Setting necessary environment variables
+
+At least the following two need to be set for R/qtl to work (there might be others which I'll add if they come up):
+RQTL_WRAPPER (should be in genenetwork3/scripts/rqtl_wrapper.R)
+TMPDIR (where the rqtl_wrapper.R cross files are generated, used by the R script)
+
 ## Migrations
 
 **NOTE**: Do not create migration scripts manually. Use the processes indicated below.
