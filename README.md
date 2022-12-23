@@ -95,11 +95,15 @@ and try again. Also make sure your ~/guix-bioinformatics is up to date.
 
 See also instructions in [.guix.scm](.guix.scm).
 
-#### Setting necessary environment variables
+#### Setting necessary configurations
 
-At least the following two need to be set for R/qtl to work (there might be others which I'll add if they come up):
-RQTL_WRAPPER (should be in genenetwork3/scripts/rqtl_wrapper.R)
-TMPDIR (where the rqtl_wrapper.R cross files are generated, used by the R script)
+These configurations should be set in an external config file, pointed to with the environment variable GN3_CONF.
+
+- SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql")
+- RQTL_WRAPPER (ex: "~/genenetwork3/scripts/rqtl_wrapper.R")
+- XAPIAN_DB_PATH (ex: "/export/data/genenetwork/xapian")
+
+TMPDIR also needs to be set correctly for the R script(s) (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp)
 
 ## Migrations
 
