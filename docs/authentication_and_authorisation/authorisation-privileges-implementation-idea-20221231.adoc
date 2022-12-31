@@ -1,0 +1,88 @@
+= Implementation of Privileges
+
+These are some ideas for implementing the privileges system.
+
+== Naming
+
+The privileges will have a naming scheme that will be of a form loosely approximating the following form:
+
+....
+<top-level>:<sub-level>:<privilege-name>
+....
+
+for example:
+
+.Example Privileges
+[cols="1,5",options="header"]
+|===
+| Privilege Name | Description
+
+| system:group:create-one
+| Allows the holder to create only one group, of which they become a member.
+  Once they are a member of any group, they cannot create another. This could be
+  added by default for new users, and removed once they are assigned to a group.
+
+| system:group:create-many
+| Allows the holder to create more than one group. Mostly for system
+  administration use. This privilege will not be accessible to end users.
+
+| group:user:list
+| Allows holder to list any user in the same group as the holder, for which this
+  privilege is attached
+
+| group:role:assign
+| Allows holder to assign group-level roles to users
+
+| group:resource:list
+| Allows holder to list any resources for which this privilege is attached
+
+| group:resource:view
+| Allows holder to view the details of any resource for which this privilege is
+  attached
+|===
+
+It is important to note that *privileges are not assigned directly*, rather,
+they are grouped into roles and the roles are assigned to users.
+
+== Checking Privileges
+
+To check privileges, a mini-DSL (Domain-Specific Language) is proposed, which
+will be used to generate a checker to verify that the user has the appropriate
+privileges to access a resource.
+
+I propose a simple, lisp-like syntax that follows the form:
+
+....
+(command ...specifications)
+....
+
+where the *...specifications* is built with the *has* operator:
+
+for example:
+
+----
+(resource-access (has "group:resource:view" "group:resource:edit"))
+----
+
+to view and edit the resource: the user has to have *all* (in this case, both)
+of the `group:resource:view` and `group:resource:edit` privileges for this check
+to pass.
+
+----
+(system-access (or (has "system:group:create-one") (has "system:group:create-many")))
+----
+
+to enable group creation. The user has to have one or the other of the
+`system:group:create-one` or `system:group:create-many` privileges to pass.
+
+[sidebar]
+The *has-** operations acts like an *and*-ing of the privileges and thus would
+be equivalent to something like
+`(and (has priv1 priv2 ... privn) (has priv1 priv2 ... privm))`.
+
+The privilege specification can be used to generate portions of queries to check
+for access dependent on the type or resource in question, e.g. MRNA
+Assay (Probeset), Phenotypes (Publish) or Genotypes.
+
+The privilege specifications can also be used for checking access to system
+management functions like creating groups, and modifying user details.
