@@ -10,6 +10,7 @@ from gn3.auth.authentication.oauth2.models.oauth2client import OAuth2Client
 
 @pytest.fixture(autouse=True)
 def fxtr_patch_envvars(monkeypatch):
+    """Fixture: patch environment variable"""
     monkeypatch.setenv("AUTHLIB_INSECURE_TRANSPORT", "true")
 
 @pytest.fixture

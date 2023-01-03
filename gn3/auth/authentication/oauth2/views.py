@@ -45,8 +45,9 @@ def introspect_token():
 @oauth2.route("/user")
 @require_oauth("profile")
 def user_details():
-    with require_oauth.acquire("profile") as token:
-        user = token.user
+    """Return user's details."""
+    with require_oauth.acquire("profile") as the_token:
+        user = the_token.user
         return jsonify({
             "user_id": user.user_id,
             "email": user.email,
