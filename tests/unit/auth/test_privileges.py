@@ -37,7 +37,7 @@ PRIVILEGES = sorted(
 @pytest.mark.parametrize(
     "user,expected", tuple(zip(
         conftest.TEST_USERS, (PRIVILEGES, [], [], [], []))))
-def test_user_privileges(auth_testdb_path, test_users, user, expected):# pylint: disable=[unused-argument]
+def test_user_privileges(auth_testdb_path, fxtr_users, user, expected):# pylint: disable=[unused-argument]
     """
     GIVEN: A user
     WHEN: An attempt is made to fetch the user's privileges

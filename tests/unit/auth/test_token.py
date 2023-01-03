@@ -32,7 +32,7 @@ def gen_token(client, grant_type, user, scope): # pylint: disable=[unused-argume
      (("papa", "yada", 2), USERNAME_PASSWORD_FAIL_RESULT),
      # (("unaff@iliated.user", "password_for_user_004", 1), USERNAME_PASSWORD_FAIL_RESULT)
      ))
-def test_token(test_app, fixture_oauth2_clients, test_data, expected):
+def test_token(fxtr_app, fxtr_oauth2_clients, test_data, expected):
     """
     GIVEN: a registered oauth2 client, a user
     WHEN: a token is requested via the 'password' grant
@@ -42,7 +42,7 @@ def test_token(test_app, fixture_oauth2_clients, test_data, expected):
          back
       c) TODO: when user tries to use wrong client, we get error message back
     """
-    _conn, oa2clients = fixture_oauth2_clients
+    _conn, oa2clients = fxtr_oauth2_clients
     email, password, client_idx = test_data
     data = {
         "grant_type": "password", "scope": "profile nonexistent-scope",
@@ -50,7 +50,7 @@ def test_token(test_app, fixture_oauth2_clients, test_data, expected):
         "client_secret": oa2clients[client_idx].client_secret,
         "username": email, "password": password}
 
-    with test_app.test_client() as client:
+    with fxtr_app.test_client() as client:
         res = client.post("/api/oauth2/token", data=data)
     assert res.status_code == expected["status_code"]
     for key in expected["result"]:

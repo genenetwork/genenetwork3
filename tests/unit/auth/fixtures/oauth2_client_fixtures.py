@@ -9,13 +9,13 @@ from gn3.auth import db
 from gn3.auth.authentication.oauth2.models.oauth2client import OAuth2Client
 
 @pytest.fixture(autouse=True)
-def fixture_patch_envvars(monkeypatch):
+def fxtr_patch_envvars(monkeypatch):
     monkeypatch.setenv("AUTHLIB_INSECURE_TRANSPORT", "true")
 
 @pytest.fixture
-def fixture_oauth2_clients(fixture_users_with_passwords):
+def fxtr_oauth2_clients(fxtr_users_with_passwords):
     """Fixture: Create the OAuth2 clients for use with tests."""
-    conn, users = fixture_users_with_passwords
+    conn, users = fxtr_users_with_passwords
     now = datetime.datetime.now()
 
     clients = tuple(

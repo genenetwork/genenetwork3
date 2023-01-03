@@ -30,7 +30,7 @@ PRIVILEGES = (
             PRIVILEGES), create_role_failure, create_role_failure,
         create_role_failure, create_role_failure))))
 def test_create_role(# pylint: disable=[too-many-arguments]
-        test_app, auth_testdb_path, mocker, test_users, user, expected):# pylint: disable=[unused-argument]
+        fxtr_app, auth_testdb_path, mocker, fxtr_users, user, expected):# pylint: disable=[unused-argument]
     """
     GIVEN: an authenticated user
     WHEN: the user attempts to create a role
@@ -38,7 +38,7 @@ def test_create_role(# pylint: disable=[too-many-arguments]
           appropriate privileges
     """
     mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
-    with test_app.app_context() as flask_context:
+    with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
             the_role = create_role(cursor, "a_test_role", PRIVILEGES)

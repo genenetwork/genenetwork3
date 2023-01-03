@@ -22,7 +22,7 @@ RESOURCE_EDITOR_ROLE = Role(
 TEST_ROLES = (RESOURCE_READER_ROLE, RESOURCE_EDITOR_ROLE)
 
 @pytest.fixture(scope="function")
-def fixture_roles(conn_after_auth_migrations):
+def fxtr_roles(conn_after_auth_migrations):
     """Setup some example roles."""
     with db.cursor(conn_after_auth_migrations) as cursor:
         cursor.executemany(

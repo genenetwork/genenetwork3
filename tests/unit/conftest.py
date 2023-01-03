@@ -8,7 +8,7 @@ import pytest
 from gn3.app import create_app
 
 @pytest.fixture(scope="session")
-def test_app():
+def fxtr_app():
     """Fixture: setup the test app"""
     # Do some setup
     with TemporaryDirectory() as testdir:
@@ -24,12 +24,12 @@ def test_app():
         testdb.unlink(missing_ok=True)
 
 @pytest.fixture(scope="session")
-def client(test_app): # pylint: disable=redefined-outer-name
+def client(fxtr_app): # pylint: disable=redefined-outer-name
     """Create a test client fixture for tests"""
-    with test_app.app_context():
-        yield test_app.test_client()
+    with fxtr_app.app_context():
+        yield fxtr_app.test_client()
 
 @pytest.fixture(scope="session")
-def test_app_config(client): # pylint: disable=redefined-outer-name
+def fxtr_app_config(client): # pylint: disable=redefined-outer-name
     """Return the test application's configuration object"""
     return client.application.config

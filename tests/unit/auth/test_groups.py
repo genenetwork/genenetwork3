@@ -35,7 +35,7 @@ PRIVILEGES = (
         create_group_failure, create_group_failure, create_group_failure,
         create_group_failure))))
 def test_create_group(# pylint: disable=[too-many-arguments]
-        test_app, auth_testdb_path, mocker, test_users, user, expected):# pylint: disable=[unused-argument]
+        fxtr_app, auth_testdb_path, mocker, fxtr_users, user, expected):# pylint: disable=[unused-argument]
     """
     GIVEN: an authenticated user
     WHEN: the user attempts to create a group
@@ -43,7 +43,7 @@ def test_create_group(# pylint: disable=[too-many-arguments]
           appropriate privileges
     """
     mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
-    with test_app.app_context() as flask_context:
+    with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         with db.connection(auth_testdb_path) as conn:
             assert create_group(conn, "a_test_group", user) == expected
@@ -63,7 +63,7 @@ create_role_failure = {
                  "ResourceEditor", PRIVILEGES)),
         create_role_failure, create_role_failure, create_role_failure,
         create_role_failure))))
-def test_create_group_role(mocker, test_users_in_group, test_app, user, expected):
+def test_create_group_role(mocker, fxtr_users_in_group, fxtr_app, user, expected):
     """
     GIVEN: an authenticated user
     WHEN: the user attempts to create a role, attached to a group
@@ -72,14 +72,14 @@ def test_create_group_role(mocker, test_users_in_group, test_app, user, expected
     """
     mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
     mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
-    conn, _group, _users = test_users_in_group
-    with test_app.app_context() as flask_context:
+    conn, _group, _users = fxtr_users_in_group
+    with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         assert create_group_role(
             conn, GROUP, "ResourceEditor", PRIVILEGES) == expected
 
 @pytest.mark.unit_test
-def test_create_multiple_groups(mocker, test_app, test_users):
+def test_create_multiple_groups(mocker, fxtr_app, fxtr_users):
     """
     GIVEN: An authenticated user with appropriate authorisation
     WHEN: The user attempts to create a new group, while being a member of an
@@ -91,8 +91,8 @@ def test_create_multiple_groups(mocker, test_app, test_users):
     user = User(
         UUID("ecb52977-3004-469e-9428-2a1856725c7f"), "group@lead.er",
         "Group Leader")
-    conn, _test_users = test_users
-    with test_app.app_context() as flask_context:
+    conn, _test_users = fxtr_users
+    with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         # First time, successfully creates the group
         assert create_group(conn, "a_test_group", user) == Group(
@@ -108,7 +108,7 @@ def test_create_multiple_groups(mocker, test_app, test_users):
         conftest.TEST_USERS,
         (([Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup")] * 3)
          + [Nothing]))))
-def test_user_group(test_users_in_group, user, expected):
+def test_user_group(fxtr_users_in_group, user, expected):
     """
     GIVEN: A bunch of registered users, some of whom are members of a group, and
       others are not
@@ -116,7 +116,7 @@ def test_user_group(test_users_in_group, user, expected):
     THEN: return a Maybe containing the group that the user belongs to, or
       Nothing
     """
-    conn, _group, _users = test_users_in_group
+    conn, _group, _users = fxtr_users_in_group
     with db.cursor(conn) as cursor:
         assert (
             user_group(cursor, user).maybe(Nothing, lambda val: val)

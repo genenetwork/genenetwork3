@@ -46,7 +46,7 @@ TEST_RESOURCES = TEST_RESOURCES_GROUP_01 + TEST_RESOURCES_GROUP_02
 TEST_RESOURCES_PUBLIC = (TEST_RESOURCES_GROUP_01[0], TEST_RESOURCES_GROUP_02[1])
 
 @pytest.fixture(scope="function")
-def test_group(conn_after_auth_migrations):# pylint: disable=[redefined-outer-name]
+def fxtr_group(conn_after_auth_migrations):# pylint: disable=[redefined-outer-name]
     """Fixture: setup a test group."""
     query = "INSERT INTO groups(group_id, group_name) VALUES (?, ?)"
     with db.cursor(conn_after_auth_migrations) as cursor:
@@ -58,9 +58,9 @@ def test_group(conn_after_auth_migrations):# pylint: disable=[redefined-outer-na
     yield (conn_after_auth_migrations, TEST_GROUPS[0])
 
 @pytest.fixture(scope="function")
-def test_users_in_group(test_group, test_users):# pylint: disable=[redefined-outer-name, unused-argument]
+def fxtr_users_in_group(fxtr_group, fxtr_users):# pylint: disable=[redefined-outer-name, unused-argument]
     """Link the users to the groups."""
-    conn, all_users = test_users
+    conn, all_users = fxtr_users
     users = tuple(
         user for user in all_users if user.email not in ("unaff@iliated.user",))
     query_params = tuple(
@@ -78,7 +78,7 @@ def test_users_in_group(test_group, test_users):# pylint: disable=[redefined-out
             query_params)
 
 @pytest.fixture(scope="function")
-def fixture_group_roles(test_group):# pylint: disable=[redefined-outer-name]
+def fxtr_group_roles(fxtr_group):# pylint: disable=[redefined-outer-name]
     """Link roles to group"""
     from .role_fixtures import RESOURCE_EDITOR_ROLE, RESOURCE_READER_ROLE# pylint: disable=[import-outside-toplevel]
     group_roles = (
@@ -86,7 +86,7 @@ def fixture_group_roles(test_group):# pylint: disable=[redefined-outer-name]
                   TEST_GROUP_01, RESOURCE_EDITOR_ROLE),
         GroupRole(uuid.UUID("82aed039-fe2f-408c-ab1e-81cd1ba96630"),
                   TEST_GROUP_02, RESOURCE_READER_ROLE))
-    conn, groups = test_group
+    conn, groups = fxtr_group
     with db.cursor(conn) as cursor:
         cursor.executemany(
             "INSERT INTO group_roles VALUES (?, ?, ?)",
@@ -97,11 +97,11 @@ def fixture_group_roles(test_group):# pylint: disable=[redefined-outer-name]
     yield conn, groups, group_roles
 
 @pytest.fixture(scope="function")
-def fixture_group_user_roles(test_users_in_group, fixture_group_roles, fixture_resources):#pylint: disable=[redefined-outer-name,unused-argument]
+def fxtr_group_user_roles(fxtr_users_in_group, fxtr_group_roles, fxtr_resources):#pylint: disable=[redefined-outer-name,unused-argument]
     """Assign roles to users."""
     from .role_fixtures import RESOURCE_EDITOR_ROLE # pylint: disable=[import-outside-toplevel]
-    conn, _groups, _group_roles = fixture_group_roles
-    _conn, _group, group_users = test_users_in_group
+    conn, _groups, _group_roles = fxtr_group_roles
+    _conn, _group, group_users = fxtr_users_in_group
     users = tuple(user for user in group_users if user.email
                   not in ("unaff@iliated.user", "group@lead.er"))
     users_roles_resources = (

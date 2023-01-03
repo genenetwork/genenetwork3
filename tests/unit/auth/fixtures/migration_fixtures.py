@@ -8,14 +8,14 @@ from gn3.auth import db
 from gn3.migrations import apply_migrations, rollback_migrations
 
 @pytest.fixture(scope="session")
-def auth_testdb_path(test_app_config): # pylint: disable=redefined-outer-name
+def auth_testdb_path(fxtr_app_config): # pylint: disable=redefined-outer-name
     """Get the test application's auth database file"""
-    return test_app_config["AUTH_DB"]
+    return fxtr_app_config["AUTH_DB"]
 
 @pytest.fixture(scope="session")
-def auth_migrations_dir(test_app_config): # pylint: disable=redefined-outer-name
+def auth_migrations_dir(fxtr_app_config): # pylint: disable=redefined-outer-name
     """Get the test application's auth database file"""
-    return test_app_config["AUTH_MIGRATIONS"]
+    return fxtr_app_config["AUTH_MIGRATIONS"]
 
 def apply_single_migration(backend: DatabaseBackend, migration: Migration):# pylint: disable=[redefined-outer-name]
     """Utility to apply a single migration"""

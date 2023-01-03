@@ -18,7 +18,7 @@ TEST_USERS = (
              "unaff@iliated.user", "Unaffiliated User"))
 
 @pytest.fixture(scope="function")
-def test_users(conn_after_auth_migrations):# pylint: disable=[redefined-outer-name]
+def fxtr_users(conn_after_auth_migrations):# pylint: disable=[redefined-outer-name]
     """Fixture: setup test users."""
     query = "INSERT INTO users(user_id, email, name) VALUES (?, ?, ?)"
     query_user_roles = "INSERT INTO user_roles(user_id, role_id) VALUES (?, ?)"
@@ -44,9 +44,9 @@ def test_users(conn_after_auth_migrations):# pylint: disable=[redefined-outer-na
              ("9a0c7ce5-2f40-4e78-979e-bf3527a59579",)))
 
 @pytest.fixture(scope="function")
-def fixture_users_with_passwords(test_users): # pylint: disable=[redefined-outer-name]
+def fxtr_users_with_passwords(fxtr_users): # pylint: disable=[redefined-outer-name]
     """Fixture: add passwords to the users"""
-    conn, users = test_users
+    conn, users = fxtr_users
     user_passwords_params = tuple(
         (str(user.user_id), bcrypt.hashpw(
             f"password_for_user_{idx:03}".encode("utf8"),
