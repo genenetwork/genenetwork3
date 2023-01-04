@@ -1,12 +1,12 @@
 """Endpoints for the oauth2 server"""
 import uuid
 
-from flask import Blueprint, current_app as app
+from flask import current_app as app
 
+from gn3.auth.blueprint import oauth2
 from .endpoints.revocation import RevocationEndpoint
 from .endpoints.introspection import IntrospectionEndpoint
 
-oauth2 = Blueprint("oauth2", __name__)
 
 @oauth2.route("/register-client", methods=["GET", "POST"])
 def register_client():

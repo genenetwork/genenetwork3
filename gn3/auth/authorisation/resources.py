@@ -6,7 +6,7 @@ from gn3.auth import db
 from gn3.auth.authentication.users import User
 
 from .checks import authorised_p
-from .exceptions import AuthorisationError
+from .errors import AuthorisationError
 from .groups import Group, user_group, is_group_leader, authenticated_user_group
 
 class MissingGroupError(AuthorisationError):

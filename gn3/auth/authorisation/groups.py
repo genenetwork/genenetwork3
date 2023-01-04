@@ -12,7 +12,7 @@ from gn3.auth.authentication.checks import authenticated_p
 from .checks import authorised_p
 from .privileges import Privilege
 from .roles import Role, create_role
-from .exceptions import AuthorisationError
+from .errors import AuthorisationError
 
 class Group(NamedTuple):
     """Class representing a group."""
