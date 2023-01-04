@@ -19,7 +19,7 @@ from gn3.api.async_commands import async_commands
 from gn3.api.menu import menu
 from gn3.api.search import search
 from gn3.api.metadata import metadata
-from gn3.auth.authentication.oauth2.views import oauth2
+from gn3.auth.authorisation.views import oauth2
 from gn3.auth.authentication.oauth2.server import setup_oauth2_server
 
 
