@@ -69,20 +69,14 @@ def __organise_privileges__(roles_dict, privilege_row):
     }
 
 def user_roles(conn: db.DbConnection, user: User):
-    """Retrieve ALL roles assigned to the user."""
+    """Retrieve non-resource roles assigned to the user."""
     with db.cursor(conn) as cursor:
         cursor.execute(
             "SELECT r.*, p.* FROM user_roles AS ur INNER JOIN roles AS r "
             "ON ur.role_id=r.role_id INNER JOIN role_privileges AS rp "
             "ON r.role_id=rp.role_id INNER JOIN privileges AS p "
-            "ON rp.privilege_id=p.privilege_id WHERE ur.user_id=? "
-            "UNION "
-            "SELECT r.*, p.* FROM group_user_roles_on_resources AS guror "
-            "INNER JOIN roles AS r ON guror.role_id=r.role_id "
-            "INNER JOIN role_privileges AS rp ON r.role_id=rp.role_id "
-            "INNER JOIN privileges AS p ON rp.privilege_id=p.privilege_id "
-            "WHERE guror.user_id=?",
-            ((str(user.user_id),)*2))
+            "ON rp.privilege_id=p.privilege_id WHERE ur.user_id=?",
+            (str(user.user_id),))
 
         results = cursor.fetchall()
         if results:

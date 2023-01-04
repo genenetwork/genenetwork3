@@ -9,7 +9,7 @@ from ..authentication.oauth2.resource_server import require_oauth
 @oauth2.route("/user-roles")
 @require_oauth
 def user_roles():
-    """Return the roles assigned to the user."""
+    """Return the non-resource roles assigned to the user."""
     with require_oauth.acquire("role") as token:
         with db.connection(current_app.config["AUTH_DB"]) as conn:
             return jsonify(_user_roles(conn, token.user))
