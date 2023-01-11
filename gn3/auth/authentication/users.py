@@ -1,6 +1,6 @@
 """User-specific code and data structures."""
 from uuid import UUID, uuid4
-from typing import NamedTuple
+from typing import Tuple, NamedTuple
 
 import bcrypt
 from pymonad.maybe import Just, Maybe, Nothing
