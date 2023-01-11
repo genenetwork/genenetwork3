@@ -24,7 +24,9 @@ def fxtr_users(conn_after_auth_migrations):# pylint: disable=[redefined-outer-na
     query_user_roles = "INSERT INTO user_roles(user_id, role_id) VALUES (?, ?)"
     test_user_roles = (
         ("ecb52977-3004-469e-9428-2a1856725c7f",
-         "a0e67630-d502-4b9f-b23f-6805d0f30e30"),)
+         "a0e67630-d502-4b9f-b23f-6805d0f30e30"),
+        ("ecb52977-3004-469e-9428-2a1856725c7f",
+         "ade7e6b0-ba9c-4b51-87d0-2af7fe39a347"))
     with db.cursor(conn_after_auth_migrations) as cursor:
         cursor.executemany(query, (
             (str(user.user_id), user.email, user.name) for user in TEST_USERS))

@@ -7,10 +7,10 @@ from gn3.auth.blueprint import oauth2
 
 from .groups import user_group
 from .errors import UserRegistrationError
-from .roles import user_roles as _user_roles
+from .roles import assign_default_roles, user_roles as _user_roles
 
 from ..authentication.oauth2.resource_server import require_oauth
-from ..authentication.users import User, save_user, set_user_password
+from ..authentication.users import save_user, set_user_password
 from ..authentication.oauth2.models.oauth2token import token_by_access_token
 
 @oauth2.route("/user", methods=["GET"])
@@ -95,6 +95,7 @@ def register_user():
         with db.cursor(conn) as cursor:
             user, _hashed_password = set_user_password(
                 cursor, save_user(cursor, email, user_name), password)
+            assign_default_roles(cursor, user)
             return jsonify(
                 {
                     "user_id": user.user_id,

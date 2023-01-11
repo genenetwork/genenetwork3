@@ -69,9 +69,6 @@ def test_create_role(# pylint: disable=[too-many-arguments]
                      privilege_id=uuid.UUID('3ebfe79c-d159-4629-8b38-772cf4bc2261'),
                      privilege_name='view-group'),
                  Privilege(
-                     privilege_id=uuid.UUID('4842e2aa-38b9-4349-805e-0a99a9cf8bff'),
-                     privilege_name='create-group'),
-                 Privilege(
                      privilege_id=uuid.UUID('5103cc68-96f8-4ebb-83a4-a31692402c9b'),
                      privilege_name='assign-role'),
                  Privilege(
@@ -97,7 +94,14 @@ def test_create_role(# pylint: disable=[too-many-arguments]
                      privilege_name='transfer-group-leadership'),
              Privilege(
                  privilege_id=uuid.UUID('f1bd3f42-567e-4965-9643-6d1a52ddee64'),
-                 privilege_name='remove-group-member'))),),
+                 privilege_name='remove-group-member'))),
+           Role(
+               role_id=uuid.UUID("ade7e6b0-ba9c-4b51-87d0-2af7fe39a347"),
+               role_name="group-creator",
+               privileges=(
+                   Privilege(
+                       privilege_id=uuid.UUID('4842e2aa-38b9-4349-805e-0a99a9cf8bff'),
+                       privilege_name='create-group'),))),
           tuple(), tuple(), tuple()))))
 def test_user_roles(fxtr_group_user_roles, user, expected):
     """

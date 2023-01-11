@@ -83,3 +83,16 @@ def user_roles(conn: db.DbConnection, user: User):
             return tuple(
                 reduce(__organise_privileges__, results, {}).values())
         return tuple()
+
+def assign_default_roles(cursor: db.DbCursor, user: User):
+    """Assign `user` some default roles."""
+    cursor.execute(
+        'SELECT role_id FROM roles WHERE role_name IN '
+        '("group-creator")')
+    role_ids = cursor.fetchall()
+    str_user_id = str(user.user_id)
+    params = (
+        {"user_id": str_user_id, "role_id": role_id} for role_id in role_ids)
+    cursor.executemany(
+        ("INSERT INTO user_roles VALUES (:user_id, :role_id)"),
+        params)
