@@ -11,6 +11,27 @@ from gn3.db_utils import xapian_database
 
 search = Blueprint("search", __name__)
 
+
+def parse_query(query: str):
+    """Parse search query using GeneNetwork specific field processors."""
+    queryparser = xapian.QueryParser()
+    queryparser.set_stemmer(xapian.Stem("en"))
+    queryparser.set_stemming_strategy(queryparser.STEM_SOME)
+    queryparser.add_boolean_prefix("author", "A")
+    queryparser.add_boolean_prefix("species", "XS")
+    queryparser.add_boolean_prefix("group", "XG")
+    queryparser.add_boolean_prefix("tissue", "XI")
+    queryparser.add_boolean_prefix("dataset", "XDS")
+    queryparser.add_boolean_prefix("symbol", "XY")
+    queryparser.add_boolean_prefix("chr", "XC")
+    queryparser.add_boolean_prefix("peakchr", "XPC")
+    queryparser.add_prefix("description", "XD")
+    range_prefixes = ["mean", "peak", "mb", "peakmb", "additive", "year"]
+    for i, prefix in enumerate(range_prefixes):
+        queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
+    return queryparser.parse_query(query)
+
+
 @search.route("/")
 def search_results():
     """Search Xapian index and return a list of results."""
@@ -25,21 +46,7 @@ def search_results():
     if results_per_page > maximum_results_per_page:
         abort(400, description="Requested too many search results")
 
-    queryparser = xapian.QueryParser()
-    queryparser.set_stemmer(xapian.Stem("en"))
-    queryparser.set_stemming_strategy(queryparser.STEM_SOME)
-    queryparser.add_boolean_prefix("author", "A")
-    queryparser.add_boolean_prefix("species", "XS")
-    queryparser.add_boolean_prefix("group", "XG")
-    queryparser.add_boolean_prefix("tissue", "XI")
-    queryparser.add_boolean_prefix("dataset", "XDS")
-    queryparser.add_boolean_prefix("symbol", "XY")
-    queryparser.add_boolean_prefix("chr", "XC")
-    queryparser.add_boolean_prefix("peakchr", "XPC")
-    queryparser.add_prefix("description", "XD")
-    for i, prefix in enumerate(["mean:", "peak:", "mb:", "peakmb:", "additive:", "year:"]):
-        queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix))
-    query = queryparser.parse_query(querystring)
+    query = parse_query(querystring)
     traits = []
     # pylint: disable=invalid-name
     with xapian_database(current_app.config["XAPIAN_DB_PATH"]) as db:
