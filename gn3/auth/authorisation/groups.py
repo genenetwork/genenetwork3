@@ -49,7 +49,8 @@ def user_membership(conn: db.DbConnection, user: User) -> Sequence[Group]:
     return groups
 
 @authenticated_p
-@authorised_p(("create-group",), error_message="Failed to create group.")
+@authorised_p(("system:group:create-group",),
+              error_message="Failed to create group.")
 def create_group(conn: db.DbConnection, group_name: str,
                  group_leader: User) -> Group:
     """Create a group"""
@@ -69,7 +70,8 @@ def create_group(conn: db.DbConnection, group_name: str,
     return group
 
 @authenticated_p
-@authorised_p(("create-role",), error_message="Could not create the group role")
+@authorised_p(("group:role:create-role",),
+              error_message="Could not create the group role")
 def create_group_role(
         conn: db.DbConnection, group: Group, role_name: str,
         privileges: Iterable[Privilege]) -> GroupRole:

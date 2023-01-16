@@ -23,9 +23,9 @@ uuid_fn = lambda : UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
 GROUP = Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup")
 PRIVILEGES = (
     Privilege(
-        UUID("7f261757-3211-4f28-a43f-a09b800b164d"), "view-resource"),
-    Privilege(
-        UUID("2f980855-959b-4339-b80e-25d1ec286e21"), "edit-resource"))
+        "group:resource:view-resource",
+        "view a resource and use it in computations"),
+    Privilege("group:resource:edit-resource", "edit/update a resource"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(

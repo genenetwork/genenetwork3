@@ -19,7 +19,7 @@ def authorised_p(
             if hasattr(g, "user") and g.user:
                 with db.connection(app.config["AUTH_DB"]) as conn:
                     user_privileges = tuple(
-                        priv.privilege_name for priv in
+                        priv.privilege_id for priv in
                         auth_privs.user_privileges(conn, g.user))
 
                 not_assigned = [

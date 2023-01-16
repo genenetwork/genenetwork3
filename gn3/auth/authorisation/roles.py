@@ -17,7 +17,7 @@ class Role(NamedTuple):
     privileges: Iterable[Privilege]
 
 @authenticated_p
-@authorised_p(("create-role",), error_message="Could not create role")
+@authorised_p(("group:role:create-role",), error_message="Could not create role")
 def create_role(
         cursor: db.DbCursor, role_name: str,
         privileges: Iterable[Privilege]) -> Role:
@@ -55,8 +55,8 @@ def __organise_privileges__(roles_dict, privilege_row):
                 UUID(role_id_str),
                 privilege_row["role_name"],
                 roles_dict[role_id_str].privileges + (
-                    Privilege(UUID(privilege_row["privilege_id"]),
-                              privilege_row["privilege_name"]),))
+                    Privilege(privilege_row["privilege_id"],
+                              privilege_row["privilege_description"]),))
         }
 
     return {
@@ -64,8 +64,8 @@ def __organise_privileges__(roles_dict, privilege_row):
         role_id_str: Role(
             UUID(role_id_str),
             privilege_row["role_name"],
-            (Privilege(UUID(privilege_row["privilege_id"]),
-                       privilege_row["privilege_name"]),))
+            (Privilege(privilege_row["privilege_id"],
+                       privilege_row["privilege_description"]),))
     }
 
 def user_roles(conn: db.DbConnection, user: User):

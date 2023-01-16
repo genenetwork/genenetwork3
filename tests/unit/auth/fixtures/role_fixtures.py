@@ -9,15 +9,14 @@ from gn3.auth.authorisation.privileges import Privilege
 
 RESOURCE_READER_ROLE = Role(
     uuid.UUID("c3ca2507-ee24-4835-9b31-8c21e1c072d3"), "resource_reader",
-    (Privilege(uuid.UUID("7f261757-3211-4f28-a43f-a09b800b164d"),
-               "view-resource"),))
+    (Privilege("group:resource:view-resource",
+               "view a resource and use it in computations"),))
 
 RESOURCE_EDITOR_ROLE = Role(
     uuid.UUID("89819f84-6346-488b-8955-86062e9eedb7"), "resource_editor", (
-        Privilege(uuid.UUID("7f261757-3211-4f28-a43f-a09b800b164d"),
-                  "view-resource"),
-        Privilege(uuid.UUID("2f980855-959b-4339-b80e-25d1ec286e21"),
-                  "edit-resource")))
+        Privilege("group:resource:view-resource",
+                  "view a resource and use it in computations"),
+        Privilege("group:resource:edit-resource", "edit/update a resource")))
 
 TEST_ROLES = (RESOURCE_READER_ROLE, RESOURCE_EDITOR_ROLE)
 

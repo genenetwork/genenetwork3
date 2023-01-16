@@ -26,7 +26,8 @@ class Resource(NamedTuple):
     resource_category: ResourceCategory
     public: bool
 
-@authorised_p(("create-resource",),  error_message="Could not create resource")
+@authorised_p(("group:resource:create-resource",),
+              error_message="Could not create resource")
 def create_resource(
         conn: db.DbConnection, resource_name: str,
         resource_category: ResourceCategory) -> Resource:
