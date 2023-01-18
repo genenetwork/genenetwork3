@@ -153,7 +153,7 @@ def apply_si_suffix(location: str) -> int:
     return int(float(location[:-1])*10**suffixes.get(location[-1].lower(), 0))
 
 
-def parse_location_field(lifted_species: str, species_prefix: str,
+def parse_location_field(lifted_species: str, species_prefix: str, # pylint: disable=[too-many-arguments]
                          chromosome_prefix: str, location_slot: int,
                          liftover_function: IntervalLiftoverFunction,
                          query: bytes) -> xapian.Query:

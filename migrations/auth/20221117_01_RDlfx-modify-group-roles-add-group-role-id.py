@@ -33,6 +33,7 @@ steps = [
             group_role_id TEXT PRIMARY KEY,
             group_id TEXT NOT NULL,
             role_id TEXT NOT NULL,
+            UNIQUE (group_id, role_id),
             FOREIGN KEY(group_id) REFERENCES groups(group_id),
             FOREIGN KEY(role_id) REFERENCES roles(role_id)
         ) WITHOUT ROWID

@@ -13,9 +13,12 @@ steps = [
     step(
         """
         CREATE TABLE IF NOT EXISTS mrna_resources(
+            group_id TEXT NOT NULL,
             resource_id TEXT PRIMARY KEY,
             dataset_id TEXT NOT NULL UNIQUE,
-            FOREIGN KEY(resource_id) REFERENCES resources(resource_id)
+            FOREIGN KEY(group_id, resource_id)
+              REFERENCES resources(group_id, resource_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS mrna_resources")

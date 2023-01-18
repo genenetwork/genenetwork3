@@ -3,6 +3,7 @@ import uuid
 
 import pytest
 
+from gn3.auth import db
 from gn3.auth.authorisation.groups import Group
 from gn3.auth.authorisation.resources import (
     Resource, user_resources, create_resource, ResourceCategory,
@@ -35,9 +36,13 @@ def test_create_resource(mocker, fxtr_app, fxtr_users_in_group, user, expected):
     """Test that resource creation works as expected."""
     mocker.patch("gn3.auth.authorisation.resources.uuid4", uuid_fn)
     conn, _group, _users = fxtr_users_in_group
-    with fxtr_app.app_context() as flask_context:
+    with fxtr_app.app_context() as flask_context, db.cursor(conn) as cursor:
         flask_context.g.user = user
         assert create_resource(conn, "test_resource", resource_category) == expected
+
+        # Cleanup
+        cursor.execute(
+            "DELETE FROM resources WHERE resource_id=?", (str(uuid_fn()),))
 
 SORTKEY = lambda resource: resource.resource_id
 
@@ -74,5 +79,5 @@ def test_user_resources(fxtr_group_user_roles, user, expected):
     WHEN: a particular user's resources are requested
     THEN: list only the resources for which the user can access
     """
-    conn = fxtr_group_user_roles
+    conn, *_others = fxtr_group_user_roles
     assert sorted(user_resources(conn, user), key=SORTKEY) == expected

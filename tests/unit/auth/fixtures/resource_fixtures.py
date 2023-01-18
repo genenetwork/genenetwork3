@@ -15,4 +15,11 @@ def fxtr_resources(fxtr_group):# pylint: disable=[redefined-outer-name]
         ((str(res.group.group_id), str(res.resource_id), res.resource_name,
           str(res.resource_category.resource_category_id),
           1 if res.public else 0) for res in TEST_RESOURCES))
-    return (conn, TEST_RESOURCES)
+
+    yield (conn, TEST_RESOURCES)
+
+    with db.cursor(conn) as cursor:
+        cursor.executemany(
+            "DELETE FROM resources WHERE group_id=? AND resource_id=?",
+        ((str(res.group.group_id), str(res.resource_id),)
+         for res in TEST_RESOURCES))

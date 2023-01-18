@@ -99,4 +99,5 @@ def test_user_roles(fxtr_group_user_roles, user, expected):
     WHEN: we request the user's privileges
     THEN: return **ALL** the privileges attached to the user
     """
-    assert user_roles(fxtr_group_user_roles, user) == expected
+    conn, *_others = fxtr_group_user_roles
+    assert user_roles(conn, user) == expected

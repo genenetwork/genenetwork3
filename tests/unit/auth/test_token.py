@@ -2,6 +2,8 @@
 
 import pytest
 
+from gn3.auth import db
+
 SUCCESS_RESULT = {
     "status_code": 200,
     "result": {
@@ -42,7 +44,7 @@ def test_token(fxtr_app, fxtr_oauth2_clients, test_data, expected):
          back
       c) TODO: when user tries to use wrong client, we get error message back
     """
-    _conn, oa2clients = fxtr_oauth2_clients
+    conn, oa2clients = fxtr_oauth2_clients
     email, password, client_idx = test_data
     data = {
         "grant_type": "password", "scope": "profile nonexistent-scope",
@@ -50,8 +52,11 @@ def test_token(fxtr_app, fxtr_oauth2_clients, test_data, expected):
         "client_secret": oa2clients[client_idx].client_secret,
         "username": email, "password": password}
 
-    with fxtr_app.test_client() as client:
+    with fxtr_app.test_client() as client, db.cursor(conn) as cursor:
         res = client.post("/api/oauth2/token", data=data)
+        # cleanup db
+        cursor.execute("DELETE FROM oauth2_tokens WHERE access_token=?",
+                       (gen_token(None, None, None, None),))
     assert res.status_code == expected["status_code"]
     for key in expected["result"]:
         assert res.json[key] == expected["result"][key]

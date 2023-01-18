@@ -7,6 +7,8 @@ from gn3.auth import db
 from gn3.auth.authorisation.groups import Group, GroupRole
 from gn3.auth.authorisation.resources import Resource, ResourceCategory
 
+from .role_fixtures import RESOURCE_EDITOR_ROLE, RESOURCE_READER_ROLE
+
 TEST_GROUP_01 = Group(uuid.UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"),
                       "TheTestGroup")
 TEST_GROUP_02 = Group(uuid.UUID("e37d59d7-c05e-4d67-b479-81e627d8d634"),
@@ -45,6 +47,9 @@ TEST_RESOURCES_GROUP_02 = (
 TEST_RESOURCES = TEST_RESOURCES_GROUP_01 + TEST_RESOURCES_GROUP_02
 TEST_RESOURCES_PUBLIC = (TEST_RESOURCES_GROUP_01[0], TEST_RESOURCES_GROUP_02[1])
 
+def __gtuple__(cursor):
+    return tuple(dict(row) for row in cursor.fetchall())
+
 @pytest.fixture(scope="function")
 def fxtr_group(conn_after_auth_migrations):# pylint: disable=[redefined-outer-name]
     """Fixture: setup a test group."""
@@ -56,6 +61,11 @@ def fxtr_group(conn_after_auth_migrations):# pylint: disable=[redefined-outer-na
                 for group in TEST_GROUPS))
 
     yield (conn_after_auth_migrations, TEST_GROUPS[0])
+
+    with db.cursor(conn_after_auth_migrations) as cursor:
+        cursor.executemany(
+            "DELETE FROM groups WHERE group_id=?",
+            ((str(group.group_id),) for group in TEST_GROUPS))
 
 @pytest.fixture(scope="function")
 def fxtr_users_in_group(fxtr_group, fxtr_users):# pylint: disable=[redefined-outer-name, unused-argument]
@@ -78,9 +88,8 @@ def fxtr_users_in_group(fxtr_group, fxtr_users):# pylint: disable=[redefined-out
             query_params)
 
 @pytest.fixture(scope="function")
-def fxtr_group_roles(fxtr_group):# pylint: disable=[redefined-outer-name]
+def fxtr_group_roles(fxtr_group, fxtr_roles):# pylint: disable=[redefined-outer-name,unused-argument]
     """Link roles to group"""
-    from .role_fixtures import RESOURCE_EDITOR_ROLE, RESOURCE_READER_ROLE# pylint: disable=[import-outside-toplevel]
     group_roles = (
         GroupRole(uuid.UUID("9c25efb2-b477-4918-a95c-9914770cbf4d"),
                   TEST_GROUP_01, RESOURCE_EDITOR_ROLE),
@@ -96,11 +105,20 @@ def fxtr_group_roles(fxtr_group):# pylint: disable=[redefined-outer-name]
 
     yield conn, groups, group_roles
 
+    with db.cursor(conn) as cursor:
+        cursor.execute("SELECT * FROM group_user_roles_on_resources")
+        cursor.executemany(
+            ("DELETE FROM group_roles "
+             "WHERE group_role_id=? AND group_id=? AND role_id=?"),
+            ((str(role.group_role_id), str(role.group.group_id),
+              str(role.role.role_id))
+             for role in group_roles))
+
 @pytest.fixture(scope="function")
-def fxtr_group_user_roles(fxtr_users_in_group, fxtr_group_roles, fxtr_resources):#pylint: disable=[redefined-outer-name,unused-argument]
+def fxtr_group_user_roles(fxtr_resources, fxtr_group_roles, fxtr_users_in_group):#pylint: disable=[redefined-outer-name,unused-argument]
     """Assign roles to users."""
-    from .role_fixtures import RESOURCE_EDITOR_ROLE # pylint: disable=[import-outside-toplevel]
-    conn, _groups, _group_roles = fxtr_group_roles
+    conn, _groups, group_roles = fxtr_group_roles
+    _conn, group_resources = fxtr_resources
     _conn, _group, group_users = fxtr_users_in_group
     users = tuple(user for user in group_users if user.email
                   not in ("unaff@iliated.user", "group@lead.er"))
@@ -108,19 +126,22 @@ def fxtr_group_user_roles(fxtr_users_in_group, fxtr_group_roles, fxtr_resources)
         (user, RESOURCE_EDITOR_ROLE, TEST_RESOURCES_GROUP_01[1])
         for user in users if user.email == "group@mem.ber01")
     with db.cursor(conn) as cursor:
+        params = tuple({
+            "group_id": str(resource.group.group_id),
+            "user_id": str(user.user_id),
+            "role_id": str(role.role_id),
+            "resource_id": str(resource.resource_id)
+        } for user, role, resource in users_roles_resources)
         cursor.executemany(
-            ("INSERT INTO group_user_roles_on_resources VALUES (?, ?, ?, ?)"),
-            ((str(TEST_GROUP_01.group_id), str(user.user_id), str(role.role_id),
-              str(resource.resource_id))
-             for user, role, resource in users_roles_resources))
+            ("INSERT INTO group_user_roles_on_resources "
+             "VALUES (:group_id, :user_id, :role_id, :resource_id)"),
+            params)
 
-    yield conn
+    yield conn, group_users, group_roles, group_resources
 
     with db.cursor(conn) as cursor:
         cursor.executemany(
             ("DELETE FROM group_user_roles_on_resources WHERE "
-             "group_id=? AND user_id=? AND role_id=? AND "
-             "resource_id=?"),
-            ((str(TEST_GROUP_01.group_id), str(user.user_id), str(role.role_id),
-              str(resource.resource_id))
-             for user, role, resource in users_roles_resources))
+             "group_id=:group_id AND user_id=:user_id AND role_id=:role_id AND "
+             "resource_id=:resource_id"),
+            params)

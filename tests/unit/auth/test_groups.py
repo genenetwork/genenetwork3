@@ -73,10 +73,15 @@ def test_create_group_role(mocker, fxtr_users_in_group, fxtr_app, user, expected
     mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
     mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
     conn, _group, _users = fxtr_users_in_group
-    with fxtr_app.app_context() as flask_context:
+    with fxtr_app.app_context() as flask_context, db.cursor(conn) as cursor:
         flask_context.g.user = user
         assert create_group_role(
             conn, GROUP, "ResourceEditor", PRIVILEGES) == expected
+        # cleanup
+        cursor.execute(
+            ("DELETE FROM group_roles "
+             "WHERE group_role_id=? AND group_id=? AND role_id=?"),
+            (str(uuid_fn()), str(GROUP.group_id), str(uuid_fn())))
 
 @pytest.mark.unit_test
 def test_create_multiple_groups(mocker, fxtr_app, fxtr_users):
