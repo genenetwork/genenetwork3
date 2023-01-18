@@ -153,7 +153,7 @@ def apply_si_suffix(location: str) -> int:
     return int(float(location[:-1])*10**suffixes.get(location[-1].lower(), 0))
 
 
-def parse_location_field(lifted_species: str, species_prefix: str, # pylint: disable=[too-many-arguments]
+def parse_location_field(species_query: xapian.Query,
                          chromosome_prefix: str, location_slot: int,
                          liftover_function: IntervalLiftoverFunction,
                          query: bytes) -> xapian.Query:
@@ -171,11 +171,11 @@ def parse_location_field(lifted_species: str, species_prefix: str, # pylint: dis
                                    *[location.map(apply_si_suffix)
                                      for location in parse_range(location)])
 
-    def make_query(species: str, interval: ChromosomalInterval) -> xapian.Query:
+    def make_query(interval: ChromosomalInterval) -> xapian.Query:
         # TODO: Convert the xapian index to use bases instead of megabases.
         to_megabases = lambda x: str(float(x)/1e6)
         return combine_queries(xapian.Query.OP_AND,
-                               xapian.Query(species_prefix + species),
+                               species_query,
                                xapian.Query(chromosome_prefix + interval.chromosome),
                                xapian.NumberRangeProcessor(location_slot)
                                (interval.start.maybe("", to_megabases),
@@ -186,8 +186,7 @@ def parse_location_field(lifted_species: str, species_prefix: str, # pylint: dis
     except ValueError:
         return xapian.Query(xapian.Query.OP_INVALID)
     return (liftover_function(interval)
-            .maybe(xapian.Query.MatchNothing,
-                   partial(make_query, lifted_species)))
+            .maybe(xapian.Query.MatchNothing, make_query))
 
 
 def parse_synteny_field(synteny_prefix: str, query: bytes) -> xapian.Query:
@@ -265,8 +264,7 @@ def parse_query(synteny_files_directory: Path, query: str):
                               "Mm": "mouse"}
         for shorthand, species in species_shorthands.items():
             field_processors = [partial(parse_location_field,
-                                        species,
-                                        species_prefix,
+                                        xapian.Query(species_prefix + species),
                                         chromosome_prefix,
                                         range_prefixes.index("mb"),
                                         Just)]
@@ -280,8 +278,7 @@ def parse_query(synteny_files_directory: Path, query: str):
                 for lifted_species, chain_file in chain_files.items():
                     field_processors.append(
                         partial(parse_location_field,
-                                lifted_species,
-                                species_prefix,
+                                xapian.Query(species_prefix + lifted_species),
                                 chromosome_prefix,
                                 range_prefixes.index("mb"),
                                 partial(liftover_interval,
