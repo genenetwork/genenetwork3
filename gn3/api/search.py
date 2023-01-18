@@ -164,12 +164,18 @@ def parse_location_field(species_query: xapian.Query,
     """
     def split_query(query: str) -> ChromosomalInterval:
         """Split query into chromosome and location tuple."""
-        chromosome, location = query.lower().split(":")
+        chromosome, location_str = query.lower().split(":")
         if not chromosome.startswith("chr"):
             raise ValueError
-        return ChromosomalInterval(chromosome.removeprefix("chr"),
-                                   *[location.map(apply_si_suffix)
-                                     for location in parse_range(location)])
+        location: tuple[Maybe[int], Maybe[int]]
+        if ".." in location_str:
+            location = tuple(limit.map(apply_si_suffix) for limit in parse_range(location_str))
+        # If point location, assume +/- 50 kbases on either side.
+        else:
+            width = 50*10**3
+            point = apply_si_suffix(location_str)
+            location = Just(point - width), Just(point + width)
+        return ChromosomalInterval(chromosome.removeprefix("chr"), *location)
 
     def make_query(interval: ChromosomalInterval) -> xapian.Query:
         # TODO: Convert the xapian index to use bases instead of megabases.
