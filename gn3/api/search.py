@@ -207,7 +207,7 @@ def remove_synteny_field(synteny_prefix: str, query: xapian.Query,
                          parent_operator: int = xapian.Query.OP_AND) -> xapian.Query:
     """Return a new query with the synteny field removed."""
     # Note that this function only supports queries that exclusively use the
-    # AND, OR, FILTER, RANGE and INVALID operators.
+    # AND, OR, FILTER, WEIGHT, RANGE and INVALID operators.
     # python xapian bindings do not expose xapian.Query.LEAF_TERM. This is
     # most likely a bug.
     leaf_type = 100
@@ -222,7 +222,8 @@ def remove_synteny_field(synteny_prefix: str, query: xapian.Query,
         else:
             raise ValueError("Unexpected operator in query", query.get_type())
     # Recurse on non-leaf nodes with the AND, OR or FILTER operators as root.
-    elif query.get_type() in (xapian.Query.OP_AND, xapian.Query.OP_OR, xapian.Query.OP_FILTER):
+    elif query.get_type() in (xapian.Query.OP_AND, xapian.Query.OP_OR,
+                              xapian.Query.OP_FILTER, xapian.Query.OP_SCALE_WEIGHT):
         return combine_queries(query.get_type(),
                                *[remove_synteny_field(synteny_prefix, subquery, query.get_type())
                                  for subquery in query_subqueries(query)])
