@@ -51,6 +51,7 @@ def connection(db_path: str, row_factory: Callable = sqlite3.Row) -> Iterator[Db
     """Create the connection to the auth database."""
     conn = sqlite3.connect(db_path)
     conn.row_factory = row_factory
+    conn.execute("PRAGMA foreign_keys = ON")
     try:
         yield conn
     except sqlite3.Error as exc:
