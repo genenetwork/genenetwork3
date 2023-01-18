@@ -6,4 +6,5 @@ ignore-imports=yes
 
 disable=
 	fixme,
-	duplicate-code
+	duplicate-code,
+        no-else-return
