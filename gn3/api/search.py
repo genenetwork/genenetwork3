@@ -174,7 +174,7 @@ def parse_location_field(species_query: xapian.Query,
         else:
             width = 50*10**3
             point = apply_si_suffix(location_str)
-            location = Just(point - width), Just(point + width)
+            location = Just(max(0, point - width)), Just(point + width)
         return ChromosomalInterval(chromosome.removeprefix("chr"), *location)
 
     def make_query(interval: ChromosomalInterval) -> xapian.Query:
