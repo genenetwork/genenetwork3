@@ -1,6 +1,7 @@
 """Search using Xapian index."""
 
 from collections import namedtuple
+from decimal import Decimal
 import gzip
 import json
 from functools import partial, reduce
@@ -151,7 +152,7 @@ def apply_si_suffix(location: str) -> int:
     """Apply SI suffixes kilo, mega, giga and convert to bases."""
     suffixes = {"k": 3, "m": 6, "g": 9}
     if location[-1] in suffixes:
-        return int(float(location[:-1])*10**suffixes[location[-1].lower()])
+        return int(Decimal(location[:-1])*10**suffixes[location[-1].lower()])
     else:
         return int(location)
 
