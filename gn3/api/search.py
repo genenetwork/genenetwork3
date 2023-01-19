@@ -150,7 +150,7 @@ def parse_range(range_string: str) -> tuple[Maybe[str], Maybe[str]]:
 def apply_si_suffix(location: str) -> int:
     """Apply SI suffixes kilo, mega, giga and convert to bases."""
     suffixes = {"k": 3, "m": 6, "g": 9}
-    if location[:-1] in suffixes:
+    if location[-1] in suffixes:
         return int(float(location[:-1])*10**suffixes[location[-1].lower()])
     else:
         return int(location)
