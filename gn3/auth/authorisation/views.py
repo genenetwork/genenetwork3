@@ -1,5 +1,8 @@
 """Endpoints for the authorisation stuff."""
+import traceback
 from typing import Tuple, Optional
+
+import sqlite3
 from flask import request, jsonify, current_app
 
 from gn3.auth import db
@@ -80,28 +83,34 @@ def register_user():
         __assert_not_logged_in__(conn)
 
         form = request.form
-        email = form.get("email", "")
-        password = form.get("password", "")
-        user_name = form.get("user_name", "")
+        email = form.get("email", "").strip()
+        password = form.get("password", "").strip()
+        user_name = form.get("user_name", "").strip()
         errors = tuple(
-                error[1] for error in
+                error for valid,error in
             [__email_valid__(email),
-             __password_valid__(password, form.get("confirm_password", "")),
+             __password_valid__(
+                 password, form.get("confirm_password", "").strip()),
              __user_name_valid__(user_name)]
-            if error[0])
+            if not valid)
         if len(errors) > 0:
             raise UserRegistrationError(*errors)
 
-        with db.cursor(conn) as cursor:
-            user, _hashed_password = set_user_password(
-                cursor, save_user(cursor, email, user_name), password)
-            assign_default_roles(cursor, user)
-            return jsonify(
-                {
-                    "user_id": user.user_id,
-                    "email": user.email,
-                    "name": user.name
-                }), 200
+        try:
+            with db.cursor(conn) as cursor:
+                user, _hashed_password = set_user_password(
+                    cursor, save_user(cursor, email, user_name), password)
+                assign_default_roles(cursor, user)
+                return jsonify(
+                    {
+                        "user_id": user.user_id,
+                        "email": user.email,
+                        "name": user.name
+                    }), 200
+        except sqlite3.IntegrityError as sq3ie:
+            current_app.logger.debug(traceback.format_exc())
+            raise UserRegistrationError(
+                "A user with that email already exists") from sq3ie
 
     raise Exception(
         "unknown_error", "The system experienced an unexpected error.")

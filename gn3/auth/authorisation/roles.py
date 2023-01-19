@@ -91,8 +91,8 @@ def assign_default_roles(cursor: db.DbCursor, user: User):
         '("group-creator")')
     role_ids = cursor.fetchall()
     str_user_id = str(user.user_id)
-    params = (
-        {"user_id": str_user_id, "role_id": role_id} for role_id in role_ids)
+    params = tuple(
+        {"user_id": str_user_id, "role_id": row["role_id"]} for row in role_ids)
     cursor.executemany(
         ("INSERT INTO user_roles VALUES (:user_id, :role_id)"),
         params)
