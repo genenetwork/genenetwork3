@@ -36,7 +36,7 @@ def create_save_token_func(token_model: type) -> Callable:
             save_token(
                 conn, token_model(
                     token_id=uuid.uuid4(), client=request.client,
-                    user=request.client.user,
+                    user=request.user,
                     **{
                         "refresh_token": None, "revoked": False,
                         "issued_at": datetime.datetime.now(),

@@ -49,9 +49,10 @@ class OAuth2Token(NamedTuple):
         return self.revoked
 
 def __token_from_resultset__(conn: db.DbConnection, rset) -> Maybe:
-    the_client = client(conn, uuid.UUID(rset["client_id"]))
-    the_user = user_by_id(conn, uuid.UUID(rset["user_id"]))
     __identity__ = lambda val: val
+    the_user = user_by_id(conn, uuid.UUID(rset["user_id"]))
+    the_client = client(conn, uuid.UUID(rset["client_id"]),
+                        the_user.maybe(None, __identity__))
 
     if the_client.is_just() and the_user.is_just():
         return Just(OAuth2Token(token_id=uuid.UUID(rset["token_id"]),

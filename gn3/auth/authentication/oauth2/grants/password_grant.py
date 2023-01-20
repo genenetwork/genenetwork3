@@ -15,4 +15,4 @@ class PasswordGrant(grants.ResourceOwnerPasswordCredentialsGrant):
         with db.connection(app.config["AUTH_DB"]) as conn:
             return user_by_email(conn, username).maybe(
                 None,
-                lambda user: valid_login(conn, user, password))
+                lambda user: valid_login(conn, user, password) and user)

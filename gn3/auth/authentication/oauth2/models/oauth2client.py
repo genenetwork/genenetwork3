@@ -2,7 +2,7 @@
 import json
 import uuid
 import datetime
-from typing import NamedTuple, Sequence
+from typing import Sequence, Optional, NamedTuple
 
 from pymonad.maybe import Just, Maybe, Nothing
 
@@ -127,12 +127,15 @@ class OAuth2Client(NamedTuple):
         """Return the default redirect uri"""
         return self.client_metadata.get("default_redirect_uri", "")
 
-def client(conn: db.DbConnection, client_id: uuid.UUID) -> Maybe:
+def client(conn: db.DbConnection, client_id: uuid.UUID,
+           user: Optional[User] = None) -> Maybe:
     """Retrieve a client by its ID"""
     with db.cursor(conn) as cursor:
         cursor.execute(
             "SELECT * FROM oauth2_clients WHERE client_id=?", (str(client_id),))
         result = cursor.fetchone()
+        the_user = user or user_by_id(conn, result["user_id"]).maybe(
+            None, lambda usr: usr)
         if result:
             return Just(
                 OAuth2Client(uuid.UUID(result["client_id"]),
@@ -142,8 +145,6 @@ def client(conn: db.DbConnection, client_id: uuid.UUID) -> Maybe:
                              datetime.datetime.fromtimestamp(
                                  result["client_secret_expires_at"]),
                              json.loads(result["client_metadata"]),
-                             user_by_id( # type: ignore[misc]
-                                 conn, uuid.UUID(result["user_id"])).maybe(
-                                     None, lambda usr: usr)))
+                             the_user))
 
     return Nothing
