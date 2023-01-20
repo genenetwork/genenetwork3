@@ -135,7 +135,7 @@ def client(conn: db.DbConnection, client_id: uuid.UUID,
             "SELECT * FROM oauth2_clients WHERE client_id=?", (str(client_id),))
         result = cursor.fetchone()
         the_user = user or user_by_id(conn, result["user_id"]).maybe(
-            None, lambda usr: usr)
+            None, lambda usr: usr)# type: ignore
         if result:
             return Just(
                 OAuth2Client(uuid.UUID(result["client_id"]),
