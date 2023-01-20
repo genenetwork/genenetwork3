@@ -107,14 +107,22 @@ def save_token(conn: db.DbConnection, token: OAuth2Token) -> None:
     """Save/Update the token."""
     with db.cursor(conn) as cursor:
         cursor.execute(
-            "INSERT INTO oauth2_tokens VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (str(token.token_id), str(token.client.client_id), token.token_type,
-             token.access_token, token.refresh_token, token.scope,
-             1 if token.revoked else 0, int(token.issued_at.timestamp()),
-             token.expires_in, str(token.user.user_id)))
-        ## If already exists
-        # cursor.execute(
-        #     ("UPDATE oauth2_tokens SET refresh_token=?, revoked=?, "
-        #      "expires_in=? WHERE token_id=?"),
-        #     (token.refresh_token, token.scope, 1 if token.revoked else 0,
-        #      token.expires_in, str(token.token_id)))
+            ("INSERT INTO oauth2_tokens VALUES (:token_id, :client_id, "
+             ":token_type, :access_token, :refresh_token, :scope, :revoked, "
+             ":issued_at, :expires_in, :user_id) "
+             "ON CONFLICT (token_id) DO UPDATE SET "
+             "refresh_token=:refresh_token, revoked=:revoked, "
+             "expires_in=:expires_in "
+             "WHERE token_id=:token_id"),
+            {
+                "token_id": str(token.token_id),
+                "client_id": str(token.client.client_id),
+                "token_type": token.token_type,
+                "access_token": token.access_token,
+                "refresh_token": token.refresh_token,
+                "scope": token.get_scope(),
+                "revoked": 1 if token.revoked else 0,
+                "issued_at": int(token.issued_at.timestamp()),
+                "expires_in": token.expires_in,
+                "user_id": str(token.user.user_id)
+            })
