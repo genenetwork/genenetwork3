@@ -34,7 +34,15 @@ class OAuth2Client(NamedTuple):
 
     @property
     def client_type(self) -> str:
-        """Return the token endpoint authorisation method."""
+        """
+        Return the token endpoint authorisation method.
+
+        Acceptable client types:
+        * public: Unable to use registered client secrets, e.g. browsers, apps
+          on mobile devices.
+        * confidential: able to securely authenticate with authorisation server
+          e.g. being able to keep their registered client secret safe.
+        """
         return self.client_metadata.get("client_type", "public")
 
     def check_endpoint_auth_method(self, method: str, endpoint: str) -> bool:
