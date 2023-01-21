@@ -33,12 +33,13 @@ def user_details():
         })
 
 @oauth2.route("/user-roles", methods=["GET"])
-@require_oauth
+@require_oauth("role")
 def user_roles():
     """Return the non-resource roles assigned to the user."""
     with require_oauth.acquire("role") as token:
         with db.connection(current_app.config["AUTH_DB"]) as conn:
-            return jsonify(_user_roles(conn, token.user))
+            return jsonify(_user_roles(conn, token.user).maybe(
+                tuple(), lambda rls: rls))
 
 def __email_valid__(email: str) -> Tuple[bool, Optional[str]]:
     """Validate the email address."""

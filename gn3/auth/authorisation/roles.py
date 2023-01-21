@@ -1,7 +1,9 @@
 """Handle management of roles"""
 from uuid import UUID, uuid4
 from functools import reduce
-from typing import Iterable, NamedTuple
+from typing import Sequence, Iterable, NamedTuple
+
+from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
 from gn3.auth.authentication.users import User
@@ -68,7 +70,7 @@ def __organise_privileges__(roles_dict, privilege_row):
                        privilege_row["privilege_description"]),))
     }
 
-def user_roles(conn: db.DbConnection, user: User):
+def user_roles(conn: db.DbConnection, user: User) -> Maybe[Sequence[Role]]:
     """Retrieve non-resource roles assigned to the user."""
     with db.cursor(conn) as cursor:
         cursor.execute(
@@ -80,9 +82,9 @@ def user_roles(conn: db.DbConnection, user: User):
 
         results = cursor.fetchall()
         if results:
-            return tuple(
-                reduce(__organise_privileges__, results, {}).values())
-        return tuple()
+            return Just(tuple(
+                reduce(__organise_privileges__, results, {}).values()))
+        return Nothing
 
 def assign_default_roles(cursor: db.DbCursor, user: User):
     """Assign `user` some default roles."""
