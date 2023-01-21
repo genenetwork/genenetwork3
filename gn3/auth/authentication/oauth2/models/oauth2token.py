@@ -120,7 +120,7 @@ def save_token(conn: db.DbConnection, token: OAuth2Token) -> None:
                 "token_type": token.token_type,
                 "access_token": token.access_token,
                 "refresh_token": token.refresh_token,
-                "scope": token.get_scope(),
+                "scope": token.scope,
                 "revoked": 1 if token.revoked else 0,
                 "issued_at": int(token.issued_at.timestamp()),
                 "expires_in": token.expires_in,
