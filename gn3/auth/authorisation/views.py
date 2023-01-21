@@ -8,8 +8,8 @@ from flask import request, jsonify, current_app
 from gn3.auth import db
 from gn3.auth.blueprint import oauth2
 
-from .groups import user_group
 from .errors import UserRegistrationError
+from .groups import user_group, all_groups
 from .roles import assign_default_roles, user_roles as _user_roles
 
 from ..authentication.oauth2.resource_server import require_oauth
@@ -115,3 +115,13 @@ def register_user():
 
     raise Exception(
         "unknown_error", "The system experienced an unexpected error.")
+
+@oauth2.route("/groups", methods=["GET"])
+@require_oauth("profile")
+def groups():
+    """Return the list of groups that exist."""
+    with db.connection(current_app.config["AUTH_DB"]) as conn:
+        the_groups = all_groups(conn)
+        print(f"The groups: {the_groups}")
+
+    return jsonify([])

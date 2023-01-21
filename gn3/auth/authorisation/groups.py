@@ -145,3 +145,14 @@ def is_group_leader(cursor: db.DbCursor, user: User, group: Group):
     role_names = tuple(row[0] for row in cursor.fetchall())
 
     return "group-leader" in role_names
+
+def all_groups(conn: db.DbConnection) -> Maybe[Sequence[Group]]:
+    """Retrieve all existing groups"""
+    with db.cursor(conn) as cursor:
+        cursor.execute("SELECT * FROM groups")
+        res = cursor.fetchall()
+        if res:
+            return Just(tuple(
+                Group(row["group_id"], row["group_name"]) for row in res))
+
+    return Nothing
