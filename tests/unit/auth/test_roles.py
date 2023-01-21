@@ -100,4 +100,4 @@ def test_user_roles(fxtr_group_user_roles, user, expected):
     THEN: return **ALL** the privileges attached to the user
     """
     conn, *_others = fxtr_group_user_roles
-    assert user_roles(conn, user) == expected
+    assert user_roles(conn, user).maybe(tuple(), lambda rls: rls) == expected
