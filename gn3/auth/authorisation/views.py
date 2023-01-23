@@ -6,11 +6,13 @@ import sqlite3
 from flask import request, jsonify, current_app
 
 from gn3.auth import db
+from gn3.auth.dictify import dictify
 from gn3.auth.blueprint import oauth2
 
 from .errors import UserRegistrationError
-from .groups import user_group, all_groups
 from .roles import assign_default_roles, user_roles as _user_roles
+from .groups import (
+    user_group, all_groups, GroupCreationError, create_group as _create_group)
 
 from ..authentication.oauth2.resource_server import require_oauth
 from ..authentication.users import save_user, set_user_password
@@ -29,7 +31,7 @@ def user_details():
             "user_id": user.user_id,
             "email": user.email,
             "name": user.name,
-            "group": group.maybe(False, lambda grp: grp)
+            "group": group.maybe(False, dictify)
         })
 
 @oauth2.route("/user-roles", methods=["GET"])
@@ -117,11 +119,29 @@ def register_user():
         "unknown_error", "The system experienced an unexpected error.")
 
 @oauth2.route("/groups", methods=["GET"])
-@require_oauth("profile")
+@require_oauth("profile group")
 def groups():
     """Return the list of groups that exist."""
     with db.connection(current_app.config["AUTH_DB"]) as conn:
         the_groups = all_groups(conn)
-        print(f"The groups: {the_groups}")
 
-    return jsonify([])
+    return jsonify(the_groups.maybe(
+        [], lambda grps: [dictify(grp) for grp in grps]))
+
+@oauth2.route("/create-group", methods=["POST"])
+@require_oauth("profile group")
+def create_group():
+    """Create a new group."""
+    with require_oauth.acquire("profile group") as the_token:
+        group_name=request.form.get("group_name", "").strip()
+        if not bool(group_name):
+            raise GroupCreationError("Could not create the group.")
+
+        db_uri = current_app.config["AUTH_DB"]
+        with db.connection(db_uri) as conn:
+            user = the_token.user
+            new_group = _create_group(
+                conn, group_name, user, request.form.get("group_description"))
+            return jsonify({
+                **dictify(new_group), "group_leader": dictify(user)
+            })

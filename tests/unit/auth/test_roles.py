@@ -5,6 +5,7 @@ import pytest
 
 from gn3.auth import db
 from gn3.auth.authorisation.privileges import Privilege
+from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth.authorisation.roles import Role, user_roles, create_role
 
 from tests.unit.auth import conftest
@@ -24,11 +25,9 @@ PRIVILEGES = (
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
-    "user,expected", tuple(zip(conftest.TEST_USERS, (
-        Role(
-            uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_role",
-            PRIVILEGES), create_role_failure, create_role_failure,
-        create_role_failure, create_role_failure))))
+    "user,expected", tuple(zip(conftest.TEST_USERS[0:1], (
+        Role(uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_role",
+             PRIVILEGES),))))
 def test_create_role(# pylint: disable=[too-many-arguments]
         fxtr_app, auth_testdb_path, mocker, fxtr_users, user, expected):# pylint: disable=[unused-argument]
     """
@@ -43,6 +42,25 @@ def test_create_role(# pylint: disable=[too-many-arguments]
         with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
             the_role = create_role(cursor, "a_test_role", PRIVILEGES)
             assert the_role == expected
+
+@pytest.mark.unit_test
+@pytest.mark.parametrize(
+    "user,expected", tuple(zip(conftest.TEST_USERS[1:], (
+        create_role_failure, create_role_failure, create_role_failure))))
+def test_create_role_raises_exception_for_unauthorised_users(# pylint: disable=[too-many-arguments]
+        fxtr_app, auth_testdb_path, mocker, fxtr_users, user, expected):# pylint: disable=[unused-argument]
+    """
+    GIVEN: an authenticated user
+    WHEN: the user attempts to create a role
+    THEN: verify they are only able to create the role if they have the
+          appropriate privileges
+    """
+    mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
+    with fxtr_app.app_context() as flask_context:
+        flask_context.g.user = user
+        with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+            with pytest.raises(AuthorisationError):
+                create_role(cursor, "a_test_role", PRIVILEGES)
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(

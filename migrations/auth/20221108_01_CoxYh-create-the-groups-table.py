@@ -11,7 +11,8 @@ steps = [
         """
         CREATE TABLE IF NOT EXISTS groups(
             group_id TEXT PRIMARY KEY NOT NULL,
-            group_name TEXT NOT NULL
+            group_name TEXT NOT NULL,
+            group_metadata TEXT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS groups")

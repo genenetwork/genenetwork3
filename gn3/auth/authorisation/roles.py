@@ -98,3 +98,28 @@ def assign_default_roles(cursor: db.DbCursor, user: User):
     cursor.executemany(
         ("INSERT INTO user_roles VALUES (:user_id, :role_id)"),
         params)
+
+def revoke_user_role_by_name(cursor: db.DbCursor, user: User, role_name: str):
+    """Revoke a role from `user` by the role's name"""
+    cursor.execute(
+        "SELECT role_id FROM roles WHERE role_name=:role_name",
+        {"role_name": role_name})
+    role = cursor.fetchone()
+    if role:
+        cursor.execute(
+            ("DELETE FROM user_roles "
+             "WHERE user_id=:user_id AND role_id=:role_id"),
+            {"user_id": str(user.user_id), "role_id": role["role_id"]})
+
+def assign_user_role_by_name(cursor: db.DbCursor, user: User, role_name: str):
+    """Revoke a role from `user` by the role's name"""
+    cursor.execute(
+        "SELECT role_id FROM roles WHERE role_name=:role_name",
+        {"role_name": role_name})
+    role = cursor.fetchone()
+
+    if role:
+        cursor.execute(
+            ("INSERT INTO user_roles VALUES(:user_id, :role_id) "
+             "ON CONFLICT DO NOTHING"),
+            {"user_id": str(user.user_id), "role_id": role["role_id"]})

@@ -10,9 +10,9 @@ from gn3.auth.authorisation.resources import Resource, ResourceCategory
 from .role_fixtures import RESOURCE_EDITOR_ROLE, RESOURCE_READER_ROLE
 
 TEST_GROUP_01 = Group(uuid.UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"),
-                      "TheTestGroup")
+                      "TheTestGroup", {})
 TEST_GROUP_02 = Group(uuid.UUID("e37d59d7-c05e-4d67-b479-81e627d8d634"),
-                      "AnotherTestGroup")
+                      "AnotherTestGroup", {})
 TEST_GROUPS = (TEST_GROUP_01, TEST_GROUP_02)
 
 TEST_RESOURCES_GROUP_01 = (

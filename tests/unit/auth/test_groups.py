@@ -8,8 +8,10 @@ from gn3.auth import db
 from gn3.auth.authentication.users import User
 from gn3.auth.authorisation.roles import Role
 from gn3.auth.authorisation.privileges import Privilege
+from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth.authorisation.groups import (
-    Group, GroupRole, user_group, create_group, MembershipError, create_group_role)
+    Group, GroupRole, user_group, create_group, MembershipError,
+    create_group_role)
 
 from tests.unit.auth import conftest
 
@@ -20,7 +22,8 @@ create_group_failure = {
 
 uuid_fn = lambda : UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
 
-GROUP = Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup")
+GROUP = Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup",
+              {"group_description": "The test group"})
 PRIVILEGES = (
     Privilege(
         "group:resource:view-resource",
@@ -29,9 +32,10 @@ PRIVILEGES = (
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
-    "user,expected", tuple(zip(conftest.TEST_USERS, (
+    "user,expected", tuple(zip(conftest.TEST_USERS[0:1], (
         Group(
-            UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_group"),
+            UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_group",
+            {"group_description": "A test group"}),
         create_group_failure, create_group_failure, create_group_failure,
         create_group_failure))))
 def test_create_group(# pylint: disable=[too-many-arguments]
@@ -46,7 +50,24 @@ def test_create_group(# pylint: disable=[too-many-arguments]
     with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         with db.connection(auth_testdb_path) as conn:
-            assert create_group(conn, "a_test_group", user) == expected
+            assert create_group(
+                conn, "a_test_group", user, "A test group") == expected
+
+@pytest.mark.unit_test
+@pytest.mark.parametrize("user", conftest.TEST_USERS[1:])
+def test_create_group_raises_exception_with_non_privileged_user(# pylint: disable=[too-many-arguments]
+        fxtr_app, auth_testdb_path, mocker, fxtr_users, user):# pylint: disable=[unused-argument]
+    """
+    GIVEN: an authenticated user, without appropriate privileges
+    WHEN: the user attempts to create a group
+    THEN: verify the system raises an exception
+    """
+    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
+    with fxtr_app.app_context() as flask_context:
+        flask_context.g.user = user
+        with db.connection(auth_testdb_path) as conn:
+            with pytest.raises(AuthorisationError):
+                assert create_group(conn, "a_test_group", user, "A test group")
 
 create_role_failure = {
     "status": "error",
@@ -55,14 +76,12 @@ create_role_failure = {
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
-    "user,expected", tuple(zip(conftest.TEST_USERS, (
+    "user,expected", tuple(zip(conftest.TEST_USERS[0:1], (
         GroupRole(
             UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
             GROUP,
             Role(UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
-                 "ResourceEditor", PRIVILEGES)),
-        create_role_failure, create_role_failure, create_role_failure,
-        create_role_failure))))
+                 "ResourceEditor", PRIVILEGES)),))))
 def test_create_group_role(mocker, fxtr_users_in_group, fxtr_app, user, expected):
     """
     GIVEN: an authenticated user
@@ -84,6 +103,27 @@ def test_create_group_role(mocker, fxtr_users_in_group, fxtr_app, user, expected
             (str(uuid_fn()), str(GROUP.group_id), str(uuid_fn())))
 
 @pytest.mark.unit_test
+@pytest.mark.parametrize(
+    "user,expected", tuple(zip(conftest.TEST_USERS[1:], (
+        create_role_failure, create_role_failure, create_role_failure))))
+def test_create_group_role_raises_exception_with_unauthorised_users(
+        mocker, fxtr_users_in_group, fxtr_app, user, expected):
+    """
+    GIVEN: an authenticated user
+    WHEN: the user attempts to create a role, attached to a group
+    THEN: verify they are only able to create the role if they have the
+        appropriate privileges and that the role is attached to the given group
+    """
+    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
+    conn, _group, _users = fxtr_users_in_group
+    with fxtr_app.app_context() as flask_context:
+        flask_context.g.user = user
+        with pytest.raises(AuthorisationError):
+            assert create_group_role(
+                conn, GROUP, "ResourceEditor", PRIVILEGES) == expected
+
+@pytest.mark.unit_test
 def test_create_multiple_groups(mocker, fxtr_app, fxtr_users):
     """
     GIVEN: An authenticated user with appropriate authorisation
@@ -101,7 +141,8 @@ def test_create_multiple_groups(mocker, fxtr_app, fxtr_users):
         flask_context.g.user = user
         # First time, successfully creates the group
         assert create_group(conn, "a_test_group", user) == Group(
-            UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_group")
+            UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_group",
+            {})
         # subsequent attempts should fail
         with pytest.raises(MembershipError):
             create_group(conn, "another_test_group", user)
@@ -111,7 +152,7 @@ def test_create_multiple_groups(mocker, fxtr_app, fxtr_users):
     "user,expected",
     tuple(zip(
         conftest.TEST_USERS,
-        (([Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup")] * 3)
+        (([Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup", {})] * 3)
          + [Nothing]))))
 def test_user_group(fxtr_users_in_group, user, expected):
     """

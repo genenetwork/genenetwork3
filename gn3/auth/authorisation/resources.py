@@ -1,4 +1,5 @@
 """Handle the management of resources."""
+import json
 from uuid import UUID, uuid4
 from typing import Dict, Sequence, NamedTuple
 
@@ -68,7 +69,11 @@ def public_resources(conn: db.DbConnection) -> Sequence[Resource]:
         query = ("SELECT * FROM groups WHERE group_id IN "
                  f"({', '.join(['?'] * len(group_uuids))})")
         cursor.execute(query, group_uuids)
-        groups = {row[0]: Group(UUID(row[0]), row[1]) for row in cursor.fetchall()}
+        groups = {
+            row[0]: Group(
+                UUID(row[0]), row[1], json.loads(row[2] or "{}"))
+            for row in cursor.fetchall()
+        }
         return tuple(
             Resource(groups[row[0]], UUID(row[1]), row[2], categories[row[3]],
                      bool(row[4]))
@@ -93,22 +98,26 @@ def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:
         cat.resource_category_id: cat for cat in resource_categories(conn)
     }
     with db.cursor(conn) as cursor:
-        group = user_group(cursor, user).maybe(False, lambda val: val) # type: ignore[misc]
-        if not group:
-            return public_resources(conn)
+        def __all_resources__(group) -> Sequence[Resource]:
+            gl_resources = group_leader_resources(cursor, user, group, categories)
 
-        gl_resources = group_leader_resources(cursor, user, group, categories)
-
-        cursor.execute(
-            ("SELECT resources.* FROM group_user_roles_on_resources "
-             "LEFT JOIN resources "
-             "ON group_user_roles_on_resources.resource_id=resources.resource_id "
-             "WHERE group_user_roles_on_resources.group_id = ? "
-             "AND group_user_roles_on_resources.user_id = ?"),
-            (str(group.group_id), str(user.user_id)))
-        private_res = tuple(
+            cursor.execute(
+                ("SELECT resources.* FROM group_user_roles_on_resources "
+                 "LEFT JOIN resources "
+                 "ON group_user_roles_on_resources.resource_id=resources.resource_id "
+                 "WHERE group_user_roles_on_resources.group_id = ? "
+                 "AND group_user_roles_on_resources.user_id = ?"),
+                (str(group.group_id), str(user.user_id)))
+            private_res = tuple(
                 Resource(group, UUID(row[1]), row[2], categories[UUID(row[3])],
                          bool(row[4]))
                 for row in cursor.fetchall())
+            return tuple({
+                res.resource_id: res
+                for res in
+                (private_res + gl_resources + public_resources(conn))# type: ignore[operator]
+            }.values())
 
-    return tuple(set(private_res).union(gl_resources).union(public_resources(conn)))
+        # Fix the typing here
+        return user_group(cursor, user).map(__all_resources__).maybe(# type: ignore[arg-type,misc]
+            public_resources(conn), lambda res: res)# type: ignore[arg-type,return-value]
