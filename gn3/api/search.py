@@ -176,7 +176,7 @@ def parse_location_field(species_query: xapian.Query,
 
     def make_query(interval: ChromosomalInterval) -> xapian.Query:
         # TODO: Convert the xapian index to use bases instead of megabases.
-        to_megabases = lambda x: str(float(x)/1e6)
+        to_megabases = lambda x: str(Decimal(x)/10**6)
         return combine_queries(xapian.Query.OP_AND,
                                species_query,
                                xapian.Query(chromosome_prefix + interval.chromosome),
