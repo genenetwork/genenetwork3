@@ -173,9 +173,8 @@ def parse_location_field(species_query: xapian.Query,
             raise ValueError
         location: tuple[Maybe[int], Maybe[int]]
         if ".." in location_str:
-            the_range = parse_range(location_str)
-            location = (the_range[0].map(apply_si_suffix), # type: ignore
-                        the_range[1].map(apply_si_suffix)) # type: ignore
+            location = tuple(limit.map(apply_si_suffix) # type: ignore
+                             for limit in parse_range(location_str))
         # If point location, assume +/- 50 kbases on either side.
         else:
             width = 50*10**3
