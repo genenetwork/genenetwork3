@@ -40,28 +40,6 @@ def combine_queries(operator: int, *queries: xapian.Query) -> xapian.Query:
     return reduce(partial(xapian.Query, operator), queries)
 
 
-def query_subqueries(query: xapian.Query) -> list[xapian.Query]:
-    """Return list of child queries in query."""
-    return [query.get_subquery(i) for i in range(query.get_num_subqueries())]
-
-
-def query_terms(query: xapian.Query) -> list[str]:
-    """Return list of terms in query."""
-    # Unfortunately, the TermIterator from python xapian bindings seems
-    # buggy. So, we resort to traversing the query tree.
-    # python xapian bindings do not expose xapian.Query.LEAF_TERM. This is
-    # most likely a bug.
-    leaf_type = 100
-    if query.get_type() == leaf_type:
-        # We have no choice but to access the protected _get_terms_begin method.
-        # pylint: disable=protected-access
-        return [query._get_terms_begin().get_term().decode("utf-8")]
-    else:
-        return reduce(lambda result, subquery: result + query_terms(subquery),
-                      query_subqueries(query),
-                      [])
-
-
 class FieldProcessor(xapian.FieldProcessor):
     """
     Field processor for use in a xapian query parser.
@@ -200,110 +178,55 @@ def parse_location_field(species_query: xapian.Query,
             .maybe(xapian.Query.MatchNothing, make_query))
 
 
-def parse_synteny_field(synteny_prefix: str, query: bytes) -> xapian.Query:
-    """Parse synteny field and return a xapian query."""
-    if query.decode("utf-8") in ["on", "off"]:
-        return xapian.Query(synteny_prefix + query.decode("utf-8"))
-    else:
-        return xapian.Query(xapian.Query.OP_INVALID)
-
-
-def is_synteny_on(synteny_prefix: str, query: xapian.Query) -> bool:
-    """Check if synteny search is requested in query."""
-    return synteny_prefix + "on" in query_terms(query)
-
-
-def remove_synteny_field(synteny_prefix: str, query: xapian.Query,
-                         parent_operator: int = xapian.Query.OP_AND) -> xapian.Query:
-    """Return a new query with the synteny field removed."""
-    # Note that this function only supports queries that exclusively use the
-    # AND, OR, FILTER, WEIGHT, RANGE and INVALID operators.
-    # python xapian bindings do not expose xapian.Query.LEAF_TERM. This is
-    # most likely a bug.
-    leaf_type = 100
-    # Handle leaf node.
-    if query.get_type() == leaf_type:
-        if not any(term.startswith(synteny_prefix) for term in query_terms(query)):
-            return query
-        elif parent_operator in [xapian.Query.OP_AND, xapian.Query.OP_FILTER]:
-            return xapian.Query.MatchAll
-        elif parent_operator == xapian.Query.OP_OR:
-            return xapian.Query.MatchNothing
-        else:
-            raise ValueError("Unexpected operator in query", query.get_type())
-    # Recurse on non-leaf nodes with the AND, OR or FILTER operators as root.
-    elif query.get_type() in (xapian.Query.OP_AND, xapian.Query.OP_OR,
-                              xapian.Query.OP_FILTER, xapian.Query.OP_SCALE_WEIGHT):
-        return combine_queries(query.get_type(),
-                               *[remove_synteny_field(synteny_prefix, subquery, query.get_type())
-                                 for subquery in query_subqueries(query)])
-    # Return other supported non-leaf nodes verbatim.
-    elif query.get_type() in [xapian.Query.OP_VALUE_RANGE, xapian.Query.OP_INVALID]:
-        return query
-    # Raise an exception on unsupported non-leaf nodes.
-    else:
-        raise ValueError("Unexpected operator in query", query.get_type())
-
-
 def parse_query(synteny_files_directory: Path, query: str):
     """Parse search query using GeneNetwork specific field processors."""
-    synteny_prefix = "XSYN"
+    queryparser = xapian.QueryParser()
+    queryparser.set_stemmer(xapian.Stem("en"))
+    queryparser.set_stemming_strategy(queryparser.STEM_SOME)
+    species_prefix = "XS"
+    chromosome_prefix = "XC"
+    queryparser.add_boolean_prefix("author", "A")
+    queryparser.add_boolean_prefix("species", species_prefix)
+    queryparser.add_boolean_prefix("group", "XG")
+    queryparser.add_boolean_prefix("tissue", "XI")
+    queryparser.add_boolean_prefix("dataset", "XDS")
+    queryparser.add_boolean_prefix("symbol", "XY")
+    queryparser.add_boolean_prefix("chr", chromosome_prefix)
+    queryparser.add_boolean_prefix("peakchr", "XPC")
+    queryparser.add_prefix("description", "XD")
+    range_prefixes = ["mean", "peak", "mb", "peakmb", "additive", "year"]
+    for i, prefix in enumerate(range_prefixes):
+        queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
 
-    def make_query_parser(synteny: bool) -> xapian.QueryParser:
-        queryparser = xapian.QueryParser()
-        queryparser.set_stemmer(xapian.Stem("en"))
-        queryparser.set_stemming_strategy(queryparser.STEM_SOME)
-        species_prefix = "XS"
-        chromosome_prefix = "XC"
-        queryparser.add_boolean_prefix("author", "A")
-        queryparser.add_boolean_prefix("species", species_prefix)
-        queryparser.add_boolean_prefix("group", "XG")
-        queryparser.add_boolean_prefix("tissue", "XI")
-        queryparser.add_boolean_prefix("dataset", "XDS")
-        queryparser.add_boolean_prefix("symbol", "XY")
-        queryparser.add_boolean_prefix("chr", chromosome_prefix)
-        queryparser.add_boolean_prefix("peakchr", "XPC")
-        queryparser.add_prefix("description", "XD")
-        queryparser.add_prefix("synteny", FieldProcessor(partial(parse_synteny_field,
-                                                                 synteny_prefix)))
-        range_prefixes = ["mean", "peak", "mb", "peakmb", "additive", "year"]
-        for i, prefix in enumerate(range_prefixes):
-            queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
-
-        # Add field processors for location shorthands.
-        species_shorthands = {"Hs": "human",
-                              "Mm": "mouse"}
-        for shorthand, species in species_shorthands.items():
-            field_processors = [partial(parse_location_field,
-                                        xapian.Query(species_prefix + species),
-                                        chromosome_prefix,
-                                        range_prefixes.index("mb"),
-                                        Just)]
-            # If human and synteny is requested, add liftover.
-            # With synteny search, we search for the same gene sequences
-            # across different species. But, the same gene sequences may be
-            # present in very different chromosomal positions in different
-            # species. So, we first liftover.
-            if shorthand == "Hs" and synteny:
-                chain_files = {"mouse": "hg19ToMm10-chains.over.chain.gz"}
-                for lifted_species, chain_file in chain_files.items():
-                    field_processors.append(
-                        partial(parse_location_field,
-                                xapian.Query(species_prefix + lifted_species),
-                                chromosome_prefix,
-                                range_prefixes.index("mb"),
-                                partial(liftover_interval,
-                                        synteny_files_directory / chain_file)))
-            queryparser.add_boolean_prefix(
-                shorthand,
-                FieldProcessor(field_processor_or(*field_processors)))
-        return queryparser
-
-    return remove_synteny_field(
-        synteny_prefix,
-        make_query_parser(is_synteny_on(synteny_prefix,
-                                        make_query_parser(False).parse_query(query)))
-        .parse_query(query))
+    # Add field processors for synteny triplets.
+    species_shorthands = {"Hs": "human",
+                          "Mm": "mouse"}
+    for shorthand, species in species_shorthands.items():
+        field_processors = [partial(parse_location_field,
+                                    xapian.Query(species_prefix + species),
+                                    chromosome_prefix,
+                                    range_prefixes.index("mb"),
+                                    Just)]
+        # With synteny search, we search for the same gene sequences
+        # across different species. But, the same gene sequences may be
+        # present in very different chromosomal positions in different
+        # species. So, we first liftover.
+        # TODO: Implement liftover and synteny search for species other than
+        # human.
+        if shorthand == "Hs":
+            chain_files = {"mouse": "hg19ToMm10-chains.over.chain.gz"}
+            for lifted_species, chain_file in chain_files.items():
+                field_processors.append(
+                    partial(parse_location_field,
+                            xapian.Query(species_prefix + lifted_species),
+                            chromosome_prefix,
+                            range_prefixes.index("mb"),
+                            partial(liftover_interval,
+                                    synteny_files_directory / chain_file)))
+        queryparser.add_boolean_prefix(
+            shorthand,
+            FieldProcessor(field_processor_or(*field_processors)))
+    return queryparser.parse_query(query)
 
 
 @search.route("/")
