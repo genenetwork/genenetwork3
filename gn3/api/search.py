@@ -148,6 +148,15 @@ def parse_position(spec: str) -> tuple[Maybe[int], Maybe[int]]:
         return Just(max(0, point - width)), Just(point + width)
 
 
+def parse_position_field(location_slot: int, query: bytes) -> xapian.Query:
+    """Parse position and return a xapian query."""
+    start, end = parse_position(query.decode("utf-8"))
+    # TODO: Convert the xapian index to use bases instead of megabases.
+    to_megabases = lambda x: str(Decimal(x)/10**6)
+    return (xapian.NumberRangeProcessor(location_slot)
+            (start.maybe("", to_megabases), end.maybe("", to_megabases))) # type: ignore
+
+
 def parse_location_field(species_query: xapian.Query,
                          chromosome_prefix: str, location_slot: int,
                          liftover_function: IntervalLiftoverFunction,
@@ -183,6 +192,7 @@ def parse_location_field(species_query: xapian.Query,
             .maybe(xapian.Query.MatchNothing, make_query))
 
 
+# pylint: disable=too-many-locals
 def parse_query(synteny_files_directory: Path, query: str):
     """Parse search query using GeneNetwork specific field processors."""
     queryparser = xapian.QueryParser()
@@ -201,10 +211,14 @@ def parse_query(synteny_files_directory: Path, query: str):
     queryparser.add_prefix("description", "XD")
     range_prefixes = ["mean", "peak", "position", "peakmb", "additive", "year"]
     for i, prefix in enumerate(range_prefixes):
-        queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
-    # Alias the position prefix with pos.
-    queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(range_prefixes.index("position"),
-                                                               "pos:"))
+        # Treat position specially since it needs its own field processor.
+        if prefix == "position":
+            position_field_processor = FieldProcessor(partial(parse_position_field, i))
+            queryparser.add_boolean_prefix(prefix, position_field_processor)
+            # Alias the position prefix with pos.
+            queryparser.add_boolean_prefix("pos", position_field_processor)
+        else:
+            queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
 
     # Add field processors for synteny triplets.
     species_shorthands = {"Hs": "human",
