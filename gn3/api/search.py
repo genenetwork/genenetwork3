@@ -194,7 +194,7 @@ def parse_query(synteny_files_directory: Path, query: str):
     queryparser.add_boolean_prefix("chr", chromosome_prefix)
     queryparser.add_boolean_prefix("peakchr", "XPC")
     queryparser.add_prefix("description", "XD")
-    range_prefixes = ["mean", "peak", "mb", "peakmb", "additive", "year"]
+    range_prefixes = ["mean", "peak", "position", "peakmb", "additive", "year"]
     for i, prefix in enumerate(range_prefixes):
         queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
 
@@ -205,7 +205,7 @@ def parse_query(synteny_files_directory: Path, query: str):
         field_processors = [partial(parse_location_field,
                                     xapian.Query(species_prefix + species),
                                     chromosome_prefix,
-                                    range_prefixes.index("mb"),
+                                    range_prefixes.index("position"),
                                     Just)]
         # With synteny search, we search for the same gene sequences
         # across different species. But, the same gene sequences may be
@@ -220,7 +220,7 @@ def parse_query(synteny_files_directory: Path, query: str):
                     partial(parse_location_field,
                             xapian.Query(species_prefix + lifted_species),
                             chromosome_prefix,
-                            range_prefixes.index("mb"),
+                            range_prefixes.index("position"),
                             partial(liftover_interval,
                                     synteny_files_directory / chain_file)))
         queryparser.add_boolean_prefix(
