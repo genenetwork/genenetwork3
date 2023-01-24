@@ -197,6 +197,9 @@ def parse_query(synteny_files_directory: Path, query: str):
     range_prefixes = ["mean", "peak", "position", "peakmb", "additive", "year"]
     for i, prefix in enumerate(range_prefixes):
         queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
+    # Alias the position prefix with pos.
+    queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(range_prefixes.index("position"),
+                                                               "pos:"))
 
     # Add field processors for synteny triplets.
     species_shorthands = {"Hs": "human",
