@@ -171,6 +171,12 @@ This expects that the following two configuration variables are set in the appli
 * `AUTH_MIGRATIONS`: path to the migration scripts
 * `AUTH_DB`: path to the sqlite database file (will be created if absent)
 
+To enable you to run the OAuth2 server without HTTPS, you need to setup the
+following environment variable(s):
+
+* `export AUTHLIB_INSECURE_TRANSPORT=true`: Allows you to run the Authlib server
+  without HTTPS on your development machine.
+
 ## Running Tests
 
 (assuming you are in a guix container; otherwise use venv!)
