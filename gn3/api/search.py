@@ -135,6 +135,19 @@ def apply_si_suffix(location: str) -> int:
         return int(location)
 
 
+def parse_position(spec: str) -> tuple[Maybe[int], Maybe[int]]:
+    """Parse position specifiation converting point locations to ranges."""
+    # Range
+    if ".." in spec:
+        return tuple(limit.map(apply_si_suffix) # type: ignore
+                     for limit in parse_range(spec))
+    # If point location, assume +/- 50 kbases on either side.
+    else:
+        width = 50*10**3
+        point = apply_si_suffix(spec)
+        return Just(max(0, point - width)), Just(point + width)
+
+
 def parse_location_field(species_query: xapian.Query,
                          chromosome_prefix: str, location_slot: int,
                          liftover_function: IntervalLiftoverFunction,
@@ -146,19 +159,11 @@ def parse_location_field(species_query: xapian.Query,
     """
     def split_query(query: str) -> ChromosomalInterval:
         """Split query into chromosome and location tuple."""
-        chromosome, location_str = query.lower().split(":")
+        chromosome, position_spec = query.lower().split(":")
         if not chromosome.startswith("chr"):
             raise ValueError
-        location: tuple[Maybe[int], Maybe[int]]
-        if ".." in location_str:
-            location = tuple(limit.map(apply_si_suffix) # type: ignore
-                             for limit in parse_range(location_str))
-        # If point location, assume +/- 50 kbases on either side.
-        else:
-            width = 50*10**3
-            point = apply_si_suffix(location_str)
-            location = Just(max(0, point - width)), Just(point + width)
-        return ChromosomalInterval(chromosome.removeprefix("chr"), *location)
+        return ChromosomalInterval(chromosome.removeprefix("chr"),
+                                   *parse_position(position_spec))
 
     def make_query(interval: ChromosomalInterval) -> xapian.Query:
         # TODO: Convert the xapian index to use bases instead of megabases.

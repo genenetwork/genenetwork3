@@ -3,7 +3,7 @@ from hypothesis import given, strategies as st
 from pymonad.maybe import Just, Nothing
 import pytest
 
-from gn3.api.search import apply_si_suffix, parse_range
+from gn3.api.search import apply_si_suffix, parse_range, parse_position
 
 @pytest.mark.unit_test
 @given(st.decimals(places=3, allow_nan=False, allow_infinity=False),
@@ -74,3 +74,12 @@ def test_parse_range_right_open_interval():
       and no value (Nothing) for the ending of the range
     """
     assert parse_range("foo..") == (Just("foo"), Nothing)
+
+@pytest.mark.unit_test
+def test_parse_position_close_to_zero_location():
+    """
+    GIVEN: A point location close to zero
+    WHEN: we parse the range
+    THEN: set the lower limit to zero, not a negative number
+    """
+    assert parse_position("25K")[0] == Just(0)
