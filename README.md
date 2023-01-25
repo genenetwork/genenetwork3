@@ -21,8 +21,6 @@ A continuously deployed instance of genenetwork3 is available at
 redeployed on every commit provided that the [continuous integration
 tests](https://ci.genenetwork.org/jobs/genenetwork3) pass.
 
-
-
 ## Installation
 
 #### GNU Guix packages
@@ -35,6 +33,8 @@ There are at least three ways to start GeneNetwork3 with GNU Guix:
 2. Create a container with `guix shell -C`
 3. Use a profile and shell settings with `source ~/opt/genenetwork3/etc/profile`
 
+At this point we use all three for different purposes.
+
 #### Create an environment:
 
 Simply load up the environment (for development purposes):
@@ -43,7 +43,7 @@ Simply load up the environment (for development purposes):
 guix shell -Df guix.scm
 ```
 
-Also, make sure you have the [guix-bioinformatics](https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics) channel set up.
+Also, make sure you have the guix-bioinformatics channel set up correctly and this should work
 
 ```bash
 guix shell --expose=$HOME/genotype_files/ -Df guix.scm
@@ -51,13 +51,23 @@ python3
   import redis
 ```
 
-#### Run a Guix container
+Check if guix and guix-bioinformatics channel are up-to-date with
+
+```
+guix describe
+```
+
+#### Run a Guix container with network
+
+Containers provide full isolation from the underlying distribution. Very useful for figuring out any dependency issues:
 
 ```
 guix shell -C --network --expose=$HOME/genotype_files/ -Df guix.scm
 ```
 
 #### Using a Guix profile (or rolling back)
+
+A guix profile is different from a Guix shell - it has less isolation from the underlying distribution.
 
 Create a new profile with
 

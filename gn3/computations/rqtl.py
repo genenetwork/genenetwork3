@@ -1,4 +1,4 @@
-"""Procedures related rqtl computations"""
+"""Procedures related to R/qtl computations"""
 import os
 from bisect import bisect
 from typing import Dict, List, Tuple, Union
