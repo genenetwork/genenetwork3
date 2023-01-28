@@ -4,6 +4,7 @@ from functools import reduce
 from typing import Any, Sequence, Iterable, NamedTuple
 
 from pymonad.maybe import Just, Maybe, Nothing
+from pymonad.either import Left, Right, Either
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
@@ -12,6 +13,7 @@ from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
 from .privileges import Privilege
+from .errors import AuthorisationError
 
 class Role(NamedTuple):
     """Class representing a role: creates immutable objects."""
@@ -25,6 +27,11 @@ class Role(NamedTuple):
             "role_id": self.role_id, "role_name": self.role_name,
             "privileges": tuple(dictify(priv) for priv in self.privileges)
         }
+
+class RoleNotFoundError(AuthorisationError):
+    """Raised whenever we try fetching (a) role(s) that do(es) not exist."""
+    error_code: int = 404
+
 @authenticated_p
 @authorised_p(("group:role:create-role",), error_message="Could not create role")
 def create_role(
@@ -92,6 +99,24 @@ def user_roles(conn: db.DbConnection, user: User) -> Maybe[Sequence[Role]]:
             return Just(tuple(
                 reduce(__organise_privileges__, results, {}).values()))
         return Nothing
+
+def user_role(conn: db.DbConnection, user: User, role_id: UUID) -> Either:
+    """Retrieve a specific non-resource role assigned to the user."""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "SELECT r.*, p.* FROM user_roles AS ur INNER JOIN roles AS r "
+            "ON ur.role_id=r.role_id INNER JOIN role_privileges AS rp "
+            "ON r.role_id=rp.role_id INNER JOIN privileges AS p "
+            "ON rp.privilege_id=p.privilege_id "
+            "WHERE ur.user_id=? AND ur.role_id=?",
+            (str(user.user_id), str(role_id)))
+
+        results = cursor.fetchall()
+        if results:
+            return Right(tuple(
+                reduce(__organise_privileges__, results, {}).values())[0])
+        return Left(RoleNotFoundError(
+            f"Could not find role with id '{role_id}'",))
 
 def assign_default_roles(cursor: db.DbCursor, user: User):
     """Assign `user` some default roles."""

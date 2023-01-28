@@ -1,16 +1,17 @@
 """Endpoints for the authorisation stuff."""
+import uuid
 import traceback
 from typing import Tuple, Optional
 
 import sqlite3
-from flask import request, jsonify, current_app
+from flask import request, jsonify, Response, current_app
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.blueprint import oauth2
 
 from .errors import UserRegistrationError
-from .roles import assign_default_roles, user_roles as _user_roles
+from .roles import user_role, assign_default_roles, user_roles as _user_roles
 from .groups import (
     user_group, all_groups, GroupCreationError, create_group as _create_group)
 
@@ -41,7 +42,7 @@ def user_roles():
     with require_oauth.acquire("role") as token:
         with db.connection(current_app.config["AUTH_DB"]) as conn:
             return jsonify(_user_roles(conn, token.user).maybe(
-                tuple(), lambda rls: rls))
+                tuple(), lambda roles: tuple(dictify(role) for role in roles)))
 
 def __email_valid__(email: str) -> Tuple[bool, Optional[str]]:
     """Validate the email address."""
@@ -145,3 +146,16 @@ def create_group():
             return jsonify({
                 **dictify(new_group), "group_leader": dictify(user)
             })
+
+@oauth2.route("/role/<uuid:role_id>", methods=["GET"])
+@require_oauth("role")
+def role(role_id: uuid.UUID) -> Response:
+    """Retrieve a user role with id `role_id`"""
+    def __error__(exc: Exception):
+        raise exc
+    with require_oauth.acquire("profile role") as the_token:
+        db_uri = current_app.config["AUTH_DB"]
+        with db.connection(db_uri) as conn:
+            the_role = user_role(conn, the_token.user, role_id)
+            return the_role.either(
+                __error__, lambda a_role: jsonify(dictify(a_role)))
