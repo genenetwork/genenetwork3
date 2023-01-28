@@ -1,6 +1,6 @@
 """User-specific code and data structures."""
 from uuid import UUID, uuid4
-from typing import Tuple, NamedTuple
+from typing import Any, Tuple, NamedTuple
 
 import bcrypt
 from pymonad.maybe import Just, Maybe, Nothing
@@ -16,6 +16,10 @@ class User(NamedTuple):
     def get_user_id(self):
         """Return the user's UUID. Mostly for use with Authlib."""
         return self.user_id
+
+    def dictify(self) -> dict[str, Any]:
+        """Return a dict representation of `User` objects."""
+        return {"user_id": self.user_id, "email": self.email, "name": self.name}
 
 def user_by_email(conn: db.DbConnection, email: str) -> Maybe:
     """Retrieve user from database by their email address"""

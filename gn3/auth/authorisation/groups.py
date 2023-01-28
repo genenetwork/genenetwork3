@@ -7,8 +7,8 @@ from flask import g
 from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
+from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
-from gn3.auth.dictify import register_dictifier
 from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
@@ -23,15 +23,25 @@ class Group(NamedTuple):
     group_name: str
     group_metadata: dict[str, Any]
 
-register_dictifier(Group, lambda grp: {
-    "group_id": grp.group_id, "group_name": grp.group_name,
-    "group_metadata": grp.group_metadata})
+    def dictify(self):
+        """Return a dict representation of `Group` objects."""
+        return {
+            "group_id": self.group_id, "group_name": self.group_name,
+            "group_metadata": self.group_metadata
+        }
 
 class GroupRole(NamedTuple):
     """Class representing a role tied/belonging to a group."""
     group_role_id: UUID
     group: Group
     role: Role
+
+    def dictify(self) -> dict[str, Any]:
+        """Return a dict representation of `GroupRole` objects."""
+        return {
+            "group_role_id": self.group_role_id, "group": dictify(self.group),
+            "role": dictify(self.role)
+        }
 
 class GroupCreationError(AuthorisationError):
     """Raised whenever a group creation fails"""

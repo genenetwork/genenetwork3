@@ -1,17 +1,12 @@
 """Module for dictifying objects"""
 
-from typing import Any
+from typing import Any, Protocol
 
-# TYPE = TypeVar("TYPE")
+class Dictifiable(Protocol):# pylint: disable=[too-few-public-methods]
+    """Type annotation for generic object with a `dictify` method."""
+    def dictify(self):
+        """Convert the object to a dict"""
 
-__dictifiers__ = {}#: dict[TYPE, Callable[[TYPE], dict[str, Any]]] = {}
-
-# def register_dictifier(obj_type: TYPE, dictifier: Callable[[TYPE], dict[str, Any]]):
-def register_dictifier(obj_type, dictifier):
-    """Register a new dictifier function"""
-    global __dictifiers__ # pylint: disable=[global-variable-not-assigned]
-    __dictifiers__[obj_type] = dictifier
-
-def dictify(obj: Any) -> dict[str, Any]:
+def dictify(obj: Dictifiable) -> dict[str, Any]:
     """Turn `obj` to a dict representation."""
-    return __dictifiers__[type(obj)](obj)
+    return obj.dictify()

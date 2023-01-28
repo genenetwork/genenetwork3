@@ -1,9 +1,10 @@
 """Handle the management of resources."""
 import json
 from uuid import UUID, uuid4
-from typing import Dict, Sequence, NamedTuple
+from typing import Any, Dict, Sequence, NamedTuple
 
 from gn3.auth import db
+from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
 
 from .checks import authorised_p
@@ -19,6 +20,14 @@ class ResourceCategory(NamedTuple):
     resource_category_key: str
     resource_category_description: str
 
+    def dictify(self) -> dict[str, Any]:
+        """Return a dict representation of `ResourceCategory` objects."""
+        return {
+            "resource_category_id": self.resource_category_id,
+            "resource_category_key": self.resource_category_key,
+            "resource_category_description": self.resource_category_description
+        }
+
 class Resource(NamedTuple):
     """Class representing a resource."""
     group: Group
@@ -26,6 +35,15 @@ class Resource(NamedTuple):
     resource_name: str
     resource_category: ResourceCategory
     public: bool
+
+    def dictify(self) -> dict[str, Any]:
+        """Return a dict representation of `Resource` objects."""
+        return {
+            "group": dictify(self.group), "resource_id": self.resource_id,
+            "resource_name": self.resource_name,
+            "resource_category": dictify(self.resource_category),
+            "public": self.public
+        }
 
 @authorised_p(("group:resource:create-resource",),
               error_message="Could not create resource")

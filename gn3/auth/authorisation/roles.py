@@ -1,11 +1,12 @@
 """Handle management of roles"""
 from uuid import UUID, uuid4
 from functools import reduce
-from typing import Sequence, Iterable, NamedTuple
+from typing import Any, Sequence, Iterable, NamedTuple
 
 from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
+from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
 from gn3.auth.authentication.checks import authenticated_p
 
@@ -18,6 +19,12 @@ class Role(NamedTuple):
     role_name: str
     privileges: Iterable[Privilege]
 
+    def dictify(self) -> dict[str, Any]:
+        """Return a dict representation of `Role` objects."""
+        return {
+            "role_id": self.role_id, "role_name": self.role_name,
+            "privileges": tuple(dictify(priv) for priv in self.privileges)
+        }
 @authenticated_p
 @authorised_p(("group:role:create-role",), error_message="Could not create role")
 def create_role(
