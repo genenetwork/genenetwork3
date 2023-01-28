@@ -6,6 +6,7 @@ class AuthorisationError(Exception):
 
     All exceptions in this package should inherit from this class.
     """
+    error_code: int = 500
 
 class UserRegistrationError(AuthorisationError):
     """Raised whenever a user registration fails"""
