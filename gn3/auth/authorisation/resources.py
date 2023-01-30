@@ -136,10 +136,6 @@ def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:
                 (private_res + gl_resources + public_resources(conn))# type: ignore[operator]
             }.values())
 
-        def __handle_error__(exc):
-            if type(exc) == NotFoundError:
-                return public_resources(conn)
-            raise exc
         # Fix the typing here
-        return user_group(cursor, user).map(__all_resources__).either(# type: ignore[arg-type,misc]
-            __handle_error__, lambda res: res)# type: ignore[arg-type,return-value]
+        return user_group(cursor, user).map(__all_resources__).maybe(# type: ignore[arg-type,misc]
+            public_resources(conn), lambda res: res)# type: ignore[arg-type,return-value]

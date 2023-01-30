@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 from typing import Any, Sequence, Iterable, Optional, NamedTuple
 
 from flask import g
-from pymonad.either import Left, Right, Either
 from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
@@ -14,7 +13,7 @@ from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
 from .privileges import Privilege
-from .errors import NotFoundError, AuthorisationError
+from .errors import AuthorisationError
 from .roles import (
     Role, create_role, revoke_user_role_by_name, assign_user_role_by_name)
 
@@ -141,7 +140,7 @@ def authenticated_user_group(conn) -> Maybe:
 
     return Nothing
 
-def user_group(cursor: db.DbCursor, user: User) -> Either:
+def user_group(cursor: db.DbCursor, user: User) -> Maybe[Group]:
     """Returns the given user's group"""
     cursor.execute(
         ("SELECT groups.group_id, groups.group_name, groups.group_metadata "
@@ -157,19 +156,15 @@ def user_group(cursor: db.DbCursor, user: User) -> Either:
         raise MembershipError(user, groups)
 
     if len(groups) == 1:
-        return Right(groups[0])
+        return Just(groups[0])
 
-    return Left(NotFoundError("User is not in any group."))
+    return Nothing
 
 def is_group_leader(cursor: db.DbCursor, user: User, group: Group):
     """Check whether the given `user` is the leader of `group`."""
-    def __raise__(exc):
-        if type(exc) == NotFoundError:
-            return False
-        raise exc
 
-    ugroup = user_group(cursor, user).either(
-        __raise__, lambda val: val) # type: ignore[arg-type, misc]
+    ugroup = user_group(cursor, user).maybe(
+        False, lambda val: val) # type: ignore[arg-type, misc]
     if not group:
         # User cannot be a group leader if not a member of ANY group
         return False

@@ -13,7 +13,7 @@ from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
 from .privileges import Privilege
-from .errors import NotFoundError, AuthorisationError
+from .errors import NotFoundError
 
 class Role(NamedTuple):
     """Class representing a role: creates immutable objects."""

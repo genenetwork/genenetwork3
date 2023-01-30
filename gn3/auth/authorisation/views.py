@@ -10,7 +10,7 @@ from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.blueprint import oauth2
 
-from .errors import UserRegistrationError
+from .errors import NotFoundError, UserRegistrationError
 from .resources import user_resources as _user_resources
 from .roles import user_role, assign_default_roles, user_roles as _user_roles
 from .groups import (
@@ -21,29 +21,20 @@ from ..authentication.oauth2.resource_server import require_oauth
 from ..authentication.users import save_user, set_user_password
 from ..authentication.oauth2.models.oauth2token import token_by_access_token
 
-def __raise_error__(exc):
-    current_app.logger.error(exc)
-    raise exc
-
 @oauth2.route("/user", methods=["GET"])
 @require_oauth("profile")
 def user_details():
     """Return user's details."""
-    def __raise__(exc):
-        if type(exc) == NotFoundError:
-            return False
-        raise exc
-
     with require_oauth.acquire("profile") as the_token:
         user = the_token.user
+        user_dets = {
+            "user_id": user.user_id, "email": user.email, "name": user.name,
+            "group": False
+        }
         with db.connection(current_app.config["AUTH_DB"]) as conn, db.cursor(conn) as cursor:
-            return _user_group(cursor, user).either(
-                __raise__, lambda group: jsonify({
-                    "user_id": user.user_id,
-                    "email": user.email,
-                    "name": user.name,
-                    "group": dictify(group)
-        }))
+            return jsonify(_user_group(cursor, user).maybe(
+                user_dets,
+                lambda group: {**user_dets, "group": dictify(group)}))
 
 @oauth2.route("/user-roles", methods=["GET"])
 @require_oauth("role")
@@ -173,18 +164,24 @@ def role(role_id: uuid.UUID) -> Response:
 @oauth2.route("/user-group", methods=["GET"])
 @require_oauth("group")
 def user_group():
+    """Retrieve the group in which the user is a member."""
     with require_oauth.acquire("profile group") as the_token:
         db_uri = current_app.config["AUTH_DB"]
         with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
-            return _user_group(cursor, the_token.user).either(
-                __raise_error__, lambda grp: jsonify(dictify(grp)))
+            group = _user_group(cursor, the_token.user).maybe(
+                False, lambda grp: grp)
+
+        if group:
+            return jsonify(dictify(group))
+        raise NotFoundError("User is not a member of any group.")
 
 @oauth2.route("/user-resources")
 @require_oauth("profile resource")
 def user_resources():
+    """Retrieve the resources a user has access to."""
     with require_oauth.acquire("profile resource") as the_token:
         db_uri = current_app.config["AUTH_DB"]
-        with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
+        with db.connection(db_uri) as conn:
             return jsonify([
                 dictify(resource) for resource in
                 _user_resources(conn, the_token.user)])
