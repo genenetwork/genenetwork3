@@ -19,6 +19,10 @@ from ..authentication.oauth2.resource_server import require_oauth
 from ..authentication.users import save_user, set_user_password
 from ..authentication.oauth2.models.oauth2token import token_by_access_token
 
+def __raise_error__(exc):
+    current_app.logger.error(exc)
+    raise exc
+
 @oauth2.route("/user", methods=["GET"])
 @require_oauth("profile")
 def user_details():
@@ -28,11 +32,16 @@ def user_details():
         with db.connection(current_app.config["AUTH_DB"]) as conn, db.cursor(conn) as cursor:
             group = user_group(cursor, user)
 
+        def __raise__(exc):
+            if type(exc) == NotFoundError:
+                return False
+            raise exc
+
         return jsonify({
             "user_id": user.user_id,
             "email": user.email,
             "name": user.name,
-            "group": group.maybe(False, dictify)
+            "group": group.either(__raise__, dictify)
         })
 
 @oauth2.route("/user-roles", methods=["GET"])
@@ -159,3 +168,12 @@ def role(role_id: uuid.UUID) -> Response:
             the_role = user_role(conn, the_token.user, role_id)
             return the_role.either(
                 __error__, lambda a_role: jsonify(dictify(a_role)))
+
+@oauth2.route("/user-group", methods=["GET"])
+@require_oauth("group")
+def users_group():
+    with require_oauth.acquire("profile group") as the_token:
+        db_uri = current_app.config["AUTH_DB"]
+        with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
+            return user_group(cursor, the_token.user).either(
+                __raise_error__, lambda grp: jsonify(dictify(grp)))

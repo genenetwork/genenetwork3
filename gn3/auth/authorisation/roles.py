@@ -13,7 +13,7 @@ from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
 from .privileges import Privilege
-from .errors import AuthorisationError
+from .errors import NotFoundError, AuthorisationError
 
 class Role(NamedTuple):
     """Class representing a role: creates immutable objects."""
@@ -27,10 +27,6 @@ class Role(NamedTuple):
             "role_id": self.role_id, "role_name": self.role_name,
             "privileges": tuple(dictify(priv) for priv in self.privileges)
         }
-
-class RoleNotFoundError(AuthorisationError):
-    """Raised whenever we try fetching (a) role(s) that do(es) not exist."""
-    error_code: int = 404
 
 @authenticated_p
 @authorised_p(("group:role:create-role",), error_message="Could not create role")
@@ -115,7 +111,7 @@ def user_role(conn: db.DbConnection, user: User, role_id: UUID) -> Either:
         if results:
             return Right(tuple(
                 reduce(__organise_privileges__, results, {}).values())[0])
-        return Left(RoleNotFoundError(
+        return Left(NotFoundError(
             f"Could not find role with id '{role_id}'",))
 
 def assign_default_roles(cursor: db.DbCursor, user: User):
