@@ -163,7 +163,13 @@ def user_group(cursor: db.DbCursor, user: User) -> Either:
 
 def is_group_leader(cursor: db.DbCursor, user: User, group: Group):
     """Check whether the given `user` is the leader of `group`."""
-    ugroup = user_group(cursor, user).maybe(False, lambda val: val) # type: ignore[arg-type, misc]
+    def __raise__(exc):
+        if type(exc) == NotFoundError:
+            return False
+        raise exc
+
+    ugroup = user_group(cursor, user).either(
+        __raise__, lambda val: val) # type: ignore[arg-type, misc]
     if not group:
         # User cannot be a group leader if not a member of ANY group
         return False

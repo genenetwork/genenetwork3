@@ -11,6 +11,7 @@ from gn3.auth.dictify import dictify
 from gn3.auth.blueprint import oauth2
 
 from .errors import UserRegistrationError
+from .resources import user_resources as _user_resources
 from .roles import user_role, assign_default_roles, user_roles as _user_roles
 from .groups import (
     all_groups, GroupCreationError, user_group as _user_group,
@@ -177,3 +178,13 @@ def user_group():
         with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
             return _user_group(cursor, the_token.user).either(
                 __raise_error__, lambda grp: jsonify(dictify(grp)))
+
+@oauth2.route("/user-resources")
+@require_oauth("profile resource")
+def user_resources():
+    with require_oauth.acquire("profile resource") as the_token:
+        db_uri = current_app.config["AUTH_DB"]
+        with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
+            return jsonify([
+                dictify(resource) for resource in
+                _user_resources(conn, the_token.user)])
