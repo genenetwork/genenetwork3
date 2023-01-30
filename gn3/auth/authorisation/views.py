@@ -13,7 +13,8 @@ from gn3.auth.blueprint import oauth2
 from .errors import UserRegistrationError
 from .roles import user_role, assign_default_roles, user_roles as _user_roles
 from .groups import (
-    user_group, all_groups, GroupCreationError, create_group as _create_group)
+    all_groups, GroupCreationError, user_group as _user_group,
+    create_group as _create_group)
 
 from ..authentication.oauth2.resource_server import require_oauth
 from ..authentication.users import save_user, set_user_password
@@ -27,22 +28,21 @@ def __raise_error__(exc):
 @require_oauth("profile")
 def user_details():
     """Return user's details."""
+    def __raise__(exc):
+        if type(exc) == NotFoundError:
+            return False
+        raise exc
+
     with require_oauth.acquire("profile") as the_token:
         user = the_token.user
         with db.connection(current_app.config["AUTH_DB"]) as conn, db.cursor(conn) as cursor:
-            group = user_group(cursor, user)
-
-        def __raise__(exc):
-            if type(exc) == NotFoundError:
-                return False
-            raise exc
-
-        return jsonify({
-            "user_id": user.user_id,
-            "email": user.email,
-            "name": user.name,
-            "group": group.either(__raise__, dictify)
-        })
+            return _user_group(cursor, user).either(
+                __raise__, lambda group: jsonify({
+                    "user_id": user.user_id,
+                    "email": user.email,
+                    "name": user.name,
+                    "group": dictify(group)
+        }))
 
 @oauth2.route("/user-roles", methods=["GET"])
 @require_oauth("role")
@@ -171,9 +171,9 @@ def role(role_id: uuid.UUID) -> Response:
 
 @oauth2.route("/user-group", methods=["GET"])
 @require_oauth("group")
-def users_group():
+def user_group():
     with require_oauth.acquire("profile group") as the_token:
         db_uri = current_app.config["AUTH_DB"]
         with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
-            return user_group(cursor, the_token.user).either(
+            return _user_group(cursor, the_token.user).either(
                 __raise_error__, lambda grp: jsonify(dictify(grp)))
