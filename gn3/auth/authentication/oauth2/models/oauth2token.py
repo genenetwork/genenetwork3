@@ -1,7 +1,7 @@
 """OAuth2 Token"""
 import uuid
 import datetime
-from typing import NamedTuple, Optional, Sequence
+from typing import NamedTuple, Optional
 
 from pymonad.maybe import Just, Maybe, Nothing
 
@@ -17,7 +17,7 @@ class OAuth2Token(NamedTuple):
     token_type: str
     access_token: str
     refresh_token: Optional[str]
-    scope: Sequence[str]
+    scope: str
     revoked: bool
     issued_at: datetime.datetime
     expires_in: int
@@ -38,7 +38,7 @@ class OAuth2Token(NamedTuple):
 
     def get_scope(self) -> str:
         """Return the valid scope for the token."""
-        return " ".join(self.scope)
+        return self.scope
 
     def is_expired(self) -> bool:
         """Check whether the token is expired."""
@@ -60,7 +60,7 @@ def __token_from_resultset__(conn: db.DbConnection, rset) -> Maybe:
                                 token_type=rset["token_type"],
                                 access_token=rset["access_token"],
                                 refresh_token=rset["refresh_token"],
-                                scope=rset["scope"].split(None),
+                                scope=rset["scope"],
                                 revoked=(rset["revoked"] == 1),
                                 issued_at=datetime.datetime.fromtimestamp(
                                     rset["issued_at"]),
