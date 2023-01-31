@@ -9,7 +9,6 @@ from pymonad.either import Left, Right, Either
 from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
-from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
 from .privileges import Privilege
@@ -28,7 +27,6 @@ class Role(NamedTuple):
             "privileges": tuple(dictify(priv) for priv in self.privileges)
         }
 
-@authenticated_p
 @authorised_p(("group:role:create-role",), error_message="Could not create role")
 def create_role(
         cursor: db.DbCursor, role_name: str,

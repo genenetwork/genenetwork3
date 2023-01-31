@@ -9,7 +9,6 @@ from pymonad.maybe import Just, Maybe, Nothing
 from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
-from gn3.auth.authentication.checks import authenticated_p
 
 from .checks import authorised_p
 from .privileges import Privilege
@@ -71,7 +70,6 @@ def user_membership(conn: db.DbConnection, user: User) -> Sequence[Group]:
 
     return groups
 
-@authenticated_p
 def create_group(
         conn: db.DbConnection, group_name: str, group_leader: User,
         group_description: Optional[str] = None) -> Group:
@@ -98,7 +96,6 @@ def create_group(
 
     return __create_group__()
 
-@authenticated_p
 @authorised_p(("group:role:create-role",),
               error_message="Could not create the group role")
 def create_group_role(
@@ -115,7 +112,6 @@ def create_group_role(
 
     return GroupRole(group_role_id, group, role)
 
-@authenticated_p
 def authenticated_user_group(conn) -> Maybe:
     """
     Returns the currently authenticated user's group.

@@ -52,7 +52,7 @@ def create_resource(
         resource_category: ResourceCategory) -> Resource:
     """Create a resource item."""
     with db.cursor(conn) as cursor:
-        group = authenticated_user_group(conn).maybe(False, lambda val: val)
+        group = authenticated_user_group(conn).maybe(False, lambda val: val)# type: ignore[misc]
         if not group:
             raise MissingGroupError(
                 "User with no group cannot create a resource.")
