@@ -209,3 +209,15 @@ def add_user_to_group(cursor: db.DbCursor, the_group: Group, user: User):
         ("INSERT INTO group_users VALUES (:group_id, :user_id) "
          "ON CONFLICT (group_id, user_id) DO NOTHING"),
         {"group_id": str(the_group.group_id), "user_id": str(user.user_id)})
+
+def group_users(conn: db.DbConnection, group_id: UUID) -> Iterable[User]:
+    """Retrieve all users that are members of group with id `group_id`."""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "SELECT u.* FROM group_users AS gu INNER JOIN users AS u "
+            "ON gu.user_id = u.user_id WHERE gu.group_id=:group_id",
+            {"group_id": str(group_id)})
+        results = cursor.fetchall()
+
+    return (User(UUID(row["user_id"]), row["email"], row["name"])
+            for row in results)

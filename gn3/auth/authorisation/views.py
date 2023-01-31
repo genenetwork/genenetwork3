@@ -15,7 +15,7 @@ from .resources import user_resources as _user_resources
 from .roles import user_role, assign_default_roles, user_roles as _user_roles
 from .groups import (
     all_groups, GroupCreationError, user_group as _user_group,
-    create_group as _create_group)
+    group_users as _group_users, create_group as _create_group)
 
 from ..authentication.oauth2.resource_server import require_oauth
 from ..authentication.users import save_user, set_user_password
@@ -162,7 +162,7 @@ def role(role_id: uuid.UUID) -> Response:
                 __error__, lambda a_role: jsonify(dictify(a_role)))
 
 @oauth2.route("/user-group", methods=["GET"])
-@require_oauth("group")
+@require_oauth("profile group")
 def user_group():
     """Retrieve the group in which the user is a member."""
     with require_oauth.acquire("profile group") as the_token:
@@ -185,3 +185,13 @@ def user_resources():
             return jsonify([
                 dictify(resource) for resource in
                 _user_resources(conn, the_token.user)])
+
+@oauth2.route("/group-users/<uuid:group_id>", methods=["GET"])
+@require_oauth("profile group")
+def group_users(group_id: uuid.UUID) -> Response:
+    """Retrieve all the members of a group."""
+    with require_oauth.acquire("profile group") as the_token:
+        db_uri = current_app.config["AUTH_DB"]
+        with db.connection(db_uri) as conn:
+            return jsonify(tuple(
+                dictify(user) for user in _group_users(conn, group_id)))
