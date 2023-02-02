@@ -47,7 +47,8 @@ class Resource(NamedTuple):
         }
 
 @authorised_p(("group:resource:create-resource",),
-              error_message="Could not create resource")
+              error_description="Insufficient privileges to create a resource",
+              oauth2_scope="profile resource")
 def create_resource(
         conn: db.DbConnection, resource_name: str,
         resource_category: ResourceCategory) -> Resource:

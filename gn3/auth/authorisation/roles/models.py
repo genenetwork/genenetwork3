@@ -27,7 +27,9 @@ class Role(NamedTuple):
             "privileges": tuple(dictify(priv) for priv in self.privileges)
         }
 
-@authorised_p(("group:role:create-role",), error_message="Could not create role")
+@authorised_p(
+    privileges = ("group:role:create-role",),
+    error_description="Could not create role")
 def create_role(
         cursor: db.DbCursor, role_name: str,
         privileges: Iterable[Privilege]) -> Role:

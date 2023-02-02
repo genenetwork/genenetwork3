@@ -51,10 +51,10 @@ class MembershipError(AuthorisationError):
     def __init__(self, user: User, groups: Sequence[Group]):
         """Initialise the `MembershipError` exception object."""
         groups_str = ", ".join(group.group_name for group in groups)
-        error_message = (
+        error_description = (
             f"User '{user.name} ({user.email})' is a member of {len(groups)} "
             f"groups ({groups_str})")
-        super().__init__(f"{type(self).__name__}: {error_message}.")
+        super().__init__(f"{type(self).__name__}: {error_description}.")
 
 def user_membership(conn: db.DbConnection, user: User) -> Sequence[Group]:
     """Returns all the groups that a member belongs to"""
@@ -70,6 +70,12 @@ def user_membership(conn: db.DbConnection, user: User) -> Sequence[Group]:
 
     return groups
 
+@authorised_p(
+    privileges = ("system:group:create-group",),
+    error_description = (
+        "You do not have the appropriate privileges to enable you to "
+        "create a new group."),
+    oauth2_scope = "profile group")
 def create_group(
         conn: db.DbConnection, group_name: str, group_leader: User,
         group_description: Optional[str] = None) -> Group:
@@ -78,26 +84,18 @@ def create_group(
     if len(user_groups) > 0:
         raise MembershipError(group_leader, user_groups)
 
-    @authorised_p(
-        ("system:group:create-group",), (
-            "You do not have the appropriate privileges to enable you to "
-            "create a new group."),
-        group_leader)
-    def __create_group__():
-        with db.cursor(conn) as cursor:
-            new_group = __save_group__(
-                cursor, group_name,(
-                    {"group_description": group_description}
-                    if group_description else {}))
-            add_user_to_group(cursor, new_group, group_leader)
-            revoke_user_role_by_name(cursor, group_leader, "group-creator")
-            assign_user_role_by_name(cursor, group_leader, "group-leader")
-            return new_group
-
-    return __create_group__()
+    with db.cursor(conn) as cursor:
+        new_group = __save_group__(
+            cursor, group_name,(
+                {"group_description": group_description}
+                if group_description else {}))
+        add_user_to_group(cursor, new_group, group_leader)
+        revoke_user_role_by_name(cursor, group_leader, "group-creator")
+        assign_user_role_by_name(cursor, group_leader, "group-leader")
+        return new_group
 
 @authorised_p(("group:role:create-role",),
-              error_message="Could not create the group role")
+              error_description="Could not create the group role")
 def create_group_role(
         conn: db.DbConnection, group: Group, role_name: str,
         privileges: Iterable[Privilege]) -> GroupRole:
@@ -210,6 +208,11 @@ def add_user_to_group(cursor: db.DbCursor, the_group: Group, user: User):
          "ON CONFLICT (group_id, user_id) DO NOTHING"),
         {"group_id": str(the_group.group_id), "user_id": str(user.user_id)})
 
+@authorised_p(
+    privileges = ("system:group:view-group",),
+    error_description = (
+        "You do not have the appropriate privileges to access the list of users"
+        " in the group."))
 def group_users(conn: db.DbConnection, group_id: UUID) -> Iterable[User]:
     """Retrieve all users that are members of group with id `group_id`."""
     with db.cursor(conn) as cursor:
