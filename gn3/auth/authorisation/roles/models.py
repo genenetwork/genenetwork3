@@ -10,9 +10,9 @@ from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
 
-from .checks import authorised_p
-from .privileges import Privilege
-from .errors import NotFoundError
+from ..checks import authorised_p
+from ..privileges import Privilege
+from ..errors import NotFoundError
 
 class Role(NamedTuple):
     """Class representing a role: creates immutable objects."""

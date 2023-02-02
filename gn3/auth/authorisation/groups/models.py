@@ -10,10 +10,10 @@ from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
 
-from .checks import authorised_p
-from .privileges import Privilege
-from .errors import AuthorisationError
-from .roles import (
+from ..checks import authorised_p
+from ..privileges import Privilege
+from ..errors import AuthorisationError
+from ..roles.models import (
     Role, create_role, revoke_user_role_by_name, assign_user_role_by_name)
 
 class Group(NamedTuple):

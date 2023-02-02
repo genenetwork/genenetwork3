@@ -6,7 +6,7 @@ import pytest
 from gn3.auth import db
 from gn3.auth.authorisation.privileges import Privilege
 from gn3.auth.authorisation.errors import AuthorisationError
-from gn3.auth.authorisation.roles import Role, user_roles, create_role
+from gn3.auth.authorisation.roles.models import Role, user_roles, create_role
 
 from tests.unit.auth import conftest
 from tests.unit.auth.fixtures import TEST_USERS
@@ -36,7 +36,7 @@ def test_create_role(# pylint: disable=[too-many-arguments]
     THEN: verify they are only able to create the role if they have the
           appropriate privileges
     """
-    mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.roles.models.uuid4", uuid_fn)
     with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
@@ -55,7 +55,7 @@ def test_create_role_raises_exception_for_unauthorised_users(# pylint: disable=[
     THEN: verify they are only able to create the role if they have the
           appropriate privileges
     """
-    mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.roles.models.uuid4", uuid_fn)
     with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:

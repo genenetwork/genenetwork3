@@ -9,7 +9,7 @@ from gn3.auth.authentication.users import User
 from gn3.auth.authorisation.roles import Role
 from gn3.auth.authorisation.privileges import Privilege
 from gn3.auth.authorisation.errors import AuthorisationError
-from gn3.auth.authorisation.groups import (
+from gn3.auth.authorisation.groups.models import (
     Group, GroupRole, user_group, create_group, MembershipError,
     create_group_role)
 
@@ -46,7 +46,7 @@ def test_create_group(# pylint: disable=[too-many-arguments]
     THEN: verify they are only able to create the group if they have the
           appropriate privileges
     """
-    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.groups.models.uuid4", uuid_fn)
     with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         with db.connection(auth_testdb_path) as conn:
@@ -62,7 +62,7 @@ def test_create_group_raises_exception_with_non_privileged_user(# pylint: disabl
     WHEN: the user attempts to create a group
     THEN: verify the system raises an exception
     """
-    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.groups.models.uuid4", uuid_fn)
     with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
         with db.connection(auth_testdb_path) as conn:
@@ -89,8 +89,8 @@ def test_create_group_role(mocker, fxtr_users_in_group, fxtr_app, user, expected
     THEN: verify they are only able to create the role if they have the
         appropriate privileges and that the role is attached to the given group
     """
-    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
-    mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.groups.models.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.roles.models.uuid4", uuid_fn)
     conn, _group, _users = fxtr_users_in_group
     with fxtr_app.app_context() as flask_context, db.cursor(conn) as cursor:
         flask_context.g.user = user
@@ -114,8 +114,8 @@ def test_create_group_role_raises_exception_with_unauthorised_users(
     THEN: verify they are only able to create the role if they have the
         appropriate privileges and that the role is attached to the given group
     """
-    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
-    mocker.patch("gn3.auth.authorisation.roles.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.groups.models.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.roles.models.uuid4", uuid_fn)
     conn, _group, _users = fxtr_users_in_group
     with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
@@ -132,7 +132,7 @@ def test_create_multiple_groups(mocker, fxtr_app, fxtr_users):
     THEN: The system should prevent that, and respond with an appropriate error
       message
     """
-    mocker.patch("gn3.auth.authorisation.groups.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.groups.models.uuid4", uuid_fn)
     user = User(
         UUID("ecb52977-3004-469e-9428-2a1856725c7f"), "group@lead.er",
         "Group Leader")

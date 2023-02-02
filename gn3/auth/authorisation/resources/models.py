@@ -7,9 +7,10 @@ from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
 
-from .checks import authorised_p
-from .errors import AuthorisationError
-from .groups import Group, user_group, is_group_leader, authenticated_user_group
+from ..checks import authorised_p
+from ..errors import AuthorisationError
+from ..groups.models import (
+    Group, user_group, is_group_leader, authenticated_user_group)
 
 class MissingGroupError(AuthorisationError):
     """Raised for any resource operation without a group."""

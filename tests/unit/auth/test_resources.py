@@ -6,7 +6,7 @@ import pytest
 from gn3.auth import db
 from gn3.auth.authorisation.groups import Group
 from gn3.auth.authorisation.errors import AuthorisationError
-from gn3.auth.authorisation.resources import (
+from gn3.auth.authorisation.resources.models import (
     Resource, user_resources, create_resource, ResourceCategory,
     public_resources)
 
@@ -32,7 +32,7 @@ uuid_fn = lambda : uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
             "test_resource", resource_category, False),))))
 def test_create_resource(mocker, fxtr_app, fxtr_users_in_group, user, expected):
     """Test that resource creation works as expected."""
-    mocker.patch("gn3.auth.authorisation.resources.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.resources.models.uuid4", uuid_fn)
     conn, _group, _users = fxtr_users_in_group
     with fxtr_app.app_context() as flask_context, db.cursor(conn) as cursor:
         flask_context.g.user = user
@@ -52,7 +52,7 @@ def test_create_resource(mocker, fxtr_app, fxtr_users_in_group, user, expected):
 def test_create_resource_raises_for_unauthorised_users(
         mocker, fxtr_app, fxtr_users_in_group, user, expected):
     """Test that resource creation works as expected."""
-    mocker.patch("gn3.auth.authorisation.resources.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.resources.models.uuid4", uuid_fn)
     conn, _group, _users = fxtr_users_in_group
     with fxtr_app.app_context() as flask_context:
         flask_context.g.user = user
