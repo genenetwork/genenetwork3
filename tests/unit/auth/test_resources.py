@@ -4,6 +4,7 @@ import uuid
 import pytest
 
 from gn3.auth import db
+
 from gn3.auth.authorisation.groups import Group
 from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth.authorisation.resources.models import (
@@ -30,14 +31,16 @@ uuid_fn = lambda : uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
         (Resource(
             group, uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
             "test_resource", resource_category, False),))))
-def test_create_resource(mocker, fxtr_app, fxtr_users_in_group, user, expected):
+def test_create_resource(mocker, fxtr_users_in_group, user, expected):
     """Test that resource creation works as expected."""
     mocker.patch("gn3.auth.authorisation.resources.models.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.checks.require_oauth.acquire",
+                 conftest.get_tokeniser(user))
     conn, _group, _users = fxtr_users_in_group
-    with fxtr_app.app_context() as flask_context, db.cursor(conn) as cursor:
-        flask_context.g.user = user
-        assert create_resource(conn, "test_resource", resource_category) == expected
+    assert create_resource(
+        conn, "test_resource", resource_category, user) == expected
 
+    with db.cursor(conn) as cursor:
         # Cleanup
         cursor.execute(
             "DELETE FROM resources WHERE resource_id=?", (str(uuid_fn()),))
@@ -50,15 +53,15 @@ def test_create_resource(mocker, fxtr_app, fxtr_users_in_group, user, expected):
         (create_resource_failure, create_resource_failure,
          create_resource_failure))))
 def test_create_resource_raises_for_unauthorised_users(
-        mocker, fxtr_app, fxtr_users_in_group, user, expected):
+        mocker, fxtr_users_in_group, user, expected):
     """Test that resource creation works as expected."""
     mocker.patch("gn3.auth.authorisation.resources.models.uuid4", uuid_fn)
+    mocker.patch("gn3.auth.authorisation.checks.require_oauth.acquire",
+                 conftest.get_tokeniser(user))
     conn, _group, _users = fxtr_users_in_group
-    with fxtr_app.app_context() as flask_context:
-        flask_context.g.user = user
-        with pytest.raises(AuthorisationError):
-            assert create_resource(
-                conn, "test_resource", resource_category) == expected
+    with pytest.raises(AuthorisationError):
+        assert create_resource(
+            conn, "test_resource", resource_category, user) == expected
 
 SORTKEY = lambda resource: resource.resource_id
 

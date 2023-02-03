@@ -37,11 +37,11 @@ def test_create_role(# pylint: disable=[too-many-arguments]
           appropriate privileges
     """
     mocker.patch("gn3.auth.authorisation.roles.models.uuid4", uuid_fn)
-    with fxtr_app.app_context() as flask_context:
-        flask_context.g.user = user
-        with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
-            the_role = create_role(cursor, "a_test_role", PRIVILEGES)
-            assert the_role == expected
+    mocker.patch("gn3.auth.authorisation.checks.require_oauth.acquire",
+                 conftest.get_tokeniser(user))
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+        the_role = create_role(cursor, "a_test_role", PRIVILEGES)
+        assert the_role == expected
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
@@ -56,11 +56,11 @@ def test_create_role_raises_exception_for_unauthorised_users(# pylint: disable=[
           appropriate privileges
     """
     mocker.patch("gn3.auth.authorisation.roles.models.uuid4", uuid_fn)
-    with fxtr_app.app_context() as flask_context:
-        flask_context.g.user = user
-        with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
-            with pytest.raises(AuthorisationError):
-                create_role(cursor, "a_test_role", PRIVILEGES)
+    mocker.patch("gn3.auth.authorisation.checks.require_oauth.acquire",
+                 conftest.get_tokeniser(user))
+    with db.connection(auth_testdb_path) as conn, db.cursor(conn) as cursor:
+        with pytest.raises(AuthorisationError):
+            create_role(cursor, "a_test_role", PRIVILEGES)
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(

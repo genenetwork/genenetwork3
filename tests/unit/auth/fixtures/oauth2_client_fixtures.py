@@ -24,11 +24,12 @@ def fxtr_oauth2_clients(fxtr_users_with_passwords):
          now + datetime.timedelta(hours = 2),
          {
              "client_name": f"test_client_{idx:03}",
-             "scope": ["user", "profile"],
+             "scope": ["profile", "group", "role", "resource", "register-client"],
              "redirect_uri": "/test_oauth2",
              "token_endpoint_auth_method": [
                  "client_secret_post", "client_secret_basic"],
-             "grant_types": ["password"]
+             "grant_types": ["password", "authorisation_code", "refresh_token"],
+            "response_type": "token"
          }, user)
         for idx, user  in enumerate(users, start=1))
 

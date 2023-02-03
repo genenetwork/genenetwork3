@@ -1,15 +1,14 @@
 """Functions to check for authorisation."""
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable
 
-from flask import g, current_app as app
+from flask import current_app as app
 
 from gn3.auth import db
 
 from . import privileges as auth_privs
 from .errors import AuthorisationError
 
-from ..authentication.users import User
 from ..authentication.oauth2.resource_server import require_oauth
 
 def authorised_p(
@@ -36,6 +35,6 @@ def authorised_p(
                     if len(not_assigned) == 0:
                         return func(*args, **kwargs)
 
-                raise AuthorisationError(error_message)
+                raise AuthorisationError(error_description)
         return __authoriser__
     return __build_authoriser__
