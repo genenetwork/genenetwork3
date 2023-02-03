@@ -3,14 +3,15 @@ import json
 from uuid import UUID, uuid4
 from typing import Any, Dict, Sequence, NamedTuple
 
+from pymonad.maybe import Just, Maybe, Nothing
+
 from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
 
 from ..checks import authorised_p
 from ..errors import AuthorisationError
-from ..groups.models import (
-    Group, user_group, is_group_leader, authenticated_user_group)
+from ..groups.models import Group, user_group, is_group_leader
 
 class MissingGroupError(AuthorisationError):
     """Raised for any resource operation without a group."""
@@ -51,10 +52,11 @@ class Resource(NamedTuple):
               oauth2_scope="profile resource")
 def create_resource(
         conn: db.DbConnection, resource_name: str,
-        resource_category: ResourceCategory) -> Resource:
+        resource_category: ResourceCategory, user: User) -> Resource:
     """Create a resource item."""
     with db.cursor(conn) as cursor:
-        group = authenticated_user_group(conn).maybe(False, lambda val: val)# type: ignore[misc]
+        group = user_group(cursor, user).maybe(
+            False, lambda grp: grp)# type: ignore[misc, arg-type]
         if not group:
             raise MissingGroupError(
                 "User with no group cannot create a resource.")
@@ -65,8 +67,26 @@ def create_resource(
              resource_name,
              str(resource.resource_category.resource_category_id),
              1 if resource.public else 0))
+        # assign_resource_owner_role(conn, resource, user)
 
     return resource
+
+def resource_category_by_id(
+        conn: db.DbConnection, category_id: UUID) -> Maybe[ResourceCategory]:
+    """Retrieve a resource category by its ID."""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "SELECT * FROM resource_categories WHERE "
+            "resource_category_id=?",
+            (str(category_id),))
+        results = cursor.fetchone()
+        if results:
+            return Just(ResourceCategory(
+                UUID(results["resource_category_id"]),
+                results["resource_category_key"],
+                results["resource_category_description"]))
+
+    return Nothing
 
 def resource_categories(conn: db.DbConnection) -> Sequence[ResourceCategory]:
     """Retrieve all available resource categories"""
