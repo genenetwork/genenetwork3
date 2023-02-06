@@ -10,7 +10,8 @@ steps = [
     step(
         """
         INSERT INTO roles(role_id, role_name, user_editable) VALUES
-            ('a0e67630-d502-4b9f-b23f-6805d0f30e30', 'group-leader', '0')
+            ('a0e67630-d502-4b9f-b23f-6805d0f30e30', 'group-leader', '0'),
+            ('522e4d40-aefc-4a64-b7e0-768b8be517ee', 'resource-owner', '0')
         """,
         "DELETE FROM roles"),
     step(
@@ -41,6 +42,14 @@ steps = [
             ('a0e67630-d502-4b9f-b23f-6805d0f30e30',
              '2f980855-959b-4339-b80e-25d1ec286e21'),
             ('a0e67630-d502-4b9f-b23f-6805d0f30e30',
+             'd2a070fd-e031-42fb-ba41-d60cf19e5d6d'),
+            ('522e4d40-aefc-4a64-b7e0-768b8be517ee',
+             'aa25b32a-bff2-418d-b0a2-e26b4a8f089b'),
+            ('522e4d40-aefc-4a64-b7e0-768b8be517ee',
+             '7f261757-3211-4f28-a43f-a09b800b164d'),
+            ('522e4d40-aefc-4a64-b7e0-768b8be517ee',
+             '2f980855-959b-4339-b80e-25d1ec286e21'),
+            ('522e4d40-aefc-4a64-b7e0-768b8be517ee',
              'd2a070fd-e031-42fb-ba41-d60cf19e5d6d')
         """,
         "DELETE FROM role_privileges")

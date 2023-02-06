@@ -10,8 +10,8 @@ from tests.unit.auth.conftest import (
 
 test_params = (
     ("20221113_01_7M0hv-enumerate-initial-privileges.py", "privileges", 19),
-    ("20221114_04_tLUzB-initialise-basic-roles.py", "roles", 1),
-    ("20221114_04_tLUzB-initialise-basic-roles.py", "role_privileges", 11))
+    ("20221114_04_tLUzB-initialise-basic-roles.py", "roles", 2),
+    ("20221114_04_tLUzB-initialise-basic-roles.py", "role_privileges", 15))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(

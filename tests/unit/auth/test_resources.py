@@ -37,13 +37,20 @@ def test_create_resource(mocker, fxtr_users_in_group, user, expected):
     mocker.patch("gn3.auth.authorisation.checks.require_oauth.acquire",
                  conftest.get_tokeniser(user))
     conn, _group, _users = fxtr_users_in_group
-    assert create_resource(
-        conn, "test_resource", resource_category, user) == expected
+    resource = create_resource(conn, "test_resource", resource_category, user)
+    assert resource == expected
 
     with db.cursor(conn) as cursor:
         # Cleanup
         cursor.execute(
-            "DELETE FROM resources WHERE resource_id=?", (str(uuid_fn()),))
+            "DELETE FROM group_user_roles_on_resources WHERE resource_id=?",
+            (str(resource.resource_id),))
+        cursor.execute(
+            "DELETE FROM group_roles WHERE group_id=?",
+            (str(resource.group.group_id),))
+        cursor.execute(
+            "DELETE FROM resources WHERE resource_id=?",
+            (str(resource.resource_id),))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(

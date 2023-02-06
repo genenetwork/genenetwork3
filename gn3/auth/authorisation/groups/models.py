@@ -12,7 +12,7 @@ from gn3.auth.authentication.users import User
 
 from ..checks import authorised_p
 from ..privileges import Privilege
-from ..errors import AuthorisationError
+from ..errors import NotFoundError, AuthorisationError
 from ..roles.models import (
     Role, create_role, revoke_user_role_by_name, assign_user_role_by_name)
 
@@ -224,3 +224,21 @@ def group_users(conn: db.DbConnection, group_id: UUID) -> Iterable[User]:
 
     return (User(UUID(row["user_id"]), row["email"], row["name"])
             for row in results)
+
+@authorised_p(
+    privileges = ("system:group:view-group",),
+    error_description = (
+        "You do not have the appropriate privileges to access the group."))
+def group_by_id(conn: db.DbConnection, group_id: UUID) -> Group:
+    """Retrieve a group by its ID"""
+    with db.cursor(conn) as cursor:
+        cursor.execute("SELECT * FROM groups WHERE group_id=:group_id",
+                       {"group_id": str(group_id)})
+        row = cursor.fetchone()
+        if row:
+            return Group(
+                UUID(row["group_id"]),
+                row["group_name"],
+                json.loads(row["group_metadata"]))
+
+    raise NotFoundError(f"Could not find group with ID '{group_id}'.")
