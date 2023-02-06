@@ -17,6 +17,15 @@ class Matrix:
     metadata: dict
 
 
+def get_total_versions(db_path: str) -> int:
+    """Get the total number of versions in the matrix"""
+    env = lmdb.open(db_path)
+    with env.begin(write=False) as txn:
+        versions_hash = txn.get(b"versions")
+        if not versions_hash:
+            return 0
+        return int(len(versions_hash) / BLOB_HASH_DIGEST)
+
 def get_current_matrix(db_path: str) -> Optional[Matrix]:
     """Get the most recent matrix from DB_PATH.  This is functionally
     equivalent to get_nth_matrix(0, db_path)"""
@@ -28,7 +37,6 @@ def get_current_matrix(db_path: str) -> Optional[Matrix]:
         nrows = 0
         if matrix_hash:
             (nrows,) = struct.unpack("<Q", txn.get(matrix_hash + b":nrows"))
-            data, metadata = None, None
         if row_pointers:
             return Matrix(
                 data=[
