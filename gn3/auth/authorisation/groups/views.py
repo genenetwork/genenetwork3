@@ -1,15 +1,21 @@
 """The views/routes for the `gn3.auth.authorisation.groups` package."""
 import uuid
+import datetime
+from functools import partial
 
 from flask import request, jsonify, Response, Blueprint, current_app
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
+from gn3.auth.db_utils import with_db_connection
 
 from .models import (
-    all_groups, GroupCreationError, group_users as _group_users,
+    user_group, all_groups, GroupCreationError, group_users as _group_users,
     create_group as _create_group)
 
+from ..errors import AuthorisationError
+
+from ...authentication.users import User
 from ...authentication.oauth2.resource_server import require_oauth
 
 groups = Blueprint("groups", __name__)
@@ -52,3 +58,42 @@ def group_members(group_id: uuid.UUID) -> Response:
         with db.connection(db_uri) as conn:
             return jsonify(tuple(
                 dictify(user) for user in _group_users(conn, group_id)))
+
+@groups.route("/requests/join/<uuid:group_id>", methods=["POST"])
+@require_oauth("profile group")
+def request_to_join(group_id: uuid.UUID) -> Response:
+    """Request to join a group."""
+    def __request__(conn: db.DbConnection, user: User, group_id: uuid.UUID,
+                    message: str):
+        with db.cursor(conn) as cursor:
+            group = user_group(cursor, user).maybe(# type: ignore[misc]
+                False, lambda grp: grp)# type: ignore[arg-type]
+            if group:
+                error = AuthorisationError(
+                    "You cannot request to join a new group while being a "
+                    "member of an existing group.")
+                error.error_code = 400
+                raise error
+            request_id = uuid.uuid4()
+            cursor.execute(
+                "INSERT INTO group_requests VALUES "
+                "(:request_id, :group_id, :user_id, :ts, :type, :msg)",
+                {
+                    "request_id": str(request_id),
+                    "group_id": str(group_id),
+                    "user_id": str(user.user_id),
+                    "ts": datetime.datetime.now().timestamp(),
+                    "type": "JOIN",
+                    "msg": message
+                })
+            return {
+                "request_id":  request_id,
+                "message": "Successfully sent the join request."
+            }
+
+    with require_oauth.acquire("profile group") as the_token:
+        form = request.form
+        results = with_db_connection(partial(
+            __request__, user=the_token.user, group_id=group_id, message=form.get(
+                "message", "I hereby request that you add me to your group.")))
+        return jsonify(results)
