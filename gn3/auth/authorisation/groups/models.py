@@ -8,11 +8,11 @@ from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
-from gn3.auth.authentication.users import User
+from gn3.auth.authentication.users import User, user_by_id, DUMMY_USER
 
 from ..checks import authorised_p
 from ..privileges import Privilege
-from ..errors import NotFoundError, AuthorisationError
+from ..errors import NotFoundError, AuthorisationError, InconsistencyError
 from ..roles.models import (
     Role, create_role, revoke_user_role_by_name, assign_user_role_by_name)
 
@@ -28,6 +28,13 @@ class Group(NamedTuple):
             "group_id": self.group_id, "group_name": self.group_name,
             "group_metadata": self.group_metadata
         }
+
+DUMMY_GROUP = Group(
+    group_id=UUID("77cee65b-fe29-4383-ae41-3cb3b480cc70"),
+    group_name="GN3_DUMMY_GROUP",
+    group_metadata={
+        "group-description": "This is a dummy group to use as a placeholder"
+    })
 
 class GroupRole(NamedTuple):
     """Class representing a role tied/belonging to a group."""
@@ -242,3 +249,52 @@ def group_by_id(conn: db.DbConnection, group_id: UUID) -> Group:
                 json.loads(row["group_metadata"]))
 
     raise NotFoundError(f"Could not find group with ID '{group_id}'.")
+
+@authorised_p(("system:group:view-group", "system:group:edit-group"),
+              error_description=("You do not have the appropriate authorisation"
+                                 " to act upon the join requests."),
+              oauth2_scope="profile group")
+def join_requests(conn: db.DbConnection, user: User):
+    """List all the join requests for the user's group."""
+    with db.cursor(conn) as cursor:
+        group = user_group(cursor, user).maybe(DUMMY_GROUP, lambda grp: grp)# type: ignore[misc]
+        if group != DUMMY_GROUP and is_group_leader(cursor, user, group):
+            cursor.execute(
+                "SELECT gjr.*, u.email, u.name FROM group_join_requests AS gjr "
+                "INNER JOIN users AS u ON gjr.requester_id=u.user_id "
+                "WHERE gjr.group_id=? AND gjr.status='PENDING'",
+                (str(group.group_id),))
+            return tuple(dict(row)for row in cursor.fetchall())
+
+    raise AuthorisationError(
+        "You do not have the appropriate authorisation to access the "
+        "group's join requests.")
+
+@authorised_p(("system:group:view-group", "system:group:edit-group"),
+              error_description=("You do not have the appropriate authorisation"
+                                 " to act upon the join requests."),
+              oauth2_scope="profile group")
+def accept_join_request(conn: db.DbConnection, request_id: UUID, user: User):
+    """Accept a join request."""
+    with db.cursor(conn) as cursor:
+        group = user_group(cursor, user).maybe(DUMMY_GROUP, lambda grp: grp) # type: ignore[misc]
+        cursor.execute("SELECT * FROM group_join_requests WHERE request_id=?",
+                       (str(request_id),))
+        row = cursor.fetchone()
+        if row:
+            if group.group_id == UUID(row["group_id"]):
+                the_user = user_by_id(conn, UUID(row["requester_id"])).maybe(# type: ignore[misc]
+                    DUMMY_USER, lambda usr: usr)
+                if the_user == DUMMY_USER:
+                    raise InconsistencyError(
+                        "Could not find user associated with join request.")
+                add_user_to_group(cursor, group, the_user)
+                revoke_user_role_by_name(cursor, the_user, "group-creator")
+                cursor.execute(
+                    "UPDATE group_join_requests SET status='ACCEPTED' "
+                    "WHERE request_id=?",
+                    (str(request_id),))
+                return {"request_id": request_id, "status": "ACCEPTED"}
+            raise AuthorisationError(
+                "You cannot act on other groups join requests")
+        raise NotFoundError(f"Could not find request with ID '{request_id}'")

@@ -31,7 +31,8 @@ migrations_and_tables = (
     ("20221219_02_buSEU-create-oauth2-tokens-table.py", "oauth2_tokens"),
     ("20221219_03_PcTrb-create-authorisation-code-table.py",
      "authorisation_code"),
-    ("20230207_01_r0bkZ-create-group-requests-table.py", "group_requests"))
+    ("20230207_01_r0bkZ-create-group-join-requests-table.py",
+     "group_join_requests"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)

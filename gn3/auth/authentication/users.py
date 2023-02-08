@@ -21,6 +21,10 @@ class User(NamedTuple):
         """Return a dict representation of `User` objects."""
         return {"user_id": self.user_id, "email": self.email, "name": self.name}
 
+DUMMY_USER = User(user_id=UUID("a391cf60-e8b7-4294-bd22-ddbbda4b3530"),
+                  email="gn3@dummy.user",
+                  name="Dummy user to use as placeholder")
+
 def user_by_email(conn: db.DbConnection, email: str) -> Maybe:
     """Retrieve user from database by their email address"""
     with db.cursor(conn) as cursor:

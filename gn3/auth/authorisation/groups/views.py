@@ -10,7 +10,8 @@ from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
 from .models import (
-    user_group, all_groups, GroupCreationError, group_users as _group_users,
+    user_group, all_groups, join_requests, accept_join_request,
+    GroupCreationError, group_users as _group_users,
     create_group as _create_group)
 
 from ..errors import AuthorisationError
@@ -76,14 +77,14 @@ def request_to_join(group_id: uuid.UUID) -> Response:
                 raise error
             request_id = uuid.uuid4()
             cursor.execute(
-                "INSERT INTO group_requests VALUES "
-                "(:request_id, :group_id, :user_id, :ts, :type, :msg)",
+                "INSERT INTO group_join_requests VALUES "
+                "(:request_id, :group_id, :user_id, :ts, :status, :msg)",
                 {
                     "request_id": str(request_id),
                     "group_id": str(group_id),
                     "user_id": str(user.user_id),
                     "ts": datetime.datetime.now().timestamp(),
-                    "type": "JOIN",
+                    "status": "PENDING",
                     "msg": message
                 })
             return {
@@ -97,3 +98,21 @@ def request_to_join(group_id: uuid.UUID) -> Response:
             __request__, user=the_token.user, group_id=group_id, message=form.get(
                 "message", "I hereby request that you add me to your group.")))
         return jsonify(results)
+
+@groups.route("/requests/join/list", methods=["GET"])
+@require_oauth("profile group")
+def list_join_requests() -> Response:
+    """List the pending join requests."""
+    with require_oauth.acquire("profile group") as the_token:
+        return jsonify(with_db_connection(partial(
+            join_requests, user=the_token.user)))
+
+@groups.route("/requests/join/accept", methods=["POST"])
+@require_oauth("profile group")
+def accept_join_requests() -> Response:
+    """Accept a join request."""
+    with require_oauth.acquire("profile group") as the_token:
+        form = request.form
+        request_id = uuid.UUID(form.get("request_id"))
+        return jsonify(with_db_connection(partial(
+            accept_join_request, request_id=request_id, user=the_token.user)))

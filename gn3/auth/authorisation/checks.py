@@ -12,7 +12,7 @@ from .errors import AuthorisationError
 from ..authentication.oauth2.resource_server import require_oauth
 
 def authorised_p(
-        privileges: tuple[str],
+        privileges: tuple[str, ...],
         error_description: str = (
             "You lack authorisation to perform requested action"),
         oauth2_scope = "profile"):
