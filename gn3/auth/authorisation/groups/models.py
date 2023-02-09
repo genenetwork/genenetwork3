@@ -274,8 +274,10 @@ def join_requests(conn: db.DbConnection, user: User):
               error_description=("You do not have the appropriate authorisation"
                                  " to act upon the join requests."),
               oauth2_scope="profile group")
-def accept_join_request(conn: db.DbConnection, request_id: UUID, user: User):
-    """Accept a join request."""
+def accept_reject_join_request(
+        conn: db.DbConnection, request_id: UUID, user: User, status: str) -> dict:
+    """Accept/Reject a join request."""
+    assert status in ("ACCEPTED", "REJECTED"), f"Invalid status '{status}'."
     with db.cursor(conn) as cursor:
         group = user_group(cursor, user).maybe(DUMMY_GROUP, lambda grp: grp) # type: ignore[misc]
         cursor.execute("SELECT * FROM group_join_requests WHERE request_id=?",
@@ -288,13 +290,14 @@ def accept_join_request(conn: db.DbConnection, request_id: UUID, user: User):
                 if the_user == DUMMY_USER:
                     raise InconsistencyError(
                         "Could not find user associated with join request.")
-                add_user_to_group(cursor, group, the_user)
-                revoke_user_role_by_name(cursor, the_user, "group-creator")
+                if status == "ACCEPTED":
+                    add_user_to_group(cursor, group, the_user)
+                    revoke_user_role_by_name(cursor, the_user, "group-creator")
                 cursor.execute(
-                    "UPDATE group_join_requests SET status='ACCEPTED' "
+                    "UPDATE group_join_requests SET status=? "
                     "WHERE request_id=?",
-                    (str(request_id),))
-                return {"request_id": request_id, "status": "ACCEPTED"}
+                    (status, str(request_id)))
+                return {"request_id": request_id, "status": status}
             raise AuthorisationError(
                 "You cannot act on other groups join requests")
         raise NotFoundError(f"Could not find request with ID '{request_id}'")

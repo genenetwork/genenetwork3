@@ -10,8 +10,8 @@ from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
 from .models import (
-    user_group, all_groups, join_requests, accept_join_request,
-    GroupCreationError, group_users as _group_users,
+    user_group, all_groups, join_requests, GroupCreationError,
+    accept_reject_join_request, group_users as _group_users,
     create_group as _create_group)
 
 from ..errors import AuthorisationError
@@ -115,4 +115,16 @@ def accept_join_requests() -> Response:
         form = request.form
         request_id = uuid.UUID(form.get("request_id"))
         return jsonify(with_db_connection(partial(
-            accept_join_request, request_id=request_id, user=the_token.user)))
+            accept_reject_join_request, request_id=request_id,
+            user=the_token.user, status="ACCEPTED")))
+
+@groups.route("/requests/join/reject", methods=["POST"])
+@require_oauth("profile group")
+def reject_join_requests() -> Response:
+    """Reject a join request."""
+    with require_oauth.acquire("profile group") as the_token:
+        form = request.form
+        request_id = uuid.UUID(form.get("request_id"))
+        return jsonify(with_db_connection(partial(
+            accept_reject_join_request, request_id=request_id,
+            user=the_token.user, status="REJECTED")))

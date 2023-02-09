@@ -21,6 +21,7 @@ steps = [
             ON UPDATE CASCADE ON DELETE CASCADE,
             FOREIGN KEY (requester_id) REFERENCES users(user_id)
             ON UPDATE CASCADE ON DELETE CASCADE,
+            UNIQUE(group_id, requester_id),
             CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED'))
         ) WITHOUT ROWID
         """,
