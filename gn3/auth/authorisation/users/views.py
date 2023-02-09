@@ -1,12 +1,14 @@
 """User authorisation endpoints."""
 import traceback
-from typing import Tuple, Optional
+from functools import partial
+from typing import Any, Tuple, Optional
 
 import sqlite3
 from flask import request, jsonify, Response, Blueprint, current_app
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
+from gn3.auth.db_utils import with_db_connection
 
 from ..groups.models import user_group as _user_group
 from ..errors import NotFoundError, UserRegistrationError
@@ -14,7 +16,7 @@ from ..resources.models import user_resources as _user_resources
 from ..roles.models import assign_default_roles, user_roles as _user_roles
 
 from ...authentication.oauth2.resource_server import require_oauth
-from ...authentication.users import save_user, set_user_password
+from ...authentication.users import User, save_user, set_user_password
 from ...authentication.oauth2.models.oauth2token import token_by_access_token
 
 users = Blueprint("users", __name__)
@@ -137,7 +139,7 @@ def user_group() -> Response:
             return jsonify(dictify(group))
         raise NotFoundError("User is not a member of any group.")
 
-@users.route("/resources")
+@users.route("/resources", methods=["GET"])
 @require_oauth("profile resource")
 def user_resources() -> Response:
     """Retrieve the resources a user has access to."""
@@ -147,3 +149,27 @@ def user_resources() -> Response:
             return jsonify([
                 dictify(resource) for resource in
                 _user_resources(conn, the_token.user)])
+
+@users.route("group/join-request", methods=["GET"])
+@require_oauth("profile group")
+def user_join_request_exists():
+    """Check whether a user has an active group join request."""
+    def __request_exists__(conn: db.DbConnection, user: User) -> dict[str, Any]:
+        with db.cursor(conn) as cursor:
+            cursor.execute(
+                "SELECT * FROM group_join_requests WHERE requester_id=? AND "
+                "status = 'PENDING'",
+                (str(user.user_id),))
+            res = cursor.fetchone()
+            if res:
+                return {
+                    "request_id": res["request_id"],
+                    "exists": True
+                }
+        return{
+            "status": "Not found",
+            "exists": False
+        }
+    with require_oauth.acquire("profile group") as the_token:
+        return jsonify(with_db_connection(partial(
+            __request_exists__, user=the_token.user)))
