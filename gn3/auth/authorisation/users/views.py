@@ -46,9 +46,7 @@ def user_roles() -> Response:
     with require_oauth.acquire("role") as token:
         with db.connection(current_app.config["AUTH_DB"]) as conn:
             return jsonify(tuple(
-                dictify(role) for role in
-                _user_roles(conn, token.user).maybe(# type: ignore[misc]
-                    tuple(), lambda roles: roles)))
+                dictify(role) for role in _user_roles(conn, token.user)))
 
 def __email_valid__(email: str) -> Tuple[bool, Optional[str]]:
     """Validate the email address."""

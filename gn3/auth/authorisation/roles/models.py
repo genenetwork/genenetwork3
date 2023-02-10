@@ -3,7 +3,6 @@ from uuid import UUID, uuid4
 from functools import reduce
 from typing import Any, Sequence, Iterable, NamedTuple
 
-from pymonad.maybe import Just, Maybe, Nothing
 from pymonad.either import Left, Right, Either
 
 from gn3.auth import db
@@ -80,7 +79,7 @@ def __organise_privileges__(roles_dict, privilege_row):
                        privilege_row["privilege_description"]),))
     }
 
-def user_roles(conn: db.DbConnection, user: User) -> Maybe[Sequence[Role]]:
+def user_roles(conn: db.DbConnection, user: User) -> Sequence[Role]:
     """Retrieve non-resource roles assigned to the user."""
     with db.cursor(conn) as cursor:
         cursor.execute(
@@ -90,11 +89,9 @@ def user_roles(conn: db.DbConnection, user: User) -> Maybe[Sequence[Role]]:
             "ON rp.privilege_id=p.privilege_id WHERE ur.user_id=?",
             (str(user.user_id),))
 
-        results = cursor.fetchall()
-        if results:
-            return Just(tuple(
-                reduce(__organise_privileges__, results, {}).values()))
-        return Nothing
+        return tuple(
+            reduce(__organise_privileges__, cursor.fetchall(), {}).values())
+    return tuple()
 
 def user_role(conn: db.DbConnection, user: User, role_id: UUID) -> Either:
     """Retrieve a specific non-resource role assigned to the user."""

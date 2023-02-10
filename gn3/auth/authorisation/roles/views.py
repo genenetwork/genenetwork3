@@ -13,7 +13,7 @@ from ...authentication.oauth2.resource_server import require_oauth
 roles = Blueprint("roles", __name__)
 
 @roles.route("/view/<uuid:role_id>", methods=["GET"])
-@require_oauth("role")
+@require_oauth("profile role")
 def view_role(role_id: uuid.UUID) -> Response:
     """Retrieve a user role with id `role_id`"""
     def __error__(exc: Exception):
