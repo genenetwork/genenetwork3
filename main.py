@@ -1,5 +1,8 @@
 """Main entry point for project"""
+import sys
+import uuid
 import json
+import click
 from math import ceil
 from datetime import datetime
 
@@ -83,6 +86,26 @@ def init_dev_clients():
 
     with db.connection(app.config["AUTH_DB"]) as conn, db.cursor(conn) as cursor:
         cursor.executemany(dev_clients_query, dev_clients)
+
+
+@app.cli.command()
+@click.argument("user_id", type=click.UUID)
+def assign_system_admin(user_id: uuid.UUID):
+    dburi = app.config["AUTH_DB"]
+    with db.connection(dburi) as conn, db.cursor(conn) as cursor:
+        cursor.execute("SELECT * FROM users WHERE user_id=?",
+                       (str(user_id),))
+        row = cursor.fetchone()
+        if row:
+            cursor.execute(
+                "SELECT * FROM roles WHERE role_name='system-administrator'")
+            admin_role = cursor.fetchone()
+            cursor.execute("INSERT INTO user_roles VALUES (?,?)",
+                           (str(user_id), admin_role["role_id"]))
+            return 0
+        print(f"ERROR: Could not find user with ID {user_id}",
+              file=sys.stderr)
+        sys.exit(1)
 
 ##### END: CLI Commands #####
 
