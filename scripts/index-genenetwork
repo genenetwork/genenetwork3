@@ -283,7 +283,7 @@ def group(generator: Iterable, chunk_size: int) -> Iterable:
 
 
 @contextlib.contextmanager
-def worker_queue(number_of_workers: int = os.cpu_count()) -> Generator:
+def worker_queue(number_of_workers: int = os.cpu_count() or 1) -> Generator:
     """Manage a pool of worker processes returning a function to spawn them."""
     processes: deque = deque()
 
