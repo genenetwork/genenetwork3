@@ -51,6 +51,8 @@ def connection(db_path: str, row_factory: Callable = sqlite3.Row) -> Iterator[Db
     """Create the connection to the auth database."""
     conn = sqlite3.connect(db_path)
     conn.row_factory = row_factory
+    if app.config["DEBUG"]:
+        conn.set_trace_callback(app.logger.debug)
     conn.execute("PRAGMA foreign_keys = ON")
     try:
         yield conn
