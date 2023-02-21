@@ -1,5 +1,6 @@
 """Handle the management of resources."""
 import json
+import sqlite3
 from uuid import UUID, uuid4
 from typing import Any, Dict, Sequence, NamedTuple
 
@@ -37,6 +38,7 @@ class Resource(NamedTuple):
     resource_name: str
     resource_category: ResourceCategory
     public: bool
+    resource_data: Sequence[dict[str, Any]] = tuple()
 
     def dictify(self) -> dict[str, Any]:
         """Return a dict representation of `Resource` objects."""
@@ -44,7 +46,8 @@ class Resource(NamedTuple):
             "group": dictify(self.group), "resource_id": self.resource_id,
             "resource_name": self.resource_name,
             "resource_category": dictify(self.resource_category),
-            "public": self.public
+            "public": self.public,
+            "resource_data": self.resource_data
         }
 
 def __assign_resource_owner_role__(cursor, resource, user):
@@ -190,6 +193,53 @@ def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:
         return user_group(cursor, user).map(__all_resources__).maybe(# type: ignore[arg-type,misc]
             public_resources(conn), lambda res: res)# type: ignore[arg-type,return-value]
 
+def attach_resource_data(cursor: db.DbCursor, resource: Resource) -> Resource:
+    """Attach the linked data to the resource"""
+    resource_data_function = {
+        "mrna": mrna_resource_data,
+        "genotype": genotype_resource_data,
+        "phenotype": phenotype_resource_data
+    }
+    category = resource.resource_category
+    data_rows = tuple(
+        dict(data_row) for data_row in
+        resource_data_function[category.resource_category_key](
+            cursor, resource.resource_id))
+    return Resource(
+        resource.group, resource.resource_id, resource.resource_name,
+        resource.resource_category, resource.public, data_rows)
+
+def mrna_resource_data(
+        cursor: db.DbCursor, resource_id: UUID) -> Sequence[sqlite3.Row]:
+    """Fetch data linked to a mRNA resource"""
+    cursor.execute(
+        "SELECT * FROM mrna_resources AS mr INNER JOIN linked_group_data AS lgd"
+        " ON mr.dataset_id=lgd.dataset_or_trait_id WHERE mr.resource_id=?",
+        (str(resource_id),))
+    return cursor.fetchall()
+
+def genotype_resource_data(
+        cursor: db.DbCursor, resource_id: UUID) -> Sequence[sqlite3.Row]:
+    """Fetch data linked to a Genotype resource"""
+    cursor.execute(
+        "SELECT * FROM genotype_resources AS gr "
+        "INNER JOIN linked_group_data AS lgd "
+        "ON gr.trait_id=lgd.dataset_or_trait_id "
+        "WHERE gr.resource_id=?",
+        (str(resource_id),))
+    return cursor.fetchall()
+
+def phenotype_resource_data(
+        cursor: db.DbCursor, resource_id: UUID) -> Sequence[sqlite3.Row]:
+    """Fetch data linked to a Phenotype resource"""
+    cursor.execute(
+        "SELECT * FROM phenotype_resources AS pr "
+        "INNER JOIN linked_group_data AS lgd "
+        "ON pr.trait_id=lgd.dataset_or_trait_id "
+        "WHERE pr.resource_id=?",
+        (str(resource_id),))
+    return cursor.fetchall()
+
 def resource_by_id(
         conn: db.DbConnection, user: User, resource_id: UUID) -> Resource:
     """Retrieve a resource by its ID."""
@@ -205,11 +255,10 @@ def resource_by_id(
                        {"id": str(resource_id)})
         row = cursor.fetchone()
         if row:
-            return Resource(
+            return attach_resource_data(cursor, Resource(
                 group_by_id(conn, UUID(row["group_id"])),
-                UUID(row["resource_id"]),
-                row["resource_name"],
+                UUID(row["resource_id"]), row["resource_name"],
                 resource_category_by_id(conn, row["resource_category_id"]),
-                bool(int(row["public"])))
+                bool(int(row["public"]))))
 
     raise NotFoundError(f"Could not find a resource with id '{resource_id}'")

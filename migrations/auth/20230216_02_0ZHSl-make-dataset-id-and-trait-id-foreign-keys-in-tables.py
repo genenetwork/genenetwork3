@@ -26,20 +26,25 @@ def add_foreign_key_to_mrna_resources(conn):
             CREATE TABLE IF NOT EXISTS mrna_resources(
               group_id TEXT NOT NULL,
               resource_id TEXT PRIMARY KEY,
+              dataset_type TEXT NOT NULL DEFAULT "mRNA"
+                CHECK (dataset_type="mRNA"),
               dataset_id TEXT NOT NULL UNIQUE,
               FOREIGN KEY(group_id, resource_id)
                 REFERENCES resources(group_id, resource_id)
                 ON UPDATE CASCADE ON DELETE RESTRICT,
-              FOREIGN KEY (dataset_id)
-                REFERENCES linked_group_data(dataset_or_trait_id)
+              FOREIGN KEY (group_id, dataset_type, dataset_id)
+                REFERENCES
+                  linked_group_data(group_id, dataset_type, dataset_or_trait_id)
                 ON UPDATE CASCADE ON DELETE CASCADE
               ) WITHOUT ROWID
             """)
         cursor.execute(
             "SELECT group_id, resource_id, dataset_id FROM mrna_resources_bkp")
         rows = ((row[0], row[1], row[2]) for row in cursor.fetchall())
-        cursor.executemany("INSERT INTO mrna_resources VALUES (?, ?, ?)",
-                           rows)
+        cursor.executemany(
+            "INSERT INTO mrna_resources(group_id, resource_id, dataset_id) "
+            "VALUES (?, ?, ?)",
+            rows)
         cursor.execute("DROP TABLE mrna_resources_bkp")
 
 def drop_foreign_key_from_mrna_resources(conn):
@@ -61,8 +66,10 @@ def drop_foreign_key_from_mrna_resources(conn):
         cursor.execute(
             "SELECT group_id, resource_id, dataset_id FROM mrna_resources_bkp")
         rows = ((row[0], row[1], row[2]) for row in cursor.fetchall())
-        cursor.executemany("INSERT INTO mrna_resources VALUES (?, ?, ?)",
-                           rows)
+        cursor.executemany(
+            "INSERT INTO mrna_resources(group_id, resource_id, dataset_id) "
+            "VALUES (?, ?, ?)",
+            rows)
         cursor.execute("DROP TABLE mrna_resources_bkp")
 
 def add_foreign_key_to_geno_resources(conn):
@@ -75,12 +82,15 @@ def add_foreign_key_to_geno_resources(conn):
             CREATE TABLE IF NOT EXISTS genotype_resources(
               group_id TEXT NOT NULL,
               resource_id TEXT PRIMARY KEY,
+              dataset_type TEXT NOT NULL DEFAULT "Genotype"
+                CHECK (dataset_type="Genotype"),
               trait_id TEXT NOT NULL UNIQUE,
               FOREIGN KEY(group_id, resource_id)
                 REFERENCES resources(group_id, resource_id)
                 ON UPDATE CASCADE ON DELETE RESTRICT,
-              FOREIGN KEY (trait_id)
-                REFERENCES linked_group_data(dataset_or_trait_id)
+              FOREIGN KEY (group_id, dataset_type, trait_id)
+                REFERENCES
+                  linked_group_data(group_id, dataset_type, dataset_or_trait_id)
                 ON UPDATE CASCADE ON DELETE CASCADE
               ) WITHOUT ROWID
             """)
@@ -88,8 +98,10 @@ def add_foreign_key_to_geno_resources(conn):
             "SELECT group_id, resource_id, trait_id "
             "FROM genotype_resources_bkp")
         rows = ((row[0], row[1], row[2]) for row in cursor.fetchall())
-        cursor.executemany("INSERT INTO genotype_resources VALUES (?, ?, ?)",
-                           rows)
+        cursor.executemany(
+            "INSERT INTO genotype_resources(group_id, resource_id, trait_id) "
+            "VALUES (?, ?, ?)",
+            rows)
         cursor.execute("DROP TABLE genotype_resources_bkp")
 
 def drop_foreign_key_from_geno_resources(conn):
@@ -112,8 +124,10 @@ def drop_foreign_key_from_geno_resources(conn):
             "SELECT group_id, resource_id, trait_id "
             "FROM genotype_resources_bkp")
         rows = ((row[0], row[1], row[2]) for row in cursor.fetchall())
-        cursor.executemany("INSERT INTO genotype_resources VALUES (?, ?, ?)",
-                           rows)
+        cursor.executemany(
+            "INSERT INTO genotype_resources(group_id, resource_id, trait_id) "
+            "VALUES (?, ?, ?)",
+            rows)
         cursor.execute("DROP TABLE genotype_resources_bkp")
 
 def add_foreign_key_to_pheno_resources(conn):
@@ -126,12 +140,15 @@ def add_foreign_key_to_pheno_resources(conn):
             CREATE TABLE IF NOT EXISTS phenotype_resources(
               group_id TEXT NOT NULL,
               resource_id TEXT PRIMARY KEY,
+              dataset_type TEXT NOT NULL DEFAULT "Phenotype"
+                CHECK (dataset_type="Phenotype"),
               trait_id TEXT NOT NULL UNIQUE,
               FOREIGN KEY(group_id, resource_id)
                 REFERENCES resources(group_id, resource_id)
                 ON UPDATE CASCADE ON DELETE RESTRICT,
-              FOREIGN KEY (trait_id)
-                REFERENCES linked_group_data(dataset_or_trait_id)
+              FOREIGN KEY (group_id, dataset_type, trait_id)
+                REFERENCES
+                  linked_group_data(group_id, dataset_type, dataset_or_trait_id)
                 ON UPDATE CASCADE ON DELETE CASCADE
               ) WITHOUT ROWID
             """)
@@ -139,8 +156,10 @@ def add_foreign_key_to_pheno_resources(conn):
             "SELECT group_id, resource_id, trait_id "
             "FROM phenotype_resources_bkp")
         rows = ((row[0], row[1], row[2]) for row in cursor.fetchall())
-        cursor.executemany("INSERT INTO phenotype_resources VALUES (?, ?, ?)",
-                           rows)
+        cursor.executemany(
+            "INSERT INTO phenotype_resources(group_id, resource_id, trait_id) "
+            "VALUES (?, ?, ?)",
+            rows)
         cursor.execute("DROP TABLE phenotype_resources_bkp")
 
 def drop_foreign_key_from_pheno_resources(conn):
@@ -163,8 +182,10 @@ def drop_foreign_key_from_pheno_resources(conn):
             "SELECT group_id, resource_id, trait_id "
             "FROM phenotype_resources_bkp")
         rows = ((row[0], row[1], row[2]) for row in cursor.fetchall())
-        cursor.executemany("INSERT INTO phenotype_resources VALUES (?, ?, ?)",
-                           rows)
+        cursor.executemany(
+            "INSERT INTO phenotype_resources(group_id, resource_id, trait_id) "
+            "VALUES (?, ?, ?)",
+            rows)
         cursor.execute("DROP TABLE phenotype_resources_bkp")
 
 from yoyo import step
