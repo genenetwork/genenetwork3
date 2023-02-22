@@ -15,6 +15,12 @@ class NotFoundError(AuthorisationError):
     """Raised whenever we try fetching (a/an) object(s) that do(es) not exist."""
     error_code: int = 404
 
+class InvalidData(AuthorisationError):
+    """
+    Exception if user requests invalid data
+    """
+    error_code: int = 400
+
 class InconsistencyError(AuthorisationError):
     """
     Exception raised due to data inconsistencies

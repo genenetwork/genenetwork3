@@ -1,11 +1,18 @@
 """The views/routes for the resources package"""
 import uuid
+from functools import partial
+
 from flask import request, jsonify, Response, Blueprint, current_app as app
 
+from gn3 import db_utils as gn3dbutils
+from gn3.auth.db_utils import with_db_connection
+
+from .data import retrieve_ungrouped_data
 from .models import (
     resource_by_id, resource_categories, resource_category_by_id,
     create_resource as _create_resource)
 
+from ..errors import AuthorisationError
 from ..groups.models import user_group, DUMMY_GROUP
 
 from ... import db
@@ -52,7 +59,10 @@ def view_resource(resource_id: uuid.UUID) -> Response:
 @resources.route("/<string:resource_type>/unlinked-data")
 @require_oauth("profile group resource")
 def unlinked_data(resource_type: str) -> Response:
-    """View unlinked data"""
+    """View data linked to the group but not linked to any resource."""
+    if resource_type not in ("all", "mrna", "genotype", "phenotype"):
+        raise AuthorisationError(f"Invalid resource type {resource_type}")
+
     with require_oauth.acquire("profile group resource") as the_token:
         db_uri = app.config["AUTH_DB"]
         with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
@@ -97,3 +107,15 @@ def unlinked_data(resource_type: str) -> Response:
                 return jsonify(tuple(dict(row) for row in cursor.fetchall()))
 
     return jsonify(tuple())
+
+@resources.route("/<string:dataset_type>/ungrouped-data", methods=["GET"])
+@require_oauth("profile group resource")
+def ungrouped_data(dataset_type: str) -> Response:
+    """View data not linked to any group."""
+    if dataset_type not in ("all", "mrna", "genotype", "phenotype"):
+        raise AuthorisationError(f"Invalid dataset type {dataset_type}")
+
+    with gn3dbutils.database_connection() as gn3conn:
+        return jsonify(with_db_connection(partial(
+            retrieve_ungrouped_data, gn3conn=gn3conn,
+            dataset_type=dataset_type)))

@@ -32,7 +32,7 @@ def __init_dev_users__():
     dev_users_passwd = "INSERT INTO user_credentials VALUES (:user_id, :hash)"
     dev_users = ({
         "user_id": "0ad1917c-57da-46dc-b79e-c81c91e5b928",
-        "email": "test@develpment.user",
+        "email": "test@development.user",
         "name": "Test Development User",
         "password": "testpasswd"},)
 
