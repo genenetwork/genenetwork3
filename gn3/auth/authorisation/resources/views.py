@@ -7,13 +7,13 @@ from flask import request, jsonify, Response, Blueprint, current_app as app
 from gn3 import db_utils as gn3dbutils
 from gn3.auth.db_utils import with_db_connection
 
-from .data import retrieve_ungrouped_data
+from .data import link_data_to_group, retrieve_ungrouped_data
 from .models import (
     resource_by_id, resource_categories, resource_category_by_id,
     create_resource as _create_resource)
 
-from ..errors import AuthorisationError
-from ..groups.models import user_group, DUMMY_GROUP
+from ..errors import InvalidData, AuthorisationError
+from ..groups.models import user_group, DUMMY_GROUP, group_by_id
 
 from ... import db
 from ...dictify import dictify
@@ -115,7 +115,27 @@ def ungrouped_data(dataset_type: str) -> Response:
     if dataset_type not in ("all", "mrna", "genotype", "phenotype"):
         raise AuthorisationError(f"Invalid dataset type {dataset_type}")
 
-    with gn3dbutils.database_connection() as gn3conn:
-        return jsonify(with_db_connection(partial(
-            retrieve_ungrouped_data, gn3conn=gn3conn,
-            dataset_type=dataset_type)))
+    with require_oauth.acquire("profile group resource") as _the_token:
+        with gn3dbutils.database_connection() as gn3conn:
+            return jsonify(with_db_connection(partial(
+                retrieve_ungrouped_data, gn3conn=gn3conn,
+                dataset_type=dataset_type)))
+
+@resources.route("/data/link", methods=["POST"])
+@require_oauth("profile group resource")
+def link_data() -> Response:
+    """Link selected data to specified group."""
+    with require_oauth.acquire("profile group resource") as _the_token:
+        form = request.form
+        group_id = uuid.UUID(form["group_id"])
+        dataset_id = form["dataset_id"]
+        dataset_type = form.get("dataset_type")
+        if dataset_type not in ("mrna", "genotype", "phenotype"):
+            raise InvalidData("Unexpected dataset type requested!")
+        def __link__(conn: db.DbConnection):
+            group = group_by_id(conn, group_id)
+            with gn3dbutils.database_connection() as gn3conn:
+                return link_data_to_group(
+                    conn, gn3conn, dataset_type, dataset_id, group)
+
+        return jsonify(with_db_connection(__link__))

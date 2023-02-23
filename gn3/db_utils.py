@@ -28,7 +28,7 @@ def database_connector() -> mdb.Connection:
 # pylint: disable=missing-class-docstring, missing-function-docstring, too-few-public-methods
 class Connection(Protocol):
     """Type Annotation for MySQLdb's connection object"""
-    def cursor(self) -> Any:
+    def cursor(self, *args) -> Any:
         """A cursor in which queries may be performed"""
         ...
 
