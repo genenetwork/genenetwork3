@@ -2,11 +2,13 @@
 import json
 import sqlite3
 from uuid import UUID, uuid4
+from functools import partial
 from typing import Any, Dict, Sequence, NamedTuple
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
+from gn3.auth.db_utils import with_db_connection
 
 from .checks import authorised_for
 
@@ -262,3 +264,63 @@ def resource_by_id(
                 bool(int(row["public"]))))
 
     raise NotFoundError(f"Could not find a resource with id '{resource_id}'")
+
+def __link_mrna_data_to_resource__(
+        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+    """Link mRNA Assay data with a resource."""
+    with db.cursor(conn) as cursor:
+        params = {
+            "group_id": str(resource.group.group_id),
+            "resource_id": str(resource.resource_id),
+            "dataset_type": "mRNA",
+            "dataset_id": dataset_id
+        }
+        cursor.execute(
+            "INSERT INTO mrna_resources VALUES"
+            "(:group_id, :resource_id, :dataset_type, :dataset_id)",
+            params)
+        return params
+
+def __link_geno_data_to_resource__(
+        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+    """Link Genotype data with a resource."""
+    with db.cursor(conn) as cursor:
+        params = {
+            "group_id": str(resource.group.group_id),
+            "resource_id": str(resource.resource_id),
+            "dataset_type": "Genotype",
+            "trait_id": dataset_id
+        }
+        cursor.execute(
+            "INSERT INTO genotype_resources VALUES"
+            "(:group_id, :resource_id, :dataset_type, :trait_id)",
+            params)
+        return params
+
+def __link_pheno_data_to_resource__(
+        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+    """Link Phenotype data with a resource."""
+    with db.cursor(conn) as cursor:
+        params = {
+            "group_id": str(resource.group.group_id),
+            "resource_id": str(resource.resource_id),
+            "dataset_type": "Phenotype",
+            "trait_id": dataset_id
+        }
+        cursor.execute(
+            "INSERT INTO phenotype_resources VALUES"
+            "(:group_id, :resource_id, :dataset_type, :trait_id)",
+            params)
+        return params
+
+def link_data_to_resource(
+        conn: db.DbConnection, user: User, resource_id: UUID, dataset_type: str,
+        dataset_id: str):
+    """Link data to resource."""
+    resource = with_db_connection(partial(
+        resource_by_id, user=user, resource_id=resource_id))
+    return {
+        "mrna": __link_mrna_data_to_resource__,
+        "genotype": __link_geno_data_to_resource__,
+        "phenotype": __link_pheno_data_to_resource__,
+    }[dataset_type.lower()](conn, resource, dataset_id)
