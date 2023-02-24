@@ -207,7 +207,6 @@ def attach_resource_data(cursor: db.DbCursor, resource: Resource) -> Resource:
         dict(data_row) for data_row in
         resource_data_function[category.resource_category_key](
             cursor, resource.resource_id))
-    print(f"DATA ROWS: {data_rows}")
     return Resource(
         resource.group, resource.resource_id, resource.resource_name,
         resource.resource_category, resource.public, data_rows)

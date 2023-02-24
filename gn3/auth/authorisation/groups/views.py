@@ -163,19 +163,22 @@ def unlinked_data(resource_type: str) -> Response:
                 "SELECT group_id, dataset_type, "
                 "trait_id AS dataset_or_trait_id FROM phenotype_resources")
 
-            ids_query = ("SELECT group_id, dataset_type, dataset_or_trait_id "
-                         "FROM linked_group_data "
-                         f"{type_filter} "
-                         f"EXCEPT {except_filter} ")
+            ids_query = (
+                "SELECT * FROM ("
+                "SELECT group_id, dataset_type, dataset_or_trait_id "
+                "FROM linked_group_data "
+                f"EXCEPT SELECT * FROM ({except_filter})"
+                f") {type_filter}")
             cursor.execute(ids_query)
             ids = cursor.fetchall()
+            print(f"THE IDS: {ids} ==> {type_filter}")
 
             if ids:
                 clause = ", ".join(["(?, ?, ?)"] * len(ids))
                 data_query = (
                     "SELECT * FROM linked_group_data "
                     "WHERE (group_id, dataset_type, dataset_or_trait_id) "
-                    f"IN (VALUES {clause})")
+                    f"IN (VALUES {clause}) ")
                 params = tuple(item for sublist in
                                ((row[0], row[1], row[2]) for row in ids)
                                for item in sublist)
