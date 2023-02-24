@@ -207,6 +207,7 @@ def attach_resource_data(cursor: db.DbCursor, resource: Resource) -> Resource:
         dict(data_row) for data_row in
         resource_data_function[category.resource_category_key](
             cursor, resource.resource_id))
+    print(f"DATA ROWS: {data_rows}")
     return Resource(
         resource.group, resource.resource_id, resource.resource_name,
         resource.resource_category, resource.public, data_rows)
@@ -216,7 +217,9 @@ def mrna_resource_data(
     """Fetch data linked to a mRNA resource"""
     cursor.execute(
         "SELECT * FROM mrna_resources AS mr INNER JOIN linked_group_data AS lgd"
-        " ON mr.dataset_id=lgd.dataset_or_trait_id WHERE mr.resource_id=?",
+        " ON (mr.dataset_id=lgd.dataset_or_trait_id "
+        "AND mr.dataset_type=lgd.dataset_type) "
+        "WHERE mr.resource_id=?",
         (str(resource_id),))
     return cursor.fetchall()
 
@@ -226,7 +229,8 @@ def genotype_resource_data(
     cursor.execute(
         "SELECT * FROM genotype_resources AS gr "
         "INNER JOIN linked_group_data AS lgd "
-        "ON gr.trait_id=lgd.dataset_or_trait_id "
+        "ON (gr.trait_id=lgd.dataset_or_trait_id "
+        "AND gr.dataset_type=lgd.dataset_type) "
         "WHERE gr.resource_id=?",
         (str(resource_id),))
     return cursor.fetchall()
@@ -237,7 +241,8 @@ def phenotype_resource_data(
     cursor.execute(
         "SELECT * FROM phenotype_resources AS pr "
         "INNER JOIN linked_group_data AS lgd "
-        "ON pr.trait_id=lgd.dataset_or_trait_id "
+        "ON (pr.trait_id=lgd.dataset_or_trait_id "
+        "AND pr.dataset_type=lgd.dataset_type) "
         "WHERE pr.resource_id=?",
         (str(resource_id),))
     return cursor.fetchall()
