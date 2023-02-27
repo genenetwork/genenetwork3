@@ -2,7 +2,7 @@
 import json
 import sqlite3
 from uuid import UUID, uuid4
-from functools import partial
+from functools import reduce, partial
 from typing import Any, Dict, Sequence, NamedTuple
 
 from gn3.auth import db
@@ -328,3 +328,87 @@ def link_data_to_resource(
         "genotype": __link_geno_data_to_resource__,
         "phenotype": __link_pheno_data_to_resource__,
     }[dataset_type.lower()](conn, resource, dataset_id)
+
+def organise_resources_by_category(resources: Sequence[Resource]) -> dict[
+        ResourceCategory, tuple[Resource]]:
+    """Organise the `resources` by their categories."""
+    def __organise__(accumulator, resource):
+        category = resource.resource_category
+        return {
+            **accumulator,
+            category: accumulator.get(category, tuple()) + (resource,)
+        }
+    return reduce(__organise__, resources, {})
+
+def __attach_data__(
+        data_rows: Sequence[sqlite3.Row],
+        resources: Sequence[Resource]) -> Sequence[Resource]:
+    def __organise__(acc, row):
+        resource_id = UUID(row["resource_id"])
+        return {
+            **acc,
+            resource_id: acc.get(resource_id, tuple()) + (dict(row),)
+        }
+    organised = reduce(__organise__, data_rows, {})
+    return tuple(
+        Resource(
+            resource.group, resource.resource_id, resource.resource_name,
+            resource.resource_category, resource.public,
+            organised[resource.resource_id])
+        for resource in resources)
+
+def attach_mrna_resources_data(
+        cursor, resources: Sequence[Resource]) -> Sequence[Resource]:
+    """Attach linked data to mRNA Assay resources"""
+    placeholders = ", ".join(["?"] * len(resources))
+    cursor.execute(
+        "SELECT * FROM mrna_resources AS mr INNER JOIN linked_group_data AS lgd"
+        " ON (mr.dataset_id=lgd.dataset_or_trait_id "
+        "AND mr.dataset_type=lgd.dataset_type) "
+        f"WHERE mr.resource_id IN ({placeholders})",
+        tuple(str(resource.resource_id) for resource in resources))
+    return __attach_data__(cursor.fetchall(), resources)
+
+def attach_genotype_resources_data(
+        cursor, resources: Sequence[Resource]) -> Sequence[Resource]:
+    """Attach linked data to Genotype resources"""
+    placeholders = ", ".join(["?"] * len(resources))
+    cursor.execute(
+        "SELECT * FROM genotype_resources AS gr "
+        "INNER JOIN linked_group_data AS lgd "
+        "ON (gr.trait_id=lgd.dataset_or_trait_id "
+        "AND gr.dataset_type=lgd.dataset_type) "
+        f"WHERE gr.resource_id IN {placeholders}",
+        tuple(str(resource.resource_id) for resource in resources))
+    return __attach_data__(cursor.fetchall(), resources)
+
+def attach_phenotype_resources_data(
+        cursor, resources: Sequence[Resource]) -> Sequence[Resource]:
+    """Attach linked data to Phenotype resources"""
+    placeholders = ", ".join(["?"] * len(resources))
+    cursor.execute(
+        "SELECT * FROM phenotype_resources AS pr "
+        "INNER JOIN linked_group_data AS lgd "
+        "ON (pr.trait_id=lgd.dataset_or_trait_id "
+        "AND pr.dataset_type=lgd.dataset_type) "
+        f"WHERE pr.resource_id IN {placeholders}",
+        tuple(str(resource.resource_id) for resource in resources))
+    return __attach_data__(cursor.fetchall(), resources)
+
+def attach_resources_data(
+        conn: db.DbConnection, resources: Sequence[Resource]) -> Sequence[
+            Resource]:
+    """Attach linked data for each resource in `resources`"""
+    resource_data_function = {
+        "mrna": attach_mrna_resources_data,
+        "genotype": attach_genotype_resources_data,
+        "phenotype": attach_phenotype_resources_data
+    }
+    organised = organise_resources_by_category(resources)
+    with db.cursor(conn) as cursor:
+        return tuple(
+            resource for categories in
+            (resource_data_function[category.resource_category_key](
+                cursor, rscs)
+             for category, rscs in organised.items())
+            for resource in categories)
