@@ -414,12 +414,12 @@ def __attach_data__(
             **acc,
             resource_id: acc.get(resource_id, tuple()) + (dict(row),)
         }
-    organised = reduce(__organise__, data_rows, {})
+    organised: dict[UUID, tuple[dict, ...]] = reduce(__organise__, data_rows, {})
     return tuple(
         Resource(
             resource.group, resource.resource_id, resource.resource_name,
             resource.resource_category, resource.public,
-            organised[resource.resource_id])
+            organised.get(resource.resource_id, tuple()))
         for resource in resources)
 
 def attach_mrna_resources_data(
