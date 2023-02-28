@@ -7,7 +7,8 @@ from gn3.auth.db_utils import with_db_connection
 
 from .models import (
     resource_by_id, resource_categories, link_data_to_resource,
-    resource_category_by_id, create_resource as _create_resource)
+    resource_category_by_id, unlink_data_from_resource,
+    create_resource as _create_resource)
 
 from ..errors import InvalidData
 
@@ -71,5 +72,25 @@ def link_data():
                     form["dataset_type"], form["dataset_id"])
 
             return jsonify(with_db_connection(__link__))
+    except AssertionError as aserr:
+        raise InvalidData(aserr.args[0]) from aserr
+
+
+
+@resources.route("/data/unlink", methods=["POST"])
+@require_oauth("profile group resource")
+def unlink_data():
+    """Unlink data bound to a specific resource."""
+    try:
+        form = request.form
+        assert "resource_id" in form, "Resource ID not provided."
+        assert "dataset_id" in form, "Dataset ID not provided."
+
+        with require_oauth.acquire("profile group resource") as the_token:
+            def __unlink__(conn: db.DbConnection):
+                return unlink_data_from_resource(
+                    conn, the_token.user, uuid.UUID(form["resource_id"]),
+                    form["dataset_id"])
+            return jsonify(with_db_connection(__unlink__))
     except AssertionError as aserr:
         raise InvalidData(aserr.args[0]) from aserr

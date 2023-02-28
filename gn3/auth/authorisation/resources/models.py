@@ -321,12 +321,77 @@ def link_data_to_resource(
         conn: db.DbConnection, user: User, resource_id: UUID, dataset_type: str,
         dataset_id: str):
     """Link data to resource."""
+    if not authorised_for(
+            conn, user, ("group:resource:edit-resource",),
+            (resource_id,))[resource_id]:
+        raise AuthorisationError(
+            "You are not authorised to link data to resource with id "
+            f"{resource_id}")
+
     resource = with_db_connection(partial(
         resource_by_id, user=user, resource_id=resource_id))
     return {
         "mrna": __link_mrna_data_to_resource__,
         "genotype": __link_geno_data_to_resource__,
         "phenotype": __link_pheno_data_to_resource__,
+    }[dataset_type.lower()](conn, resource, dataset_id)
+
+def __unlink_mrna_data_to_resource__(
+        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+    """Unlink data from mRNA Assay resources"""
+    with db.cursor(conn) as cursor:
+        cursor.execute("DELETE FROM mrna_resources "
+                       "WHERE resource_id=? AND dataset_id=?",
+                       (str(resource.resource_id), dataset_id))
+        return {
+            "resource_id": str(resource.resource_id),
+            "dataset_type": resource.resource_category.resource_category_key,
+            "dataset_id": dataset_id
+        }
+
+def __unlink_geno_data_to_resource__(
+        conn: db.DbConnection, resource: Resource, trait_id: str) -> dict:
+    """Unlink data from Genotype resources"""
+    with db.cursor(conn) as cursor:
+        cursor.execute("DELETE FROM genotype_resources "
+                       "WHERE resource_id=? AND trait_id=?",
+                       (str(resource.resource_id), trait_id))
+        return {
+            "resource_id": str(resource.resource_id),
+            "dataset_type": resource.resource_category.resource_category_key,
+            "dataset_id": trait_id
+        }
+
+def __unlink_pheno_data_to_resource__(
+        conn: db.DbConnection, resource: Resource, trait_id: str) -> dict:
+    """Unlink data from Phenotype resources"""
+    with db.cursor(conn) as cursor:
+        cursor.execute("DELETE FROM phenotype_resources "
+                       "WHERE resource_id=? AND trait_id=?",
+                       (str(resource.resource_id), trait_id))
+        return {
+            "resource_id": str(resource.resource_id),
+            "dataset_type": resource.resource_category.resource_category_key,
+            "dataset_id": trait_id
+        }
+
+def unlink_data_from_resource(
+        conn: db.DbConnection, user: User, resource_id: UUID, dataset_id: str):
+    """Unlink data from resource."""
+    if not authorised_for(
+            conn, user, ("group:resource:edit-resource",),
+            (resource_id,))[resource_id]:
+        raise AuthorisationError(
+            "You are not authorised to link data to resource with id "
+            f"{resource_id}")
+
+    resource = with_db_connection(partial(
+        resource_by_id, user=user, resource_id=resource_id))
+    dataset_type = resource.resource_category.resource_category_key
+    return {
+        "mrna": __unlink_mrna_data_to_resource__,
+        "genotype": __unlink_geno_data_to_resource__,
+        "phenotype": __unlink_pheno_data_to_resource__,
     }[dataset_type.lower()](conn, resource, dataset_id)
 
 def organise_resources_by_category(resources: Sequence[Resource]) -> dict[
