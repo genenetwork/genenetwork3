@@ -19,7 +19,7 @@ class Matrix:
 
 def get_total_versions(db_path: str) -> int:
     """Get the total number of versions in the matrix"""
-    env = lmdb.open(db_path)
+    env = lmdb.open(db_path, readonly="True")
     with env.begin(write=False) as txn:
         versions_hash = txn.get(b"versions")
         if not versions_hash:
@@ -29,7 +29,7 @@ def get_total_versions(db_path: str) -> int:
 
 def get_nth_matrix(index: int, db_path: str) -> Optional[Matrix]:
     """Get the NTH matrix from the DB_PATH.  The most recent matrix is 0."""
-    env = lmdb.open(db_path)
+    env = lmdb.open(db_path, readonly="True")
     with env.begin(write=False) as txn:
         versions_hash = txn.get(b"versions")
         if (index * 32) + 32 > len(versions_hash):
@@ -54,7 +54,7 @@ def get_nth_matrix(index: int, db_path: str) -> Optional[Matrix]:
 def get_current_matrix(db_path: str) -> Optional[Matrix]:
     """Get the most recent matrix from DB_PATH.  This is functionally
     equivalent to get_nth_matrix(0, db_path)"""
-    env = lmdb.open(db_path)
+    env = lmdb.open(db_path, readonly="True")
     with env.begin(write=False) as txn:
         current_hash = txn.get(b"current") or b""
         matrix_hash = txn.get(current_hash + b":matrix") or b""
