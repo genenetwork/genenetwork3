@@ -20,6 +20,7 @@ from gn3.api.async_commands import async_commands
 from gn3.api.menu import menu
 from gn3.api.search import search
 from gn3.api.metadata import metadata
+from gn3.api.sampledata import sampledata
 from gn3.auth import oauth2
 from gn3.auth.authentication.oauth2.server import setup_oauth2_server
 
@@ -59,6 +60,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(menu, url_prefix="/api/menu")
     app.register_blueprint(search, url_prefix="/api/search")
     app.register_blueprint(metadata, url_prefix="/api/metadata")
+    app.register_blueprint(sampledata, url_prefix="/api/sampledata")
     app.register_blueprint(oauth2, url_prefix="/api/oauth2")
 
     register_error_handlers(app)
