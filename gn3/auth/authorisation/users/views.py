@@ -1,9 +1,10 @@
 """User authorisation endpoints."""
 import traceback
+from typing import Any
 from functools import partial
-from typing import Any, Tuple, Optional
 
 import sqlite3
+from email_validator import validate_email, EmailNotValidError
 from flask import request, jsonify, Response, Blueprint, current_app
 
 from gn3.auth import db
@@ -11,9 +12,10 @@ from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
 from ..groups.models import user_group as _user_group
-from ..errors import NotFoundError, UserRegistrationError
 from ..resources.models import user_resources as _user_resources
 from ..roles.models import assign_default_roles, user_roles as _user_roles
+from ..errors import (
+    NotFoundError, UsernameError, PasswordError, UserRegistrationError)
 
 from ...authentication.oauth2.resource_server import require_oauth
 from ...authentication.users import User, save_user, set_user_password
@@ -48,32 +50,20 @@ def user_roles() -> Response:
             return jsonify(tuple(
                 dictify(role) for role in _user_roles(conn, token.user)))
 
-def __email_valid__(email: str) -> Tuple[bool, Optional[str]]:
-    """Validate the email address."""
-    if email == "":
-        return False, "Empty email address"
-
-    ## Check that the address is a valid email address
-    ## Review use of `email-validator` or `pyIsEmail` python packages for
-    ## validating the emails, if it turns out this is important.
-
-    ## Success
-    return True, None
-
-def __password_valid__(password, confirm_password) -> Tuple[bool, Optional[str]]:
-    if password == "" or confirm_password == "":
-        return False, "Empty password value"
+def __valid_password__(password, confirm_password) -> str:
+    if len(password) < 8:
+        raise PasswordError("The password must be at least 8 characters long.")
 
     if password != confirm_password:
-        return False, "Mismatched password values"
+        raise PasswordError("Mismatched password values")
 
-    return True, None
+    return password
 
-def __user_name_valid__(name: str) -> Tuple[bool, Optional[str]]:
+def __valid_username__(name: str) -> str:
     if name == "":
-        return False, "User's name not provided."
+        raise UsernameError("User's name not provided.")
 
-    return True, None
+    return name
 
 def __assert_not_logged_in__(conn: db.DbConnection):
     bearer = request.headers.get('Authorization')
@@ -90,24 +80,18 @@ def register_user() -> Response:
     with db.connection(current_app.config["AUTH_DB"]) as conn:
         __assert_not_logged_in__(conn)
 
-        form = request.form
-        email = form.get("email", "").strip()
-        password = form.get("password", "").strip()
-        user_name = form.get("user_name", "").strip()
-        errors = tuple(
-                error for valid,error in
-            [__email_valid__(email),
-             __password_valid__(
-                 password, form.get("confirm_password", "").strip()),
-             __user_name_valid__(user_name)]
-            if not valid)
-        if len(errors) > 0:
-            raise UserRegistrationError(*errors)
-
         try:
+            form = request.form
+            email = validate_email(form.get("email", "").strip(),
+                                   check_deliverability=True)
+            password = __valid_password__(
+                form.get("password", "").strip(),
+                form.get("confirm_password", "").strip())
+            user_name = __valid_username__(form.get("user_name", "").strip())
             with db.cursor(conn) as cursor:
                 user, _hashed_password = set_user_password(
-                    cursor, save_user(cursor, email, user_name), password)
+                    cursor, save_user(
+                        cursor, email["email"], user_name), password)
                 assign_default_roles(cursor, user)
                 return jsonify(
                     {
@@ -119,6 +103,9 @@ def register_user() -> Response:
             current_app.logger.debug(traceback.format_exc())
             raise UserRegistrationError(
                 "A user with that email already exists") from sq3ie
+        except EmailNotValidError as enve:
+            current_app.logger.debug(traceback.format_exc())
+            raise(UserRegistrationError(f"Email Error: {str(enve)}")) from enve
 
     raise Exception(
         "unknown_error", "The system experienced an unexpected error.")

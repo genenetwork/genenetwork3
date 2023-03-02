@@ -26,3 +26,13 @@ class InconsistencyError(AuthorisationError):
     Exception raised due to data inconsistencies
     """
     error_code: int = 500
+
+class PasswordError(AuthorisationError):
+    """
+    Raise in case of an error with passwords.
+    """
+
+class UsernameError(AuthorisationError):
+    """
+    Raise in case of an error with a user's name.
+    """
