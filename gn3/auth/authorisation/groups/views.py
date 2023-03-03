@@ -15,8 +15,9 @@ from gn3.auth.db_utils import with_db_connection
 from .data import link_data_to_group, retrieve_ungrouped_data
 from .models import (
     user_group, all_groups, DUMMY_GROUP, GroupRole, group_by_id, join_requests,
-    GroupCreationError, accept_reject_join_request, group_users as _group_users,
-    create_group as _create_group, create_group_role as _create_group_role)
+    group_role_by_id, GroupCreationError, accept_reject_join_request,
+    group_users as _group_users, create_group as _create_group,
+    create_group_role as _create_group_role)
 
 from ..roles.models import Role
 from ..checks import authorised_p
@@ -302,3 +303,18 @@ def create_group_role():
             return _create_group_role(conn, group, role_name, privileges)
 
         return jsonify(with_db_connection(__create__))
+
+@groups.route("/role/<uuid:group_role_id>", methods=["GET"])
+def view_group_role(group_role_id: uuid.UUID):
+    """Return the details of the given role."""
+    with require_oauth.acquire("profile group role") as the_token:
+        def __group_role__(conn: db.DbConnection) -> GroupRole:
+            with db.cursor(conn) as cursor:
+                group = user_group(cursor, the_token.user).maybe(#type: ignore[misc]
+                    DUMMY_GROUP, lambda grp: grp)
+
+            if group == DUMMY_GROUP:
+                raise AuthorisationError(
+                    "A user without a group cannot view group roles.")
+            return group_role_by_id(conn, group, group_role_id)
+        return jsonify(dictify(with_db_connection(__group_role__)))
