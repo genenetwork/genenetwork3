@@ -29,3 +29,19 @@ def user_privileges(conn: db.DbConnection, user: User) -> Iterable[Privilege]:
         results = cursor.fetchall()
 
     return (Privilege(row[0], row[1]) for row in results)
+
+def privileges_by_ids(
+        conn: db.DbConnection, privileges_ids: tuple[str, ...]) -> tuple[
+            Privilege, ...]:
+    """Fetch privileges by their ids."""
+    if len(privileges_ids) == 0:
+        return tuple()
+
+    with db.cursor(conn) as cursor:
+        clause = ", ".join(["?"] * len(privileges_ids))
+        cursor.execute(
+            f"SELECT * FROM privileges WHERE privilege_id IN ({clause})",
+            privileges_ids)
+        return tuple(
+            Privilege(row["privilege_id"], row["privilege_description"])
+            for row in cursor.fetchall())
