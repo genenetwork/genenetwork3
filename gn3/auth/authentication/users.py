@@ -6,6 +6,7 @@ import bcrypt
 from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
+from gn3.auth.authorisation.errors import NotFoundError
 
 class User(NamedTuple):
     """Class representing a user."""
@@ -25,16 +26,16 @@ DUMMY_USER = User(user_id=UUID("a391cf60-e8b7-4294-bd22-ddbbda4b3530"),
                   email="gn3@dummy.user",
                   name="Dummy user to use as placeholder")
 
-def user_by_email(conn: db.DbConnection, email: str) -> Maybe:
+def user_by_email(conn: db.DbConnection, email: str) -> User:
     """Retrieve user from database by their email address"""
     with db.cursor(conn) as cursor:
         cursor.execute("SELECT * FROM users WHERE email=?", (email,))
         row = cursor.fetchone()
 
     if row:
-        return Just(User(UUID(row["user_id"]), row["email"], row["name"]))
+        return User(UUID(row["user_id"]), row["email"], row["name"])
 
-    return Nothing
+    raise NotFoundError(f"Could not find user with email {email}")
 
 def user_by_id(conn: db.DbConnection, user_id: UUID) -> Maybe:
     """Retrieve user from database by their user id"""

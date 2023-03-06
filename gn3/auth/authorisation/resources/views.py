@@ -9,17 +9,17 @@ from gn3.auth.db_utils import with_db_connection
 
 from .checks import authorised_for
 from .models import (
-    resource_by_id, resource_categories, link_data_to_resource,
-    resource_category_by_id, unlink_data_from_resource,
+    resource_by_id, resource_categories, assign_resource_user,
+    link_data_to_resource, resource_category_by_id, unlink_data_from_resource,
     create_resource as _create_resource)
 
 from ..roles import Role
-from ..groups.models import Group, GroupRole
 from ..errors import InvalidData, AuthorisationError
+from ..groups.models import Group, GroupRole, group_role_by_id
 
 from ... import db
 from ...dictify import dictify
-from ...authentication.users import User
+from ...authentication.users import User, user_by_email
 from ...authentication.oauth2.resource_server import require_oauth
 
 resources = Blueprint("resources", __name__)
@@ -101,7 +101,7 @@ def unlink_data():
     except AssertionError as aserr:
         raise InvalidData(aserr.args[0]) from aserr
 
-@resources.route("<uuid:resource_id>/users", methods=["GET"])
+@resources.route("<uuid:resource_id>/user/list", methods=["GET"])
 @require_oauth("profile group resource")
 def resource_users(resource_id: uuid.UUID):
     """Retrieve all users with access to the given resource."""
@@ -115,8 +115,8 @@ def resource_users(resource_id: uuid.UUID):
                 with db.cursor(conn) as cursor:
                     def __organise_users_n_roles__(users_n_roles, row):
                         user_id = uuid.UUID(row["user_id"])
-                        user = users_n_roles.get(
-                            user_id, User(user_id, row["email"], row["name"]))
+                        user = users_n_roles.get(user_id, {}).get(
+                            "user", User(user_id, row["email"], row["name"]))
                         role = GroupRole(
                             uuid.UUID(row["group_role_id"]),
                             resource.group,
@@ -157,3 +157,27 @@ def resource_users(resource_id: uuid.UUID):
                 user_row for user_id, user_row
                 in with_db_connection(__the_users__).items()))
         return jsonify(tuple(results))
+
+@resources.route("<uuid:resource_id>/user/assign", methods=["POST"])
+@require_oauth("profile group resource role")
+def assign_role_to_user(resource_id: uuid.UUID) -> Response:
+    """Assign a role on the specified resource to a user."""
+    with require_oauth.acquire("profile group resource role") as the_token:
+        try:
+            form = request.form
+            group_role_id = form.get("group_role_id", "")
+            user_email = form.get("user_email", "")
+            assert bool(group_role_id), "The role must be provided."
+            assert bool(user_email), "The user email must be provided."
+
+            def __assign__(conn: db.DbConnection) -> dict:
+                resource = resource_by_id(conn, the_token.user, resource_id)
+                user = user_by_email(conn, user_email)
+                return assign_resource_user(
+                    conn, resource, user,
+                    group_role_by_id(conn, resource.group,
+                                     uuid.UUID(group_role_id)))
+        except AssertionError as aserr:
+            raise AuthorisationError(aserr.args[0]) from aserr
+
+        return jsonify(with_db_connection(__assign__))

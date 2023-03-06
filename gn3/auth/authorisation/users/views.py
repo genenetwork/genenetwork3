@@ -11,6 +11,7 @@ from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
+from ..users.models import list_users
 from ..groups.models import user_group as _user_group
 from ..resources.models import user_resources as _user_resources
 from ..roles.models import assign_default_roles, user_roles as _user_roles
@@ -158,3 +159,11 @@ def user_join_request_exists():
     with require_oauth.acquire("profile group") as the_token:
         return jsonify(with_db_connection(partial(
             __request_exists__, user=the_token.user)))
+
+@users.route("/list", methods=["GET"])
+@require_oauth("profile user")
+def list_all_users() -> Response:
+    """List all the users."""
+    with require_oauth.acquire("profile group") as _the_token:
+        return jsonify(tuple(
+            dictify(user) for user in with_db_connection(list_users)))

@@ -14,7 +14,8 @@ from .checks import authorised_for
 
 from ..checks import authorised_p
 from ..errors import NotFoundError, AuthorisationError
-from ..groups.models import Group, user_group, group_by_id, is_group_leader
+from ..groups.models import (
+    Group, GroupRole, user_group, group_by_id, is_group_leader)
 
 class MissingGroupError(AuthorisationError):
     """Raised for any resource operation without a group."""
@@ -477,3 +478,30 @@ def attach_resources_data(
                 cursor, rscs)
              for category, rscs in organised.items())
             for resource in categories)
+
+@authorised_p(
+    ("group:user:assign-role",),
+    "You cannot assign roles to users for this group.",
+    oauth2_scope="profile group role resource")
+def assign_resource_user(
+        conn: db.DbConnection, resource: Resource, user: User,
+        role: GroupRole) -> dict:
+    """Assign `role` to `user` for the specific `resource`."""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "INSERT INTO "
+            "group_user_roles_on_resources(group_id, user_id, role_id, "
+            "resource_id) "
+            "VALUES (?, ?, ?, ?) "
+            "ON CONFLICT (group_id, user_id, role_id, resource_id) "
+            "DO NOTHING",
+            (str(resource.group.group_id), str(user.user_id),
+             str(role.role.role_id), str(resource.resource_id)))
+        return {
+            "resource": dictify(resource),
+            "user": dictify(user),
+            "role": dictify(role),
+            "description": (
+                f"The user '{user.name}'({user.email}) was assigned the "
+                f"'{role.role.role_name}' role on resource with ID "
+                f"'{resource.resource_id}'.")}
