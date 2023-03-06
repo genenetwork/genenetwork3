@@ -12,6 +12,7 @@ PRIVILEGES = sorted(
     (Privilege("system:group:create-group", "Create a group"),
      Privilege("system:group:view-group", "View the details of a group"),
      Privilege("system:group:edit-group", "Edit the details of a group"),
+     Privilege("system:user:list", "List users in the system"),
      Privilege("system:group:delete-group", "Delete a group"),
      Privilege("group:user:add-group-member", "Add a user to a group"),
      Privilege("group:user:remove-group-member", "Remove a user from a group"),

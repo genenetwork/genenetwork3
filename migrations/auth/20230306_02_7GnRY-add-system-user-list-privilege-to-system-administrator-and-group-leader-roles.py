@@ -35,7 +35,7 @@ def del_privilege_from_roles(conn):
         cursor.execute(
             "DELETE FROM role_privileges WHERE "
             "role_id IN (?, ?) AND privilege_id='system:user:list'",
-            tuple(role_ids(cursor)))
+            tuple(str(role_id) for role_id in role_ids(cursor)))
 
 steps = [
     step(add_privilege_to_roles, del_privilege_from_roles)

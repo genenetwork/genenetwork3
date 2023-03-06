@@ -12,7 +12,7 @@ def insert_users_list_priv(conn):
     with contextlib.closing(conn.cursor()) as cursor:
         cursor.execute(
             "INSERT INTO privileges(privilege_id, privilege_description) "
-            "VALUES('system:user:list', 'List users in the system.') "
+            "VALUES('system:user:list', 'List users in the system') "
             "ON CONFLICT (privilege_id) DO NOTHING")
 
 def delete_users_list_priv(conn):

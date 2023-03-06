@@ -103,7 +103,9 @@ def test_create_role_raises_exception_for_unauthorised_users(# pylint: disable=[
                          'Transfer leadership of the group to some other '
                          'member')),
                  Privilege(privilege_id='system:group:view-group',
-                           privilege_description='View the details of a group'))),
+                           privilege_description='View the details of a group'),
+                 Privilege(privilege_id='system:user:list',
+                           privilege_description='List users in the system'))),
            Role(
                role_id=uuid.UUID("ade7e6b0-ba9c-4b51-87d0-2af7fe39a347"),
                role_name="group-creator",
