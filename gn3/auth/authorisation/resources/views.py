@@ -14,8 +14,8 @@ from .models import (
     create_resource as _create_resource)
 
 from ..roles import Role
+from ..groups.models import Group, GroupRole
 from ..errors import InvalidData, AuthorisationError
-from ..groups.models import Group, GroupRole, user_group, DUMMY_GROUP
 
 from ... import db
 from ...dictify import dictify
@@ -107,24 +107,19 @@ def resource_users(resource_id: uuid.UUID):
     """Retrieve all users with access to the given resource."""
     with require_oauth.acquire("profile group resource") as the_token:
         def __the_users__(conn: db.DbConnection):
+            resource = resource_by_id(conn, the_token.user, resource_id)
             authorised = authorised_for(
                 conn, the_token.user, ("group:resource:edit-resource",),
                 (resource_id,))
             if authorised.get(resource_id, False):
                 with db.cursor(conn) as cursor:
-                    group = user_group(cursor, the_token.user).maybe(
-                        DUMMY_GROUP, lambda grp: grp)
-                    if group == DUMMY_GROUP:
-                        raise AuthorisationError(
-                            "Users who are not members of groups cannot access "
-                            "resource details.")
                     def __organise_users_n_roles__(users_n_roles, row):
                         user_id = uuid.UUID(row["user_id"])
                         user = users_n_roles.get(
                             user_id, User(user_id, row["email"], row["name"]))
                         role = GroupRole(
                             uuid.UUID(row["group_role_id"]),
-                            group,
+                            resource.group,
                             Role(uuid.UUID(row["role_id"]), row["role_name"],
                                  tuple()))
                         return {
