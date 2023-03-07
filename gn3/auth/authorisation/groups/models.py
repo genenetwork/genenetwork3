@@ -344,3 +344,37 @@ def group_role_by_id(
             return GroupRole(group_role_id, group, roles[0])
         raise NotFoundError(
             f"Group role with ID '{group_role_id}' does not exist.")
+
+def add_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
+                                privilege: Privilege) -> GroupRole:
+    """Add `privilege` to `group_role`."""
+    ## TODO: do privileges check.
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "INSERT INTO role_privileges(role_id,privilege_id) "
+            "VALUES (?, ?) ON CONFLICT (role_id, privilege_id) "
+            "DO NOTHING",
+            (str(group_role.role.role_id), str(privilege.privilege_id)))
+        return GroupRole(
+            group_role.group_role_id,
+            group_role.group,
+            Role(group_role.role.role_id,
+                 group_role.role.role_name,
+                 group_role.role.privileges + (privilege,)))
+
+def delete_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
+                                   privilege: Privilege) -> GroupRole:
+    """Delete `privilege` to `group_role`."""
+    ## TODO: do privileges check.
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "DELETE FROM role_privileges WHERE "
+            "role_id=? AND privilege_id=?",
+            (str(group_role.role.role_id), str(privilege.privilege_id)))
+        return GroupRole(
+            group_role.group_role_id,
+            group_role.group,
+            Role(group_role.role.role_id,
+                 group_role.role.role_name,
+                 tuple(priv for priv in group_role.role.privileges
+                       if priv != privilege)))

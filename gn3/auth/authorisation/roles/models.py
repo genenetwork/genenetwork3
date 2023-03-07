@@ -17,7 +17,7 @@ class Role(NamedTuple):
     """Class representing a role: creates immutable objects."""
     role_id: UUID
     role_name: str
-    privileges: Iterable[Privilege]
+    privileges: tuple[Privilege, ...]
 
     def dictify(self) -> dict[str, Any]:
         """Return a dict representation of `Role` objects."""
@@ -44,7 +44,7 @@ def create_role(
 
     RETURNS: An immutable `gn3.auth.authorisation.roles.Role` object
     """
-    role = Role(uuid4(), role_name, privileges)
+    role = Role(uuid4(), role_name, tuple(privileges))
 
     cursor.execute(
         "INSERT INTO roles(role_id, role_name) VALUES (?, ?)",
