@@ -10,8 +10,8 @@ from gn3.auth.db_utils import with_db_connection
 from .checks import authorised_for
 from .models import (
     resource_by_id, resource_categories, assign_resource_user,
-    link_data_to_resource, resource_category_by_id, unlink_data_from_resource,
-    create_resource as _create_resource)
+    link_data_to_resource, unassign_resource_user, resource_category_by_id,
+    unlink_data_from_resource, create_resource as _create_resource)
 
 from ..roles import Role
 from ..errors import InvalidData, AuthorisationError
@@ -19,8 +19,8 @@ from ..groups.models import Group, GroupRole, group_role_by_id
 
 from ... import db
 from ...dictify import dictify
-from ...authentication.users import User, user_by_email
 from ...authentication.oauth2.resource_server import require_oauth
+from ...authentication.users import User, user_by_id, user_by_email
 
 resources = Blueprint("resources", __name__)
 
@@ -175,6 +175,29 @@ def assign_role_to_user(resource_id: uuid.UUID) -> Response:
                 user = user_by_email(conn, user_email)
                 return assign_resource_user(
                     conn, resource, user,
+                    group_role_by_id(conn, resource.group,
+                                     uuid.UUID(group_role_id)))
+        except AssertionError as aserr:
+            raise AuthorisationError(aserr.args[0]) from aserr
+
+        return jsonify(with_db_connection(__assign__))
+
+@resources.route("<uuid:resource_id>/user/unassign", methods=["POST"])
+@require_oauth("profile group resource role")
+def unassign_role_to_user(resource_id: uuid.UUID) -> Response:
+    """Unassign a role on the specified resource from a user."""
+    with require_oauth.acquire("profile group resource role") as the_token:
+        try:
+            form = request.form
+            group_role_id = form.get("group_role_id", "")
+            user_id = form.get("user_id", "")
+            assert bool(group_role_id), "The role must be provided."
+            assert bool(user_id), "The user id must be provided."
+
+            def __assign__(conn: db.DbConnection) -> dict:
+                resource = resource_by_id(conn, the_token.user, resource_id)
+                return unassign_resource_user(
+                    conn, resource, user_by_id(conn, uuid.UUID(user_id)),
                     group_role_by_id(conn, resource.group,
                                      uuid.UUID(group_role_id)))
         except AssertionError as aserr:

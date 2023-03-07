@@ -505,3 +505,26 @@ def assign_resource_user(
                 f"The user '{user.name}'({user.email}) was assigned the "
                 f"'{role.role.role_name}' role on resource with ID "
                 f"'{resource.resource_id}'.")}
+
+@authorised_p(
+    ("group:user:assign-role",),
+    "You cannot assign roles to users for this group.",
+    oauth2_scope="profile group role resource")
+def unassign_resource_user(
+        conn: db.DbConnection, resource: Resource, user: User,
+        role: GroupRole) -> dict:
+    """Assign `role` to `user` for the specific `resource`."""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "DELETE FROM group_user_roles_on_resources "
+            "WHERE group_id=? AND user_id=? AND role_id=? AND resource_id=?",
+            (str(resource.group.group_id), str(user.user_id),
+             str(role.role.role_id), str(resource.resource_id)))
+        return {
+            "resource": dictify(resource),
+            "user": dictify(user),
+            "role": dictify(role),
+            "description": (
+                f"The user '{user.name}'({user.email}) had the "
+                f"'{role.role.role_name}' role on resource with ID "
+                f"'{resource.resource_id}' taken away.")}
