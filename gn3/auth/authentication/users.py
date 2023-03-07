@@ -3,7 +3,6 @@ from uuid import UUID, uuid4
 from typing import Any, Tuple, NamedTuple
 
 import bcrypt
-from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
 from gn3.auth.authorisation.errors import NotFoundError
@@ -37,16 +36,16 @@ def user_by_email(conn: db.DbConnection, email: str) -> User:
 
     raise NotFoundError(f"Could not find user with email {email}")
 
-def user_by_id(conn: db.DbConnection, user_id: UUID) -> Maybe:
+def user_by_id(conn: db.DbConnection, user_id: UUID) -> User:
     """Retrieve user from database by their user id"""
     with db.cursor(conn) as cursor:
         cursor.execute("SELECT * FROM users WHERE user_id=?", (str(user_id),))
         row = cursor.fetchone()
 
     if row:
-        return Just(User(UUID(row["user_id"]), row["email"], row["name"]))
+        return User(UUID(row["user_id"]), row["email"], row["name"])
 
-    return Nothing
+    raise NotFoundError(f"Could not find user with ID {user_id}")
 
 def valid_login(conn: db.DbConnection, user: User, password: str) -> bool:
     """Check the validity of the provided credentials for login."""

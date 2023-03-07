@@ -9,7 +9,7 @@ from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
-from gn3.auth.authentication.users import User, user_by_id, DUMMY_USER
+from gn3.auth.authentication.users import User, user_by_id
 
 from ..checks import authorised_p
 from ..privileges import Privilege
@@ -286,19 +286,20 @@ def accept_reject_join_request(
         row = cursor.fetchone()
         if row:
             if group.group_id == UUID(row["group_id"]):
-                the_user = user_by_id(conn, UUID(row["requester_id"])).maybe(# type: ignore[misc]
-                    DUMMY_USER, lambda usr: usr)
-                if the_user == DUMMY_USER:
+                try:
+                    the_user = user_by_id(conn, UUID(row["requester_id"]))
+                    if status == "ACCEPTED":
+                        add_user_to_group(cursor, group, the_user)
+                        revoke_user_role_by_name(cursor, the_user, "group-creator")
+                    cursor.execute(
+                        "UPDATE group_join_requests SET status=? "
+                        "WHERE request_id=?",
+                        (status, str(request_id)))
+                    return {"request_id": request_id, "status": status}
+                except NotFoundError as nfe:
                     raise InconsistencyError(
-                        "Could not find user associated with join request.")
-                if status == "ACCEPTED":
-                    add_user_to_group(cursor, group, the_user)
-                    revoke_user_role_by_name(cursor, the_user, "group-creator")
-                cursor.execute(
-                    "UPDATE group_join_requests SET status=? "
-                    "WHERE request_id=?",
-                    (status, str(request_id)))
-                return {"request_id": request_id, "status": status}
+                        "Could not find user associated with join request."
+                    ) from nfe
             raise AuthorisationError(
                 "You cannot act on other groups join requests")
         raise NotFoundError(f"Could not find request with ID '{request_id}'")

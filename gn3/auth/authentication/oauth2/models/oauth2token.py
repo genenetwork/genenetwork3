@@ -8,6 +8,8 @@ from pymonad.maybe import Just, Maybe, Nothing
 from gn3.auth import db
 from gn3.auth.authentication.users import User, user_by_id
 
+from gn3.auth.authorisation.errors import NotFoundError
+
 from .oauth2client import client, OAuth2Client
 
 class OAuth2Token(NamedTuple):
@@ -50,11 +52,13 @@ class OAuth2Token(NamedTuple):
 
 def __token_from_resultset__(conn: db.DbConnection, rset) -> Maybe:
     __identity__ = lambda val: val
-    the_user = user_by_id(conn, uuid.UUID(rset["user_id"]))
-    the_client = client(conn, uuid.UUID(rset["client_id"]),
-                        the_user.maybe(None, __identity__))
+    try:
+        the_user = user_by_id(conn, uuid.UUID(rset["user_id"]))
+    except NotFoundError as _nfe:
+        the_user = None
+    the_client = client(conn, uuid.UUID(rset["client_id"]), the_user)
 
-    if the_client.is_just() and the_user.is_just():
+    if the_client.is_just() and bool(the_user):
         return Just(OAuth2Token(token_id=uuid.UUID(rset["token_id"]),
                                 client=the_client.maybe(None, __identity__),
                                 token_type=rset["token_type"],
@@ -65,7 +69,7 @@ def __token_from_resultset__(conn: db.DbConnection, rset) -> Maybe:
                                 issued_at=datetime.datetime.fromtimestamp(
                                     rset["issued_at"]),
                                 expires_in=rset["expires_in"],
-                                user=the_user.maybe(None, __identity__)))
+                                user=the_user))# type: ignore[arg-type]
 
     return Nothing
 

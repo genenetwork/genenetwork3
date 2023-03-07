@@ -9,6 +9,8 @@ from pymonad.maybe import Just, Maybe, Nothing
 from gn3.auth import db
 from gn3.auth.authentication.users import User, user_by_id
 
+from gn3.auth.authorisation.errors import NotFoundError
+
 class OAuth2Client(NamedTuple):
     """
     Client to the OAuth2 Server.
@@ -134,8 +136,12 @@ def client(conn: db.DbConnection, client_id: uuid.UUID,
         cursor.execute(
             "SELECT * FROM oauth2_clients WHERE client_id=?", (str(client_id),))
         result = cursor.fetchone()
-        the_user = user or user_by_id(conn, result["user_id"]).maybe(
-            None, lambda usr: usr)# type: ignore
+        the_user = user
+        if not bool(the_user):
+            try:
+                the_user = user_by_id(conn, result["user_id"])
+            except NotFoundError as _nfe:
+                the_user = None
         if result:
             return Just(
                 OAuth2Client(uuid.UUID(result["client_id"]),
@@ -145,6 +151,6 @@ def client(conn: db.DbConnection, client_id: uuid.UUID,
                              datetime.datetime.fromtimestamp(
                                  result["client_secret_expires_at"]),
                              json.loads(result["client_metadata"]),
-                             the_user))
+                             the_user))# type: ignore[arg-type]
 
     return Nothing
