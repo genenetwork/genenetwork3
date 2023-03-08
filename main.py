@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 import click
-import bcrypt
+from argon2 import PasswordHasher
 from yoyo import get_backend, read_migrations
 
 from gn3 import migrations
@@ -37,7 +37,7 @@ def __init_dev_users__():
         "password": "testpasswd"},)
 
     def __hash_passwd__(passwd):
-        return bcrypt.hashpw(passwd.encode("utf8"), bcrypt.gensalt())
+        return PasswordHasher().hash(passwd)
 
     with db.connection(app.config["AUTH_DB"]) as conn, db.cursor(conn) as cursor:
         cursor.executemany(dev_users_query, dev_users)

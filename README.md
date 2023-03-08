@@ -194,17 +194,17 @@ following environment variable(s):
 To run tests:
 
 ```bash
-$ export AUTHLIB_INSECURE_TRANSPORT=true
-$ export OAUTH2_ACCESS_TOKEN_GENERATOR="tests.unit.auth.test_token.gen_token"
-$ pytest
+export AUTHLIB_INSECURE_TRANSPORT=true
+export OAUTH2_ACCESS_TOKEN_GENERATOR="tests.unit.auth.test_token.gen_token"
+pytest
 ```
 
 To specify unit-tests:
 
 ```bash
-$ export AUTHLIB_INSECURE_TRANSPORT=true
-$ export OAUTH2_ACCESS_TOKEN_GENERATOR="tests.unit.auth.test_token.gen_token"
-$ pytest -k unit_test
+export AUTHLIB_INSECURE_TRANSPORT=true
+export OAUTH2_ACCESS_TOKEN_GENERATOR="tests.unit.auth.test_token.gen_token"
+pytest -k unit_test
 ```
 
 Running pylint:

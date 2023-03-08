@@ -2,7 +2,8 @@
 from uuid import UUID, uuid4
 from typing import Any, Tuple, NamedTuple
 
-import bcrypt
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 from gn3.auth import db
 from gn3.auth.authorisation.errors import NotFoundError
@@ -60,7 +61,11 @@ def valid_login(conn: db.DbConnection, user: User, password: str) -> bool:
     if row is None:
         return False
 
-    return bcrypt.checkpw(password.encode("utf-8"), row["password"])
+    hasher = PasswordHasher() # TODO: Maybe tune the parameters here...
+    try:
+        return hasher.verify(row["password"], password)
+    except VerifyMismatchError as _vme:
+        return False
 
 def save_user(cursor: db.DbCursor, email: str, name: str) -> User:
     """
@@ -79,7 +84,8 @@ def save_user(cursor: db.DbCursor, email: str, name: str) -> User:
 def set_user_password(
         cursor: db.DbCursor, user: User, password: str) -> Tuple[User, bytes]:
     """Set the given user's password in the database."""
-    hashed_password = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt())
+    hasher = PasswordHasher() # TODO: Maybe tune the parameters here...
+    hashed_password = hasher.hash(password)
     cursor.execute(
         ("INSERT INTO user_credentials VALUES (:user_id, :hash) "
          "ON CONFLICT (user_id) DO UPDATE SET password=:hash"),
