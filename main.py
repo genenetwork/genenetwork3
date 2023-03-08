@@ -7,11 +7,11 @@ from datetime import datetime
 
 
 import click
-from argon2 import PasswordHasher
 from yoyo import get_backend, read_migrations
 
 from gn3 import migrations
 from gn3.app import create_app
+from gn3.auth.authentication.users import hash_password
 
 from gn3.auth import db
 
@@ -36,13 +36,10 @@ def __init_dev_users__():
         "name": "Test Development User",
         "password": "testpasswd"},)
 
-    def __hash_passwd__(passwd):
-        return PasswordHasher().hash(passwd)
-
     with db.connection(app.config["AUTH_DB"]) as conn, db.cursor(conn) as cursor:
         cursor.executemany(dev_users_query, dev_users)
         cursor.executemany(dev_users_passwd, (
-            {**usr, "hash": __hash_passwd__(usr["password"])}
+            {**usr, "hash": hash_password(usr["password"])}
             for usr in dev_users))
 
 @app.cli.command()

@@ -2,10 +2,9 @@
 import uuid
 
 import pytest
-import bcrypt
 
 from gn3.auth import db
-from gn3.auth.authentication.users import User
+from gn3.auth.authentication.users import User, hash_password
 
 TEST_USERS = (
         User(uuid.UUID("ecb52977-3004-469e-9428-2a1856725c7f"), "group@lead.er",
@@ -50,9 +49,8 @@ def fxtr_users_with_passwords(fxtr_users): # pylint: disable=[redefined-outer-na
     """Fixture: add passwords to the users"""
     conn, users = fxtr_users
     user_passwords_params = tuple(
-        (str(user.user_id), bcrypt.hashpw(
-            f"password_for_user_{idx:03}".encode("utf8"),
-            bcrypt.gensalt()))
+        (str(user.user_id), hash_password(
+            f"password_for_user_{idx:03}".encode("utf8")))
         for idx, user in enumerate(users, start=1))
 
     with db.cursor(conn) as cursor:

@@ -61,9 +61,8 @@ def valid_login(conn: db.DbConnection, user: User, password: str) -> bool:
     if row is None:
         return False
 
-    hasher = PasswordHasher() # TODO: Maybe tune the parameters here...
     try:
-        return hasher.verify(row["password"], password)
+        return hasher().verify(row["password"], password)
     except VerifyMismatchError as _vme:
         return False
 
@@ -81,11 +80,27 @@ def save_user(cursor: db.DbCursor, email: str, name: str) -> User:
                    (str(user_id), email, name))
     return User(user_id, email, name)
 
+def hasher():
+    """Retrieve PasswordHasher object"""
+    # TODO: Maybe tune the parameters here...
+    # Tuneable Parameters:
+    # - time_cost (default: 2)
+    # - memory_cost (default: 102400)
+    # - parallelism (default: 8)
+    # - hash_len (default: 16)
+    # - salt_len (default: 16)
+    # - encoding (default: 'utf-8')
+    # - type (default: <Type.ID: 2>)
+    return PasswordHasher()
+
+def hash_password(password):
+    """Hash the password."""
+    return hasher().hash(password)
+
 def set_user_password(
         cursor: db.DbCursor, user: User, password: str) -> Tuple[User, bytes]:
     """Set the given user's password in the database."""
-    hasher = PasswordHasher() # TODO: Maybe tune the parameters here...
-    hashed_password = hasher.hash(password)
+    hashed_password = hash_password(password)
     cursor.execute(
         ("INSERT INTO user_credentials VALUES (:user_id, :hash) "
          "ON CONFLICT (user_id) DO UPDATE SET password=:hash"),
