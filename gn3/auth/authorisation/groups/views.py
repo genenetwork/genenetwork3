@@ -76,7 +76,7 @@ def request_to_join(group_id: uuid.UUID) -> Response:
     def __request__(conn: db.DbConnection, user: User, group_id: uuid.UUID,
                     message: str):
         with db.cursor(conn) as cursor:
-            group = user_group(cursor, user).maybe(# type: ignore[misc]
+            group = user_group(conn, user).maybe(# type: ignore[misc]
                 False, lambda grp: grp)# type: ignore[arg-type]
             if group:
                 error = AuthorisationError(
@@ -148,7 +148,7 @@ def unlinked_data(resource_type: str) -> Response:
     with require_oauth.acquire("profile group resource") as the_token:
         db_uri = current_app.config["AUTH_DB"]
         with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
-            ugroup = user_group(cursor, the_token.user).maybe(# type: ignore[misc]
+            ugroup = user_group(conn, the_token.user).maybe(# type: ignore[misc]
                 DUMMY_GROUP, lambda grp: grp)
             if ugroup == DUMMY_GROUP:
                 return jsonify(tuple())
@@ -233,7 +233,7 @@ def group_roles():
         def __list_roles__(conn: db.DbConnection):
             ## TODO: Check that user has appropriate privileges
             with db.cursor(conn) as cursor:
-                group = user_group(cursor, the_token.user).maybe(# type: ignore[misc]
+                group = user_group(conn, the_token.user).maybe(# type: ignore[misc]
                     DUMMY_GROUP, lambda grp: grp)
                 if group == DUMMY_GROUP:
                     return tuple()
@@ -291,8 +291,7 @@ def create_group_role():
                 raise InvalidData(
                     "At least one privilege needs to be provided.")
 
-            with db.cursor(conn) as cursor:
-                group = user_group(cursor, the_token.user).maybe(# type: ignore[misc]
+            group = user_group(conn, the_token.user).maybe(# type: ignore[misc]
                     DUMMY_GROUP, lambda grp: grp)
 
             if group == DUMMY_GROUP:
@@ -314,9 +313,8 @@ def view_group_role(group_role_id: uuid.UUID):
     """Return the details of the given role."""
     with require_oauth.acquire("profile group role") as the_token:
         def __group_role__(conn: db.DbConnection) -> GroupRole:
-            with db.cursor(conn) as cursor:
-                group = user_group(cursor, the_token.user).maybe(#type: ignore[misc]
-                    DUMMY_GROUP, lambda grp: grp)
+            group = user_group(conn, the_token.user).maybe(#type: ignore[misc]
+                DUMMY_GROUP, lambda grp: grp)
 
             if group == DUMMY_GROUP:
                 raise AuthorisationError(
@@ -329,29 +327,28 @@ def __add_remove_priv_to_from_role__(conn: db.DbConnection,
                                      direction: str,
                                      user: User) -> GroupRole:
     assert direction in ("ADD", "DELETE")
-    with db.cursor(conn) as cursor:
-        group = user_group(cursor, user).maybe(# type: ignore[misc]
-            DUMMY_GROUP, lambda grp: grp)
+    group = user_group(conn, user).maybe(# type: ignore[misc]
+        DUMMY_GROUP, lambda grp: grp)
 
-        if group == DUMMY_GROUP:
-            raise AuthorisationError(
-                "You need to be a member of a group to edit roles.")
-        try:
-            privilege_id = request.form.get("privilege_id", "")
-            assert bool(privilege_id), "Privilege to add must be provided."
-            privileges = privileges_by_ids(conn, (privilege_id,))
-            if len(privileges) == 0:
-                raise NotFoundError("Privilege not found.")
-            dir_fns = {
-                "ADD": add_privilege_to_group_role,
-                "DELETE": delete_privilege_to_group_role
-            }
-            return dir_fns[direction](
-                conn,
-                group_role_by_id(conn, group, group_role_id),
-                privileges[0])
-        except AssertionError as aerr:
-            raise InvalidData(aerr.args[0]) from aerr
+    if group == DUMMY_GROUP:
+        raise AuthorisationError(
+            "You need to be a member of a group to edit roles.")
+    try:
+        privilege_id = request.form.get("privilege_id", "")
+        assert bool(privilege_id), "Privilege to add must be provided."
+        privileges = privileges_by_ids(conn, (privilege_id,))
+        if len(privileges) == 0:
+            raise NotFoundError("Privilege not found.")
+        dir_fns = {
+            "ADD": add_privilege_to_group_role,
+            "DELETE": delete_privilege_to_group_role
+        }
+        return dir_fns[direction](
+            conn,
+            group_role_by_id(conn, group, group_role_id),
+            privileges[0])
+    except AssertionError as aerr:
+        raise InvalidData(aerr.args[0]) from aerr
 
 @groups.route("/role/<uuid:group_role_id>/privilege/add", methods=["POST"])
 @require_oauth("profile group")

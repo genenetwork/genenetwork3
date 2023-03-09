@@ -34,8 +34,8 @@ def user_details() -> Response:
             "user_id": user.user_id, "email": user.email, "name": user.name,
             "group": False
         }
-        with db.connection(current_app.config["AUTH_DB"]) as conn, db.cursor(conn) as cursor:
-            the_group = _user_group(cursor, user).maybe(# type: ignore[misc]
+        with db.connection(current_app.config["AUTH_DB"]) as conn:
+            the_group = _user_group(conn, user).maybe(# type: ignore[misc]
                 False, lambda grp: grp)# type: ignore[arg-type]
             return jsonify({
                 **user_dets,
@@ -61,7 +61,8 @@ def validate_password(password, confirm_password) -> str:
 
     return password
 
-def __valid_username__(name: str) -> str:
+def validate_username(name: str) -> str:
+    """Validate the provides name."""
     if name == "":
         raise UsernameError("User's name not provided.")
 
@@ -89,7 +90,7 @@ def register_user() -> Response:
             password = validate_password(
                 form.get("password", "").strip(),
                 form.get("confirm_password", "").strip())
-            user_name = __valid_username__(form.get("user_name", "").strip())
+            user_name = validate_username(form.get("user_name", "").strip())
             with db.cursor(conn) as cursor:
                 user, _hashed_password = set_user_password(
                     cursor, save_user(
@@ -118,8 +119,8 @@ def user_group() -> Response:
     """Retrieve the group in which the user is a member."""
     with require_oauth.acquire("profile group") as the_token:
         db_uri = current_app.config["AUTH_DB"]
-        with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
-            group = _user_group(cursor, the_token.user).maybe(# type: ignore[misc]
+        with db.connection(db_uri) as conn:
+            group = _user_group(conn, the_token.user).maybe(# type: ignore[misc]
                 False, lambda grp: grp)# type: ignore[arg-type]
 
         if group:

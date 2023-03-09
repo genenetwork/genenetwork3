@@ -163,7 +163,6 @@ def test_user_group(fxtr_users_in_group, user, expected):
       Nothing
     """
     conn, _group, _users = fxtr_users_in_group
-    with db.cursor(conn) as cursor:
-        assert (
-            user_group(cursor, user).maybe(Nothing, lambda val: val)
-            == expected)
+    assert (
+        user_group(conn, user).maybe(Nothing, lambda val: val)
+        == expected)

@@ -87,7 +87,7 @@ def create_resource(
         resource_category: ResourceCategory, user: User) -> Resource:
     """Create a resource item."""
     with db.cursor(conn) as cursor:
-        group = user_group(cursor, user).maybe(
+        group = user_group(conn, user).maybe(
             False, lambda grp: grp)# type: ignore[misc, arg-type]
         if not group:
             raise MissingGroupError(
@@ -153,16 +153,17 @@ def public_resources(conn: db.DbConnection) -> Sequence[Resource]:
             for row in results)
 
 def group_leader_resources(
-        cursor: db.DbCursor, user: User, group: Group,
+        conn: db.DbConnection, user: User, group: Group,
         res_categories: Dict[UUID, ResourceCategory]) -> Sequence[Resource]:
     """Return all the resources available to the group leader"""
-    if is_group_leader(cursor, user, group):
-        cursor.execute("SELECT * FROM resources WHERE group_id=?",
-                       (str(group.group_id),))
-        return tuple(
-            Resource(group, UUID(row[1]), row[2], res_categories[UUID(row[3])],
-                     bool(row[4]))
-            for row in cursor.fetchall())
+    if is_group_leader(conn, user, group):
+        with db.cursor(conn) as cursor:
+            cursor.execute("SELECT * FROM resources WHERE group_id=?",
+                           (str(group.group_id),))
+            return tuple(
+                Resource(group, UUID(row[1]), row[2],
+                         res_categories[UUID(row[3])], bool(row[4]))
+                for row in cursor.fetchall())
     return tuple()
 
 def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:
@@ -172,7 +173,7 @@ def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:
     }
     with db.cursor(conn) as cursor:
         def __all_resources__(group) -> Sequence[Resource]:
-            gl_resources = group_leader_resources(cursor, user, group, categories)
+            gl_resources = group_leader_resources(conn, user, group, categories)
 
             cursor.execute(
                 ("SELECT resources.* FROM group_user_roles_on_resources "
@@ -193,7 +194,7 @@ def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:
             }.values())
 
         # Fix the typing here
-        return user_group(cursor, user).map(__all_resources__).maybe(# type: ignore[arg-type,misc]
+        return user_group(conn, user).map(__all_resources__).maybe(# type: ignore[arg-type,misc]
             public_resources(conn), lambda res: res)# type: ignore[arg-type,return-value]
 
 def attach_resource_data(cursor: db.DbCursor, resource: Resource) -> Resource:
