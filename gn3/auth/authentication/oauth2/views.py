@@ -1,8 +1,11 @@
 """Endpoints for the oauth2 server"""
 import uuid
 
-from flask import Blueprint, current_app as app
+from flask import Response, Blueprint, current_app as app
 
+from gn3.auth.authorisation.errors import ForbiddenAccess
+
+from .resource_server import require_oauth
 from .endpoints.revocation import RevocationEndpoint
 from .endpoints.introspection import IntrospectionEndpoint
 
@@ -36,7 +39,15 @@ def revoke_token():
         RevocationEndpoint.ENDPOINT_NAME)
 
 @auth.route("/introspect", methods=["POST"])
-def introspect_token():
+@require_oauth("introspect")
+def introspect_token() -> Response:
     """Provide introspection information for the token."""
-    return app.config["OAUTH2_SERVER"].create_endpoint_response(
-        IntrospectionEndpoint.ENDPOINT_NAME)
+    # This is dangerous to provide publicly
+    authorised_clients = app.config.get(
+        "OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE", [])
+    with require_oauth.acquire("introspect") as the_token:
+        if the_token.client.client_id in authorised_clients:
+            return app.config["OAUTH2_SERVER"].create_endpoint_response(
+                IntrospectionEndpoint.ENDPOINT_NAME)
+
+    raise ForbiddenAccess("You cannot access this endpoint")

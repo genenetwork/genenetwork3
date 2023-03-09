@@ -8,6 +8,10 @@ class AuthorisationError(Exception):
     """
     error_code: int = 400
 
+class ForbiddenAccess(AuthorisationError):
+    """Raised for forbidden access."""
+    error_code: int = 403
+
 class UserRegistrationError(AuthorisationError):
     """Raised whenever a user registration fails"""
 

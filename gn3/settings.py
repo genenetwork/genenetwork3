@@ -1,7 +1,7 @@
 """Configuration settings for this project"""
-
-import tempfile
 import os
+import uuid
+import tempfile
 
 BCRYPT_SALT = "$2b$12$mxLvu9XRLlIaaSeDxt8Sle"  # Change this!
 DATA_DIR = ""
@@ -70,3 +70,14 @@ MULTIPROCESSOR_PROCS = 6 # Number of processes to spawn
 AUTH_MIGRATIONS = "migrations/auth"
 AUTH_DB = os.environ.get(
     "AUTH_DB", f"{os.environ.get('HOME')}/genenetwork/gn3_files/db/auth.db")
+
+try:
+    # *** SECURITY CONCERN ***
+    # Clients with access to this privileges create a security concern.
+    # Be careful when adding to this configuration
+    OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE = tuple(
+        uuid.UUID(client_id) for client_id in
+        os.environ.get(
+            "OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE", "").split(","))
+except ValueError as _valerr:
+    OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE = tuple()
