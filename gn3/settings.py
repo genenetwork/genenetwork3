@@ -81,3 +81,14 @@ try:
             "OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE", "").split(","))
 except ValueError as _valerr:
     OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE = tuple()
+
+try:
+    # *** SECURITY CONCERN ***
+    # Clients with access to this privileges create a security concern.
+    # Be careful when adding to this configuration
+    OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE = tuple(
+        uuid.UUID(client_id) for client_id in
+        os.environ.get(
+            "OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE", "").split(","))
+except ValueError as _valerr:
+    OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE = tuple()

@@ -51,7 +51,8 @@ def user_roles() -> Response:
             return jsonify(tuple(
                 dictify(role) for role in _user_roles(conn, token.user)))
 
-def __valid_password__(password, confirm_password) -> str:
+def validate_password(password, confirm_password) -> str:
+    """Validate the provided password."""
     if len(password) < 8:
         raise PasswordError("The password must be at least 8 characters long.")
 
@@ -85,7 +86,7 @@ def register_user() -> Response:
             form = request.form
             email = validate_email(form.get("email", "").strip(),
                                    check_deliverability=True)
-            password = __valid_password__(
+            password = validate_password(
                 form.get("password", "").strip(),
                 form.get("confirm_password", "").strip())
             user_name = __valid_username__(form.get("user_name", "").strip())
