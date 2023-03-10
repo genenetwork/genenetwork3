@@ -130,7 +130,7 @@ def migrate_user_group(conn: db.DbConnection, user: User) -> Group:
     group = user_group(conn, user).maybe(# type: ignore[misc]
         False, lambda grp: grp) # type: ignore[arg-type]
     if not bool(group):
-        group = Group(uuid.UUID(), f"{user.name}'s Group", {
+        group = Group(uuid.uuid4(), f"{user.name}'s Group", {
             "created": datetime.datetime.now().isoformat(),
             "notes": "Imported from redis"
         })
@@ -224,8 +224,8 @@ def migrate_user_data():
                 try:
                     user_id = uuid.UUID(request.form.get("user_id", ""))
                     email = validate_email(request.form.get("email", ""))
-                    username = validate_username(
-                        request.form.get("username", ""))
+                    fullname = validate_username(
+                        request.form.get("fullname", ""))
                     password = validate_password(
                         request.form.get("password", ""),
                         request.form.get("confirm_password", ""))
@@ -234,7 +234,7 @@ def migrate_user_data():
                           redis.Redis(decode_responses=True) as rconn,
                           gn3db.database_connection() as gn3conn):
                         user = migrate_user(
-                            authconn, user_id, email["email"], username,
+                            authconn, user_id, email["email"], fullname,
                             password)
                         group = migrate_user_group(authconn, user)
                         user_resource_data = migrate_data(

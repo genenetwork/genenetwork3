@@ -79,7 +79,7 @@ def init_dev_clients():
             "redirect_uris": ["http://localhost:5033/oauth2/code"],
             "response_type": "token", # choices: ["code", "token"]
             "scope": ["profile", "group", "role", "resource", "register-client",
-                      "user"]
+                      "user", "migrate-data", "introspect"]
         }),
         "user_id": "0ad1917c-57da-46dc-b79e-c81c91e5b928"},)
 
