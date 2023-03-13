@@ -187,6 +187,37 @@ following environment variable(s):
 * `export AUTHLIB_INSECURE_TRANSPORT=true`: Allows you to run the Authlib server
   without HTTPS on your development machine.
 
+## Example cURL Commands for OAuth2
+
+In this section, we present some example request to the API using cURL to
+acquire the token(s) and access resources.
+
+### Request Token
+
+```sh
+curl -X POST http://localhost:8080/api/oauth2/token \
+    -F "username=test@development.user" -F "password=testpasswd" \
+    -F "grant_type=password" \
+    -F "client_id=0bbfca82-d73f-4bd4-a140-5ae7abb4a64d" \
+    -F "client_secret=yadabadaboo" \
+    -F "scope=profile group role resource register-client user introspect migrate-data"
+```
+
+### Access a Resource
+
+Once you have acquired a token as above, we can now access a resource with, for
+example:
+
+```sh
+curl -X GET -H "Authorization: Bearer L3Q5mvehQeSUNQQbFLfrcUEdEyoknyblXWxlpKkvdl" \
+    "http://localhost:8080/api/oauth2/group/members/8f8d7640-5d51-4445-ad68-7ab217439804"
+```
+
+to get all the members of a group with the ID
+`8f8d7640-5d51-4445-ad68-7ab217439804` where
+`L3Q5mvehQeSUNQQbFLfrcUEdEyoknyblXWxlpKkvdl` is the token you got in the
+**Request Token** section above.
+
 ## Running Tests
 
 (assuming you are in a guix container; otherwise use venv!)
