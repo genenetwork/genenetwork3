@@ -36,8 +36,10 @@ from gn3.auth.authorisation.resources.models import (
 from gn3.auth.authorisation.errors import ForbiddenAccess, AuthorisationError
 
 
-from gn3.auth.authentication.users import User, user_by_id, set_user_password
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
+from gn3.auth.authentication.users import User, user_by_id, set_user_password
+from gn3.auth.authentication.oauth2.models.oauth2token import (
+    OAuth2Token, save_token)
 from gn3.auth.authentication.oauth2.models.oauth2client import (
     client_by_id_and_secret)
 
@@ -171,19 +173,63 @@ def user_redis_resources(rconn: redis.Redis, user_id: uuid.UUID) -> tuple[
          if dataset["owner_id"] == str(user_id)),
         (tuple(), tuple(), tuple()))
 
+def system_admin_user(conn: db.DbConnection) -> User:
+    """Return a system admin user."""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "SELECT * FROM users AS u INNER JOIN user_roles AS ur "
+            "ON u.user_id=ur.user_id INNER JOIN roles AS r "
+            "ON ur.role_id=r.role_id WHERE r.role_name='system-administrator'")
+        rows = cursor.fetchall()
+        if len(rows) > 0:
+            return User(uuid.UUID(rows[0]["user_id"]), rows[0]["email"],
+                        rows[0]["name"])
+        raise NotFoundError("Could not find a system administration user.")
+
+def generate_sysadmin_token() -> OAuth2Token:
+    """Generate a token for a user with system administration privileges."""
+    db_uri = app.config["AUTH_DB"]
+    server = app.config["OAUTH2_SERVER"]
+    with (require_oauth.acquire("profile") as the_token,
+          db.connection(db_uri) as conn):
+        admin_user = system_admin_user(conn)
+        token = OAuth2Token(
+            token_id = uuid.uuid4(),
+            client = the_token.client,
+            **server.generate_token(
+            client = the_token.client,
+            grant_type = "implicit",
+            user = admin_user,
+            scope = the_token.scope,
+            expires_in = 30*60,
+                include_refresh_token=False),
+            refresh_token = None,
+            revoked=False,
+            issued_at=datetime.datetime.now(),
+            user=admin_user)
+        save_token(conn, token)
+        return token
+
 def migrate_data(
         authconn: db.DbConnection, gn3conn: gn3db.Connection,
         redis_resources: tuple[tuple[dict], tuple[dict], tuple[dict]],
         user: User, group: Group) -> tuple[dict[str, str], ...]:
     """Migrate data attached to the user to the user's group."""
     redis_mrna, redis_geno, redis_pheno = redis_resources
-    mrna_datasets = __unmigrated_data__(
-        retrieve_ungrouped_data(authconn, gn3conn, "mrna"), redis_mrna)
-    geno_datasets = __unmigrated_data__(
-        retrieve_ungrouped_data(authconn, gn3conn, "genotype"), redis_geno)
-    pheno_datasets = __unmigrated_data__(
-        retrieve_ungrouped_data(authconn, gn3conn, "phenotype"), redis_pheno)
-    print(f"MRNA DATASETS: {tuple(mrna_datasets)}")
+    ## BEGIN: Escalate privileges temporarily to enable fetching of data
+    ## =====================================
+    new_token = generate_sysadmin_token()
+    with app.test_request_context(headers={
+            "Authorization": f"Bearer {new_token.access_token}"}):
+        mrna_datasets = __unmigrated_data__(
+            retrieve_ungrouped_data(authconn, gn3conn, "mrna"), redis_mrna)
+        geno_datasets = __unmigrated_data__(
+            retrieve_ungrouped_data(authconn, gn3conn, "genotype"), redis_geno)
+        pheno_datasets = __unmigrated_data__(
+            retrieve_ungrouped_data(authconn, gn3conn, "phenotype"), redis_pheno)
+    ## =====================================
+    ## END: Escalate privileges temporarily to enable fetching of data
+
     params = (
         __parametrise__(group, mrna_datasets, "mRNA") +
         __parametrise__(group, geno_datasets, "Genotype") +
@@ -248,8 +294,6 @@ def migrate_user() -> Response:
     except EmailNotValidError as enve:
         raise AuthorisationError(f"Email Error: {str(enve)}") from enve
     except ValueError as verr:
-        import traceback
-        print(traceback.format_exc())
         raise AuthorisationError(verr.args[0]) from verr
 
 @data.route("/user/<uuid:user_id>/migrate", methods=["POST"])
