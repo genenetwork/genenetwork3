@@ -18,6 +18,7 @@ steps = [
             user_id TEXT NOT NULL,
             PRIMARY KEY(client_id),
             FOREIGN KEY(user_id) REFERENCES users(user_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS oauth2_clients")

@@ -13,6 +13,7 @@ steps = [
             user_id TEXT PRIMARY KEY,
             password TEXT NOT NULL,
             FOREIGN KEY(user_id) REFERENCES users(user_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS user_credentials")

@@ -21,8 +21,10 @@ steps = [
             expires_in INTEGER NOT NULL,
             user_id TEXT NOT NULL,
             PRIMARY KEY(token_id),
-            FOREIGN KEY (client_id) REFERENCES oauth2_clients(client_id),
+            FOREIGN KEY (client_id) REFERENCES oauth2_clients(client_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT,
             FOREIGN KEY (user_id) REFERENCES users(user_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS oauth2_tokens")

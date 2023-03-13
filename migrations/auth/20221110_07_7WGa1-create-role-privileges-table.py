@@ -13,8 +13,10 @@ steps = [
             role_id TEXT NOT NULL,
             privilege_id TEXT NOT NULL,
             PRIMARY KEY(role_id, privilege_id),
-            FOREIGN KEY(role_id) REFERENCES roles(role_id),
+            FOREIGN KEY(role_id) REFERENCES roles(role_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT,
             FOREIGN KEY(privilege_id) REFERENCES privileges(privilege_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS role_privileges"),

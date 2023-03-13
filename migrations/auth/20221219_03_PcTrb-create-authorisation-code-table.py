@@ -21,8 +21,10 @@ steps = [
             code_challenge_method TEXT,
             user_id TEXT NOT NULL,
             PRIMARY KEY (code_id),
-            FOREIGN KEY (client_id) REFERENCES oauth2_clients(client_id),
+            FOREIGN KEY (client_id) REFERENCES oauth2_clients(client_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT,
             FOREIGN KEY (user_id) REFERENCES users(user_id)
+              ON UPDATE CASCADE ON DELETE RESTRICT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS authorisation_code")

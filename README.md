@@ -214,7 +214,17 @@ curl -X GET -H "Authorization: Bearer L3Q5mvehQeSUNQQbFLfrcUEdEyoknyblXWxlpKkvdl
 ```
 
 to get all the members of a group with the ID
-`8f8d7640-5d51-4445-ad68-7ab217439804` where
+`8f8d7640-5d51-4445-ad68-7ab217439804`
+
+or:
+
+```sh
+curl -X POST "http://localhost:8080/api/oauth2/user/register" \
+    -F "email=a_new@users.email" -F "password=apasswd" \
+    -F "confirm_password=apasswd"
+```
+
+where
 `L3Q5mvehQeSUNQQbFLfrcUEdEyoknyblXWxlpKkvdl` is the token you got in the
 **Request Token** section above.
 
