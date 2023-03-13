@@ -154,3 +154,22 @@ def client(conn: db.DbConnection, client_id: uuid.UUID,
                              the_user))# type: ignore[arg-type]
 
     return Nothing
+
+def client_by_id_and_secret(conn: db.DbConnection, client_id: uuid.UUID,
+                            client_secret: str) -> OAuth2Client:
+    """Retrieve a client by its ID and secret"""
+    with db.cursor(conn) as cursor:
+        cursor.execute(
+            "SELECT * FROM oauth2_clients WHERE client_id=? AND "
+            "client_secret=?",
+            (str(client_id), client_secret))
+        row = cursor.fetchone()
+        if bool(row):
+            return OAuth2Client(
+                client_id, client_secret,
+                datetime.datetime.fromtimestamp(row["client_id_issued_at"]),
+                datetime.datetime.fromtimestamp(row["client_secret_expires_at"]),
+                json.loads(row["client_metadata"]),
+                user_by_id(conn, uuid.UUID(row["user_id"])))
+
+        raise NotFoundError(f"Could not find client with ID '{client_id}'")

@@ -38,6 +38,8 @@ from gn3.auth.authorisation.errors import ForbiddenAccess, AuthorisationError
 
 from gn3.auth.authentication.users import User, user_by_id, set_user_password
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
+from gn3.auth.authentication.oauth2.models.oauth2client import (
+    client_by_id_and_secret)
 
 data = Blueprint("data", __name__)
 
@@ -110,21 +112,6 @@ def authorisation() -> Response:
             (build_trait_name(trait_fullname)
              for trait_fullname in traits_names)))
 
-def migrate_user(conn: db.DbConnection, user_id: uuid.UUID, email: str,
-                 username: str, password: str) -> User:
-    """Migrate the user, if not already migrated."""
-    try:
-        return user_by_id(conn, user_id)
-    except NotFoundError as _nfe:
-        user = User(user_id, email, username)
-        with db.cursor(conn) as cursor:
-            cursor.execute(
-                "INSERT INTO users(user_id, email, name) "
-                "VALUES (?, ?, ?)",
-                (str(user.user_id), user.email, user.name))
-            set_user_password(cursor, user, password)
-            return user
-
 def migrate_user_group(conn: db.DbConnection, user: User) -> Group:
     """Create a group for the user if they don't already have a group."""
     group = user_group(conn, user).maybe(# type: ignore[misc]
@@ -171,26 +158,32 @@ def __parametrise__(group: Group, datasets: Sequence[dict],
             "accession_id": dataset["accession_id"]
         } for dataset in datasets)
 
-def migrate_data(
-        authconn: db.DbConnection, gn3conn: gn3db.Connection,
-        rconn: redis.Redis, user: User,
-        group: Group) -> tuple[dict[str, str], ...]:
-    """Migrate data attached to the user to the user's group."""
-    redis_mrna, redis_geno, redis_pheno = reduce(# type: ignore[var-annotated]
+def user_redis_resources(rconn: redis.Redis, user_id: uuid.UUID) -> tuple[
+        tuple[dict], tuple[dict], tuple[dict]]:
+    """Acquire any resources from redis."""
+    return reduce(# type: ignore[var-annotated]
         __redis_datasets_by_type__,
         (dataset for dataset in
          (dataset for _key,dataset in {
              key: json.loads(val)
             for key,val in rconn.hgetall("resources").items()
          }.items())
-         if dataset["owner_id"] == str(user.user_id)),
+         if dataset["owner_id"] == str(user_id)),
         (tuple(), tuple(), tuple()))
+
+def migrate_data(
+        authconn: db.DbConnection, gn3conn: gn3db.Connection,
+        redis_resources: tuple[tuple[dict], tuple[dict], tuple[dict]],
+        user: User, group: Group) -> tuple[dict[str, str], ...]:
+    """Migrate data attached to the user to the user's group."""
+    redis_mrna, redis_geno, redis_pheno = redis_resources
     mrna_datasets = __unmigrated_data__(
         retrieve_ungrouped_data(authconn, gn3conn, "mrna"), redis_mrna)
     geno_datasets = __unmigrated_data__(
         retrieve_ungrouped_data(authconn, gn3conn, "genotype"), redis_geno)
     pheno_datasets = __unmigrated_data__(
         retrieve_ungrouped_data(authconn, gn3conn, "phenotype"), redis_pheno)
+    print(f"MRNA DATASETS: {tuple(mrna_datasets)}")
     params = (
         __parametrise__(group, mrna_datasets, "mRNA") +
         __parametrise__(group, geno_datasets, "Genotype") +
@@ -206,8 +199,62 @@ def migrate_data(
     return params
 
 @data.route("/user/migrate", methods=["POST"])
+# @require_oauth("migrate-data")
+def migrate_user() -> Response:
+    """Migrate the user"""
+    def __migrate_user__(conn: db.DbConnection, user_id: uuid.UUID, email: str,
+                 username: str, password: str) -> User:
+        """Migrate the user, if not already migrated."""
+        try:
+            return user_by_id(conn, user_id)
+        except NotFoundError as _nfe:
+            user = User(user_id, email, username)
+            with db.cursor(conn) as cursor:
+                cursor.execute(
+                    "INSERT INTO users(user_id, email, name) "
+                    "VALUES (?, ?, ?)",
+                    (str(user.user_id), user.email, user.name))
+                set_user_password(cursor, user, password)
+                return user
+    try:
+        db_uri = app.config.get("AUTH_DB").strip()
+        with (db.connection(db_uri) as authconn,
+              redis.Redis(decode_responses=True) as rconn):
+            client_id = uuid.UUID(request.form.get("client_id"))
+            client_secret = request.form.get("client_secret", "NOTASECRET")
+            client = client_by_id_and_secret(authconn, client_id, client_secret)
+            authorised_clients = app.config.get(
+                "OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE", [])
+            if client.client_id not in  authorised_clients:
+                raise ForbiddenAccess("You cannot access this endpoint.")
+
+            user_id = uuid.UUID(request.form.get("user_id"))
+            redis_dets = rconn.hget("users", str(user_id))
+            user_details = json.loads(redis_dets)
+            if user_details:
+                email = validate_email(user_details["email_address"])
+                user = __migrate_user__(
+                    authconn, user_id, email["email"],
+                    validate_username(user_details.get("full_name", "")),
+                    validate_password(
+                        request.form.get("password", ""),
+                        request.form.get("confirm_password", "")))
+                return jsonify({
+                    "user": dictify(user),
+                    "description": "Successfully migrated user."
+                })
+            raise NotFoundError(
+                f"No user with ID '{user_id}'")
+    except EmailNotValidError as enve:
+        raise AuthorisationError(f"Email Error: {str(enve)}") from enve
+    except ValueError as verr:
+        import traceback
+        print(traceback.format_exc())
+        raise AuthorisationError(verr.args[0]) from verr
+
+@data.route("/user/<uuid:user_id>/migrate", methods=["POST"])
 @require_oauth("migrate-data")
-def migrate_user_data():
+def migrate_user_data(user_id: uuid.UUID) -> Response:
     """
     Special, protected endpoint to enable the migration of data from the older
     system to the newer system with groups, resources and privileges.
@@ -221,36 +268,24 @@ def migrate_user_data():
             "OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE", [])
         with require_oauth.acquire("migrate-data") as the_token:
             if the_token.client.client_id in authorised_clients:
-                try:
-                    user_id = uuid.UUID(request.form.get("user_id", ""))
-                    email = validate_email(request.form.get("email", ""))
-                    fullname = validate_username(
-                        request.form.get("fullname", ""))
-                    password = validate_password(
-                        request.form.get("password", ""),
-                        request.form.get("confirm_password", ""))
-
-                    with (db.connection(db_uri) as authconn,
-                          redis.Redis(decode_responses=True) as rconn,
-                          gn3db.database_connection() as gn3conn):
-                        user = migrate_user(
-                            authconn, user_id, email["email"], fullname,
-                            password)
+                user = the_token.user
+                with (db.connection(db_uri) as authconn,
+                      redis.Redis(decode_responses=True) as rconn,
+                      gn3db.database_connection() as gn3conn):
+                    redis_resources = user_redis_resources(rconn, user.user_id)
+                    user_resource_data = tuple()
+                    if any(bool(item) for item in redis_resources):
                         group = migrate_user_group(authconn, user)
                         user_resource_data = migrate_data(
-                            authconn, gn3conn, rconn, user, group)
+                            authconn, gn3conn, redis_resources, user, group)
                         ## TODO: Maybe delete user from redis...
-                        return jsonify({
-                            "description": (
-                                f"Migrated {len(user_resource_data)} resource data "
-                                "items."),
-                            "user": dictify(user),
-                            "group": dictify(group)
-                        })
-                except EmailNotValidError as enve:
-                    raise AuthorisationError(f"Email Error: {str(enve)}") from enve
-                except ValueError as verr:
-                    raise AuthorisationError(verr.args[0]) from verr
+                    return jsonify({
+                        "description": (
+                            f"Migrated {len(user_resource_data)} resource data "
+                            "items."),
+                        "user": dictify(user),
+                        "group": dictify(group)
+                    })
 
             raise ForbiddenAccess("You cannot access this endpoint.")
 
