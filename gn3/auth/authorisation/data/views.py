@@ -39,7 +39,7 @@ from gn3.auth.authorisation.errors import ForbiddenAccess, AuthorisationError
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 from gn3.auth.authentication.users import User, user_by_id, set_user_password
 from gn3.auth.authentication.oauth2.models.oauth2token import (
-    OAuth2Token, save_token)
+    OAuth2Token, save_token, revoke_token)
 from gn3.auth.authentication.oauth2.models.oauth2client import (
     client_by_id_and_secret)
 
@@ -163,7 +163,7 @@ def __parametrise__(group: Group, datasets: Sequence[dict],
 def user_redis_resources(rconn: redis.Redis, user_id: uuid.UUID) -> tuple[
         tuple[dict], tuple[dict], tuple[dict]]:
     """Acquire any resources from redis."""
-    return reduce(# type: ignore[var-annotated]
+    return reduce(# type: ignore[return-value]
         __redis_datasets_by_type__,
         (dataset for dataset in
          (dataset for _key,dataset in {
@@ -213,7 +213,7 @@ def generate_sysadmin_token() -> OAuth2Token:
 def migrate_data(
         authconn: db.DbConnection, gn3conn: gn3db.Connection,
         redis_resources: tuple[tuple[dict], tuple[dict], tuple[dict]],
-        user: User, group: Group) -> tuple[dict[str, str], ...]:
+        group: Group) -> tuple[dict[str, str], ...]:
     """Migrate data attached to the user to the user's group."""
     redis_mrna, redis_geno, redis_pheno = redis_resources
     ## BEGIN: Escalate privileges temporarily to enable fetching of data
@@ -227,6 +227,8 @@ def migrate_data(
             retrieve_ungrouped_data(authconn, gn3conn, "genotype"), redis_geno)
         pheno_datasets = __unmigrated_data__(
             retrieve_ungrouped_data(authconn, gn3conn, "phenotype"), redis_pheno)
+
+    save_token(authconn, revoke_token(new_token))
     ## =====================================
     ## END: Escalate privileges temporarily to enable fetching of data
 
@@ -263,7 +265,7 @@ def migrate_user() -> Response:
                 set_user_password(cursor, user, password)
                 return user
     try:
-        db_uri = app.config.get("AUTH_DB").strip()
+        db_uri = app.config.get("AUTH_DB", "").strip()
         with (db.connection(db_uri) as authconn,
               redis.Redis(decode_responses=True) as rconn):
             client_id = uuid.UUID(request.form.get("client_id"))
@@ -306,22 +308,25 @@ def migrate_user_data(user_id: uuid.UUID) -> Response:
     This is a temporary endpoint and should be removed after all the data has
     been migrated.
     """
-    db_uri = app.config.get("AUTH_DB").strip()
+    db_uri = app.config.get("AUTH_DB", "").strip()
     if bool(db_uri) and os.path.exists(db_uri):
         authorised_clients = app.config.get(
             "OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE", [])
         with require_oauth.acquire("migrate-data") as the_token:
             if the_token.client.client_id in authorised_clients:
                 user = the_token.user
+                if not user_id == user.user_id:
+                    raise AuthorisationError(
+                        "You cannot trigger migration of another user's data.")
                 with (db.connection(db_uri) as authconn,
                       redis.Redis(decode_responses=True) as rconn,
                       gn3db.database_connection() as gn3conn):
                     redis_resources = user_redis_resources(rconn, user.user_id)
-                    user_resource_data = tuple()
+                    user_resource_data: tuple = tuple()
                     if any(bool(item) for item in redis_resources):
                         group = migrate_user_group(authconn, user)
                         user_resource_data = migrate_data(
-                            authconn, gn3conn, redis_resources, user, group)
+                            authconn, gn3conn, redis_resources, group)
                         ## TODO: Maybe delete user from redis...
                     return jsonify({
                         "description": (
@@ -333,8 +338,16 @@ def migrate_user_data(user_id: uuid.UUID) -> Response:
 
             raise ForbiddenAccess("You cannot access this endpoint.")
 
-    return jsonify({
-        "error": "Unavailable",
-        "error_description": (
-            "The data migration service is currently unavailable.")
-    }), 503
+    return app.response_class(
+        response=json.dumps({
+            "error": "Unavailable",
+            "error_description": (
+                "The data migration service is currently unavailable.")
+        }),
+        status=500, mimetype="application/json")
+
+    # return jsonify({
+    #     "error": "Unavailable",
+    #     "error_description": (
+    #         "The data migration service is currently unavailable.")
+    # }), 503
