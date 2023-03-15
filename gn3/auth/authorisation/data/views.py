@@ -2,9 +2,11 @@
 import os
 import uuid
 import json
+import random
+import string
 import datetime
-from typing import Sequence
 from functools import reduce
+from typing import Sequence, Iterable
 
 import redis
 from email_validator import validate_email, EmailNotValidError
@@ -19,9 +21,6 @@ from gn3.auth.dictify import dictify
 
 from gn3.auth.authorisation.errors import NotFoundError
 
-from gn3.auth.authorisation.users.views import (
-    validate_password, validate_username)
-
 from gn3.auth.authorisation.roles.models import(
     revoke_user_role_by_name, assign_user_role_by_name)
 
@@ -33,15 +32,11 @@ from gn3.auth.authorisation.resources.checks import authorised_for
 from gn3.auth.authorisation.resources.models import (
     user_resources, public_resources, attach_resources_data)
 
-from gn3.auth.authorisation.errors import ForbiddenAccess, AuthorisationError
+from gn3.auth.authorisation.errors import ForbiddenAccess
 
 
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
-from gn3.auth.authentication.users import User, user_by_id, set_user_password
-from gn3.auth.authentication.oauth2.models.oauth2token import (
-    OAuth2Token, save_token, revoke_token)
-from gn3.auth.authentication.oauth2.models.oauth2client import (
-    client_by_id_and_secret)
+from gn3.auth.authentication.users import User, user_by_email, set_user_password
 
 data = Blueprint("data", __name__)
 
@@ -119,8 +114,9 @@ def migrate_user_group(conn: db.DbConnection, user: User) -> Group:
     group = user_group(conn, user).maybe(# type: ignore[misc]
         False, lambda grp: grp) # type: ignore[arg-type]
     if not bool(group):
-        group = Group(uuid.uuid4(), f"{user.name}'s Group", {
-            "created": datetime.datetime.now().isoformat(),
+        now = datetime.datetime.now().isoformat()
+        group = Group(uuid.uuid4(), f"{user.name}'s Group ({now})", {
+            "created": now,
             "notes": "Imported from redis"
         })
         with db.cursor(conn) as cursor:
@@ -160,18 +156,21 @@ def __parametrise__(group: Group, datasets: Sequence[dict],
             "accession_id": dataset["accession_id"]
         } for dataset in datasets)
 
-def user_redis_resources(rconn: redis.Redis, user_id: uuid.UUID) -> tuple[
-        tuple[dict], tuple[dict], tuple[dict]]:
-    """Acquire any resources from redis."""
-    return reduce(# type: ignore[return-value]
-        __redis_datasets_by_type__,
-        (dataset for dataset in
-         (dataset for _key,dataset in {
-             key: json.loads(val)
-            for key,val in rconn.hgetall("resources").items()
-         }.items())
-         if dataset["owner_id"] == str(user_id)),
-        (tuple(), tuple(), tuple()))
+def __org_by_user_id__(acc, resource):
+    try:
+        user_id = uuid.UUID(resource["owner_id"])
+        return {
+            **acc,
+            user_id: acc.get(user_id, tuple()) + (resource,)
+        }
+    except ValueError as _verr:
+        return acc
+
+def redis_resources(rconn: redis.Redis) -> Iterable[dict[str, str]]:
+    """Retrieve ALL defined resources from Redis"""
+    return (
+        json.loads(resource)
+        for resource in rconn.hgetall("resources").values())
 
 def system_admin_user(conn: db.DbConnection) -> User:
     """Return a system admin user."""
@@ -186,41 +185,45 @@ def system_admin_user(conn: db.DbConnection) -> User:
                         rows[0]["name"])
         raise NotFoundError("Could not find a system administration user.")
 
-def generate_sysadmin_token() -> OAuth2Token:
-    """Generate a token for a user with system administration privileges."""
-    db_uri = app.config["AUTH_DB"]
-    server = app.config["OAUTH2_SERVER"]
-    with (require_oauth.acquire("profile") as the_token,
-          db.connection(db_uri) as conn):
-        admin_user = system_admin_user(conn)
-        token = OAuth2Token(
-            token_id = uuid.uuid4(),
-            client = the_token.client,
-            **server.generate_token(
-            client = the_token.client,
-            grant_type = "implicit",
-            user = admin_user,
-            scope = the_token.scope,
-            expires_in = 30*60,
-                include_refresh_token=False),
-            refresh_token = None,
-            revoked=False,
-            issued_at=datetime.datetime.now(),
-            user=admin_user)
-        save_token(conn, token)
-        return token
+def migrate_user(
+        conn: db.DbConnection, email: str, username: str, password: str) -> User:
+    """Migrate the user, if not already migrated."""
+    try:
+        return user_by_email(conn, email)
+    except NotFoundError as _nfe:
+        user = User(uuid.uuid4(), email, username)
+        with db.cursor(conn) as cursor:
+            cursor.execute(
+                "INSERT INTO users(user_id, email, name) "
+                "VALUES (?, ?, ?)",
+                (str(user.user_id), user.email, user.name))
+            set_user_password(cursor, user, password)
+            return user
 
-def migrate_data(
-        authconn: db.DbConnection, gn3conn: gn3db.Connection,
-        redis_resources: tuple[tuple[dict], tuple[dict], tuple[dict]],
-        group: Group) -> tuple[dict[str, str], ...]:
+def __generate_random_password__(length: int = 25):
+    """Generate a random password string"""
+    return "".join(random.choices(
+        string.ascii_letters + string.punctuation + string.digits,
+        k=length))
+
+def migrate_data(# pylint: disable=[too-many-locals]
+        authconn: db.DbConnection,
+        gn3conn: gn3db.Connection,
+        rconn: redis.Redis,
+        redis_user_id: uuid.UUID,
+        redisresources: tuple[dict[str, str], ...]) -> tuple[
+            User, Group, tuple[dict[str, str], ...]]:
     """Migrate data attached to the user to the user's group."""
-    redis_mrna, redis_geno, redis_pheno = redis_resources
-    ## BEGIN: Escalate privileges temporarily to enable fetching of data
-    ## =====================================
-    new_token = generate_sysadmin_token()
-    with app.test_request_context(headers={
-            "Authorization": f"Bearer {new_token.access_token}"}):
+    try:
+        user_details = json.loads(rconn.hget("users", str(redis_user_id)))
+        email = validate_email(user_details["email_address"])
+        user = migrate_user(authconn, email["email"],
+                            user_details.get("full_name") or "NOT SET",
+                            __generate_random_password__())
+        group = migrate_user_group(authconn, user)
+        redis_mrna, redis_geno, redis_pheno = reduce(#type: ignore[var-annotated]
+            __redis_datasets_by_type__, redisresources,
+            (tuple(), tuple(), tuple()))
         mrna_datasets = __unmigrated_data__(
             retrieve_ungrouped_data(authconn, gn3conn, "mrna"), redis_mrna)
         geno_datasets = __unmigrated_data__(
@@ -228,79 +231,27 @@ def migrate_data(
         pheno_datasets = __unmigrated_data__(
             retrieve_ungrouped_data(authconn, gn3conn, "phenotype"), redis_pheno)
 
-    save_token(authconn, revoke_token(new_token))
-    ## =====================================
-    ## END: Escalate privileges temporarily to enable fetching of data
+        params = (
+            __parametrise__(group, mrna_datasets, "mRNA") +
+            __parametrise__(group, geno_datasets, "Genotype") +
+            __parametrise__(group, pheno_datasets, "Phenotype"))
+        if len(params) > 0:
+            with db.cursor(authconn) as cursor:
+                cursor.executemany(
+                    "INSERT INTO linked_group_data VALUES"
+                    "(:group_id, :dataset_type, :dataset_or_trait_id, "
+                    ":dataset_name, :dataset_fullname, :accession_id)",
+                    params)
 
-    params = (
-        __parametrise__(group, mrna_datasets, "mRNA") +
-        __parametrise__(group, geno_datasets, "Genotype") +
-        __parametrise__(group, pheno_datasets, "Phenotype"))
-    if len(params) > 0:
-        with db.cursor(authconn) as cursor:
-            cursor.executemany(
-                "INSERT INTO linked_group_data VALUES"
-                "(:group_id, :dataset_type, :dataset_or_trait_id, "
-                ":dataset_name, :dataset_fullname, :accession_id)",
-                params)
+        return user, group, params
+    except EmailNotValidError as _enve:
+        pass
 
-    return params
+    return tuple() # type: ignore[return-value]
 
-@data.route("/user/migrate", methods=["POST"])
-# @require_oauth("migrate-data")
-def migrate_user() -> Response:
-    """Migrate the user"""
-    def __migrate_user__(conn: db.DbConnection, user_id: uuid.UUID, email: str,
-                 username: str, password: str) -> User:
-        """Migrate the user, if not already migrated."""
-        try:
-            return user_by_id(conn, user_id)
-        except NotFoundError as _nfe:
-            user = User(user_id, email, username)
-            with db.cursor(conn) as cursor:
-                cursor.execute(
-                    "INSERT INTO users(user_id, email, name) "
-                    "VALUES (?, ?, ?)",
-                    (str(user.user_id), user.email, user.name))
-                set_user_password(cursor, user, password)
-                return user
-    try:
-        db_uri = app.config.get("AUTH_DB", "").strip()
-        with (db.connection(db_uri) as authconn,
-              redis.Redis(decode_responses=True) as rconn):
-            client_id = uuid.UUID(request.form.get("client_id"))
-            client_secret = request.form.get("client_secret", "NOTASECRET")
-            client = client_by_id_and_secret(authconn, client_id, client_secret)
-            authorised_clients = app.config.get(
-                "OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE", [])
-            if client.client_id not in  authorised_clients:
-                raise ForbiddenAccess("You cannot access this endpoint.")
-
-            user_id = uuid.UUID(request.form.get("user_id"))
-            redis_dets = rconn.hget("users", str(user_id))
-            user_details = json.loads(redis_dets)
-            if user_details:
-                email = validate_email(user_details["email_address"])
-                user = __migrate_user__(
-                    authconn, user_id, email["email"],
-                    validate_username(user_details.get("full_name", "")),
-                    validate_password(
-                        request.form.get("password", ""),
-                        request.form.get("confirm_password", "")))
-                return jsonify({
-                    "user": dictify(user),
-                    "description": "Successfully migrated user."
-                })
-            raise NotFoundError(
-                f"No user with ID '{user_id}'")
-    except EmailNotValidError as enve:
-        raise AuthorisationError(f"Email Error: {str(enve)}") from enve
-    except ValueError as verr:
-        raise AuthorisationError(verr.args[0]) from verr
-
-@data.route("/user/<uuid:user_id>/migrate", methods=["POST"])
+@data.route("/users/migrate", methods=["POST"])
 @require_oauth("migrate-data")
-def migrate_user_data(user_id: uuid.UUID) -> Response:
+def migrate_users_data() -> Response:
     """
     Special, protected endpoint to enable the migration of data from the older
     system to the newer system with groups, resources and privileges.
@@ -312,30 +263,30 @@ def migrate_user_data(user_id: uuid.UUID) -> Response:
     if bool(db_uri) and os.path.exists(db_uri):
         authorised_clients = app.config.get(
             "OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE", [])
-        with require_oauth.acquire("migrate-data") as the_token:
+        with (require_oauth.acquire("migrate-data") as the_token,
+              db.connection(db_uri) as authconn,
+              redis.Redis(decode_responses=True) as rconn,
+              gn3db.database_connection() as gn3conn):
             if the_token.client.client_id in authorised_clients:
-                user = the_token.user
-                if not user_id == user.user_id:
-                    raise AuthorisationError(
-                        "You cannot trigger migration of another user's data.")
-                with (db.connection(db_uri) as authconn,
-                      redis.Redis(decode_responses=True) as rconn,
-                      gn3db.database_connection() as gn3conn):
-                    redis_resources = user_redis_resources(rconn, user.user_id)
-                    user_resource_data: tuple = tuple()
-                    if any(bool(item) for item in redis_resources):
-                        group = migrate_user_group(authconn, user)
-                        user_resource_data = migrate_data(
-                            authconn, gn3conn, redis_resources, group)
-                        ## TODO: Maybe delete user from redis...
-                    return jsonify({
-                        "description": (
-                            f"Migrated {len(user_resource_data)} resource data "
-                            "items."),
-                        "user": dictify(user),
-                        "group": dictify(group)
-                    })
-
+                by_user: dict[uuid.UUID, tuple[dict[str, str], ...]] = reduce(
+                    __org_by_user_id__, redis_resources(rconn), {})
+                users, groups, resource_data_params = reduce(# type: ignore[var-annotated, arg-type]
+                    lambda acc, ugp: (acc[0] + (ugp[0],),# type: ignore[return-value, arg-type]
+                                      acc[1] + (ugp[1],),
+                                      acc[2] + ugp[2]),
+                    (
+                    migrate_data(
+                        authconn, gn3conn, rconn, user_id, user_resources)
+                        for user_id, user_resources in by_user.items()),
+                    (tuple(), tuple(), tuple()))
+                return jsonify({
+                    "description": (
+                        f"Migrated {len(resource_data_params)} resource data "
+                        f"items for {len(users)} users into {len(groups)} "
+                        "groups."),
+                    "users": tuple(dictify(user) for user in users),
+                    "groups": tuple(dictify(group) for group in groups)
+                })
             raise ForbiddenAccess("You cannot access this endpoint.")
 
     return app.response_class(
@@ -345,9 +296,3 @@ def migrate_user_data(user_id: uuid.UUID) -> Response:
                 "The data migration service is currently unavailable.")
         }),
         status=500, mimetype="application/json")
-
-    # return jsonify({
-    #     "error": "Unavailable",
-    #     "error_description": (
-    #         "The data migration service is currently unavailable.")
-    # }), 503
