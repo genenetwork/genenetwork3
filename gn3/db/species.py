@@ -9,8 +9,11 @@ from MySQLdb import escape_string
 def get_all_species(conn: Any) -> Optional[Tuple]:
     """Return a list of all species"""
     with conn.cursor() as cursor:
-        cursor.execute("SELECT Name, MenuName FROM Species "
-                       "ORDER BY OrderId")
+        cursor.execute("SELECT Name, MenuName, IFNULL(Family, 'None') "
+                       "FROM Species "
+                       "ORDER BY IFNULL(FamilyOrderId, SpeciesName) ASC, "
+                       "IFNULL(Family, SpeciesName) ASC, "
+                       "OrderId ASC")
         return cursor.fetchall()
 
 
