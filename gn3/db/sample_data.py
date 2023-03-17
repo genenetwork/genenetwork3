@@ -158,6 +158,7 @@ def update_sample_data(
                     (f"UPDATE {table} SET {_val} = %s " f"WHERE {sub_query}"),
                     (value, strain_id, data_id),
                 )
+                conn.commit()
                 return cursor.rowcount
         return 0
 
@@ -185,6 +186,7 @@ def update_sample_data(
                         "AND InbredSetId = %s",
                         (value, strain_id, name, inbredset_id),
                     )
+                conn.commit()
                 return cursor.rowcount
         return 0
 
@@ -264,6 +266,7 @@ def delete_sample_data(
                 (f"DELETE FROM {table} " f"WHERE {sub_query}"),
                 (strain_id, data_id),
             )
+            conn.commit()
             return cursor.rowcount
 
     def __delete_case_attribute(conn, strain_id, case_attr, inbredset_id):
@@ -285,6 +288,7 @@ def delete_sample_data(
                     "AND InbredSetId = %s",
                     (strain_id, name, inbredset_id),
                 )
+            conn.commit()
             return cursor.rowcount
 
     strain_id, data_id, inbredset_id = get_sample_data_ids(
@@ -337,6 +341,7 @@ def insert_sample_data(
                     ),
                     (strain_id, data_id, value),
                 )
+                conn.commit()
                 return cursor.rowcount
         return 0
 
@@ -367,7 +372,9 @@ def insert_sample_data(
                         (strain_id, id_, value, inbredset_id),
                     )
                     row_count = cursor.rowcount
+                    conn.commit()
                     return row_count
+                conn.commit()
         return 0
 
     strain_id, data_id, inbredset_id = get_sample_data_ids(
@@ -394,6 +401,7 @@ def insert_sample_data(
                 "AND StrainId = %s",
                 (data_id, strain_id),
             )
+            conn.commit()
         if cursor.fetchone():  # Data already exists
             return count
 
