@@ -1,6 +1,7 @@
 """The views/routes for the resources package"""
 import uuid
 import json
+import sqlite3
 from functools import reduce
 
 from flask import request, jsonify, Response, Blueprint, current_app as app
@@ -14,7 +15,7 @@ from .models import (
     unlink_data_from_resource, create_resource as _create_resource)
 
 from ..roles import Role
-from ..errors import InvalidData, AuthorisationError
+from ..errors import InvalidData, InconsistencyError, AuthorisationError
 from ..groups.models import Group, GroupRole, group_role_by_id
 
 from ... import db
@@ -43,11 +44,20 @@ def create_resource() -> Response:
         resource_category_id = uuid.UUID(form.get("resource_category"))
         db_uri = app.config["AUTH_DB"]
         with db.connection(db_uri) as conn:
-            resource = _create_resource(
-                conn, resource_name, resource_category_by_id(
-                    conn, resource_category_id),
-                the_token.user)
-            return jsonify(dictify(resource))
+            try:
+                resource = _create_resource(
+                    conn, resource_name, resource_category_by_id(
+                        conn, resource_category_id),
+                    the_token.user)
+                return jsonify(dictify(resource))
+            except sqlite3.IntegrityError as sql3ie:
+                if sql3ie.args[0] == ("UNIQUE constraint failed: "
+                                      "resources.resource_name"):
+                    raise InconsistencyError(
+                        "You cannot have duplicate resource names.") from sql3ie
+                app.logger.debug(
+                    f"{type(sql3ie)=}: {sql3ie=}")
+                raise
 
 @resources.route("/view/<uuid:resource_id>")
 @require_oauth("profile group resource")
