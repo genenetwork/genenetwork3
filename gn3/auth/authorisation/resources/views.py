@@ -10,9 +10,10 @@ from gn3.auth.db_utils import with_db_connection
 
 from .checks import authorised_for
 from .models import (
-    resource_by_id, resource_categories, assign_resource_user,
-    link_data_to_resource, unassign_resource_user, resource_category_by_id,
-    unlink_data_from_resource, create_resource as _create_resource)
+    Resource, save_resource, resource_by_id, resource_categories,
+    assign_resource_user, link_data_to_resource, unassign_resource_user,
+    resource_category_by_id, unlink_data_from_resource,
+    create_resource as _create_resource)
 
 from ..roles import Role
 from ..errors import InvalidData, InconsistencyError, AuthorisationError
@@ -214,3 +215,23 @@ def unassign_role_to_user(resource_id: uuid.UUID) -> Response:
             raise AuthorisationError(aserr.args[0]) from aserr
 
         return jsonify(with_db_connection(__assign__))
+
+@resources.route("<uuid:resource_id>/toggle-public", methods=["POST"])
+@require_oauth("profile group resource role")
+def toggle_public(resource_id: uuid.UUID) -> Response:
+    """Make a resource public if it is private, or private if public."""
+    with require_oauth.acquire("profile group resource") as the_token:
+        def __toggle__(conn: db.DbConnection) -> Resource:
+            old_rsc = resource_by_id(conn, the_token.user, resource_id)
+            return save_resource(
+                conn, the_token.user, Resource(
+                    old_rsc.group, old_rsc.resource_id, old_rsc.resource_name,
+                    old_rsc.resource_category, not old_rsc.public,
+                    old_rsc.resource_data))
+
+        resource = with_db_connection(__toggle__)
+        return jsonify({
+            "resource": dictify(resource),
+            "description": (
+                "Made resource public" if resource.public
+                else "Made resource private")})

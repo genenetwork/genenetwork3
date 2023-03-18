@@ -529,3 +529,30 @@ def unassign_resource_user(
                 f"The user '{user.name}'({user.email}) had the "
                 f"'{role.role.role_name}' role on resource with ID "
                 f"'{resource.resource_id}' taken away.")}
+
+def save_resource(
+        conn: db.DbConnection, user: User, resource: Resource) -> Resource:
+    """Update an existing resource."""
+    resource_id = resource.resource_id
+    authorised = authorised_for(
+        conn, user, ("group:resource:edit-resource",), (resource_id,))
+    if authorised[resource_id]:
+        with db.cursor(conn) as cursor:
+            params = {**dictify(resource), "public": 1 if resource.public else 0}
+            print(f"THE PARAMS: {params}")
+            cursor.execute(
+                "UPDATE resources SET "
+                "resource_name=:resource_name, "
+                "public=:public "
+                "WHERE group_id=:group_id "
+                "AND resource_id=:resource_id",
+                {
+                    "resource_name": resource.resource_name,
+                    "public": 1 if resource.public else 0,
+                    "group_id": str(resource.group.group_id),
+                    "resource_id": str(resource.resource_id)
+                })
+            return resource
+
+    raise AuthorisationError(
+        "You do not have the appropriate privileges to edit this resource.")
