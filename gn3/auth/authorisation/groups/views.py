@@ -177,7 +177,6 @@ def unlinked_data(resource_type: str) -> Response:
                 f") {type_filter}")
             cursor.execute(ids_query)
             ids = cursor.fetchall()
-            print(f"THE IDS: {ids} ==> {type_filter}")
 
             if ids:
                 clause = ", ".join(["(?, ?, ?)"] * len(ids))
@@ -204,7 +203,8 @@ def ungrouped_data(dataset_type: str) -> Response:
         with gn3dbutils.database_connection() as gn3conn:
             return jsonify(with_db_connection(partial(
                 retrieve_ungrouped_data, gn3conn=gn3conn,
-                dataset_type=dataset_type)))
+                dataset_type=dataset_type,
+                offset = int(request.args.get("offset", 0)))))
 
 @groups.route("/data/link", methods=["POST"])
 @require_oauth("profile group resource")

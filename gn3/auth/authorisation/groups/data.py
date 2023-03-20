@@ -20,8 +20,7 @@ def __fetch_grouped_data__(
         return tuple(dict(row) for row in cursor.fetchall())
 
 def __fetch_ungrouped_mrna_data__(
-        conn: gn3db.Connection, grouped_data,
-        offset: int = 0) -> Sequence[dict]:
+        conn: gn3db.Connection, grouped_data, offset: int) -> Sequence[dict]:
     """Fetch ungrouped mRNA Assay data."""
     query = ("SELECT psf.Id, psf.Name AS dataset_name, "
              "psf.FullName AS dataset_fullname, "
@@ -39,8 +38,7 @@ def __fetch_ungrouped_mrna_data__(
         return tuple(dict(row) for row in cursor.fetchall())
 
 def __fetch_ungrouped_geno_data__(
-        conn: gn3db.Connection, grouped_data,
-        offset: int = 0) -> Sequence[dict]:
+        conn: gn3db.Connection, grouped_data, offset: int) -> Sequence[dict]:
     """Fetch ungrouped Genotype data."""
     query = ("SELECT gf.Id, gf.Name AS dataset_name, "
              "gf.FullName AS dataset_fullname, "
@@ -58,8 +56,7 @@ def __fetch_ungrouped_geno_data__(
         return tuple(dict(row) for row in cursor.fetchall())
 
 def __fetch_ungrouped_pheno_data__(
-        conn: gn3db.Connection, grouped_data,
-        offset: int = 0) -> Sequence[dict]:
+        conn: gn3db.Connection, grouped_data, offset: int) -> Sequence[dict]:
     """Fetch ungrouped Phenotype data."""
     query = ("SELECT "
               "pxf.Id, iset.InbredSetName, pf.Name AS dataset_name, "
@@ -83,14 +80,15 @@ def __fetch_ungrouped_pheno_data__(
 
 def __fetch_ungrouped_data__(
         conn: gn3db.Connection, dataset_type: str,
-        ungrouped: Sequence[dict[str, Any]]) -> Sequence[dict[str, Any]]:
+        ungrouped: Sequence[dict[str, Any]],
+        offset) -> Sequence[dict[str, Any]]:
     """Fetch any ungrouped data."""
     fetch_fns = {
         "mrna": __fetch_ungrouped_mrna_data__,
         "genotype": __fetch_ungrouped_geno_data__,
         "phenotype": __fetch_ungrouped_pheno_data__
     }
-    return fetch_fns[dataset_type](conn, ungrouped)
+    return fetch_fns[dataset_type](conn, ungrouped, offset)
 
 @authorised_p(("system:data:link-to-group",),
               error_description=(
@@ -100,14 +98,15 @@ def __fetch_ungrouped_data__(
 def retrieve_ungrouped_data(
         authconn: authdb.DbConnection,
         gn3conn: gn3db.Connection,
-        dataset_type: str) -> Sequence[dict]:
+        dataset_type: str,
+        offset: int = 0) -> Sequence[dict]:
     """Retrieve any data not linked to any group."""
     if dataset_type not in ("mrna", "genotype", "phenotype"):
         raise InvalidData(
             "Requested dataset type is invalid. Expected one of "
             "'mrna', 'genotype' or 'phenotype'.")
     grouped_data = __fetch_grouped_data__(authconn, dataset_type)
-    return __fetch_ungrouped_data__(gn3conn, dataset_type, grouped_data)
+    return __fetch_ungrouped_data__(gn3conn, dataset_type, grouped_data, offset)
 
 def __fetch_mrna_data_by_id__(conn: gn3db.Connection, dataset_id: str) -> dict:
     """Fetch mRNA Assay data by ID."""
