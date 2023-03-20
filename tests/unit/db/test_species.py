@@ -51,5 +51,9 @@ class TestChromosomes(TestCase):
             cursor.fetchall.return_value = ()
             self.assertEqual(get_all_species(db_mock), ())
             cursor.execute.assert_called_once_with(
-                "SELECT Name, MenuName FROM Species ORDER BY OrderId"
+                "SELECT Name, MenuName, IFNULL(Family, 'None') "
+                "FROM Species "
+                "ORDER BY IFNULL(FamilyOrderId, SpeciesName) ASC, "
+                "IFNULL(Family, SpeciesName) ASC, "
+                "OrderId ASC"
             )
