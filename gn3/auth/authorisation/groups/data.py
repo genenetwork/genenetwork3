@@ -23,7 +23,8 @@ def __fetch_ungrouped_mrna_data__(
         conn: gn3db.Connection, grouped_data,
         offset: int = 0) -> Sequence[dict]:
     """Fetch ungrouped mRNA Assay data."""
-    query = ("SELECT psf.Id, psf.Name, psf.FullName, "
+    query = ("SELECT psf.Id, psf.Name AS dataset_name, "
+             "psf.FullName AS dataset_fullname, "
              "ifiles.GN_AccesionId AS accession_id FROM ProbeSetFreeze AS psf "
              "INNER JOIN InfoFiles AS ifiles ON psf.Name=ifiles.InfoPageName")
     params: tuple[Any, ...] = tuple()
@@ -41,7 +42,8 @@ def __fetch_ungrouped_geno_data__(
         conn: gn3db.Connection, grouped_data,
         offset: int = 0) -> Sequence[dict]:
     """Fetch ungrouped Genotype data."""
-    query = ("SELECT gf.Id, gf.Name, gf.FullName, "
+    query = ("SELECT gf.Id, gf.Name AS dataset_name, "
+             "gf.FullName AS dataset_fullname, "
              "ifiles.GN_AccesionId AS accession_id FROM GenoFreeze AS gf "
              "INNER JOIN InfoFiles AS ifiles ON gf.Name=ifiles.InfoPageName")
     params: tuple[Any, ...] = tuple()
@@ -59,13 +61,19 @@ def __fetch_ungrouped_pheno_data__(
         conn: gn3db.Connection, grouped_data,
         offset: int = 0) -> Sequence[dict]:
     """Fetch ungrouped Phenotype data."""
-    query = ("SELECT pf.Id, pf.Name, pf.FullName, "
-             "ifiles.GN_AccesionId AS accession_id FROM PublishFreeze AS pf "
-             "INNER JOIN InfoFiles AS ifiles ON pf.Name=ifiles.InfoPageName")
+    query = ("SELECT "
+              "pxf.Id, iset.InbredSetName, pf.Name AS dataset_name, "
+              "pf.FullName AS dataset_fullname, "
+              "pf.ShortName AS dataset_shortname "
+              "FROM PublishXRef AS pxf "
+              "INNER JOIN InbredSet AS iset "
+              "ON pxf.InbredSetId=iset.InbredSetId "
+              "LEFT JOIN PublishFreeze AS pf "
+              "ON iset.InbredSetId=pf.InbredSetId")
     params: tuple[Any, ...] = tuple()
     if bool(grouped_data):
         clause = ", ".join(["%s"] * len(grouped_data))
-        query = f"{query} WHERE pf.Id NOT IN ({clause})"
+        query = f"{query} WHERE pxf.Id NOT IN ({clause})"
         params = tuple(item["dataset_or_trait_id"] for item in grouped_data)
 
     query = f"{query} LIMIT 100 OFFSET %s"
