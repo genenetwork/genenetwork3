@@ -1,7 +1,6 @@
 """Module containing functions that work with sample data"""
 from typing import Any, Tuple, Dict, Callable
 
-import re
 import MySQLdb
 
 from gn3.csvcmp import extract_strain_name
@@ -63,45 +62,20 @@ def get_trait_csv_sample_data(
     conn: Any, trait_name: int, phenotype_id: int
 ) -> str:
     """Fetch a trait and return it as a csv string"""
-    case_attr_columns = set()
-    csv_data: Dict = {}
     with conn.cursor() as cursor:
         cursor.execute("""
 SELECT concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
-ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data',
-ifnull(ca.Name, 'x') AS 'CaseAttr', ifnull(cxref.value, 'x') AS 'Value'
+ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data'
 FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
 JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
 LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
 LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
-LEFT JOIN CaseAttributeXRefNew cxref ON (cxref.InbredSetId = px.InbredSetId
-AND cxref.StrainId = st.Id) LEFT JOIN CaseAttribute ca
-ON ca.Id = cxref.CaseAttributeId WHERE px.Id = %s
-AND px.PhenotypeId = %s ORDER BY st.Name""", (trait_name, phenotype_id))
-        for data in cursor.fetchall():
-            if data[1] == "x":
-                csv_data[data[0]] = None
-            else:
-                sample, case_attr, value = [
-                    re.sub(r"(\\n|\\r|\\t|\\)", "", x).strip()
-                    for x in [data[0], data[1], data[2]]
-                ]
-                if not csv_data.get(sample):
-                    csv_data[sample] = {}
-                csv_data[sample][case_attr] = value
-                case_attr_columns.add(case_attr)
-        if not case_attr_columns:
-            return "Strain Name,Value,SE,Count\n" + "\n".join(csv_data.keys())
-        columns = sorted(case_attr_columns)
-        csv = "Strain Name,Value,SE,Count," + ",".join(columns) + "\n"
-        for key, _value in csv_data.items():
-            if not _value:
-                csv += key + (len(case_attr_columns) * ",x") + "\n"
-            else:
-                vals = [str(_value.get(column, "x")) for column in columns]
-                csv += key + "," + ",".join(vals) + "\n"
-        return csv
-    return "No Sample Data Found"
+WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name""",
+                       (trait_name, phenotype_id))
+        if not (data := cursor.fetchall()):
+            return "No Sample Data Found"
+        return "Strain Name,Value,SE,Count\n" + \
+            "\n".join([el[0] for el in data])
 
 
 def get_sample_data_ids(
