@@ -213,7 +213,7 @@ def link_data() -> Response:
     with require_oauth.acquire("profile group resource") as _the_token:
         form = request.form
         group_id = uuid.UUID(form["group_id"])
-        dataset_id = form["dataset_id"]
+        dataset_ids = form.getlist("dataset_ids")
         dataset_type = form.get("dataset_type")
         if dataset_type not in ("mrna", "genotype", "phenotype"):
             raise InvalidData("Unexpected dataset type requested!")
@@ -221,7 +221,7 @@ def link_data() -> Response:
             group = group_by_id(conn, group_id)
             with gn3dbutils.database_connection() as gn3conn:
                 return link_data_to_group(
-                    conn, gn3conn, dataset_type, dataset_id, group)
+                    conn, gn3conn, dataset_type, dataset_ids, group)
 
         return jsonify(with_db_connection(__link__))
 
