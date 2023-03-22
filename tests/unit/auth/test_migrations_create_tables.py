@@ -14,9 +14,6 @@ migrations_and_tables = (
     ("20221108_02_wxTr9-create-privileges-table.py", "privileges"),
     ("20221108_03_Pbhb1-create-resource-categories-table.py", "resource_categories"),
     ("20221110_01_WtZ1I-create-resources-table.py", "resources"),
-    ("20221110_02_z1dWf-create-mrna-resources-table.py", "mrna_resources"),
-    ("20221110_03_ka3W0-create-phenotype-resources-table.py", "phenotype_resources"),
-    ("20221110_04_6PRFQ-create-genotype-resources-table.py", "genotype_resources"),
     ("20221110_05_BaNtL-create-roles-table.py", "roles"),
     ("20221110_06_Pq2kT-create-generic-roles-table.py", "generic_roles"),
     ("20221110_07_7WGa1-create-role-privileges-table.py", "role_privileges"),
@@ -32,8 +29,7 @@ migrations_and_tables = (
     ("20221219_03_PcTrb-create-authorisation-code-table.py",
      "authorisation_code"),
     ("20230207_01_r0bkZ-create-group-join-requests-table.py",
-     "group_join_requests"),
-    ("20230216_01_dgWjv-create-linked-group-data-table.py", "linked_group_data"))
+     "group_join_requests"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)

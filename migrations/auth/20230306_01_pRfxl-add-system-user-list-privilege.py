@@ -5,7 +5,7 @@ import contextlib
 
 from yoyo import step
 
-__depends__ = {'20230216_02_0ZHSl-make-dataset-id-and-trait-id-foreign-keys-in-tables'}
+__depends__ = {'20230210_02_lDK14-create-system-admin-role'}
 
 def insert_users_list_priv(conn):
     """Create a new 'system:user:list' privilege."""

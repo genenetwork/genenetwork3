@@ -4,7 +4,7 @@ Create 'roles' table
 
 from yoyo import step
 
-__depends__ = {'20221110_04_6PRFQ-create-genotype-resources-table'}
+__depends__ = {'20221110_01_WtZ1I-create-resources-table'}
 
 steps = [
     step(
