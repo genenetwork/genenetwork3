@@ -4,14 +4,14 @@ from typing import Any, Iterator, Protocol, Tuple
 from urllib.parse import urlparse
 import MySQLdb as mdb
 import xapian
-from gn3.settings import SQL_URI
+from flask import current_app
 
 
 def parse_db_url() -> Tuple:
     """function to parse SQL_URI env variable note:there\
     is a default value for SQL_URI so a tuple result is\
     always expected"""
-    parsed_db = urlparse(SQL_URI)
+    parsed_db = urlparse(current_app.config["SQL_URI"])
     return (
         parsed_db.hostname, parsed_db.username, parsed_db.password,
         parsed_db.path[1:], parsed_db.port)
