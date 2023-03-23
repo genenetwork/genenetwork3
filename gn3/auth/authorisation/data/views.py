@@ -9,6 +9,7 @@ from functools import reduce
 from typing import Sequence, Iterable
 
 import redis
+from MySQLdb.cursors import DictCursor
 from email_validator import validate_email, EmailNotValidError
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import request, jsonify, Response, Blueprint, current_app as app
@@ -39,6 +40,14 @@ from gn3.auth.authentication.oauth2.resource_server import require_oauth
 from gn3.auth.authentication.users import User, user_by_email, set_user_password
 
 data = Blueprint("data", __name__)
+
+@data.route("species")
+def list_species() -> Response:
+    """List all available species information."""
+    with (gn3db.database_connection() as gn3conn,
+          gn3conn.cursor(DictCursor) as cursor):
+        cursor.execute("SELECT * FROM Species")
+        return jsonify(tuple(dict(row) for row in cursor.fetchall()))
 
 @data.route("/authorisation", methods=["GET"])
 def authorisation() -> Response:
