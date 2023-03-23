@@ -21,6 +21,18 @@ A continuously deployed instance of genenetwork3 is available at
 redeployed on every commit provided that the [continuous integration
 tests](https://ci.genenetwork.org/jobs/genenetwork3) pass.
 
+## Configuration
+
+The system comes with some default configurations found in **"gn3/settings.py"**
+relative to the repository root.
+
+To overwrite these settings without changing the file, you can provide a path in
+the `GN3_CONF` environment variable, to a file containing those variables whose
+values you want to change.
+
+The `GN3_CONF` variable allows you to have your own environment-specific
+configurations rather than being forced to conform to the defaults.
+
 ## Installation
 
 #### GNU Guix packages
@@ -269,7 +281,7 @@ export FLASK_DEBUG=1
 export FLASK_APP="main.py"
 flask run --port=8080
 ```
-
+n
 And test with
 
 ```
