@@ -137,12 +137,13 @@ def client(conn: db.DbConnection, client_id: uuid.UUID,
             "SELECT * FROM oauth2_clients WHERE client_id=?", (str(client_id),))
         result = cursor.fetchone()
         the_user = user
-        if not bool(the_user):
-            try:
-                the_user = user_by_id(conn, result["user_id"])
-            except NotFoundError as _nfe:
-                the_user = None
         if result:
+            if not bool(the_user):
+                try:
+                    the_user = user_by_id(conn, result["user_id"])
+                except NotFoundError as _nfe:
+                    the_user = None
+
             return Just(
                 OAuth2Client(uuid.UUID(result["client_id"]),
                              result["client_secret"],
