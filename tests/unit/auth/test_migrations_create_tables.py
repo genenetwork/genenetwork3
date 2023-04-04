@@ -29,7 +29,15 @@ migrations_and_tables = (
     ("20221219_03_PcTrb-create-authorisation-code-table.py",
      "authorisation_code"),
     ("20230207_01_r0bkZ-create-group-join-requests-table.py",
-     "group_join_requests"))
+     "group_join_requests"),
+    ("20230322_01_0dDZR-create-linked-phenotype-data-table.py",
+     "linked_phenotype_data"),
+    ("20230322_02_Ll854-create-phenotype-resources-table.py",
+     "phenotype_resources"),
+    ("20230404_01_VKxXg-create-linked-genotype-data-table.py",
+     "linked_genotype_data"),
+    ("20230404_02_la33P-create-genotype-resources-table.py",
+     "genotype_resources"))
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize("migration_file,the_table", migrations_and_tables)

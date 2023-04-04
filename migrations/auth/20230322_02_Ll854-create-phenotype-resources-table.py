@@ -16,7 +16,7 @@ steps = [
           data_link_id TEXT NOT NULL,
           PRIMARY KEY(resource_id, data_link_id),
           UNIQUE (data_link_id) -- ensure data is linked to only one resource
-        )
+        ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS phenotype_resources")
 ]
