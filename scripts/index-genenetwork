@@ -299,12 +299,12 @@ def worker_queue(number_of_workers: int = os.cpu_count() or 1) -> Generator:
         process.join()
 
 
-def index_query(index_function: Callable, query: SQLQuery, xapian_build_directory: pathlib.Path, start: int = 0) -> None:
+def index_query(index_function: Callable, query: SQLQuery, xapian_build_directory: pathlib.Path, sql_uri: str, start: int = 0) -> None:
     """Run SQL query, and index its results for Xapian."""
     i = start
     try:
         with worker_queue() as spawn_worker:
-            with database_connection() as conn:
+            with database_connection(sql_uri) as conn:
                 for chunk in group(query_sql(conn, serialize_sql(
                         # KLUDGE: MariaDB does not allow an offset
                         # without a limit. So, set limit to a "high"
@@ -325,7 +325,7 @@ def index_query(index_function: Callable, query: SQLQuery, xapian_build_director
     except MySQLdb._exceptions.OperationalError:
         logging.warning("Reopening connection to recovering from SQL operational error",
                         exc_info=True)
-        index_query(index_function, query, xapian_build_directory, i)
+        index_query(index_function, query, xapian_build_directory, sql_uri, i)
 
 
 @contextlib.contextmanager
@@ -352,17 +352,18 @@ def xapian_compact(combined_index: pathlib.Path, indices: List[pathlib.Path]) ->
 
 @click.command(help="Index GeneNetwork data and build Xapian search index in XAPIAN_DIRECTORY.")
 @click.argument("xapian_directory")
+@click.argument("sql_uri")
 # pylint: disable=missing-function-docstring
-def main(xapian_directory: str) -> None:
+def main(xapian_directory: str, sql_uri: str) -> None:
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"),
                         format='%(relativeCreated)s: %(levelname)s: %(message)s')
     pathlib.Path(xapian_directory).mkdir(exist_ok=True)
     with temporary_directory("combined", xapian_directory) as combined_index:
         with temporary_directory("build", xapian_directory) as xapian_build_directory:
             logging.info("Indexing genes")
-            index_query(index_genes, genes_query, xapian_build_directory)
+            index_query(index_genes, genes_query, xapian_build_directory, sql_uri)
             logging.info("Indexing phenotypes")
-            index_query(index_phenotypes, phenotypes_query, xapian_build_directory)
+            index_query(index_phenotypes, phenotypes_query, xapian_build_directory, sql_uri)
             logging.info("Combining and compacting indices")
             xapian_compact(combined_index, list(xapian_build_directory.iterdir()))
         for child in combined_index.iterdir():
