@@ -23,7 +23,7 @@ def ungrouped_phenotype_data(
             (row["SpeciesId"], row["InbredSetId"], row["PublishFreezeId"],
              row["PublishXRefId"])
             for row in linked_phenotype_data(authconn))
-        paramstr = ", ".join(["(?, ?, ? ?)"] * len(params))
+        paramstr = ", ".join(["(?, ?, ?, ?)"] * len(params))
         query = (
             "SELECT spc.SpeciesId, iset.InbredSetId, pf.Id AS PublishFreezeId, "
             "pf.Name AS dataset_name, pf.FullName AS dataset_fullname, "

@@ -5,7 +5,7 @@ import json
 import random
 import string
 import datetime
-from functools import reduce
+from functools import reduce, partial
 from typing import Sequence, Iterable
 
 import redis
@@ -19,6 +19,7 @@ from gn3.db.traits import build_trait_name
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
+from gn3.auth.db_utils import with_db_connection
 
 from gn3.auth.authorisation.errors import NotFoundError
 
@@ -38,6 +39,8 @@ from gn3.auth.authorisation.errors import ForbiddenAccess
 
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 from gn3.auth.authentication.users import User, user_by_email, set_user_password
+
+from gn3.auth.authorisation.data.genotypes import ungrouped_genotype_data
 
 data = Blueprint("data", __name__)
 
@@ -305,3 +308,31 @@ def migrate_users_data() -> Response:
                 "The data migration service is currently unavailable.")
         }),
         status=500, mimetype="application/json")
+
+def __search_mrna__():
+    pass
+
+def __search_genotypes__():
+    query = request.form.get("query", request.args.get("query", ""))
+    limit = int(request.form.get("limit", request.args.get("limit", 10000)))
+    offset = int(request.form.get("offset", request.args.get("offset", 0)))
+    with gn3db.database_connection() as gn3conn:
+        __ungrouped__ = partial(
+            ungrouped_genotype_data, gn3conn=gn3conn, search_query=query,
+            limit=limit, offset=offset)
+        return jsonify(with_db_connection(__ungrouped__))
+
+def __search_phenotypes__():
+    pass
+
+@data.route("/search", methods=["GET"])
+@require_oauth("profile group resource")
+def search_unlinked_data():
+    """Search for various unlinked data."""
+    dataset_type = request.form["dataset_type"]
+    search_fns = {
+        "mrna": __search_mrna__,
+        "genotype": __search_genotypes__,
+        "phenotype": __search_phenotypes__
+    }
+    return search_fns[dataset_type]()
