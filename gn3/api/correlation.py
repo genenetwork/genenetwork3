@@ -9,7 +9,7 @@ from flask import request
 from flask import current_app
 
 from gn3.settings import SQL_URI
-from gn3.db_utils import database_connector
+from gn3.db_utils import database_connection
 from gn3.commands import run_sample_corr_cmd
 from gn3.responses.pcorrs_responses import build_response
 from gn3.commands import run_async_cmd, compose_pcorrs_command
@@ -64,7 +64,7 @@ def compute_lit_corr(species=None, gene_id=None):
     might be needed for actual computing of the correlation results
     """
 
-    with database_connector() as conn:
+    with database_connection(current_app.config["SQL_URI"]) as conn:
         target_traits_gene_ids = request.get_json()
         target_trait_gene_list = list(target_traits_gene_ids.items())
 

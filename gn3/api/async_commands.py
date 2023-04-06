@@ -11,6 +11,6 @@ def command_state(command_id):
         state = rconn.hgetall(name=command_id)
         if not state:
             return jsonify(
-                status=404,
-                error="The command id provided does not exist.")
+                error="The command id provided does not exist.",
+                status="error"), 404
         return jsonify(dict(state.items()))

@@ -65,15 +65,15 @@ class CorrelationIntegrationTest(TestCase):
 
     @pytest.mark.integration_test
     @mock.patch("gn3.api.correlation.compute_all_lit_correlation")
-    @mock.patch("gn3.api.correlation.database_connector")
-    def test_lit_correlation(self, database_connector, mock_compute_corr):
+    @mock.patch("gn3.api.correlation.database_connection")
+    def test_lit_correlation(self, database_connection, mock_compute_corr):
         """Test api/correlation/lit_corr/{species}/{gene_id}"""
 
         mock_compute_corr.return_value = []
 
-        database_connector.return_value = mock.Mock()
-        database_connector.return_value.__enter__ = mock.Mock()
-        database_connector.return_value.__exit__ = mock.Mock()
+        database_connection.return_value = mock.Mock()
+        database_connection.return_value.__enter__ = mock.Mock()
+        database_connection.return_value.__exit__ = mock.Mock()
 
         post_data = {"1426678_at": "68031",
                      "1426679_at": "68036",

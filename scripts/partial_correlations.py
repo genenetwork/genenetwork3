@@ -4,7 +4,7 @@ import json
 import traceback
 from argparse import ArgumentParser
 
-from gn3.db_utils import database_connector
+from gn3.db_utils import database_connection
 from gn3.responses.pcorrs_responses import OutputEncoder
 from gn3.computations.partial_correlations import (
     partial_correlations_with_target_db,
@@ -108,6 +108,10 @@ def process_cli_arguments():
         help="The correlation method to use",
         type=str,
         choices=("pearsons", "spearmans"))
+    parser.add_argument(
+        "sql_uri",
+        help="The uri to use to connect to the database",
+        type=str)
     against_db_parser(against_traits_parser(
         parser.add_subparsers(
             title="subcommands",
@@ -119,7 +123,7 @@ def main():
     """Entry point for the script"""
     args = process_cli_arguments()
 
-    with database_connector() as conn:
+    with database_connection(args.sql_uri) as conn:
         print(json.dumps(run_pcorrs(conn, args), cls=OutputEncoder))
 
 

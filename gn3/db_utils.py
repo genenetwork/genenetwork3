@@ -17,15 +17,6 @@ def parse_db_url(sql_uri: str) -> Tuple:
         parsed_db.path[1:], parsed_db.port)
 
 
-# This function is deprecated. Use database_connection instead.
-def database_connector(sql_uri: str = "") -> mdb.Connection:
-    """function to create db connector"""
-    host, user, passwd, db_name, db_port = parse_db_url(
-        sql_uri or current_app.config["SQL_URI"])
-
-    return mdb.connect(host, user, passwd, db_name, port=(db_port or 3306))
-
-
 # pylint: disable=missing-class-docstring, missing-function-docstring, too-few-public-methods
 class Connection(Protocol):
     """Type Annotation for MySQLdb's connection object"""

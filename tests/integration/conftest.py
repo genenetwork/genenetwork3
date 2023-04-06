@@ -4,7 +4,7 @@ import MySQLdb
 
 from gn3.app import create_app
 from gn3.chancy import random_string
-from gn3.db_utils import parse_db_url, database_connector
+from gn3.db_utils import parse_db_url, database_connection
 
 @pytest.fixture(scope="session")
 def client():
@@ -18,17 +18,18 @@ def client():
 
 
 @pytest.fixture(scope="session")
-def db_conn():
+def db_conn(client):
     """Create a db connection fixture for tests"""
     # 01) Generate random string to append to all test db artifacts for the session
+    live_db_uri = client.application.config["SQL_URI"]
     rand_str = random_string(15)
-    live_db_details = parse_db_url()
+    live_db_details = parse_db_url(live_db_uri)
     test_db_name = f"test_{live_db_details[3]}_{rand_str}"
     #
     # 02) Create new test db
     #     Use context manager to ensure the live connection is automatically
     #     closed on exit
-    with database_connector() as live_db_conn:
+    with database_connection(live_db_uri) as live_db_conn:
         with live_db_conn.cursor() as live_db_cursor:
             live_db_cursor.execute(f"CREATE DATABASE {test_db_name}")
             #

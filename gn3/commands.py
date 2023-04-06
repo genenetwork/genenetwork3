@@ -14,6 +14,8 @@ from typing import Tuple
 from typing import Union
 from typing import Sequence
 from uuid import uuid4
+
+from flask import current_app
 from redis.client import Redis  # Used only in type hinting
 
 from gn3.chancy import random_string
@@ -80,7 +82,8 @@ def compose_pcorrs_command(
 
     prefix_cmd = (
         f"{sys.executable}", "-m", "scripts.partial_correlations",
-        primary_trait, ",".join(control_traits), __parse_method__(method))
+        primary_trait, ",".join(control_traits), __parse_method__(method),
+        current_app.config["SQL_URI"])
     if (
             kwargs.get("target_database") is not None
             and kwargs.get("target_traits") is None):

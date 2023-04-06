@@ -5,9 +5,9 @@ Module to hold the entrypoint functions that generate heatmaps
 import io
 from flask import jsonify
 from flask import request
-from flask import Blueprint
+from flask import Blueprint, current_app
 from gn3.heatmaps import build_heatmap
-from gn3.db_utils import database_connector
+from gn3.db_utils import database_connection
 
 heatmaps = Blueprint("heatmaps", __name__)
 
@@ -24,7 +24,7 @@ def clustered_heatmaps():
         return jsonify({
             "message": "You need to provide at least two trait names."
         }), 400
-    with database_connector() as conn:
+    with database_connection(current_app.config["SQL_URI"]) as conn:
         def parse_trait_fullname(trait):
             name_parts = trait.split(":")
             return f"{name_parts[1]}::{name_parts[0]}"

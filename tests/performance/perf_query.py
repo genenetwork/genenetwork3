@@ -7,7 +7,7 @@ from inspect import getmembers
 from inspect import isfunction
 
 from functools import wraps
-from gn3.db_utils import database_connector
+from gn3.db_utils import database_connection
 
 
 def timer(func):
@@ -26,9 +26,10 @@ def timer(func):
 
 
 def query_executor(query: str,
+                   sql_uri: str,
                    fetch_all: bool = True):
     """function to execute a query"""
-    with database_connector() as conn:
+    with database_connection(sql_uri) as conn:
         with conn.cursor() as cursor:
             cursor.execute(query)
 
@@ -58,22 +59,22 @@ def fetch_probeset_query(dataset_name: str):
 
 
 @timer
-def perf_hc_m2_dataset():
+def perf_hc_m2_dataset(sql_uri: str):
     """test the default dataset HC_M2_0606_P"""
 
     dataset_name = "HC_M2_0606_P"
     print(f"Performance test for {dataset_name}")
 
-    query_executor(fetch_probeset_query(dataset_name=dataset_name))
+    query_executor(fetch_probeset_query(dataset_name=dataset_name), sql_uri)
 
 
 @timer
-def perf_umutaffyexon_dataset():
+def perf_umutaffyexon_dataset(sql_uri):
     """largest dataset in gn"""
 
     dataset_name = "UMUTAffyExon_0209_RMA"
     print(f"Performance test for {dataset_name}")
-    query_executor(fetch_probeset_query(dataset_name=dataset_name))
+    query_executor(fetch_probeset_query(dataset_name=dataset_name), sql_uri)
 
 
 def fetch_perf_functions():
@@ -102,6 +103,7 @@ def fetch_cmd_args():
 
 
 if __name__ == '__main__':
+    # Figure out how to pass the database uri here... Maybe use click.
     func_list = fetch_cmd_args()
     for func_obj in func_list:
         func_obj()

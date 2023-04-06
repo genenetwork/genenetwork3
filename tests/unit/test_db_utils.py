@@ -1,49 +1,28 @@
 """module contains test for db_utils"""
-
-from unittest import TestCase
 from unittest import mock
-from types import SimpleNamespace
 
 import pytest
 
 import gn3
-from gn3.db_utils import database_connector
-from gn3.db_utils import parse_db_url
+from gn3.db_utils import parse_db_url, database_connection
 
-@pytest.fixture(scope="class")
-def setup_app(request, fxtr_app):
-    """Setup the fixtures for the class."""
-    request.cls.app = fxtr_app
+@pytest.mark.unit_test
+@mock.patch("gn3.db_utils.mdb")
+@mock.patch("gn3.db_utils.parse_db_url")
+def test_database_connection(mock_db_parser, mock_sql):
+    """test for creating database connection"""
+    print(f"MOCK SQL: {mock_sql}")
+    print(f"MOCK DB PARSER: {mock_db_parser}")
+    mock_db_parser.return_value = ("localhost", "guest", "4321", "users", None)
 
-class TestDatabase(TestCase):
-    """class contains testd for db connection functions"""
-
-    @pytest.mark.unit_test
-    @mock.patch("gn3.db_utils.mdb")
-    @mock.patch("gn3.db_utils.parse_db_url")
-    def test_database_connector(self, mock_db_parser, mock_sql):
-        """test for creating database connection"""
-        mock_db_parser.return_value = ("localhost", "guest", "4321", "users", None)
-        callable_cursor = lambda: SimpleNamespace(execute=3)
-        cursor_object = SimpleNamespace(cursor=callable_cursor)
-        mock_sql.connect.return_value = cursor_object
-        mock_sql.close.return_value = None
-        results = database_connector()
-
+    with database_connection("mysql://guest:4321@localhost/users") as conn:
         mock_sql.connect.assert_called_with(
-            "localhost", "guest", "4321", "users", port=3306)
-        self.assertIsInstance(
-            results, SimpleNamespace, "database not created successfully")
+            db="users", user="guest", passwd="4321", host="localhost",
+            port=3306)
 
-    @pytest.mark.unit_test
-    @pytest.mark.usefixtures("setup_app")
-    def test_parse_db_url(self):
-        """test for parsing db_uri env variable"""
-        print(self.__dict__)
-        with self.app.app_context(), mock.patch.dict(# pylint: disable=[no-member]
-                gn3.db_utils.current_app.config,
-                {"SQL_URI": "mysql://username:4321@localhost/test"},
-                clear=True):
-            results = parse_db_url()
-            expected_results = ("localhost", "username", "4321", "test", None)
-            self.assertEqual(results, expected_results)
+@pytest.mark.unit_test
+def test_parse_db_url():
+    """test for parsing db_uri env variable"""
+    results = parse_db_url("mysql://username:4321@localhost/test")
+    expected_results = ("localhost", "username", "4321", "test", None)
+    assert results == expected_results
