@@ -18,7 +18,7 @@ def client():
 
 
 @pytest.fixture(scope="session")
-def db_conn(client):
+def db_conn(client): # pylint: disable=[redefined-outer-name]
     """Create a db connection fixture for tests"""
     # 01) Generate random string to append to all test db artifacts for the session
     live_db_uri = client.application.config["SQL_URI"]
