@@ -6,7 +6,7 @@ import random
 import string
 import datetime
 from functools import reduce, partial
-from typing import Sequence, Iterable
+from typing import Any, Sequence, Iterable
 
 import redis
 from MySQLdb.cursors import DictCursor
@@ -21,14 +21,14 @@ from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
-from gn3.auth.authorisation.errors import NotFoundError
+from gn3.auth.authorisation.errors import InvalidData, NotFoundError
 
 from gn3.auth.authorisation.roles.models import(
     revoke_user_role_by_name, assign_user_role_by_name)
 
 from gn3.auth.authorisation.groups.data import retrieve_ungrouped_data
 from gn3.auth.authorisation.groups.models import (
-    Group, user_group, add_user_to_group)
+    Group, user_group, group_by_id, add_user_to_group)
 
 from gn3.auth.authorisation.resources.checks import authorised_for
 from gn3.auth.authorisation.resources.models import (
@@ -40,7 +40,8 @@ from gn3.auth.authorisation.errors import ForbiddenAccess
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 from gn3.auth.authentication.users import User, user_by_email, set_user_password
 
-from gn3.auth.authorisation.data.genotypes import ungrouped_genotype_data
+from gn3.auth.authorisation.data.genotypes import (
+    link_genotype_data, ungrouped_genotype_data)
 
 data = Blueprint("data", __name__)
 
@@ -336,3 +337,28 @@ def search_unlinked_data():
         "phenotype": __search_phenotypes__
     }
     return search_fns[dataset_type]()
+
+@data.route("/link/genotype", methods=["POST"])
+def link_genotypes() -> Response:
+    """Link genotype data to group."""
+    def __values__(form) -> dict[str, Any]:
+        if not bool(form.get("species_name", "").strip()):
+            raise InvalidData("Expected 'species_name' not provided.")
+        if not bool(form.get("group_id")):
+            raise InvalidData("Expected 'group_id' not provided.",)
+        try:
+            _group_id = uuid.UUID(form.get("group_id"))
+        except TypeError as terr:
+            raise InvalidData("Expected a UUID for 'group_id' value.") from terr
+        if not bool(form.get("selected_datasets")):
+            raise InvalidData("Expected at least one dataset to be provided.")
+        return {
+            "group_id": uuid.UUID(form.get("group_id")),
+            "datasets": form.get("selected_datasets")
+        }
+
+    def __link__(conn: db.DbConnection, group_id: uuid.UUID, datasets: dict):
+        return link_genotype_data(conn, group_by_id(conn, group_id), datasets)
+
+    return jsonify(with_db_connection(
+        partial(__link__, **__values__(request.json))))

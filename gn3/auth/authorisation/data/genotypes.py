@@ -1,11 +1,14 @@
 """Handle linking of Genotype data to the Auth(entic|oris)ation system."""
+import uuid
 from typing import Iterable
 
 from MySQLdb.cursors import DictCursor
 
 import gn3.auth.db as authdb
 import gn3.db_utils as gn3db
+from gn3.auth.dictify import dictify
 from gn3.auth.authorisation.checks import authorised_p
+from gn3.auth.authorisation.groups.models import Group
 
 def linked_genotype_data(conn: authdb.DbConnection) -> Iterable[dict]:
     """Retrive genotype data that is linked to user groups."""
@@ -39,11 +42,11 @@ def ungrouped_genotype_data(
         query = query + "WHERE "
 
     if len(params) > 0:
-        paramstr = ", ".join(["(?, ?, ?)"] * len(params))
+        paramstr = ", ".join(["(%s, %s, %s)"] * len(params))
         query = query + (
-            "(s.SpeciesId, iset.InbredSetId, GenoFreezeId) "
+            "(s.SpeciesId, iset.InbredSetId, gf.Id) "
             f"NOT IN ({paramstr}) "
-            "AND ")
+            ) + ("AND " if bool(search_query) else "")
 
     if bool(search_query):
         query = query + (
@@ -51,7 +54,41 @@ def ungrouped_genotype_data(
         params = params + ((search_query,),)# type: ignore[operator]
 
     query = query + f"LIMIT {int(limit)} OFFSET {int(offset)}"
+    final_params = tuple(item for sublist in params for item in sublist)
     with gn3conn.cursor(DictCursor) as cursor:
         cursor.execute(
-            query, tuple(item for sublist in params for item in sublist))
+            query, final_params)
         return tuple(row for row in cursor.fetchall())
+
+@authorised_p(
+    ("system:data:link-to-group",),
+    error_description=(
+        "You do not have sufficient privileges to link data to (a) "
+        "group(s)."),
+    oauth2_scope="profile group resource")
+def link_genotype_data(
+        conn: authdb.DbConnection, group: Group, datasets: dict) -> dict:
+    """Link genotye `datasets` to `group`."""
+    with authdb.cursor(conn) as cursor:
+        cursor.executemany(
+            "INSERT INTO linked_genotype_data VALUES "
+            "(:data_link_id, :group_id, :SpeciesId, :InbredSetId, "
+            ":GenoFreezeId, :dataset_name, :dataset_fullname, "
+            ":dataset_shortname) "
+            "ON CONFLICT (SpeciesId, InbredSetId, GenoFreezeId) DO NOTHING",
+            tuple({
+                "data_link_id": str(uuid.uuid4()),
+                "group_id": str(group.group_id),
+                **{
+                    key: value for key,value in dataset.items() if key in (
+                        "GenoFreezeId", "InbredSetId", "SpeciesId",
+                        "dataset_fullname", "dataset_name", "dataset_shortname")
+                }
+            } for dataset in datasets))
+        return {
+            "description": (
+                f"Successfully linked {len(datasets)} to group "
+                f"'{group.group_name}'."),
+            "group": dictify(group),
+            "datasets": datasets
+        }
