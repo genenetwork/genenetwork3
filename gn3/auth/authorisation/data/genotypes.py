@@ -21,14 +21,17 @@ def linked_genotype_data(conn: authdb.DbConnection) -> Iterable[dict]:
                   "You do not have sufficient privileges to link data to (a) "
                   "group(s)."),
               oauth2_scope="profile group resource")
-def ungrouped_genotype_data(
+def ungrouped_genotype_data(# pylint: disable=[too-many-arguments]
         authconn: authdb.DbConnection, gn3conn: gn3db.Connection,
-        search_query: str, limit: int = 10000, offset: int = 0) -> tuple[
+        search_query: str, selected: tuple[dict, ...] = tuple(),
+        limit: int = 10000, offset: int = 0) -> tuple[
             dict, ...]:
     """Retrieve genotype data that is not linked to any user group."""
     params = tuple(
         (row["SpeciesId"], row["InbredSetId"], row["GenoFreezeId"])
-            for row in linked_genotype_data(authconn))
+            for row in linked_genotype_data(authconn)) + tuple(
+                    (row["SpeciesId"], row["InbredSetId"], row["GenoFreezeId"])
+                    for row in selected)
     query = (
         "SELECT s.SpeciesId, iset.InbredSetId, iset.InbredSetName, "
         "gf.Id AS GenoFreezeId, gf.Name AS dataset_name, "
@@ -50,14 +53,13 @@ def ungrouped_genotype_data(
 
     if bool(search_query):
         query = query + (
-            "CONCAT(gf.Name, ' ', gf.FullName, ' ', gf.ShortName) LIKE '%%?%%' ")
-        params = params + ((search_query,),)# type: ignore[operator]
+            "CONCAT(gf.Name, ' ', gf.FullName, ' ', gf.ShortName) LIKE %s ")
+        params = params + ((f"%{search_query}%",),)# type: ignore[operator]
 
     query = query + f"LIMIT {int(limit)} OFFSET {int(offset)}"
-    final_params = tuple(item for sublist in params for item in sublist)
     with gn3conn.cursor(DictCursor) as cursor:
         cursor.execute(
-            query, final_params)
+            query, tuple(item for sublist in params for item in sublist))
         return tuple(row for row in cursor.fetchall())
 
 @authorised_p(

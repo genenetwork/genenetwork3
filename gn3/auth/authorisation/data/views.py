@@ -313,13 +313,28 @@ def migrate_users_data() -> Response:
 def __search_mrna__():
     pass
 
+def __request_key__(key: str, default: Any = ""):
+    if bool(request.json):
+        return request.json.get(#type: ignore[union-attr]
+            key, request.args.get(key, request.form.get(key, default)))
+    return request.args.get(key, request.form.get(key, default))
+
+def __request_key_list__(key: str, default: tuple[Any, ...] = tuple()):
+    if bool(request.json):
+        return (request.json.get(key,[])#type: ignore[union-attr]
+                or request.args.getlist(key) or request.form.getlist(key)
+                or list(default))
+    return (request.args.getlist(key)
+            or request.form.getlist(key) or list(default))
+
 def __search_genotypes__():
-    query = request.form.get("query", request.args.get("query", ""))
-    limit = int(request.form.get("limit", request.args.get("limit", 10000)))
-    offset = int(request.form.get("offset", request.args.get("offset", 0)))
+    query = __request_key__("query", "")
+    limit = int(__request_key__("limit", 10000))
+    offset = int(__request_key__("offset", 0))
     with gn3db.database_connection() as gn3conn:
         __ungrouped__ = partial(
             ungrouped_genotype_data, gn3conn=gn3conn, search_query=query,
+            selected=__request_key_list__("selected"),
             limit=limit, offset=offset)
         return jsonify(with_db_connection(__ungrouped__))
 
@@ -330,7 +345,7 @@ def __search_phenotypes__():
 @require_oauth("profile group resource")
 def search_unlinked_data():
     """Search for various unlinked data."""
-    dataset_type = request.form["dataset_type"]
+    dataset_type = request.json["dataset_type"]
     search_fns = {
         "mrna": __search_mrna__,
         "genotype": __search_genotypes__,
