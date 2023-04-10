@@ -15,7 +15,10 @@ steps = [
           resource_id TEXT NOT NULL, -- A resource can have multiple data items
           data_link_id TEXT NOT NULL,
           PRIMARY KEY(resource_id, data_link_id),
-          UNIQUE (data_link_id) -- ensure data is linked to only one resource
+          UNIQUE (data_link_id), -- ensure data is linked to only one resource
+          FOREIGN KEY (data_link_id)
+            REFERENCES linked_phenotype_data(data_link_id)
+            ON UPDATE CASCADE ON DELETE RESTRICT
         ) WITHOUT ROWID
         """,
         "DROP TABLE IF EXISTS phenotype_resources")
