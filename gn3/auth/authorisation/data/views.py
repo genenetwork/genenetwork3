@@ -365,11 +365,11 @@ def link_genotypes() -> Response:
             _group_id = uuid.UUID(form.get("group_id"))
         except TypeError as terr:
             raise InvalidData("Expected a UUID for 'group_id' value.") from terr
-        if not bool(form.get("selected_datasets")):
+        if not bool(form.get("selected")):
             raise InvalidData("Expected at least one dataset to be provided.")
         return {
             "group_id": uuid.UUID(form.get("group_id")),
-            "datasets": form.get("selected_datasets")
+            "datasets": form.get("selected")
         }
 
     def __link__(conn: db.DbConnection, group_id: uuid.UUID, datasets: dict):
