@@ -40,6 +40,7 @@ from gn3.auth.authorisation.errors import ForbiddenAccess
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 from gn3.auth.authentication.users import User, user_by_email, set_user_password
 
+from gn3.auth.authorisation.data.mrna import link_mrna_data, ungrouped_mrna_data
 from gn3.auth.authorisation.data.genotypes import (
     link_genotype_data, ungrouped_genotype_data)
 
@@ -311,7 +312,15 @@ def migrate_users_data() -> Response:
         status=500, mimetype="application/json")
 
 def __search_mrna__():
-    pass
+    query = __request_key__("query", "")
+    limit = int(__request_key__("limit", 10000))
+    offset = int(__request_key__("offset", 0))
+    with gn3db.database_connection() as gn3conn:
+        __ungrouped__ = partial(
+            ungrouped_mrna_data, gn3conn=gn3conn, search_query=query,
+            selected=__request_key_list__("selected"),
+            limit=limit, offset=offset)
+        return jsonify(with_db_connection(__ungrouped__))
 
 def __request_key__(key: str, default: Any = ""):
     if bool(request.json):
@@ -374,6 +383,31 @@ def link_genotypes() -> Response:
 
     def __link__(conn: db.DbConnection, group_id: uuid.UUID, datasets: dict):
         return link_genotype_data(conn, group_by_id(conn, group_id), datasets)
+
+    return jsonify(with_db_connection(
+        partial(__link__, **__values__(request.json))))
+
+@data.route("/link/mrna", methods=["POST"])
+def link_mrna() -> Response:
+    """Link mrna data to group."""
+    def __values__(form) -> dict[str, Any]:
+        if not bool(form.get("species_name", "").strip()):
+            raise InvalidData("Expected 'species_name' not provided.")
+        if not bool(form.get("group_id")):
+            raise InvalidData("Expected 'group_id' not provided.",)
+        try:
+            _group_id = uuid.UUID(form.get("group_id"))
+        except TypeError as terr:
+            raise InvalidData("Expected a UUID for 'group_id' value.") from terr
+        if not bool(form.get("selected")):
+            raise InvalidData("Expected at least one dataset to be provided.")
+        return {
+            "group_id": uuid.UUID(form.get("group_id")),
+            "datasets": form.get("selected")
+        }
+
+    def __link__(conn: db.DbConnection, group_id: uuid.UUID, datasets: dict):
+        return link_mrna_data(conn, group_by_id(conn, group_id), datasets)
 
     return jsonify(with_db_connection(
         partial(__link__, **__values__(request.json))))
