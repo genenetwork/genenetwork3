@@ -217,9 +217,8 @@ def mrna_resource_data(
         cursor: db.DbCursor, resource_id: UUID) -> Sequence[sqlite3.Row]:
     """Fetch data linked to a mRNA resource"""
     cursor.execute(
-        "SELECT * FROM mrna_resources AS mr INNER JOIN linked_group_data AS lgd"
-        " ON (mr.dataset_id=lgd.dataset_or_trait_id "
-        "AND mr.dataset_type=lgd.dataset_type) "
+        "SELECT * FROM mrna_resources AS mr INNER JOIN linked_mrna_data AS lmr"
+        " ON mr.data_link_id=lmr.data_link_id "
         "WHERE mr.resource_id=?",
         (str(resource_id),))
     return cursor.fetchall()
@@ -229,9 +228,8 @@ def genotype_resource_data(
     """Fetch data linked to a Genotype resource"""
     cursor.execute(
         "SELECT * FROM genotype_resources AS gr "
-        "INNER JOIN linked_group_data AS lgd "
-        "ON (gr.trait_id=lgd.dataset_or_trait_id "
-        "AND gr.dataset_type=lgd.dataset_type) "
+        "INNER JOIN linked_genotype_data AS lgd "
+        "ON gr.data_link_id=lgd.data_link_id "
         "WHERE gr.resource_id=?",
         (str(resource_id),))
     return cursor.fetchall()
@@ -241,9 +239,9 @@ def phenotype_resource_data(
     """Fetch data linked to a Phenotype resource"""
     cursor.execute(
         "SELECT * FROM phenotype_resources AS pr "
-        "INNER JOIN linked_group_data AS lgd "
-        "ON (pr.trait_id=lgd.dataset_or_trait_id "
-        "AND pr.dataset_type=lgd.dataset_type) "
+        "INNER JOIN linked_phenotype_data AS lpd "
+        "ON (pr.trait_id=lpd.dataset_or_trait_id "
+        "AND pr.dataset_type=lpd.dataset_type) "
         "WHERE pr.resource_id=?",
         (str(resource_id),))
     return cursor.fetchall()

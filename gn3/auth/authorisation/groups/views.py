@@ -14,11 +14,11 @@ from gn3.auth.db_utils import with_db_connection
 
 from .data import link_data_to_group, retrieve_ungrouped_data
 from .models import (
-    user_group, all_groups, DUMMY_GROUP, GroupRole, group_by_id, join_requests,
-    group_role_by_id, GroupCreationError, accept_reject_join_request,
-    group_users as _group_users, create_group as _create_group,
-    add_privilege_to_group_role, delete_privilege_to_group_role,
-    create_group_role as _create_group_role)
+    Group, user_group, all_groups, DUMMY_GROUP, GroupRole, group_by_id,
+    join_requests, group_role_by_id, GroupCreationError,
+    accept_reject_join_request, group_users as _group_users,
+    create_group as _create_group, add_privilege_to_group_role,
+    delete_privilege_to_group_role, create_group_role as _create_group_role)
 
 from ..roles.models import Role
 from ..checks import authorised_p
@@ -138,6 +138,42 @@ def reject_join_requests() -> Response:
             accept_reject_join_request, request_id=request_id,
             user=the_token.user, status="REJECTED")))
 
+def unlinked_mrna_data(
+        conn: db.DbConnection, group: Group) -> tuple[dict, ...]:
+    """
+    Retrieve all mRNA Assay data linked to a group but not linked to any
+    resource.
+    """
+    query = (
+        "SELECT lmd.* FROM linked_mrna_data lmd "
+        "LEFT JOIN mrna_resources mr ON lmd.data_link_id=mr.data_link_id "
+        "WHERE lmd.group_id=? AND mr.data_link_id IS NULL")
+    with db.cursor(conn) as cursor:
+        cursor.execute(query, (str(group.group_id),))
+        return tuple(dict(row) for row in cursor.fetchall())
+
+def unlinked_genotype_data(
+        conn: db.DbConnection, group: Group) -> tuple[dict, ...]:
+    """
+    Retrieve all genotype data linked to a group but not linked to any resource.
+    """
+    query = (
+        "SELECT lgd.* FROM linked_genotype_data lgd "
+        "LEFT JOIN genotype_resources gr ON lgd.data_link_id=gr.data_link_id "
+        "WHERE lgd.group_id=? AND gr.data_link_id IS NULL")
+    with db.cursor(conn) as cursor:
+        cursor.execute(query, (str(group.group_id),))
+        return tuple(dict(row) for row in cursor.fetchall())
+
+def unlinked_phenotype_data(
+        conn: db.DbConnection, group: Group) -> tuple[dict, ...]:#pylint: disable=[unused-argument]
+    """
+    Retrieve all phenotype data linked to a group but not linked to any
+    resource.
+    """
+    raise NotImplementedError(
+        "The feature to fetch unlinked phenotype data is not implemented yet.")
+
 @groups.route("/<string:resource_type>/unlinked-data")
 @require_oauth("profile group resource")
 def unlinked_data(resource_type: str) -> Response:
@@ -147,48 +183,19 @@ def unlinked_data(resource_type: str) -> Response:
 
     with require_oauth.acquire("profile group resource") as the_token:
         db_uri = current_app.config["AUTH_DB"]
-        with db.connection(db_uri) as conn, db.cursor(conn) as cursor:
+        with db.connection(db_uri) as conn:
             ugroup = user_group(conn, the_token.user).maybe(# type: ignore[misc]
                 DUMMY_GROUP, lambda grp: grp)
             if ugroup == DUMMY_GROUP:
                 return jsonify(tuple())
-            type_filter = {
-                "all": "",
-                "mrna": 'WHERE dataset_type="mRNA"',
-                "genotype": 'WHERE dataset_type="Genotype"',
-                "phenotype": 'WHERE dataset_type="Phenotype"'
-            }[resource_type]
 
-            except_filter = (
-                "SELECT group_id, dataset_type, "
-                "dataset_id AS dataset_or_trait_id FROM mrna_resources "
-                "UNION "
-                "SELECT group_id, dataset_type, "
-                "trait_id AS dataset_or_trait_id FROM genotype_resources "
-                "UNION "
-                "SELECT group_id, dataset_type, "
-                "trait_id AS dataset_or_trait_id FROM phenotype_resources")
-
-            ids_query = (
-                "SELECT * FROM ("
-                "SELECT group_id, dataset_type, dataset_or_trait_id "
-                "FROM linked_group_data "
-                f"EXCEPT SELECT * FROM ({except_filter})"
-                f") {type_filter}")
-            cursor.execute(ids_query)
-            ids = cursor.fetchall()
-
-            if ids:
-                clause = ", ".join(["(?, ?, ?)"] * len(ids))
-                data_query = (
-                    "SELECT * FROM linked_group_data "
-                    "WHERE (group_id, dataset_type, dataset_or_trait_id) "
-                    f"IN (VALUES {clause}) ")
-                params = tuple(item for sublist in
-                               ((row[0], row[1], row[2]) for row in ids)
-                               for item in sublist)
-                cursor.execute(data_query, params)
-                return jsonify(tuple(dict(row) for row in cursor.fetchall()))
+            unlinked_fns = {
+                "mrna": unlinked_mrna_data,
+                "genotype": unlinked_genotype_data,
+                "phenotype": unlinked_phenotype_data
+            }
+            return jsonify(tuple(
+                dict(row) for row in unlinked_fns[resource_type](conn, ugroup)))
 
     return jsonify(tuple())
 
