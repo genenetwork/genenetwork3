@@ -1,11 +1,10 @@
 """Handle connection to auth database."""
 import sqlite3
+import logging
 import contextlib
 from typing import Any, Callable, Iterator, Protocol
 
 import traceback
-
-from flask import current_app as app
 
 class DbConnection(Protocol):
     """Type annotation for a generic database connection object."""
@@ -51,14 +50,13 @@ def connection(db_path: str, row_factory: Callable = sqlite3.Row) -> Iterator[Db
     """Create the connection to the auth database."""
     conn = sqlite3.connect(db_path)
     conn.row_factory = row_factory
-    if app.config["DEBUG"]:
-        conn.set_trace_callback(app.logger.debug)
+    conn.set_trace_callback(logging.debug)
     conn.execute("PRAGMA foreign_keys = ON")
     try:
         yield conn
     except sqlite3.Error as exc:
         conn.rollback()
-        app.logger.debug(traceback.format_exc())
+        logging.debug(traceback.format_exc())
         raise exc
     finally:
         conn.commit()
@@ -72,7 +70,7 @@ def cursor(conn: DbConnection) -> Iterator[DbCursor]:
         yield cur
     except sqlite3.Error as exc:
         conn.rollback()
-        app.logger.debug(traceback.format_exc())
+        logging.debug(traceback.format_exc())
         raise exc
     finally:
         conn.commit()
