@@ -49,7 +49,7 @@ data = Blueprint("data", __name__)
 @data.route("species")
 def list_species() -> Response:
     """List all available species information."""
-    with (gn3db.database_connection() as gn3conn,
+    with (gn3db.database_connection(app.config["SQL_URI"]) as gn3conn,
           gn3conn.cursor(DictCursor) as cursor):
         cursor.execute("SELECT * FROM Species")
         return jsonify(tuple(dict(row) for row in cursor.fetchall()))
@@ -280,7 +280,7 @@ def migrate_users_data() -> Response:
         with (require_oauth.acquire("migrate-data") as the_token,
               db.connection(db_uri) as authconn,
               redis.Redis(decode_responses=True) as rconn,
-              gn3db.database_connection() as gn3conn):
+              gn3db.database_connection(app.config["SQL_URI"]) as gn3conn):
             if the_token.client.client_id in authorised_clients:
                 by_user: dict[uuid.UUID, tuple[dict[str, str], ...]] = reduce(
                     __org_by_user_id__, redis_resources(rconn), {})
@@ -315,7 +315,7 @@ def __search_mrna__():
     query = __request_key__("query", "")
     limit = int(__request_key__("limit", 10000))
     offset = int(__request_key__("offset", 0))
-    with gn3db.database_connection() as gn3conn:
+    with gn3db.database_connection(app.config["SQL_URI"]) as gn3conn:
         __ungrouped__ = partial(
             ungrouped_mrna_data, gn3conn=gn3conn, search_query=query,
             selected=__request_key_list__("selected"),
@@ -340,7 +340,7 @@ def __search_genotypes__():
     query = __request_key__("query", "")
     limit = int(__request_key__("limit", 10000))
     offset = int(__request_key__("offset", 0))
-    with gn3db.database_connection() as gn3conn:
+    with gn3db.database_connection(app.config["SQL_URI"]) as gn3conn:
         __ungrouped__ = partial(
             ungrouped_genotype_data, gn3conn=gn3conn, search_query=query,
             selected=__request_key_list__("selected"),

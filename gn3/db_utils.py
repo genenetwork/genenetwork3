@@ -4,7 +4,6 @@ from typing import Any, Iterator, Protocol, Tuple
 from urllib.parse import urlparse
 import MySQLdb as mdb
 import xapian
-from flask import current_app
 
 
 def parse_db_url(sql_uri: str) -> Tuple:
@@ -25,15 +24,10 @@ class Connection(Protocol):
         ...
 
 
-## We need to decouple current_app from this module and function, but since this
-## function is used throughout the code, that will require careful work to update
-## all the code to pass the `sql_uri` argument, and make it a compulsory argument
-## rather than its current optional state.
 @contextlib.contextmanager
-def database_connection(sql_uri: str = "") -> Iterator[Connection]:
+def database_connection(sql_uri) -> Iterator[Connection]:
     """Connect to MySQL database."""
-    host, user, passwd, db_name, port = parse_db_url(
-        sql_uri or current_app.config["SQL_URI"])
+    host, user, passwd, db_name, port = parse_db_url(sql_uri)
     connection = mdb.connect(db=db_name,
                              user=user,
                              passwd=passwd or '',

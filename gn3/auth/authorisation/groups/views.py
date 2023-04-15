@@ -207,7 +207,7 @@ def ungrouped_data(dataset_type: str) -> Response:
         raise AuthorisationError(f"Invalid dataset type {dataset_type}")
 
     with require_oauth.acquire("profile group resource") as _the_token:
-        with gn3dbutils.database_connection() as gn3conn:
+        with gn3dbutils.database_connection(current_app.config["SQL_URI"]) as gn3conn:
             return jsonify(with_db_connection(partial(
                 retrieve_ungrouped_data, gn3conn=gn3conn,
                 dataset_type=dataset_type,
@@ -226,7 +226,7 @@ def link_data() -> Response:
             raise InvalidData("Unexpected dataset type requested!")
         def __link__(conn: db.DbConnection):
             group = group_by_id(conn, group_id)
-            with gn3dbutils.database_connection() as gn3conn:
+            with gn3dbutils.database_connection(current_app.config["SQL_URI"]) as gn3conn:
                 return link_data_to_group(
                     conn, gn3conn, dataset_type, dataset_ids, group)
 
