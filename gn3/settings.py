@@ -14,7 +14,7 @@ TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
 RQTL_WRAPPER = "rqtl_wrapper.R"
 
 # SPARQL endpoint
-SPARQL_ENDPOINT = os.environment.get(
+SPARQL_ENDPOINT = os.environ.get(
     "SPARQL_ENDPOINT",
     "http://localhost:9082/sparql")
 
