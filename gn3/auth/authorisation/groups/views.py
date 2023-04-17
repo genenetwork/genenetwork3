@@ -12,7 +12,7 @@ from gn3 import db_utils as gn3dbutils
 from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
-from .data import link_data_to_group, retrieve_ungrouped_data
+from .data import link_data_to_group
 from .models import (
     Group, user_group, all_groups, DUMMY_GROUP, GroupRole, group_by_id,
     join_requests, group_role_by_id, GroupCreationError,
@@ -198,20 +198,6 @@ def unlinked_data(resource_type: str) -> Response:
                 dict(row) for row in unlinked_fns[resource_type](conn, ugroup)))
 
     return jsonify(tuple())
-
-@groups.route("/<string:dataset_type>/ungrouped-data", methods=["GET"])
-@require_oauth("profile group resource")
-def ungrouped_data(dataset_type: str) -> Response:
-    """View data not linked to any group."""
-    if dataset_type not in ("all", "mrna", "genotype", "phenotype"):
-        raise AuthorisationError(f"Invalid dataset type {dataset_type}")
-
-    with require_oauth.acquire("profile group resource") as _the_token:
-        with gn3dbutils.database_connection(current_app.config["SQL_URI"]) as gn3conn:
-            return jsonify(with_db_connection(partial(
-                retrieve_ungrouped_data, gn3conn=gn3conn,
-                dataset_type=dataset_type,
-                offset = int(request.args.get("offset", 0)))))
 
 @groups.route("/data/link", methods=["POST"])
 @require_oauth("profile group resource")
