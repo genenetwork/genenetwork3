@@ -12,6 +12,7 @@ import click
 import redis
 import requests
 
+from gn3 import jobs
 from gn3.auth import db as authdb
 from gn3 import db_utils as gn3db
 from gn3.settings import SQL_URI, AUTH_DB
@@ -43,7 +44,8 @@ def remove_linked(search_results, linked: tuple):
     """Remove any item that has been already linked to a user group."""
     return (item for item in search_results if __filter_object__(item) not in linked)
 
-def save_to_redis(redisconn: redis.Redis, redisname: str, results: tuple[dict[str, Any], ...]):
+def update_search_results(redisconn: redis.Redis, redisname: str,
+                          results: tuple[dict[str, Any], ...]):
     """Save the results to redis db."""
     key = "search_results"
     prev_results = tuple(json.loads(redisconn.hget(redisname, key) or "[]"))
@@ -77,12 +79,12 @@ def search(# pylint: disable=[too-many-arguments, too-many-locals]
     loading more and more pages until the `per_page` quota is fulfilled or the
     search runs out of pages.
     """
-    redisname = f"GN3:JOBS:{job_id}"
+    redisname = jobs.job_key(job_id)
     with (authdb.connection(auth_db_uri) as authconn,
           gn3db.database_connection(gn3_db_uri) as gn3conn,
           redis.Redis.from_url(redis_uri, decode_responses=True) as redisconn):
         redisconn.hset(redisname, "status", "started")
-        save_to_redis(redisconn, redisname, tuple())
+        update_search_results(redisconn, redisname, tuple()) # init search results
         try:
             search_query = f"species:{species}" + (
                 f" AND ({query})" if bool(query) else "")
@@ -103,7 +105,7 @@ def search(# pylint: disable=[too-many-arguments, too-many-locals]
                     linked))[0:per_page-count]
                 count = count + len(results)
                 page = page + 1
-                save_to_redis(redisconn, redisname, results)
+                update_search_results(redisconn, redisname, results)
         except NoSearchResults as _nsr:
             pass
         except Exception as _exc: # pylint: disable=[broad-except]

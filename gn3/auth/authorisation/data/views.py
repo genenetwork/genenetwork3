@@ -1,43 +1,32 @@
 """Handle data endpoints."""
-import os
+import sys
 import uuid
 import json
-import random
-import string
-import datetime
-from functools import reduce, partial
-from typing import Any, Sequence, Iterable
+from typing import Any
+from functools import partial
 
 import redis
 from MySQLdb.cursors import DictCursor
-from email_validator import validate_email, EmailNotValidError
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import request, jsonify, Response, Blueprint, current_app as app
 
 import gn3.db_utils as gn3db
+from gn3 import jobs
+from gn3.commands import run_async_cmd
 from gn3.db.traits import build_trait_name
 
 from gn3.auth import db
-from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
 from gn3.auth.authorisation.errors import InvalidData, NotFoundError
 
-from gn3.auth.authorisation.roles.models import(
-    revoke_user_role_by_name, assign_user_role_by_name)
-
-from gn3.auth.authorisation.groups.models import (
-    Group, user_group, group_by_id, add_user_to_group)
+from gn3.auth.authorisation.groups.models import group_by_id
 
 from gn3.auth.authorisation.resources.checks import authorised_for
 from gn3.auth.authorisation.resources.models import (
     user_resources, public_resources, attach_resources_data)
 
-from gn3.auth.authorisation.errors import ForbiddenAccess
-
-
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
-from gn3.auth.authentication.users import User, user_by_email, set_user_password
 
 from gn3.auth.authorisation.data.mrna import link_mrna_data, ungrouped_mrna_data
 from gn3.auth.authorisation.data.genotypes import (
@@ -159,7 +148,28 @@ def __search_genotypes__():
         return jsonify(with_db_connection(__ungrouped__))
 
 def __search_phenotypes__():
-    pass
+    # launch the external process to search for phenotypes
+    redisuri = app.config["REDIS_URI"]
+    with redis.Redis.from_url(redisuri, decode_responses=True) as redisconn:
+        job_id = uuid.uuid4()
+        command =[
+            sys.executable, "-m", "scripts.search_phenotypes",
+            __request_key__("species_name"),
+            __request_key__("query"),
+            str(job_id),
+            f"--host={__request_key__('gn3_server_uri')}",
+            f"--auth-db-uri={app.config['AUTH_DB']}",
+            f"--gn3-db-uri={app.config['SQL_URI']}",
+            f"--redis-uri={redisuri}"]
+        jobs.create_job(redisconn, {
+            "job_id": job_id, "command": command, "status": "queued",
+            "search_results": "[]"})
+        return jsonify({
+            "job_id": job_id,
+            "command_id": run_async_cmd(
+                redisconn, app.config.get("REDIS_JOB_QUEUE"), command),
+            "command": command
+        })
 
 @data.route("/search", methods=["GET"])
 @require_oauth("profile group resource")
@@ -172,6 +182,16 @@ def search_unlinked_data():
         "phenotype": __search_phenotypes__
     }
     return search_fns[dataset_type]()
+
+@data.route("/search/phenotype/<uuid:job_id>", methods=["GET"])
+def pheno_search_results(job_id: uuid.UUID) -> Response:
+    """Get the search results from the external script"""
+    def __search_error__(err):
+        raise NotFoundError(err["error_description"])
+    redisuri = app.config["REDIS_URI"]
+    with redis.Redis.from_url(redisuri, decode_responses=True) as redisconn:
+        return jobs.job(redisconn, job_id).either(
+            __search_error__, jsonify)
 
 @data.route("/link/genotype", methods=["POST"])
 def link_genotypes() -> Response:

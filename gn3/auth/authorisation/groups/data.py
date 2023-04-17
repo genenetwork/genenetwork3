@@ -1,13 +1,11 @@
 """Handles the resource objects' data."""
-from typing import Any, Sequence
-
 from MySQLdb.cursors import DictCursor
 
 from gn3 import db_utils as gn3db
 from gn3.auth import db as authdb
 from gn3.auth.authorisation.groups import Group
 from gn3.auth.authorisation.checks import authorised_p
-from gn3.auth.authorisation.errors import InvalidData, NotFoundError
+from gn3.auth.authorisation.errors import NotFoundError
 
 def __fetch_mrna_data_by_ids__(
         conn: gn3db.Connection, dataset_ids: tuple[str, ...]) -> tuple[

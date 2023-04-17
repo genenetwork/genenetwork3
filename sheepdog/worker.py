@@ -52,6 +52,7 @@ def run_jobs(conn, queue_name: str = "GN3::job-queue"):
                 update_status(conn, cmd_id, "success")
             else:
                 update_status(conn, cmd_id, "error")
+                conn.hset(cmd_id, "stderr", result.get("output"))
         return cmd_id
     return None
 
