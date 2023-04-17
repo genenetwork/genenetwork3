@@ -14,7 +14,10 @@ TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
 RQTL_WRAPPER = "rqtl_wrapper.R"
 
 # SPARQL endpoint
-SPARQL_ENDPOINT = "http://localhost:8891/sparql"
+SPARQL_ENDPOINT = os.environment.get(
+    "SPARQL_ENDPOINT",
+    "http://localhost:9082/sparql")
+
 # LMDB path
 LMDB_PATH = os.environ.get(
     "LMDB_PATH", f"{os.environ.get('HOME')}/tmp/dataset")
