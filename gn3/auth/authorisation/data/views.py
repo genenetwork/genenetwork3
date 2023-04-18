@@ -152,6 +152,7 @@ def __search_phenotypes__():
     redisuri = app.config["REDIS_URI"]
     with redis.Redis.from_url(redisuri, decode_responses=True) as redisconn:
         job_id = uuid.uuid4()
+        selected = __request_key__("selected_traits")
         command =[
             sys.executable, "-m", "scripts.search_phenotypes",
             __request_key__("species_name"),
@@ -160,10 +161,13 @@ def __search_phenotypes__():
             f"--host={__request_key__('gn3_server_uri')}",
             f"--auth-db-uri={app.config['AUTH_DB']}",
             f"--gn3-db-uri={app.config['SQL_URI']}",
-            f"--redis-uri={redisuri}"]
+            f"--redis-uri={redisuri}",
+            f"--per-page={__request_key__('per_page')}"] +(
+                [f"--selected='{json.dumps(selected)}"]
+                if len(selected) > 0 else [])
         jobs.create_job(redisconn, {
             "job_id": job_id, "command": command, "status": "queued",
-            "search_results": "[]"})
+            "search_results": tuple()})
         return jsonify({
             "job_id": job_id,
             "command_id": run_async_cmd(
