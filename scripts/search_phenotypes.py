@@ -44,6 +44,10 @@ def remove_linked(search_results, linked: tuple):
     """Remove any item that has been already linked to a user group."""
     return (item for item in search_results if __filter_object__(item) not in linked)
 
+def update_status(redisconn: redis.Redis, redisname, status: str):
+    """Update the status of the search."""
+    redisconn.hset(redisname, "status", json.dumps(status))
+
 def update_search_results(redisconn: redis.Redis, redisname: str,
                           results: tuple[dict[str, Any], ...]):
     """Save the results to redis db."""
@@ -83,7 +87,7 @@ def search(# pylint: disable=[too-many-arguments, too-many-locals]
     with (authdb.connection(auth_db_uri) as authconn,
           gn3db.database_connection(gn3_db_uri) as gn3conn,
           redis.Redis.from_url(redis_uri, decode_responses=True) as redisconn):
-        redisconn.hset(redisname, "status", "started")
+        update_status(redisconn, redisname, "started")
         update_search_results(redisconn, redisname, tuple()) # init search results
         try:
             search_query = f"species:{species}" + (
@@ -109,11 +113,11 @@ def search(# pylint: disable=[too-many-arguments, too-many-locals]
         except NoSearchResults as _nsr:
             pass
         except Exception as _exc: # pylint: disable=[broad-except]
-            redisconn.hset(redisname, "status", "failed")
-            redisconn.hset(redisname, "exception", traceback.format_exc())
+            update_status(redisconn, redisname, "failed")
+            redisconn.hset(redisname, "exception", json.dumps(traceback.format_exc()))
             expire_redis_results(redisconn, redisname)
             return 1
-        redisconn.hset(redisname, "status", "completed")
+        update_status(redisconn, redisname, "completed")
         expire_redis_results(redisconn, redisname)
         return 0
 

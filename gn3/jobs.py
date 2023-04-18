@@ -5,8 +5,9 @@ from uuid import UUID, uuid4
 from datetime import datetime
 
 from redis import Redis
-
 from pymonad.either import Left, Right, Either
+
+from gn3 import json_encoders_decoders as jed
 
 JOBS_NAMESPACE = "GN3::JOBS"
 
@@ -22,8 +23,8 @@ def job(redisconn: Redis, job_id: UUID) -> Either:
     the_job = redisconn.hgetall(job_key(job_id))
     if the_job:
         return Right({
-            **the_job,
-            "search_results": json.loads(the_job["search_results"])
+            key: json.loads(value, object_hook=jed.custom_json_decoder)
+            for key, value in the_job.items()
         })
     return Left({
         "error": "NotFound",
@@ -48,8 +49,10 @@ def create_job(redisconn: Redis, job_details: dict[str, Any]) -> UUID:
     def __create__(_job_command):
         job_id = job_details.get("job_id", uuid4())
         redisconn.hset(job_key(job_id), mapping={
-            **job_details, "job_id": job_id, "created": datetime.now(), "stdout": "",
-            "stderr": "", "status": "queued"
+            key: json.dumps(value, cls=jed.CustomJSONEncoder) for key, value in {
+                **job_details, "job_id": job_id, "created": datetime.now(),
+                "status": "queued"
+            }.items()
         })
         return job_id
     def __raise__(err):
