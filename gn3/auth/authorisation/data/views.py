@@ -28,6 +28,7 @@ from gn3.auth.authorisation.resources.models import (
 
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 
+from gn3.auth.authorisation.data.phenotypes import link_phenotype_data
 from gn3.auth.authorisation.data.mrna import link_mrna_data, ungrouped_mrna_data
 from gn3.auth.authorisation.data.genotypes import (
     link_genotype_data, ungrouped_genotype_data)
@@ -246,3 +247,31 @@ def link_mrna() -> Response:
 
     return jsonify(with_db_connection(
         partial(__link__, **__values__(request.json))))
+
+@data.route("/link/phenotype", methods=["POST"])
+def link_phenotype() -> Response:
+    """Link phenotype data to group."""
+    def __values__(form):
+        if not bool(form.get("species_name", "").strip()):
+            raise InvalidData("Expected 'species_name' not provided.")
+        if not bool(form.get("group_id")):
+            raise InvalidData("Expected 'group_id' not provided.",)
+        try:
+            _group_id = uuid.UUID(form.get("group_id"))
+        except TypeError as terr:
+            raise InvalidData("Expected a UUID for 'group_id' value.") from terr
+        if not bool(form.get("selected")):
+            raise InvalidData("Expected at least one dataset to be provided.")
+        return {
+            "group_id": uuid.UUID(form["group_id"]),
+            "traits": form["selected"]
+        }
+
+    with gn3db.database_connection(app.config["SQL_URI"]) as gn3conn:
+        def __link__(conn: db.DbConnection, group_id: uuid.UUID,
+                     traits: tuple[dict, ...]) -> dict:
+            return link_phenotype_data(
+                conn, gn3conn, group_by_id(conn, group_id), traits)
+
+        return jsonify(with_db_connection(
+            partial(__link__, **__values__(request.json))))

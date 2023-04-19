@@ -97,7 +97,7 @@ def search(# pylint: disable=[too-many-arguments, too-many-locals]
                 for item in json.loads(selected))
             linked = tuple(
                 (row["SpeciesName"], row["InbredSetName"], row["dataset_name"],
-                 row["PublishXRefId"])
+                 str(row["PublishXRefId"]))
                 for row in linked_phenotype_data(authconn, gn3conn, species))
             page = 1
             count = 0
