@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 import click
 import redis
 import requests
-from MySQLdb.cursors import DictCursor
 
 from gn3 import jobs
 from gn3.auth import db as authdb

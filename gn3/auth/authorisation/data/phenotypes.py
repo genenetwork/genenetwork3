@@ -18,7 +18,7 @@ def linked_phenotype_data(
         linked = tuple(tuple(row[key] for key in authkeys)
                        for row in authcursor.fetchall())
         if len(linked) <= 0:
-            return (item for item in tuple())
+            return iter(())
         paramstr = "".join(["(%s, %s, %s, %s)"] * len(linked))
         query = (
             "SELECT spc.SpeciesId, spc.SpeciesName, iset.InbredSetId, "
