@@ -152,7 +152,7 @@ def __search_phenotypes__():
     redisuri = app.config["REDIS_URI"]
     with redis.Redis.from_url(redisuri, decode_responses=True) as redisconn:
         job_id = uuid.uuid4()
-        selected = __request_key__("selected_traits")
+        selected = __request_key__("selected_traits", [])
         command =[
             sys.executable, "-m", "scripts.search_phenotypes",
             __request_key__("species_name"),
