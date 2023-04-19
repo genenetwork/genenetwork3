@@ -163,7 +163,7 @@ def __search_phenotypes__():
             f"--gn3-db-uri={app.config['SQL_URI']}",
             f"--redis-uri={redisuri}",
             f"--per-page={__request_key__('per_page')}"] +(
-                [f"--selected='{json.dumps(selected)}"]
+                [f"--selected={json.dumps(selected)}"]
                 if len(selected) > 0 else [])
         jobs.create_job(redisconn, {
             "job_id": job_id, "command": command, "status": "queued",

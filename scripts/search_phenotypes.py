@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import click
 import redis
 import requests
+from MySQLdb.cursors import DictCursor
 
 from gn3 import jobs
 from gn3.auth import db as authdb
@@ -92,13 +93,13 @@ def search(# pylint: disable=[too-many-arguments, too-many-locals]
         try:
             search_query = f"species:{species}" + (
                 f" AND ({query})" if bool(query) else "")
-            filter_keys = ("SpeciesName", "InbredSetName", "dataset_name",
-                           "PublishXRefId")
-            selected_traits = tuple(tuple(item[key] for key in filter_keys)
-                                    for item in json.loads(selected))
-            linked = tuple(tuple(row[key] for key in filter_keys)
-                           for row in linked_phenotype_data(
-                                   authconn, gn3conn, species))
+            selected_traits = tuple(
+                (item["species"], item["group"], item["dataset"], item["name"])
+                for item in json.loads(selected))
+            linked = tuple(
+                (row["SpeciesName"], row["InbredSetName"], row["dataset_name"],
+                 row["PublishXRefId"])
+                for row in linked_phenotype_data(authconn, gn3conn, species))
             page = 1
             count = 0
             while count < per_page:
