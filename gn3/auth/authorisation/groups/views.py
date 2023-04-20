@@ -4,10 +4,11 @@ import datetime
 from typing import Iterable
 from functools import partial
 
+from MySQLdb.cursors import DictCursor
 from flask import request, jsonify, Response, Blueprint, current_app
 
 from gn3.auth import db
-from gn3 import db_utils as gn3dbutils
+from gn3 import db_utils as gn3db
 
 from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
@@ -166,13 +167,57 @@ def unlinked_genotype_data(
         return tuple(dict(row) for row in cursor.fetchall())
 
 def unlinked_phenotype_data(
-        conn: db.DbConnection, group: Group) -> tuple[dict, ...]:#pylint: disable=[unused-argument]
+        authconn: db.DbConnection, gn3conn: gn3db.Connection,
+        group: Group) -> tuple[dict, ...]:
     """
     Retrieve all phenotype data linked to a group but not linked to any
     resource.
     """
-    raise NotImplementedError(
-        "The feature to fetch unlinked phenotype data is not implemented yet.")
+    with db.cursor(authconn) as authcur, gn3conn.cursor(DictCursor) as gn3cur:
+        authcur.execute(
+            "SELECT lpd.* FROM linked_phenotype_data AS lpd "
+            "LEFT JOIN phenotype_resources AS pr "
+            "ON lpd.data_link_id=pr.data_link_id "
+            "WHERE lpd.group_id=? AND pr.data_link_id IS NULL",
+            (str(group.group_id),))
+        ids = tuple((
+            row["SpeciesId"], row["InbredSetId"], row["PublishFreezeId"],
+            row["PublishXRefId"]) for row in authcur.fetchall())
+        if len(ids) < 1:
+            return tuple()
+        paramstr = ", ".join(["(%s, %s, %s, %s)"] * len(ids))
+        gn3cur.execute(
+            "SELECT spc.SpeciesId, spc.SpeciesName, iset.InbredSetId, "
+            "iset.InbredSetName, pf.Id AS PublishFreezeId, "
+            "pf.Name AS dataset_name, pf.FullName AS dataset_fullname, "
+            "pf.ShortName AS dataset_shortname, pxr.Id AS PublishXRefId, "
+            "pub.PubMed_ID, pub.Title, pub.Year, "
+            "phen.Pre_publication_description, "
+            "phen.Post_publication_description, phen.Original_description "
+            "FROM "
+            "Species AS spc "
+            "INNER JOIN InbredSet AS iset "
+            "ON spc.SpeciesId=iset.SpeciesId "
+            "INNER JOIN PublishFreeze AS pf "
+            "ON iset.InbredSetId=pf.InbredSetId "
+            "INNER JOIN PublishXRef AS pxr "
+            "ON pf.InbredSetId=pxr.InbredSetId "
+            "INNER JOIN Publication AS pub "
+            "ON pxr.PublicationId=pub.Id "
+            "INNER JOIN Phenotype AS phen "
+            "ON pxr.PhenotypeId=phen.Id "
+            "WHERE (spc.SpeciesId, iset.InbredSetId, pf.Id, pxr.Id) "
+            f"IN ({paramstr})",
+            tuple(item for sublist in ids for item in sublist))
+        return tuple({
+            **{key: value for key, value in row.items() if key not in
+               ("Post_publication_description", "Pre_publication_description",
+                "Original_description")},
+            "description": (
+                row["Post_publication_description"] or
+                row["Pre_publication_description"] or
+                row["Original_description"])
+        } for row in gn3cur.fetchall())
 
 @groups.route("/<string:resource_type>/unlinked-data")
 @require_oauth("profile group resource")
@@ -183,8 +228,10 @@ def unlinked_data(resource_type: str) -> Response:
 
     with require_oauth.acquire("profile group resource") as the_token:
         db_uri = current_app.config["AUTH_DB"]
-        with db.connection(db_uri) as conn:
-            ugroup = user_group(conn, the_token.user).maybe(# type: ignore[misc]
+        gn3db_uri = current_app.config["SQL_URI"]
+        with (db.connection(db_uri) as authconn,
+              gn3db.database_connection(gn3db_uri) as gn3conn):
+            ugroup = user_group(authconn, the_token.user).maybe(# type: ignore[misc]
                 DUMMY_GROUP, lambda grp: grp)
             if ugroup == DUMMY_GROUP:
                 return jsonify(tuple())
@@ -192,10 +239,13 @@ def unlinked_data(resource_type: str) -> Response:
             unlinked_fns = {
                 "mrna": unlinked_mrna_data,
                 "genotype": unlinked_genotype_data,
-                "phenotype": unlinked_phenotype_data
+                "phenotype": lambda conn, grp: partial(
+                    unlinked_phenotype_data, gn3conn=gn3conn)(
+                        authconn=conn, group=grp)
             }
             return jsonify(tuple(
-                dict(row) for row in unlinked_fns[resource_type](conn, ugroup)))
+                dict(row) for row in unlinked_fns[resource_type](
+                    authconn, ugroup)))
 
     return jsonify(tuple())
 
@@ -212,7 +262,7 @@ def link_data() -> Response:
             raise InvalidData("Unexpected dataset type requested!")
         def __link__(conn: db.DbConnection):
             group = group_by_id(conn, group_id)
-            with gn3dbutils.database_connection(current_app.config["SQL_URI"]) as gn3conn:
+            with gn3db.database_connection(current_app.config["SQL_URI"]) as gn3conn:
                 return link_data_to_group(
                     conn, gn3conn, dataset_type, dataset_ids, group)
 

@@ -240,8 +240,7 @@ def phenotype_resource_data(
     cursor.execute(
         "SELECT * FROM phenotype_resources AS pr "
         "INNER JOIN linked_phenotype_data AS lpd "
-        "ON (pr.trait_id=lpd.dataset_or_trait_id "
-        "AND pr.dataset_type=lpd.dataset_type) "
+        "ON pr.data_link_id=lpd.data_link_id "
         "WHERE pr.resource_id=?",
         (str(resource_id),))
     return cursor.fetchall()
