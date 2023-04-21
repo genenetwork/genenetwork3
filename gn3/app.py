@@ -7,6 +7,7 @@ from typing import Union
 from flask import Flask
 from flask_cors import CORS # type: ignore
 
+from gn3.loggers import setup_app_handlers
 from gn3.api.gemma import gemma
 from gn3.api.rqtl import rqtl
 from gn3.api.general import general
@@ -41,6 +42,9 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
             app.config.update(config)
         elif config.endswith(".py"):
             app.config.from_pyfile(config)
+
+    # DO NOT log anything before this point
+    setup_app_handlers(app)
 
     CORS(
         app,
