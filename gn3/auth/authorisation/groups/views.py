@@ -180,12 +180,16 @@ def unlinked_phenotype_data(
             "ON lpd.data_link_id=pr.data_link_id "
             "WHERE lpd.group_id=? AND pr.data_link_id IS NULL",
             (str(group.group_id),))
-        ids = tuple((
-            row["SpeciesId"], row["InbredSetId"], row["PublishFreezeId"],
-            row["PublishXRefId"]) for row in authcur.fetchall())
-        if len(ids) < 1:
+        results = authcur.fetchall()
+        ids: dict[tuple[str, ...], str] = {
+            (
+                row["SpeciesId"], row["InbredSetId"], row["PublishFreezeId"],
+                row["PublishXRefId"]): row["data_link_id"]
+            for row in results
+        }
+        if len(ids.keys()) < 1:
             return tuple()
-        paramstr = ", ".join(["(%s, %s, %s, %s)"] * len(ids))
+        paramstr = ", ".join(["(%s, %s, %s, %s)"] * len(ids.keys()))
         gn3cur.execute(
             "SELECT spc.SpeciesId, spc.SpeciesName, iset.InbredSetId, "
             "iset.InbredSetName, pf.Id AS PublishFreezeId, "
@@ -208,7 +212,7 @@ def unlinked_phenotype_data(
             "ON pxr.PhenotypeId=phen.Id "
             "WHERE (spc.SpeciesId, iset.InbredSetId, pf.Id, pxr.Id) "
             f"IN ({paramstr})",
-            tuple(item for sublist in ids for item in sublist))
+            tuple(item for sublist in ids.keys() for item in sublist))
         return tuple({
             **{key: value for key, value in row.items() if key not in
                ("Post_publication_description", "Pre_publication_description",
@@ -216,7 +220,10 @@ def unlinked_phenotype_data(
             "description": (
                 row["Post_publication_description"] or
                 row["Pre_publication_description"] or
-                row["Original_description"])
+                row["Original_description"]),
+            "data_link_id": ids[tuple(str(row[key]) for key in (
+                "SpeciesId", "InbredSetId", "PublishFreezeId",
+                "PublishXRefId"))]
         } for row in gn3cur.fetchall())
 
 @groups.route("/<string:resource_type>/unlinked-data")

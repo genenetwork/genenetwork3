@@ -77,7 +77,7 @@ def link_data():
     try:
         form = request.form
         assert "resource_id" in form, "Resource ID not provided."
-        assert "dataset_id" in form, "Dataset ID not provided."
+        assert "data_link_id" in form, "Data Link ID not provided."
         assert "dataset_type" in form, "Dataset type not specified"
         assert form["dataset_type"].lower() in (
             "mrna", "genotype", "phenotype"), "Invalid dataset type provided."
@@ -86,7 +86,7 @@ def link_data():
             def __link__(conn: db.DbConnection):
                 return link_data_to_resource(
                     conn, the_token.user, uuid.UUID(form["resource_id"]),
-                    form["dataset_type"], form["dataset_id"])
+                    form["dataset_type"], uuid.UUID(form["data_link_id"]))
 
             return jsonify(with_db_connection(__link__))
     except AssertionError as aserr:
@@ -101,13 +101,13 @@ def unlink_data():
     try:
         form = request.form
         assert "resource_id" in form, "Resource ID not provided."
-        assert "dataset_id" in form, "Dataset ID not provided."
+        assert "data_link_id" in form, "Data Link ID not provided."
 
         with require_oauth.acquire("profile group resource") as the_token:
             def __unlink__(conn: db.DbConnection):
                 return unlink_data_from_resource(
                     conn, the_token.user, uuid.UUID(form["resource_id"]),
-                    form["dataset_id"])
+                    uuid.UUID(form["data_link_id"]))
             return jsonify(with_db_connection(__unlink__))
     except AssertionError as aserr:
         raise InvalidData(aserr.args[0]) from aserr

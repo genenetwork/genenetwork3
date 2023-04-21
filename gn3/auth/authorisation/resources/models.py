@@ -269,56 +269,53 @@ def resource_by_id(
     raise NotFoundError(f"Could not find a resource with id '{resource_id}'")
 
 def __link_mrna_data_to_resource__(
-        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+        conn: db.DbConnection, resource: Resource, data_link_id: UUID) -> dict:
     """Link mRNA Assay data with a resource."""
     with db.cursor(conn) as cursor:
         params = {
             "group_id": str(resource.group.group_id),
             "resource_id": str(resource.resource_id),
-            "dataset_type": "mRNA",
-            "dataset_id": dataset_id
+            "data_link_id": str(data_link_id)
         }
         cursor.execute(
             "INSERT INTO mrna_resources VALUES"
-            "(:group_id, :resource_id, :dataset_type, :dataset_id)",
+            "(:group_id, :resource_id, :data_link_id)",
             params)
         return params
 
 def __link_geno_data_to_resource__(
-        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+        conn: db.DbConnection, resource: Resource, data_link_id: UUID) -> dict:
     """Link Genotype data with a resource."""
     with db.cursor(conn) as cursor:
         params = {
             "group_id": str(resource.group.group_id),
             "resource_id": str(resource.resource_id),
-            "dataset_type": "Genotype",
-            "trait_id": dataset_id
+            "data_link_id": str(data_link_id)
         }
         cursor.execute(
             "INSERT INTO genotype_resources VALUES"
-            "(:group_id, :resource_id, :dataset_type, :trait_id)",
+            "(:group_id, :resource_id, :data_link_id)",
             params)
         return params
 
 def __link_pheno_data_to_resource__(
-        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+        conn: db.DbConnection, resource: Resource, data_link_id: UUID) -> dict:
     """Link Phenotype data with a resource."""
     with db.cursor(conn) as cursor:
         params = {
             "group_id": str(resource.group.group_id),
             "resource_id": str(resource.resource_id),
-            "dataset_type": "Phenotype",
-            "trait_id": dataset_id
+            "data_link_id": str(data_link_id)
         }
         cursor.execute(
             "INSERT INTO phenotype_resources VALUES"
-            "(:group_id, :resource_id, :dataset_type, :trait_id)",
+            "(:group_id, :resource_id, :data_link_id)",
             params)
         return params
 
 def link_data_to_resource(
         conn: db.DbConnection, user: User, resource_id: UUID, dataset_type: str,
-        dataset_id: str):
+        data_link_id: UUID) -> dict:
     """Link data to resource."""
     if not authorised_for(
             conn, user, ("group:resource:edit-resource",),
@@ -333,49 +330,49 @@ def link_data_to_resource(
         "mrna": __link_mrna_data_to_resource__,
         "genotype": __link_geno_data_to_resource__,
         "phenotype": __link_pheno_data_to_resource__,
-    }[dataset_type.lower()](conn, resource, dataset_id)
+    }[dataset_type.lower()](conn, resource, data_link_id)
 
 def __unlink_mrna_data_to_resource__(
-        conn: db.DbConnection, resource: Resource, dataset_id: str) -> dict:
+        conn: db.DbConnection, resource: Resource, data_link_id: UUID) -> dict:
     """Unlink data from mRNA Assay resources"""
     with db.cursor(conn) as cursor:
         cursor.execute("DELETE FROM mrna_resources "
-                       "WHERE resource_id=? AND dataset_id=?",
-                       (str(resource.resource_id), dataset_id))
+                       "WHERE resource_id=? AND data_link_id=?",
+                       (str(resource.resource_id), str(data_link_id)))
         return {
             "resource_id": str(resource.resource_id),
             "dataset_type": resource.resource_category.resource_category_key,
-            "dataset_id": dataset_id
+            "data_link_id": data_link_id
         }
 
 def __unlink_geno_data_to_resource__(
-        conn: db.DbConnection, resource: Resource, trait_id: str) -> dict:
+        conn: db.DbConnection, resource: Resource, data_link_id: UUID) -> dict:
     """Unlink data from Genotype resources"""
     with db.cursor(conn) as cursor:
         cursor.execute("DELETE FROM genotype_resources "
-                       "WHERE resource_id=? AND trait_id=?",
-                       (str(resource.resource_id), trait_id))
+                       "WHERE resource_id=? AND data_link_id=?",
+                       (str(resource.resource_id), str(data_link_id)))
         return {
             "resource_id": str(resource.resource_id),
             "dataset_type": resource.resource_category.resource_category_key,
-            "dataset_id": trait_id
+            "data_link_id": data_link_id
         }
 
 def __unlink_pheno_data_to_resource__(
-        conn: db.DbConnection, resource: Resource, trait_id: str) -> dict:
+        conn: db.DbConnection, resource: Resource, data_link_id: UUID) -> dict:
     """Unlink data from Phenotype resources"""
     with db.cursor(conn) as cursor:
         cursor.execute("DELETE FROM phenotype_resources "
-                       "WHERE resource_id=? AND trait_id=?",
-                       (str(resource.resource_id), trait_id))
+                       "WHERE resource_id=? AND data_link_id=?",
+                       (str(resource.resource_id), str(data_link_id)))
         return {
             "resource_id": str(resource.resource_id),
             "dataset_type": resource.resource_category.resource_category_key,
-            "dataset_id": trait_id
+            "data_link_id": str(data_link_id)
         }
 
 def unlink_data_from_resource(
-        conn: db.DbConnection, user: User, resource_id: UUID, dataset_id: str):
+        conn: db.DbConnection, user: User, resource_id: UUID, data_link_id: UUID):
     """Unlink data from resource."""
     if not authorised_for(
             conn, user, ("group:resource:edit-resource",),
@@ -391,7 +388,7 @@ def unlink_data_from_resource(
         "mrna": __unlink_mrna_data_to_resource__,
         "genotype": __unlink_geno_data_to_resource__,
         "phenotype": __unlink_pheno_data_to_resource__,
-    }[dataset_type.lower()](conn, resource, dataset_id)
+    }[dataset_type.lower()](conn, resource, data_link_id)
 
 def organise_resources_by_category(resources: Sequence[Resource]) -> dict[
         ResourceCategory, tuple[Resource]]:
