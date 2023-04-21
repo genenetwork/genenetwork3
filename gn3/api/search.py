@@ -21,7 +21,8 @@ search = Blueprint("search", __name__)
 
 ChromosomalPosition = namedtuple("ChromosomalPosition", "chromosome position")
 ChromosomalInterval = namedtuple("ChromosomalInterval", "chromosome start end")
-IntervalLiftoverFunction = Callable[[ChromosomalInterval], Maybe[ChromosomalInterval]]
+IntervalLiftoverFunction = Callable[[
+    ChromosomalInterval], Maybe[ChromosomalInterval]]
 FieldProcessorFunction = Callable[[str], xapian.Query]
 
 
@@ -50,9 +51,11 @@ class FieldProcessor(xapian.FieldProcessor):
     additional state required by the field processor is contained in the
     lexical environment of the closure.
     """
+
     def __init__(self, proc: FieldProcessorFunction) -> None:
         super().__init__()
         self.proc = proc
+
     def __call__(self, query: str) -> xapian.Query:
         return self.proc(query)
 
@@ -83,7 +86,7 @@ def liftover(chain_file: Path, position: ChromosomalPosition) -> Maybe[Chromosom
             if line.startswith('chain'):
                 (target, query, query_size, query_strand) = split_chain_line(line)
                 if (target.chromosome == position.chromosome
-                    and target.start <= position.position < target.end):
+                        and target.start <= position.position < target.end):
                     transformed_position = query.start + position.position - target.start
                     if query_strand == '-':
                         transformed_position = query_size - 1 - transformed_position
@@ -113,8 +116,9 @@ def liftover_interval(chain_file: str, interval: ChromosomalInterval) -> Chromos
             # practice. But, in this case, there doesn't seem to be a way
             # around.
             .map(lambda interval: ChromosomalInterval(interval.chromosome,
-                                              Just(min(interval.start.value, interval.end.value)),
-                                              Just(max(interval.start.value, interval.end.value)))
+                                                      Just(
+                                                          min(interval.start.value, interval.end.value)),
+                                                      Just(max(interval.start.value, interval.end.value)))
                  if interval.start.is_just() and interval.end.is_just()
                  else interval))
 
@@ -139,7 +143,7 @@ def parse_position(spec: str) -> tuple[Maybe[int], Maybe[int]]:
     """Parse position specifiation converting point locations to ranges."""
     # Range
     if ".." in spec:
-        return tuple(limit.map(apply_si_suffix) # type: ignore
+        return tuple(limit.map(apply_si_suffix)  # type: ignore
                      for limit in parse_range(spec))
     # If point location, assume +/- 50 kbases on either side.
     else:
@@ -152,9 +156,9 @@ def parse_position_field(location_slot: int, query: bytes) -> xapian.Query:
     """Parse position and return a xapian query."""
     start, end = parse_position(query.decode("utf-8"))
     # TODO: Convert the xapian index to use bases instead of megabases.
-    to_megabases = lambda x: str(Decimal(x)/10**6)
+    def to_megabases(x): return str(Decimal(x)/10**6)
     return (xapian.NumberRangeProcessor(location_slot)
-            (start.maybe("", to_megabases), end.maybe("", to_megabases))) # type: ignore
+            (start.maybe("", to_megabases), end.maybe("", to_megabases)))  # type: ignore
 
 
 def parse_location_field(species_query: xapian.Query,
@@ -176,10 +180,11 @@ def parse_location_field(species_query: xapian.Query,
 
     def make_query(interval: ChromosomalInterval) -> xapian.Query:
         # TODO: Convert the xapian index to use bases instead of megabases.
-        to_megabases = lambda x: str(Decimal(x)/10**6)
+        def to_megabases(x): return str(Decimal(x)/10**6)
         return combine_queries(xapian.Query.OP_AND,
                                species_query,
-                               xapian.Query(chromosome_prefix + interval.chromosome),
+                               xapian.Query(chromosome_prefix +
+                                            interval.chromosome),
                                xapian.NumberRangeProcessor(location_slot)
                                (interval.start.maybe("", to_megabases),
                                 interval.end.maybe("", to_megabases)))
@@ -213,12 +218,14 @@ def parse_query(synteny_files_directory: Path, query: str):
     for i, prefix in enumerate(range_prefixes):
         # Treat position specially since it needs its own field processor.
         if prefix == "position":
-            position_field_processor = FieldProcessor(partial(parse_position_field, i))
+            position_field_processor = FieldProcessor(
+                partial(parse_position_field, i))
             queryparser.add_boolean_prefix(prefix, position_field_processor)
             # Alias the position prefix with pos.
             queryparser.add_boolean_prefix("pos", position_field_processor)
         else:
-            queryparser.add_rangeprocessor(xapian.NumberRangeProcessor(i, prefix + ":"))
+            queryparser.add_rangeprocessor(
+                xapian.NumberRangeProcessor(i, prefix + ":"))
 
     # Add field processors for synteny triplets.
     species_shorthands = {"Hs": "human",
@@ -265,10 +272,13 @@ def search_results():
     if results_per_page > maximum_results_per_page:
         abort(400, description="Requested too many search results")
 
-    query = parse_query(Path(current_app.config["DATA_DIR"]) / "synteny", querystring)
+    query = parse_query(
+        Path(current_app.config["DATA_DIR"]) / "synteny", querystring)
     traits = []
     # pylint: disable=invalid-name
-    with xapian_database(current_app.config["XAPIAN_DB_PATH"]) as db:
+
+    xapian_db_path = "/tmp/xapian"
+    with xapian_database(xapian_db_path) as db:
         enquire = xapian.Enquire(db)
         # Filter documents by type.
         enquire.set_query(xapian.Query(xapian.Query.OP_FILTER,
@@ -286,3 +296,44 @@ def search_results():
                                               "dopt": "Abstract"}))
             traits.append(trait.data)
     return jsonify(traits)
+
+
+NGRAM_MIN_LENGTH = 2
+NGRAM_MAX_LENGTH = 15
+
+
+def edge_ngram_terms(values, min_len=NGRAM_MIN_LENGTH, max_len=NGRAM_MAX_LENGTH):
+    prefixes = []
+
+    values = values.split()
+    for word in values:
+        for i in range(max(len(word), min_len), min(len(word), max_len) + 1):
+            prefix = word[:i]
+            prefixes.append(prefix)
+    return prefixes
+
+
+@search.route("/autocomplete")
+def autocomplete():
+    #!expirementall
+    querystring = request.args.get("query", default="")
+    # modify xapian path
+    with xapian_database("/tmp/xapian") as db:
+        queryparser = xapian.QueryParser()
+        queryparser.set_stemmer(xapian.Stem('en'))
+        queryparser.set_stemming_strategy(queryparser.STEM_NONE)
+        # trial and prefixes for other parse the query
+        queryparser.add_prefix("species", "XS")
+        queries = queryparser.parse_query(querystring)
+        init_term = queries._get_terms_begin()
+        filtered = set()
+        while init_term != queries._get_terms_end():
+            filtered.add(init_term.get_term().decode())
+            next(init_term)
+        matched = set()
+        for val in edge_ngram_terms(" ".join(filtered)):
+            matched.update({val.decode()
+                            for val in [term.term for term in db.allterms(val)]})
+        return jsonify({
+            "autocomplete": sorted(matched, key=len)
+        })
