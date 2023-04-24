@@ -423,9 +423,8 @@ def attach_mrna_resources_data(
     """Attach linked data to mRNA Assay resources"""
     placeholders = ", ".join(["?"] * len(resources))
     cursor.execute(
-        "SELECT * FROM mrna_resources AS mr INNER JOIN linked_group_data AS lgd"
-        " ON (mr.dataset_id=lgd.dataset_or_trait_id "
-        "AND mr.dataset_type=lgd.dataset_type) "
+        "SELECT * FROM mrna_resources AS mr INNER JOIN linked_mrna_data AS lmd"
+        " ON mr.data_link_id=lmd.data_link_id "
         f"WHERE mr.resource_id IN ({placeholders})",
         tuple(str(resource.resource_id) for resource in resources))
     return __attach_data__(cursor.fetchall(), resources)
@@ -436,10 +435,9 @@ def attach_genotype_resources_data(
     placeholders = ", ".join(["?"] * len(resources))
     cursor.execute(
         "SELECT * FROM genotype_resources AS gr "
-        "INNER JOIN linked_group_data AS lgd "
-        "ON (gr.trait_id=lgd.dataset_or_trait_id "
-        "AND gr.dataset_type=lgd.dataset_type) "
-        f"WHERE gr.resource_id IN {placeholders}",
+        "INNER JOIN linked_genotype_data AS lgd "
+        "ON gr.data_link_id=lgd.data_link_id "
+        f"WHERE gr.resource_id IN ({placeholders})",
         tuple(str(resource.resource_id) for resource in resources))
     return __attach_data__(cursor.fetchall(), resources)
 
@@ -449,10 +447,9 @@ def attach_phenotype_resources_data(
     placeholders = ", ".join(["?"] * len(resources))
     cursor.execute(
         "SELECT * FROM phenotype_resources AS pr "
-        "INNER JOIN linked_group_data AS lgd "
-        "ON (pr.trait_id=lgd.dataset_or_trait_id "
-        "AND pr.dataset_type=lgd.dataset_type) "
-        f"WHERE pr.resource_id IN {placeholders}",
+        "INNER JOIN linked_phenotype_data AS lpd "
+        "ON pr.data_link_id=lpd.data_link_id "
+        f"WHERE pr.resource_id IN ({placeholders})",
         tuple(str(resource.resource_id) for resource in resources))
     return __attach_data__(cursor.fetchall(), resources)
 
@@ -532,8 +529,6 @@ def save_resource(
         conn, user, ("group:resource:edit-resource",), (resource_id,))
     if authorised[resource_id]:
         with db.cursor(conn) as cursor:
-            params = {**dictify(resource), "public": 1 if resource.public else 0}
-            print(f"THE PARAMS: {params}")
             cursor.execute(
                 "UPDATE resources SET "
                 "resource_name=:resource_name, "

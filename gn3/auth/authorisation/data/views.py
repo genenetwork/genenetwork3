@@ -22,6 +22,8 @@ from gn3.auth.authorisation.errors import InvalidData, NotFoundError
 
 from gn3.auth.authorisation.groups.models import group_by_id
 
+from gn3.auth.authorisation.users.models import user_resource_roles
+
 from gn3.auth.authorisation.resources.checks import authorised_for
 from gn3.auth.authorisation.resources.models import (
     user_resources, public_resources, attach_resources_data)
@@ -53,14 +55,17 @@ def authorisation() -> Response:
             with require_oauth.acquire("profile group resource") as the_token:
                 resources = attach_resources_data(
                     auth_conn, user_resources(auth_conn, the_token.user))
+                resources_roles = user_resource_roles(auth_conn, the_token.user)
                 privileges = {
-                    resource_id: ("group:resource:view-resource",)
+                    resource_id: tuple(
+                        privilege.privilege_id
+                        for roles in resources_roles[resource_id]
+                        for privilege in roles.privileges)#("group:resource:view-resource",)
                     for resource_id, is_authorised
                     in authorised_for(
                         auth_conn, the_token.user,
                         ("group:resource:view-resource",), tuple(
-                            resource.resource_id for resource in resources
-                            if not resource.public)).items()
+                            resource.resource_id for resource in resources)).items()
                     if is_authorised
                 }
         except _HTTPException as exc:
@@ -76,18 +81,26 @@ def authorisation() -> Response:
         #    -H "Content-Type: application/json" \
         #    -d '{"traits": ["HC_M2_0606_P::1442370_at", "BXDGeno::01.001.695",
         #        "BXDPublish::10001"]}'
+        def __gen_key__(resource, data_item):
+            if resource.resource_category.resource_category_key.lower() == "phenotype":
+                return (
+                    f"{resource.resource_category.resource_category_key.lower()}::"
+                    f"{data_item['dataset_name']}::{data_item['PublishXRefId']}")
+            return (
+                f"{resource.resource_category.resource_category_key.lower()}::"
+                f"{data_item['dataset_name']}")
+
         data_to_resource_map = {
-            (f"{data_item['dataset_type'].lower()}::"
-             f"{data_item['dataset_name']}"): resource.resource_id
+            __gen_key__(resource, data_item): resource.resource_id
             for resource in resources
             for data_item in resource.resource_data
         }
         privileges = {
-            **privileges,
             **{
                 resource.resource_id: ("system:resource:public-read",)
                 for resource in resources if resource.public
-            }}
+            },
+            **privileges}
 
         args = request.get_json()
         traits_names = args["traits"] # type: ignore[index]
@@ -97,6 +110,14 @@ def authorisation() -> Response:
                 "Geno": "Genotype",
                 "Publish": "Phenotype"
             }[val]
+
+        def __trait_key__(trait):
+            dataset_type = __translate__(trait['db']['dataset_type']).lower()
+            dataset_name = trait["db"]["dataset_name"]
+            if dataset_type == "phenotype":
+                return f"{dataset_type}::{dataset_name}::{trait['trait_name']}"
+            return f"{dataset_type}::{dataset_name}"
+
         return jsonify(tuple(
             {
                 **{key:trait[key] for key in ("trait_fullname", "trait_name")},
@@ -104,8 +125,7 @@ def authorisation() -> Response:
                 "dataset_type": __translate__(trait["db"]["dataset_type"]),
                 "privileges": privileges.get(
                     data_to_resource_map.get(
-                        f"{__translate__(trait['db']['dataset_type']).lower()}"
-                        f"::{trait['db']['dataset_name']}",
+                        __trait_key__(trait),
                         uuid.UUID("4afa415e-94cb-4189-b2c6-f9ce2b6a878d")),
                     tuple())
             } for trait in
