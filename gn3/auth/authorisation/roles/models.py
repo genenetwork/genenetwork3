@@ -25,6 +25,7 @@ class Role(NamedTuple):
         """Return a dict representation of `Role` objects."""
         return {
             "role_id": self.role_id, "role_name": self.role_name,
+            "user_editable": self.user_editable,
             "privileges": tuple(dictify(priv) for priv in self.privileges)
         }
 
