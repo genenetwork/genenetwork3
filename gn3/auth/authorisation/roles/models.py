@@ -8,6 +8,7 @@ from pymonad.either import Left, Right, Either
 from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.authentication.users import User
+from gn3.auth.authorisation.errors import AuthorisationError
 
 from ..checks import authorised_p
 from ..privileges import Privilege
@@ -17,6 +18,7 @@ class Role(NamedTuple):
     """Class representing a role: creates immutable objects."""
     role_id: UUID
     role_name: str
+    user_editable: bool
     privileges: tuple[Privilege, ...]
 
     def dictify(self) -> dict[str, Any]:
@@ -25,6 +27,12 @@ class Role(NamedTuple):
             "role_id": self.role_id, "role_name": self.role_name,
             "privileges": tuple(dictify(priv) for priv in self.privileges)
         }
+
+def check_user_editable(role: Role):
+    """Raise an exception if `role` is not user editable."""
+    if not role.user_editable:
+        raise AuthorisationError(
+            f"The role `{role.role_name}` is not user editable.")
 
 @authorised_p(
     privileges = ("group:role:create-role",),
@@ -44,11 +52,11 @@ def create_role(
 
     RETURNS: An immutable `gn3.auth.authorisation.roles.Role` object
     """
-    role = Role(uuid4(), role_name, tuple(privileges))
+    role = Role(uuid4(), role_name, True, tuple(privileges))
 
     cursor.execute(
-        "INSERT INTO roles(role_id, role_name) VALUES (?, ?)",
-        (str(role.role_id), role.role_name))
+        "INSERT INTO roles(role_id, role_name, user_editable) VALUES (?, ?, ?)",
+        (str(role.role_id), role.role_name, (1 if role.user_editable else 0)))
     cursor.executemany(
         "INSERT INTO role_privileges(role_id, privilege_id) VALUES (?, ?)",
         tuple((str(role.role_id), str(priv.privilege_id))
@@ -65,6 +73,7 @@ def __organise_privileges__(roles_dict, privilege_row):
             role_id_str: Role(
                 UUID(role_id_str),
                 privilege_row["role_name"],
+                bool(int(privilege_row["user_editable"])),
                 roles_dict[role_id_str].privileges + (
                     Privilege(privilege_row["privilege_id"],
                               privilege_row["privilege_description"]),))
@@ -75,6 +84,7 @@ def __organise_privileges__(roles_dict, privilege_row):
         role_id_str: Role(
             UUID(role_id_str),
             privilege_row["role_name"],
+            bool(int(privilege_row["user_editable"])),
             (Privilege(privilege_row["privilege_id"],
                        privilege_row["privilege_description"]),))
     }

@@ -80,7 +80,7 @@ create_role_failure = {
             UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
             GROUP,
             Role(UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"),
-                 "ResourceEditor", PRIVILEGES)),))))
+                 "ResourceEditor", True, PRIVILEGES)),))))
 def test_create_group_role(mocker, fxtr_users_in_group, user, expected):
     """
     GIVEN: an authenticated user

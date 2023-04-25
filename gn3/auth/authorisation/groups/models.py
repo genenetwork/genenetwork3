@@ -15,7 +15,8 @@ from ..checks import authorised_p
 from ..privileges import Privilege
 from ..errors import NotFoundError, AuthorisationError, InconsistencyError
 from ..roles.models import (
-    Role, create_role, revoke_user_role_by_name, assign_user_role_by_name)
+    Role, create_role, check_user_editable, revoke_user_role_by_name,
+    assign_user_role_by_name)
 
 class Group(NamedTuple):
     """Class representing a group."""
@@ -312,13 +313,19 @@ def __organise_privileges__(acc, row):
     if role:
         return {
             **acc,
-            role_id: Role(role.role_id, role.role_name, role.privileges + (
-                Privilege(row["privilege_id"], row["privilege_description"]),))
+            role_id: Role(
+                role.role_id, role.role_name,
+                bool(int(row["user_editable"])),
+                role.privileges + (
+                    Privilege(row["privilege_id"],
+                              row["privilege_description"]),))
         }
     return {
         **acc,
-        role_id: Role(UUID(row["role_id"]), row["role_name"], (
-            Privilege(row["privilege_id"], row["privilege_description"]),))
+        role_id: Role(
+            UUID(row["role_id"]), row["role_name"],
+            bool(int(row["user_editable"])),
+            (Privilege(row["privilege_id"], row["privilege_description"]),))
     }
 
 # @authorised_p(("group:role:view",),
@@ -351,6 +358,7 @@ def add_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
                                 privilege: Privilege) -> GroupRole:
     """Add `privilege` to `group_role`."""
     ## TODO: do privileges check.
+    check_user_editable(group_role.role)
     with db.cursor(conn) as cursor:
         cursor.execute(
             "INSERT INTO role_privileges(role_id,privilege_id) "
@@ -362,12 +370,14 @@ def add_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
             group_role.group,
             Role(group_role.role.role_id,
                  group_role.role.role_name,
+                 group_role.role.user_editable,
                  group_role.role.privileges + (privilege,)))
 
 def delete_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
                                    privilege: Privilege) -> GroupRole:
     """Delete `privilege` to `group_role`."""
     ## TODO: do privileges check.
+    check_user_editable(group_role.role)
     with db.cursor(conn) as cursor:
         cursor.execute(
             "DELETE FROM role_privileges WHERE "
@@ -378,5 +388,6 @@ def delete_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
             group_role.group,
             Role(group_role.role.role_id,
                  group_role.role.role_name,
+                 group_role.role.user_editable,
                  tuple(priv for priv in group_role.role.privileges
                        if priv != privilege)))

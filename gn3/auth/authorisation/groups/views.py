@@ -298,6 +298,7 @@ def group_roles():
                               group,
                               Role(uuid.UUID(row["role_id"]),
                                    row["role_name"],
+                                   bool(int(row["user_editable"])),
                                    tuple()))
                     for row in cursor.fetchall())
         return jsonify(tuple(

@@ -27,7 +27,7 @@ PRIVILEGES = (
 @pytest.mark.parametrize(
     "user,expected", tuple(zip(conftest.TEST_USERS[0:1], (
         Role(uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b"), "a_test_role",
-             PRIVILEGES),))))
+             True, PRIVILEGES),))))
 def test_create_role(# pylint: disable=[too-many-arguments]
         fxtr_app, auth_testdb_path, mocker, fxtr_users, user, expected):# pylint: disable=[unused-argument]
     """
@@ -68,7 +68,7 @@ def test_create_role_raises_exception_for_unauthorised_users(# pylint: disable=[
     (zip(TEST_USERS,
          ((Role(
              role_id=uuid.UUID('a0e67630-d502-4b9f-b23f-6805d0f30e30'),
-             role_name='group-leader',
+             role_name='group-leader', user_editable=False,
              privileges=(
                  Privilege(privilege_id='group:resource:create-resource',
                            privilege_description='Create a resource object'),
@@ -108,7 +108,7 @@ def test_create_role_raises_exception_for_unauthorised_users(# pylint: disable=[
                            privilege_description='List users in the system'))),
            Role(
                role_id=uuid.UUID("ade7e6b0-ba9c-4b51-87d0-2af7fe39a347"),
-               role_name="group-creator",
+               role_name="group-creator", user_editable=False,
                privileges=(
                    Privilege(privilege_id='system:group:create-group',
                              privilege_description = "Create a group"),))),

@@ -8,12 +8,13 @@ from gn3.auth.authorisation.roles import Role
 from gn3.auth.authorisation.privileges import Privilege
 
 RESOURCE_READER_ROLE = Role(
-    uuid.UUID("c3ca2507-ee24-4835-9b31-8c21e1c072d3"), "resource_reader",
+    uuid.UUID("c3ca2507-ee24-4835-9b31-8c21e1c072d3"), "resource_reader", True,
     (Privilege("group:resource:view-resource",
                "view a resource and use it in computations"),))
 
 RESOURCE_EDITOR_ROLE = Role(
-    uuid.UUID("89819f84-6346-488b-8955-86062e9eedb7"), "resource_editor", (
+    uuid.UUID("89819f84-6346-488b-8955-86062e9eedb7"), "resource_editor", True,
+    (
         Privilege("group:resource:view-resource",
                   "view a resource and use it in computations"),
         Privilege("group:resource:edit-resource", "edit/update a resource")))
