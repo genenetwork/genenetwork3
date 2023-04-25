@@ -132,7 +132,7 @@ def resource_users(resource_id: uuid.UUID):
                             uuid.UUID(row["group_role_id"]),
                             resource.group,
                             Role(uuid.UUID(row["role_id"]), row["role_name"],
-                                 tuple()))
+                                 bool(int(row["user_editable"])), tuple()))
                         return {
                             **users_n_roles,
                             user_id: {
