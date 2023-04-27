@@ -26,10 +26,10 @@ def __build_resource_roles__(rows):
         role_id = uuid.UUID(row["role_id"])
         priv = Privilege(row["privilege_id"], row["privilege_description"])
         role = roles.get(role_id, Role(
-            role_id, row["role_name"], tuple()))
+            role_id, row["role_name"], bool(row["user_editable"]), tuple()))
         return {
             **roles,
-            role_id: Role(role_id, role.role_name, role.privileges + (priv,))
+            role_id: Role(role_id, role.role_name, role.user_editable, role.privileges + (priv,))
         }
     def __build__(acc, row):
         resource_id = uuid.UUID(row["resource_id"])
