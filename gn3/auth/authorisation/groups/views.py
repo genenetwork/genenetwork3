@@ -19,7 +19,7 @@ from .models import (
     join_requests, group_role_by_id, GroupCreationError,
     accept_reject_join_request, group_users as _group_users,
     create_group as _create_group, add_privilege_to_group_role,
-    delete_privilege_to_group_role, create_group_role as _create_group_role)
+    delete_privilege_from_group_role, create_group_role as _create_group_role)
 
 from ..roles.models import Role
 from ..checks import authorised_p
@@ -392,7 +392,7 @@ def __add_remove_priv_to_from_role__(conn: db.DbConnection,
             raise NotFoundError("Privilege not found.")
         dir_fns = {
             "ADD": add_privilege_to_group_role,
-            "DELETE": delete_privilege_to_group_role
+            "DELETE": delete_privilege_from_group_role
         }
         return dir_fns[direction](
             conn,

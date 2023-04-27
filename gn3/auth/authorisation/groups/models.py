@@ -354,6 +354,9 @@ def group_role_by_id(
         raise NotFoundError(
             f"Group role with ID '{group_role_id}' does not exist.")
 
+@authorised_p(("group:role:edit-role",),
+              "You do not have the privilege to edit a role.",
+              oauth2_scope="profile group role")
 def add_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
                                 privilege: Privilege) -> GroupRole:
     """Add `privilege` to `group_role`."""
@@ -373,8 +376,12 @@ def add_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
                  group_role.role.user_editable,
                  group_role.role.privileges + (privilege,)))
 
-def delete_privilege_to_group_role(conn: db.DbConnection, group_role: GroupRole,
-                                   privilege: Privilege) -> GroupRole:
+@authorised_p(("group:role:edit-role",),
+              "You do not have the privilege to edit a role.",
+              oauth2_scope="profile group role")
+def delete_privilege_from_group_role(
+        conn: db.DbConnection, group_role: GroupRole,
+        privilege: Privilege) -> GroupRole:
     """Delete `privilege` to `group_role`."""
     ## TODO: do privileges check.
     check_user_editable(group_role.role)
