@@ -22,6 +22,8 @@ from .models import (
     delete_privilege_from_group_role, create_group_role as _create_group_role)
 
 from ..roles.models import Role
+from ..roles.models import user_roles
+
 from ..checks import authorised_p
 from ..privileges import Privilege, privileges_by_ids
 from ..errors import InvalidData, NotFoundError, AuthorisationError
@@ -308,15 +310,18 @@ def group_roles():
 @require_oauth("profile group")
 def group_privileges():
     """Return a list of all available group roles."""
-    with require_oauth.acquire("profile group role") as _the_token:
+    with require_oauth.acquire("profile group role") as the_token:
         def __list_privileges__(conn: db.DbConnection) -> Iterable[Privilege]:
             ## TODO: Check that user has appropriate privileges
+            this_user_roles = user_roles(conn, the_token.user)
             with db.cursor(conn) as cursor:
                 cursor.execute("SELECT * FROM privileges "
                                "WHERE privilege_id LIKE 'group:%'")
-                return (
+                group_level_roles = tuple(
                     Privilege(row["privilege_id"], row["privilege_description"])
                     for row in cursor.fetchall())
+            return tuple(privilege for arole in this_user_roles
+                         for privilege in arole.privileges) + group_level_roles
         return jsonify(tuple(
             dictify(priv) for priv in with_db_connection(__list_privileges__)))
 
