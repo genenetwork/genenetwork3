@@ -1,11 +1,10 @@
 """
 This module contains functions relating to specific trait dataset manipulation
 """
+import os
 from typing import Any
 
-
-def retrieve_sample_list(
-        group: str, connection: Any):
+def retrieve_sample_list(group: str):
     """
     Get the sample list for a group (a category that datasets belong to)
 
@@ -13,7 +12,7 @@ def retrieve_sample_list(
     the "official" sample list is stored
     """
 
-    genofile_path = current_app.config.get("RQTL_WRAPPER_CMD") + "/" + group + ".geno"
+    genofile_path = os.environ.get("GENENETWORK_FILES") + "/genotype/" + group + ".geno"
     if os.path.isfile(genofile_path):
         genofile = open(genofile_path)
 
