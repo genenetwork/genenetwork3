@@ -68,20 +68,20 @@ FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
      JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
      LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
      LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
-     AND px.Id = %s AND px.PhenotypeId = %s
+WHERE px.Id = %s AND px.PhenotypeId = %s
 ORDER BY st.Name""", (trait_name, phenotype_id))
 
-    sample_data = {}
-    for data in cursor.fetchall():
-        this_data = {}
-        sample, value, error, n_cases = data
-        sample_data[sample] = {
-            'value': value,
-            'error': error,
-            'n_cases:': n_cases
-        }
+        sample_data = {}
+        for data in cursor.fetchall():
+            this_data = {}
+            sample, value, error, n_cases = data
+            sample_data[sample] = {
+                'value': value,
+                'error': error,
+                'n_cases:': n_cases
+            }
 
-    return sample_data
+        return sample_data
 
 def get_trait_csv_sample_data(
     conn: Any, trait_name: int, phenotype_id: int
