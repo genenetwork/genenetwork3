@@ -89,7 +89,7 @@ def get_trait_csv_sample_data(
     """Fetch a trait and return it as a csv string"""
     with conn.cursor() as cursor:
         cursor.execute("""
-SELECT concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
+SELECT DISTINCT concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
 ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data'
 FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
 JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
