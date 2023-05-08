@@ -102,7 +102,7 @@ class OAuth2Client(NamedTuple):
     @property
     def response_types(self) -> Sequence[str]:
         """Return the response_types that this client supports."""
-        return self.client_metadata.get("response_types", [])
+        return self.client_metadata.get("response_type", [])
 
     def check_response_type(self, response_type: str) -> bool:
         """Check whether this client supports `response_type`."""

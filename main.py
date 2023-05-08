@@ -74,10 +74,11 @@ def init_dev_clients():
             "token_endpoint_auth_method": [
                 "client_secret_post", "client_secret_basic"],
             "client_type": "confidential",
-            "grant_types": ["password", "authorisation_code", "refresh_token"],
+            "grant_types": ["password", "authorization_code", "refresh_token"],
             "default_redirect_uri": "http://localhost:5033/oauth2/code",
-            "redirect_uris": ["http://localhost:5033/oauth2/code"],
-            "response_type": "token", # choices: ["code", "token"]
+            "redirect_uris": ["http://localhost:5033/oauth2/code",
+                              "http://localhost:5033/oauth2/token"],
+            "response_type": ["code", "token"],
             "scope": ["profile", "group", "role", "resource", "register-client",
                       "user", "migrate-data", "introspect"]
         }),

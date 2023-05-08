@@ -1,0 +1,40 @@
+{%extends "base.html"%}
+
+{%block title%}Authorise User{%endblock%}
+
+{%block content%}
+{{flash_messages()}}
+
+<h1>Authenticate to the API Server</h1>
+
+<form method="POST" action="#">
+  <input type="hidden" name="response_type" value="{{response_type}}" />
+  <input type="hidden" name="scope" value="{{scope | join(' ')}}" />
+  <p>
+    You are authorising "{{client.client_metadata.client_name}}" to access
+    Genenetwork 3 with the following scope:
+  </p>
+  <fieldset>
+    <legend>Scope</legend>
+    {%for scp in scope%}
+    <input id="scope:{{scp}}" type="checkbox" name="scope[]" value="{{scp}}"
+	   checked="checked" disabled="disabled" />
+    <label for="scope:{{scp}}">{{scp}}</label>
+    <br />
+    {%endfor%}
+  </fieldset>
+
+  <fieldset>
+    <legend>User Credentials</legend>
+    <label for="user:email">Email</label>
+    <input type="email" name="user:email" id="user:email" required="required" />
+    <br />
+
+    <label for="user:password">Password</label>
+    <input type="password" name="user:password" id="user:password"
+	   required="required" />
+  </fieldset>
+  
+  <input type="submit" value="authorise" />
+</form>
+{%endblock%}

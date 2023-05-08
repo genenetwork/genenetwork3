@@ -5,8 +5,7 @@ from typing import Callable
 
 from flask import Flask, current_app
 from authlib.integrations.flask_oauth2 import AuthorizationServer
-# from authlib.integrations.sqla_oauth2 import (
-#     create_save_token_func, create_query_client_func)
+# from authlib.oauth2.rfc7636 import CodeChallenge
 
 from gn3.auth import db
 
@@ -14,7 +13,7 @@ from .models.oauth2client import client
 from .models.oauth2token import OAuth2Token, save_token
 
 from .grants.password_grant import PasswordGrant
-# from .grants.authorisation_code_grant import AuthorisationCodeGrant
+from .grants.authorisation_code_grant import AuthorisationCodeGrant
 
 from .endpoints.revocation import RevocationEndpoint
 from .endpoints.introspection import IntrospectionEndpoint
@@ -49,7 +48,11 @@ def setup_oauth2_server(app: Flask) -> None:
     """Set's up the oauth2 server for the flask application."""
     server = AuthorizationServer()
     server.register_grant(PasswordGrant)
-    # server.register_grant(AuthorisationCodeGrant)
+
+    # Figure out a common `code_verifier` for GN2 and GN3 and set
+    # server.register_grant(AuthorisationCodeGrant, [CodeChallenge(required=False)])
+    # below
+    server.register_grant(AuthorisationCodeGrant)
 
     # register endpoints
     server.register_endpoint(RevocationEndpoint)
