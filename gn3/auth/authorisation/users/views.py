@@ -4,6 +4,7 @@ from typing import Any
 from functools import partial
 
 import sqlite3
+from redis import Redis
 from email_validator import validate_email, EmailNotValidError
 from flask import request, jsonify, Response, Blueprint, current_app
 
@@ -11,7 +12,9 @@ from gn3.auth import db
 from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
-from ..users.models import list_users
+from .models import list_users
+from .collections import user_collections, old_user_collections
+
 from ..groups.models import user_group as _user_group
 from ..resources.models import user_resources as _user_resources
 from ..roles.models import assign_default_roles, user_roles as _user_roles
@@ -169,3 +172,14 @@ def list_all_users() -> Response:
     with require_oauth.acquire("profile group") as _the_token:
         return jsonify(tuple(
             dictify(user) for user in with_db_connection(list_users)))
+
+@users.route("collections/list")
+@require_oauth("profile user")
+def list_user_collections() -> Response:
+    """Retrieve the user ids"""
+    with (require_oauth.acquire("profile user") as the_token,
+          Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        return jsonify(
+            user_collections(redisconn, the_token.user) or
+            old_user_collections(redisconn, the_token.user))
