@@ -84,12 +84,12 @@ ORDER BY st.Name""", (trait_name, phenotype_id))
         return sample_data
 
 def get_trait_csv_sample_data(
-    conn: Any, trait_name: int, phenotype_id: int
+    conn: Any, trait_name: int, phenotype_id: int, sample_list: list
 ) -> str:
     """Fetch a trait and return it as a csv string"""
     with conn.cursor() as cursor:
         cursor.execute("""
-SELECT DISTINCT concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
+SELECT DISTINCT st.Name, concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
 ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data'
 FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
 JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
@@ -99,8 +99,18 @@ WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name""",
                        (trait_name, phenotype_id))
         if not (data := cursor.fetchall()):
             return "No Sample Data Found"
-        return "Strain Name,Value,SE,Count\n" + \
-            "\n".join([el[0] for el in data])
+
+        # Get list of samples with data in the DB
+        existing_samples = [el[0] for el in data]
+
+        trait_csv = ["Strain Name,Value,SE,Count"]
+        for sample in sample_list:
+            if sample in existing_samples:
+                trait_csv.append(data[existing_samples.index(sample)][1])
+            else:
+                trait_csv.append(sample + ",x,x,x")
+
+        return "\n".join(trait_csv)
 
 
 def get_sample_data_ids(
