@@ -57,7 +57,8 @@ def authorise():
         redirect_response = redirect(url_for("oauth2.auth.authorise",
                                              client_id=client_id))
         try:
-            email = validate_email(form.get("user:email"))
+            email = validate_email(
+                form.get("user:email"), check_deliverability=False)
             user = user_by_email(conn, email["email"])
             if valid_login(conn, user, form.get("user:password", "")):
                 return server.create_authorization_response(request=request, grant_user=user)
