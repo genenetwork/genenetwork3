@@ -13,7 +13,7 @@ from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
 from .models import list_users
-from .collections import user_collections, old_user_collections
+from .collections import user_collections
 
 from ..groups.models import user_group as _user_group
 from ..resources.models import user_resources as _user_resources
@@ -180,6 +180,4 @@ def list_user_collections() -> Response:
     with (require_oauth.acquire("profile user") as the_token,
           Redis.from_url(current_app.config["REDIS_URI"],
                          decode_responses=True) as redisconn):
-        return jsonify(
-            user_collections(redisconn, the_token.user) or
-            old_user_collections(redisconn, the_token.user))
+        return jsonify(user_collections(redisconn, the_token.user))
