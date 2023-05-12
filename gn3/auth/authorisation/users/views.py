@@ -1,5 +1,6 @@
 """User authorisation endpoints."""
 import traceback
+from uuid import UUID
 from typing import Any
 from functools import partial
 
@@ -22,8 +23,9 @@ from ..errors import (
     NotFoundError, UsernameError, PasswordError, UserRegistrationError)
 
 from ...authentication.oauth2.resource_server import require_oauth
-from ...authentication.users import User, save_user, set_user_password
 from ...authentication.oauth2.models.oauth2token import token_by_access_token
+from ...authentication.users import (
+    User, save_user, user_by_id, set_user_password)
 
 users = Blueprint("users", __name__)
 
@@ -181,3 +183,21 @@ def list_user_collections() -> Response:
           Redis.from_url(current_app.config["REDIS_URI"],
                          decode_responses=True) as redisconn):
         return jsonify(user_collections(redisconn, the_token.user))
+
+@users.route("<uuid:anon_id>/collections/list")
+def list_anonymous_collections(anon_id: UUID) -> Response:
+    """Fetch anonymous collections"""
+    with Redis.from_url(
+            current_app.config["REDIS_URI"], decode_responses=True) as redisconn:
+        def __list__(conn: db.DbConnection) -> tuple:
+            try:
+                _user = user_by_id(conn, anon_id)
+                current_app.logger.warning(
+                    "Fetch collections for authenticated user using the "
+                    "`list_user_collections()` endpoint.")
+                return tuple()
+            except NotFoundError as _nfe:
+                return user_collections(
+                    redisconn, User(anon_id, "anon@ymous.user", "Anonymous User"))
+
+        return jsonify(with_db_connection(__list__))
