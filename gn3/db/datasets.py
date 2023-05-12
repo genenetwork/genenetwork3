@@ -1,8 +1,57 @@
 """
 This module contains functions relating to specific trait dataset manipulation
 """
+import os
 from typing import Any
 
+def retrieve_sample_list(group: str):
+    """
+    Get the sample list for a group (a category that datasets belong to)
+
+    Currently it is fetched from the .geno files, since that's the only place
+    the "official" sample list is stored
+    """
+
+    genofile_path = os.environ.get("GENENETWORK_FILES") + "/genotype/" + group + ".geno"
+    if os.path.isfile(genofile_path):
+        genofile = open(genofile_path)
+
+        for line in genofile:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith(("#", "@")):
+                continue
+            break
+
+        headers = line.split("\t")
+
+        if headers[3] == "Mb":
+            samplelist = headers[4:]
+        else:
+            samplelist = headers[3:]
+        return samplelist
+
+def retrieve_group_name(
+        group_id: int, connection: any):
+    """
+    Given the group id (InbredSet.Id in the database), retrieve its name
+    """
+    query = (
+        "SELECT Name "
+        "FROM InbredSet "
+        "WHERE "
+        "InbredSet.Id = %(group_id)s")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            query,
+            {
+                "group_id": group_id
+            })
+        res = cursor.fetchone()
+        if res:
+            return res[0]
+        return None
 
 def retrieve_probeset_trait_dataset_name(
         threshold: int, name: str, connection: Any):
