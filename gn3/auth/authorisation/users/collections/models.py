@@ -1,11 +1,21 @@
 """Handle user collections."""
-import uuid
 import json
+from uuid import UUID, uuid4
+from datetime import datetime
 
 from redis import Redis
 from email_validator import validate_email, EmailNotValidError
 
-from .models import User
+from ..models import User
+
+class CollectionJSONEncoder(json.JSONEncoder):
+    """Serialise collection objects into JSON."""
+    def default(self, obj):# pylint: disable=[arguments-renamed]
+        if isinstance(obj, UUID):
+            return str(obj)
+        if isinstance(obj, datetime):
+            return obj.strftime("%b %d %Y %I:%M%p")
+        return json.JSONEncoder.default(self, obj)
 
 def __valid_email__(email:str) -> bool:
     """Check for email validity."""
@@ -55,13 +65,29 @@ def __retrieve_old_accounts__(rconn: Redis) -> dict:
         }
     return __build_email_uuid_bridge__(rconn)
 
-def __retrieve_old_user_collections__(rconn: Redis, old_user_id: uuid.UUID) -> tuple:
-    """Retrieve any old collections relating to the user."""
-    return tuple(json.loads(rconn.hget("collections", old_user_id) or "[]"))
+def parse_collection(coll: dict) -> dict:
+    """Parse the collection as persisted in redis to a usable python object."""
+    return {
+        "id": UUID(coll["id"]),
+        "name": coll["name"],
+        "created": datetime.strptime(coll["created"], "%b %d %Y %I:%M%p"),
+        "changed": datetime.strptime(coll["changed"], "%b %d %Y %I:%M%p"),
+        "num_members": int(coll["num_members"]),
+        "members": coll["members"]
+    }
 
-def user_collections(rconn: Redis, user: User) -> tuple:
+def dump_collection(pythoncollection: dict) -> str:
+    """Convert the collection from a python object to a json string."""
+    return json.dumps(pythoncollection, cls=CollectionJSONEncoder)
+
+def __retrieve_old_user_collections__(rconn: Redis, old_user_id: UUID) -> tuple:
+    """Retrieve any old collections relating to the user."""
+    return tuple(parse_collection(coll) for coll in
+                 json.loads(rconn.hget("collections", old_user_id) or "[]"))
+
+def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
     """Retrieve current user collections."""
-    collections = tuple(json.loads(
+    collections = tuple(parse_collection(coll) for coll in json.loads(
         rconn.hget("collections", str(user.user_id)) or
         "[]"))
     old_accounts = __retrieve_old_accounts__(rconn)
@@ -69,9 +95,35 @@ def user_collections(rconn: Redis, user: User) -> tuple:
         not old_accounts[user.email]["collections-migrated"]):
         old_user_id = old_accounts[user.email]["user_id"]
         collections = tuple(set(collections + __retrieve_old_user_collections__(
-            rconn, uuid.UUID(old_user_id))))
+            rconn, UUID(old_user_id))))
         rconn.hdel("collections", old_user_id)
         __toggle_boolean_field__(rconn, user.email, "collections-migrated")
         rconn.hset(
             "collections", key=user.user_id, value=json.dumps(collections))
     return collections
+
+def save_collections(rconn: Redis, user: User, collections: tuple[dict, ...]) -> tuple[dict, ...]:
+    """Save the `collections` to redis."""
+    rconn.hset(
+        "collections",
+        str(user.user_id),
+        json.dumps(collections, cls=CollectionJSONEncoder))
+    return collections
+
+def add_to_user_collections(rconn: Redis, user: User, collection: dict) -> dict:
+    """Add `collection` to list of user collections."""
+    ucolls = user_collections(rconn, user)
+    save_collections(rconn, user, ucolls + (collection,))
+    return collection
+
+def create_collection(rconn: Redis, user: User, name: str, traits: tuple) -> dict:
+    """Create a new collection."""
+    now = datetime.utcnow()
+    return add_to_user_collections(rconn, user, {
+        "id": uuid4(),
+        "name": name,
+        "created": now,
+        "changed": now,
+        "num_members": len(traits),
+        "members": traits
+    })

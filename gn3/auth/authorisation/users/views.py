@@ -1,11 +1,9 @@
 """User authorisation endpoints."""
 import traceback
-from uuid import UUID
 from typing import Any
 from functools import partial
 
 import sqlite3
-from redis import Redis
 from email_validator import validate_email, EmailNotValidError
 from flask import request, jsonify, Response, Blueprint, current_app
 
@@ -14,7 +12,7 @@ from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
 from .models import list_users
-from .collections import user_collections
+from .collections.views import collections
 
 from ..groups.models import user_group as _user_group
 from ..resources.models import user_resources as _user_resources
@@ -23,11 +21,11 @@ from ..errors import (
     NotFoundError, UsernameError, PasswordError, UserRegistrationError)
 
 from ...authentication.oauth2.resource_server import require_oauth
+from ...authentication.users import User, save_user, set_user_password
 from ...authentication.oauth2.models.oauth2token import token_by_access_token
-from ...authentication.users import (
-    User, save_user, user_by_id, set_user_password)
 
 users = Blueprint("users", __name__)
+users.register_blueprint(collections, url_prefix="/collections")
 
 @users.route("/", methods=["GET"])
 @require_oauth("profile")
@@ -174,30 +172,3 @@ def list_all_users() -> Response:
     with require_oauth.acquire("profile group") as _the_token:
         return jsonify(tuple(
             dictify(user) for user in with_db_connection(list_users)))
-
-@users.route("collections/list")
-@require_oauth("profile user")
-def list_user_collections() -> Response:
-    """Retrieve the user ids"""
-    with (require_oauth.acquire("profile user") as the_token,
-          Redis.from_url(current_app.config["REDIS_URI"],
-                         decode_responses=True) as redisconn):
-        return jsonify(user_collections(redisconn, the_token.user))
-
-@users.route("<uuid:anon_id>/collections/list")
-def list_anonymous_collections(anon_id: UUID) -> Response:
-    """Fetch anonymous collections"""
-    with Redis.from_url(
-            current_app.config["REDIS_URI"], decode_responses=True) as redisconn:
-        def __list__(conn: db.DbConnection) -> tuple:
-            try:
-                _user = user_by_id(conn, anon_id)
-                current_app.logger.warning(
-                    "Fetch collections for authenticated user using the "
-                    "`list_user_collections()` endpoint.")
-                return tuple()
-            except NotFoundError as _nfe:
-                return user_collections(
-                    redisconn, User(anon_id, "anon@ymous.user", "Anonymous User"))
-
-        return jsonify(with_db_connection(__list__))

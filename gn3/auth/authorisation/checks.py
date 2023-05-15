@@ -2,12 +2,12 @@
 from functools import wraps
 from typing import Callable
 
-from flask import current_app as app
+from flask import request, current_app as app
 
 from gn3.auth import db
 
 from . import privileges as auth_privs
-from .errors import AuthorisationError
+from .errors import InvalidData, AuthorisationError
 
 from ..authentication.oauth2.resource_server import require_oauth
 
@@ -59,3 +59,12 @@ def authorised_p(
                 raise AuthorisationError(error_description)
         return __authoriser__
     return __build_authoriser__
+
+def require_json(func):
+    """Ensure the request has JSON data."""
+    @wraps(func)
+    def __req_json__(*args, **kwargs):
+        if bool(request.json):
+            return func(*args, **kwargs)
+        raise InvalidData("Expected JSON data in the request.")
+    return __req_json__
