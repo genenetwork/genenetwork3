@@ -6,6 +6,8 @@ from datetime import datetime
 from redis import Redis
 from email_validator import validate_email, EmailNotValidError
 
+from gn3.auth.authorisation.errors import InvalidData, NotFoundError
+
 from ..models import User
 
 class CollectionJSONEncoder(json.JSONEncoder):
@@ -127,3 +129,19 @@ def create_collection(rconn: Redis, user: User, name: str, traits: tuple) -> dic
         "num_members": len(traits),
         "members": traits
     })
+
+def get_collection(rconn: Redis, user: User, collection_id: UUID) -> dict:
+    """Retrieve the collection with ID `collection_id`."""
+    colls = tuple(coll for coll in user_collections(rconn, user)
+                  if coll["id"] == collection_id)
+    if len(colls) == 0:
+        raise NotFoundError(
+            f"Could not find a collection with ID `{collection_id}` for user "
+            f"with ID `{user.user_id}`")
+    if len(colls) > 1:
+        err = InvalidData(
+            "More than one collection was found having the ID "
+            f"`{collection_id}` for user with ID `{user.user_id}`.")
+        err.error_code = 513
+        raise err
+    return colls[0]

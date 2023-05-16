@@ -12,7 +12,7 @@ from gn3.auth.authorisation.errors import NotFoundError
 from gn3.auth.authentication.users import User, user_by_id
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 
-from .models import user_collections, create_collection
+from .models import get_collection, user_collections, create_collection
 
 collections = Blueprint("collections", __name__)
 
@@ -71,3 +71,22 @@ def new_user_collection() -> Response:
                 redisconn, name, traits))
         return jsonify(__new_collection_as_anonymous_user__(
             redisconn, name, traits))
+
+@collections.route("/<uuid:collection_id>/view", methods=["POST"])
+@require_json
+def view_collection(collection_id: UUID) -> Response:
+    """View a particular collection"""
+    with (Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        if bool(request.headers.get("Authorization")):
+            with require_oauth.acquire("profile user") as token:
+                return jsonify(get_collection(redisconn,
+                                              token.user,
+                                              collection_id))
+        return jsonify(get_collection(
+            redisconn,
+            User(
+                UUID(request.json.get("anon_id")),#type: ignore[union-attr]
+                "anon@ymous.user",
+                "Anonymous User"),
+            collection_id))
