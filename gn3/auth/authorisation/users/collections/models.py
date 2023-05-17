@@ -145,3 +145,17 @@ def get_collection(rconn: Redis, user: User, collection_id: UUID) -> dict:
         err.error_code = 513
         raise err
     return colls[0]
+
+def delete_collections(rconn: Redis,
+                       user: User,
+                       collection_ids: tuple[UUID, ...]) -> tuple[dict, ...]:
+    """
+    Delete collections with the given `collection_ids` returning the deleted
+    collections.
+    """
+    ucolls = user_collections(rconn, user)
+    save_collections(
+        rconn,
+        user,
+        tuple(coll for coll in ucolls if coll["id"] not in collection_ids))
+    return tuple(coll for coll in ucolls if coll["id"] in collection_ids)

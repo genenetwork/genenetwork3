@@ -13,7 +13,8 @@ from gn3.auth.authentication.users import User, user_by_id
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 
 from .models import (
-    get_collection, user_collections, save_collections, create_collection)
+    get_collection, user_collections, save_collections, create_collection,
+    delete_collections as _delete_collections)
 
 collections = Blueprint("collections", __name__)
 
@@ -128,3 +129,22 @@ def delete_anonymous() -> Response:
         return jsonify({
             "message": f"Deletion of {len(anon_colls)} was successful."
         })
+
+@collections.route("/delete", methods=["POST"])
+@require_json
+def delete_collections():
+    """Delete specified collections."""
+    with (Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        coll_ids = tuple(UUID(cid) for cid in request.json["collection_ids"])
+        deleted = _delete_collections(
+            redisconn,
+            User(request.json["anon_id"], "anon@ymous.user", "Anonymous User"),
+            coll_ids)
+        if bool(request.headers.get("Authorization")):
+            with require_oauth.acquire("profile user") as token:
+                deleted = deleted + _delete_collections(
+                    redisconn, token.user, coll_ids)
+
+        return jsonify({
+            "message": f"Deleted {len(deleted)} collections."})
