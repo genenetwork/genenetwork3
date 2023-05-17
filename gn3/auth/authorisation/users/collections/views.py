@@ -12,7 +12,8 @@ from gn3.auth.authorisation.errors import NotFoundError
 from gn3.auth.authentication.users import User, user_by_id
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 
-from .models import get_collection, user_collections, create_collection
+from .models import (
+    get_collection, user_collections, save_collections, create_collection)
 
 collections = Blueprint("collections", __name__)
 
@@ -90,3 +91,40 @@ def view_collection(collection_id: UUID) -> Response:
                 "anon@ymous.user",
                 "Anonymous User"),
             collection_id))
+
+@collections.route("/anonymous/import", methods=["POST"])
+@require_json
+@require_oauth("profile user")
+def import_anonymous() -> Response:
+    """Import anonymous collections."""
+    with (require_oauth.acquire("profile user") as token,
+          Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        anon_id = UUID(request.json.get("anon_id"))#type: ignore[union-attr]
+        anon_colls = user_collections(redisconn, User(
+            anon_id, "anon@ymous.user", "Anonymous User"))
+        save_collections(
+            redisconn,
+            token.user,
+            (user_collections(redisconn, token.user) +
+             anon_colls))
+        redisconn.hdel("collections", str(anon_id))
+        return jsonify({
+            "message": f"Import of {len(anon_colls)} was successful."
+        })
+
+@collections.route("/anonymous/delete", methods=["POST"])
+@require_json
+@require_oauth("profile user")
+def delete_anonymous() -> Response:
+    """Delete anonymous collections."""
+    with (require_oauth.acquire("profile user") as _token,
+          Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        anon_id = UUID(request.json.get("anon_id"))#type: ignore[union-attr]
+        anon_colls = user_collections(redisconn, User(
+            anon_id, "anon@ymous.user", "Anonymous User"))
+        redisconn.hdel("collections", str(anon_id))
+        return jsonify({
+            "message": f"Deletion of {len(anon_colls)} was successful."
+        })
