@@ -14,6 +14,7 @@ from gn3.auth.authentication.oauth2.resource_server import require_oauth
 
 from .models import (
     add_traits,
+    change_name,
     remove_traits,
     get_collection,
     user_collections,
@@ -207,5 +208,32 @@ def add_traits_to_collection(collection_id: UUID) -> Response:
 
         return jsonify({
             "message": f"Added {len(the_traits)} traits to collection.",
+            "collection": coll
+        })
+
+@collections.route("/<uuid:collection_id>/rename", methods=["POST"])
+@require_json
+def rename_collection(collection_id: UUID) -> Response:
+    """Rename the given collection"""
+    if not bool(request.json["new_name"]):#type: ignore[index]
+        return jsonify({"message": "No new name to change to."})
+
+    new_name = request.json["new_name"]#type: ignore[index]
+    with (Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        if not bool(request.headers.get("Authorization")):
+            coll = change_name(redisconn,
+                               User(UUID(request.json["anon_id"]),#type: ignore[index]
+                                    "anon@ymous.user",
+                                    "Anonymous User"),
+                               collection_id,
+                               new_name)
+        else:
+            with require_oauth.acquire("profile user") as token:
+                coll = change_name(
+                    redisconn, token.user, collection_id, new_name)
+
+        return jsonify({
+            "message": "Collection rename successful.",
             "collection": coll
         })

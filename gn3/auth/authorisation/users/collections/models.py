@@ -208,9 +208,9 @@ def add_traits(rconn: Redis,
     return new_coll
 
 def remove_traits(rconn: Redis,
-               user: User,
-               collection_id: UUID,
-               traits: tuple[str, ...]) -> dict:
+                  user: User,
+                  collection_id: UUID,
+                  traits: tuple[str, ...]) -> dict:
     """
     Remove `traits` from the `user` collection identified by `collection_id`.
 
@@ -228,6 +228,29 @@ def remove_traits(rconn: Redis,
         "members": new_members,
         "num_members": len(new_members)
     }
+    save_collections(
+        rconn,
+        user,
+        (tuple(coll for coll in ucolls if coll["id"] != collection_id) +
+         (new_coll,)))
+    return new_coll
+
+def change_name(rconn: Redis,
+                user: User,
+                collection_id: UUID,
+                new_name: str) -> dict:
+    """
+    Change the collection's name.
+
+    Returns: The collection with the new name.
+    """
+    ucolls = user_collections(rconn, user)
+    __raise_if_collections_empty__(user, ucolls)
+
+    mod_col = tuple(coll for coll in ucolls if coll["id"] == collection_id)
+    __raise_if_not_single_collection__(user, collection_id, mod_col)
+
+    new_coll = {**mod_col[0], "name": new_name}
     save_collections(
         rconn,
         user,
