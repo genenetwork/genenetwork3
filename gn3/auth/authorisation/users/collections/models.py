@@ -146,6 +146,26 @@ def get_collection(rconn: Redis, user: User, collection_id: UUID) -> dict:
         raise err
     return colls[0]
 
+def __raise_if_collections_empty__(user: User, collections: tuple[dict, ...]):
+    """Raise an exception if no collections are found for `user`."""
+    if len(collections) < 1:
+        raise NotFoundError(f"No collections found for user `{user.user_id}`")
+
+def __raise_if_not_single_collection__(
+        user: User, collection_id: UUID, collections: tuple[dict, ...]):
+    """
+    Raise an exception there is zero, or more than one collection for `user`.
+    """
+    if len(collections) == 0:
+        raise NotFoundError(f"No collections found for user `{user.user_id}` "
+                            f"with ID `{collection_id}`.")
+    if len(collections) > 1:
+        err = InvalidData(
+            "More than one collection was found having the ID "
+            f"`{collection_id}` for user with ID `{user.user_id}`.")
+        err.error_code = 513
+        raise err
+
 def delete_collections(rconn: Redis,
                        user: User,
                        collection_ids: tuple[UUID, ...]) -> tuple[dict, ...]:
@@ -159,3 +179,58 @@ def delete_collections(rconn: Redis,
         user,
         tuple(coll for coll in ucolls if coll["id"] not in collection_ids))
     return tuple(coll for coll in ucolls if coll["id"] in collection_ids)
+
+def add_traits(rconn: Redis,
+               user: User,
+               collection_id: UUID,
+               traits: tuple[str, ...]) -> dict:
+    """
+    Add `traits` to the `user` collection identified by `collection_id`.
+
+    Returns: The collection with the new traits added.
+    """
+    ucolls = user_collections(rconn, user)
+    __raise_if_collections_empty__(user, ucolls)
+
+    mod_col = tuple(coll for coll in ucolls if coll["id"] == collection_id)
+    __raise_if_not_single_collection__(user, collection_id, mod_col)
+    new_members = tuple(set(tuple(mod_col[0]["members"]) + traits))
+    new_coll = {
+        **mod_col[0],
+        "members": new_members,
+        "num_members": len(new_members)
+    }
+    save_collections(
+        rconn,
+        user,
+        (tuple(coll for coll in ucolls if coll["id"] != collection_id) +
+         (new_coll,)))
+    return new_coll
+
+def remove_traits(rconn: Redis,
+               user: User,
+               collection_id: UUID,
+               traits: tuple[str, ...]) -> dict:
+    """
+    Remove `traits` from the `user` collection identified by `collection_id`.
+
+    Returns: The collection with the specified `traits` removed.
+    """
+    ucolls = user_collections(rconn, user)
+    __raise_if_collections_empty__(user, ucolls)
+
+    mod_col = tuple(coll for coll in ucolls if coll["id"] == collection_id)
+    __raise_if_not_single_collection__(user, collection_id, mod_col)
+    new_members = tuple(
+        trait for trait in mod_col[0]["members"] if trait not in traits)
+    new_coll = {
+        **mod_col[0],
+        "members": new_members,
+        "num_members": len(new_members)
+    }
+    save_collections(
+        rconn,
+        user,
+        (tuple(coll for coll in ucolls if coll["id"] != collection_id) +
+         (new_coll,)))
+    return new_coll

@@ -13,7 +13,12 @@ from gn3.auth.authentication.users import User, user_by_id
 from gn3.auth.authentication.oauth2.resource_server import require_oauth
 
 from .models import (
-    get_collection, user_collections, save_collections, create_collection,
+    add_traits,
+    remove_traits,
+    get_collection,
+    user_collections,
+    save_collections,
+    create_collection,
     delete_collections as _delete_collections)
 
 collections = Blueprint("collections", __name__)
@@ -148,3 +153,59 @@ def delete_collections():
 
         return jsonify({
             "message": f"Deleted {len(deleted)} collections."})
+
+@collections.route("/<uuid:collection_id>/traits/remove", methods=["POST"])
+@require_json
+def remove_traits_from_collection(collection_id: UUID) -> Response:
+    """Remove specified traits from collection with ID `collection_id`."""
+    if len(request.json["traits"]) < 1:#type: ignore[index]
+        return jsonify({"message": "No trait to remove from collection."})
+
+    the_traits = tuple(request.json["traits"])#type: ignore[index]
+    with (Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        if not bool(request.headers.get("Authorization")):
+            coll = remove_traits(
+                redisconn,
+                User(request.json["anon_id"],#type: ignore[index]
+                     "anon@ymous.user",
+                     "Anonymous User"),
+                collection_id,
+                the_traits)
+        else:
+            with require_oauth.acquire("profile user") as token:
+                coll = remove_traits(
+                    redisconn, token.user, collection_id, the_traits)
+
+        return jsonify({
+            "message": f"Deleted {len(the_traits)} traits from collection.",
+            "collection": coll
+        })
+
+@collections.route("/<uuid:collection_id>/traits/add", methods=["POST"])
+@require_json
+def add_traits_to_collection(collection_id: UUID) -> Response:
+    """Add specified traits to collection with ID `collection_id`."""
+    if len(request.json["traits"]) < 1:#type: ignore[index]
+        return jsonify({"message": "No trait to add to collection."})
+
+    the_traits = tuple(request.json["traits"])#type: ignore[index]
+    with (Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redisconn):
+        if not bool(request.headers.get("Authorization")):
+            coll = add_traits(
+                redisconn,
+                User(request.json["anon_id"],#type: ignore[index]
+                     "anon@ymous.user",
+                     "Anonymous User"),
+                collection_id,
+                the_traits)
+        else:
+            with require_oauth.acquire("profile user") as token:
+                coll = add_traits(
+                    redisconn, token.user, collection_id, the_traits)
+
+        return jsonify({
+            "message": f"Added {len(the_traits)} traits to collection.",
+            "collection": coll
+        })
