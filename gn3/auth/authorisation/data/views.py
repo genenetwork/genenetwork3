@@ -123,13 +123,13 @@ def authorisation() -> Response:
                 return f"{dataset_type}::{dataset_name}::{trait['trait_name']}"
             return f"{dataset_type}::{dataset_name}"
 
-        return jsonify({
-            "user": user._asdict(),
-            "trait_privileges": tuple(
+        return jsonify(tuple(
             {
+                "user": user._asdict(),
                 **{key:trait[key] for key in ("trait_fullname", "trait_name")},
                 "dataset_name": trait["db"]["dataset_name"],
                 "dataset_type": __translate__(trait["db"]["dataset_type"]),
+                "resource_id": data_to_resource_map.get(__trait_key__(trait)),
                 "privileges": privileges.get(
                     data_to_resource_map.get(
                         __trait_key__(trait),
@@ -137,7 +137,7 @@ def authorisation() -> Response:
                     tuple())
             } for trait in
             (build_trait_name(trait_fullname)
-             for trait_fullname in traits_names))})
+             for trait_fullname in traits_names)))
 
 def __search_mrna__():
     query = __request_key__("query", "")
