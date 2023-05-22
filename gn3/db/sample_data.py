@@ -73,7 +73,6 @@ ORDER BY st.Name""", (trait_name, phenotype_id))
 
         sample_data = {}
         for data in cursor.fetchall():
-            this_data = {}
             sample, value, error, n_cases = data
             sample_data[sample] = {
                 'value': value,
