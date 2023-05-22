@@ -59,7 +59,7 @@ def __extract_actions(
 
 def get_trait_sample_data(
     conn: Any, trait_name: int, phenotype_id: int
-) -> str:
+) -> Dict:
     """Fetch a trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
         cursor.execute("""
