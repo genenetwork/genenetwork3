@@ -12,25 +12,25 @@ def retrieve_sample_list(group: str):
     the "official" sample list is stored
     """
 
+    samplelist = []
     genofile_path = os.environ.get("GENENETWORK_FILES") + "/genotype/" + group + ".geno"
     if os.path.isfile(genofile_path):
-        genofile = open(genofile_path)
+        with open(genofile_path, "r") as genofile:
+            for line in genofile:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith(("#", "@")):
+                    continue
+                break
 
-        for line in genofile:
-            line = line.strip()
-            if not line:
-                continue
-            if line.startswith(("#", "@")):
-                continue
-            break
+            headers = line.split("\t")
 
-        headers = line.split("\t")
-
-        if headers[3] == "Mb":
-            samplelist = headers[4:]
-        else:
-            samplelist = headers[3:]
-        return samplelist
+            if headers[3] == "Mb":
+                samplelist = headers[4:]
+            else:
+                samplelist = headers[3:]
+    return samplelist
 
 def retrieve_group_name(
         group_id: int, connection: any):
