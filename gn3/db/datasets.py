@@ -34,7 +34,7 @@ def retrieve_sample_list(group: str):
     return samplelist
 
 def retrieve_group_name(
-        group_id: int, connection: any):
+        group_id: int, connection: Any):
     """
     Given the group id (InbredSet.Id in the database), retrieve its name
     """
