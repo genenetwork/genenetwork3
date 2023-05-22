@@ -13,7 +13,7 @@ def retrieve_sample_list(group: str):
     """
 
     samplelist = []
-    genofile_path = f"{os.environ.get("GENENETWORK_FILES", "/home/gn2/production/genotype_files/")}/genotype/{group}.geno"
+    genofile_path = f"{os.environ.get('GENENETWORK_FILES', '/home/gn2/production/genotype_files/')}/genotype/{group}.geno"
     if os.path.isfile(genofile_path):
         with open(genofile_path, encoding="utf-8") as genofile:
             line = ""
