@@ -16,6 +16,7 @@ def retrieve_sample_list(group: str):
     genofile_path = os.environ.get("GENENETWORK_FILES") + "/genotype/" + group + ".geno"
     if os.path.isfile(genofile_path):
         with open(genofile_path, "r") as genofile:
+            line = ""
             for line in genofile:
                 line = line.strip()
                 if not line:
