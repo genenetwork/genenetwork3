@@ -131,6 +131,8 @@ def locked_xapian_writable_database(path: pathlib.Path) -> xapian.WritableDataba
     between processes.
     """
     # pylint: disable-next=invalid-name
+    if not path.exists():
+        os.makedirs(path)
     db = xapian.WritableDatabase(str(path))
     db.begin_transaction()
     try:
