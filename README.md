@@ -338,6 +338,28 @@ pip freeze --path venv/lib/python3.8/site-packages > requirements.txt
 
 ```
 
+## Logging
+
+During development, there is periodically need to log what the application is
+doing to help resolve issues.
+
+The logging system [was initialised](https://github.com/genenetwork/genenetwork3/commit/95f067a542424b76022595a74d660a7e84158f38)
+to help with this.
+
+Now, you can simply use the `current_app.logger.*` logging methods to log out
+any information you desire: e.g.
+
+```python
+from flask import current_app
+
+...
+
+def some_function(arg1, arg2, **args, **kwargs):
+    ...
+    current_app.logger.debug(f"THE KWARGS: {kwargs}")
+    ...
+```
+
 ## Genotype Files
 
 You can get the genotype files from http://ipfs.genenetwork.org/ipfs/QmXQy3DAUWJuYxubLHLkPMNCEVq1oV7844xWG2d1GSPFPL and save them on your host machine at, say `$HOME/genotype_files` with something like:
