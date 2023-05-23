@@ -12,6 +12,7 @@ from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
 
 from .models import list_users
+from .masquerade.views import masq
 from .collections.views import collections
 
 from ..groups.models import user_group as _user_group
@@ -25,6 +26,7 @@ from ...authentication.users import User, save_user, set_user_password
 from ...authentication.oauth2.models.oauth2token import token_by_access_token
 
 users = Blueprint("users", __name__)
+users.register_blueprint(masq, url_prefix="/masquerade")
 users.register_blueprint(collections, url_prefix="/collections")
 
 @users.route("/", methods=["GET"])
