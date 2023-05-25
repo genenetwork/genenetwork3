@@ -57,7 +57,9 @@ def __assign_resource_owner_role__(cursor, resource, user):
     """Assign `user` the 'Resource Owner' role for `resource`."""
     cursor.execute(
         "SELECT gr.* FROM group_roles AS gr INNER JOIN roles AS r "
-        "ON gr.role_id=r.role_id WHERE r.role_name='resource-owner'")
+        "ON gr.role_id=r.role_id WHERE r.role_name='resource-owner' "
+        "AND gr.group_id=?",
+        (str(resource.group.group_id),))
     role = cursor.fetchone()
     if not role:
         cursor.execute("SELECT * FROM roles WHERE role_name='resource-owner'")

@@ -94,7 +94,7 @@ def create_group(
         raise MembershipError(group_leader, user_groups)
 
     with db.cursor(conn) as cursor:
-        new_group = __save_group__(
+        new_group = save_group(
             cursor, group_name,(
                 {"group_description": group_description}
                 if group_description else {}))
@@ -198,7 +198,7 @@ def all_groups(conn: db.DbConnection) -> Maybe[Sequence[Group]]:
 
     return Nothing
 
-def __save_group__(
+def save_group(
         cursor: db.DbCursor, group_name: str,
         group_metadata: dict[str, Any]) -> Group:
     """Save a group to db"""
