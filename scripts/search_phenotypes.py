@@ -22,10 +22,16 @@ class NoSearchResults(Exception):
     """Raise when there are no results for a search."""
 
 def do_search(
-        host: str, query: str, per_page: int, page: int = 1) -> Iterable[dict[str, Any]]:
+        dataset_type: str, host: str, query: str, per_page: int,
+        page: int = 1) -> Iterable[dict[str, Any]]:
     """Do the search and return the results"""
+    search_types = {
+        "phenotype": "phenotype",
+        "genotype": "gene"
+    }
     search_uri = urljoin(host, (f"search/?page={page}&per_page={per_page}"
-                                f"&type=phenotype&query={query}"))
+                                f"&type={search_types[dataset_type]}"
+                                f"&query={query}"))
     response = requests.get(search_uri)
     results = response.json()
     if len(results) > 0:
@@ -61,6 +67,7 @@ def expire_redis_results(redisconn: redis.Redis, redisname: str):
 
 @click.command()
 @click.argument("species")
+@click.argument("dataset_type")
 @click.argument("query")
 @click.argument("job-id", type=click.UUID)
 @click.option(
@@ -76,8 +83,9 @@ def expire_redis_results(redisconn: redis.Redis, redisname: str):
     "--redis-uri", default="redis://:@localhost:6379/0",
     help="The URI to the redis server.")
 def search(# pylint: disable=[too-many-arguments, too-many-locals]
-        species: str, query: str, job_id: uuid.UUID, host: str, per_page: int,
-        selected: str, auth_db_uri: str, gn3_db_uri: str, redis_uri: str):
+        species: str, dataset_type: str, query: str, job_id: uuid.UUID,
+        host: str, per_page: int, selected: str, auth_db_uri: str,
+        gn3_db_uri: str, redis_uri: str):
     """
     Search for phenotype traits, filtering out any linked and selected traits,
     loading more and more pages until the `per_page` quota is fulfilled or the
@@ -104,7 +112,8 @@ def search(# pylint: disable=[too-many-arguments, too-many-locals]
             while count < per_page:
                 results = tuple(remove_linked(
                     remove_selected(
-                        do_search(host, search_query, per_page, page),
+                        do_search(
+                            dataset_type, host, search_query, per_page, page),
                         selected_traits),
                     linked))[0:per_page-count]
                 count = count + len(results)

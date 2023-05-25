@@ -175,7 +175,7 @@ def __search_genotypes__():
             limit=limit, offset=offset)
         return jsonify(with_db_connection(__ungrouped__))
 
-def __search_phenotypes__():
+def __search_xapian__():
     # launch the external process to search for phenotypes
     redisuri = app.config["REDIS_URI"]
     with redis.Redis.from_url(redisuri, decode_responses=True) as redisconn:
@@ -184,6 +184,7 @@ def __search_phenotypes__():
         command =[
             sys.executable, "-m", "scripts.search_phenotypes",
             __request_key__("species_name"),
+            __request_key__("dataset_type"),
             __request_key__("query"),
             str(job_id),
             f"--host={__request_key__('gn3_server_uri')}",
@@ -193,6 +194,10 @@ def __search_phenotypes__():
             f"--per-page={__request_key__('per_page')}"] +(
                 [f"--selected={json.dumps(selected)}"]
                 if len(selected) > 0 else [])
+        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        import shlex
+        print(shlex.join(command))
+        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
         jobs.create_job(redisconn, {
             "job_id": job_id, "command": command, "status": "queued",
             "search_results": tuple()})
@@ -203,20 +208,21 @@ def __search_phenotypes__():
             "command": command
         })
 
-@data.route("/search", methods=["GET"])
+@data.route("/search", methods=["POST"])
 @require_oauth("profile group resource")
+@require_json
 def search_unlinked_data():
     """Search for various unlinked data."""
     dataset_type = request.json["dataset_type"]
     search_fns = {
         "mrna": __search_mrna__,
-        "genotype": __search_genotypes__,
-        "phenotype": __search_phenotypes__
+        "genotype": __search_xapian__,
+        "phenotype": __search_xapian__
     }
     return search_fns[dataset_type]()
 
-@data.route("/search/phenotype/<uuid:job_id>", methods=["GET"])
-def pheno_search_results(job_id: uuid.UUID) -> Response:
+@data.route("/search/results/<uuid:job_id>", methods=["GET"])
+def search_job_results(job_id: uuid.UUID) -> Response:
     """Get the search results from the external script"""
     def __search_error__(err):
         raise NotFoundError(err["error_description"])
