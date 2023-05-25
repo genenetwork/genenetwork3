@@ -37,7 +37,8 @@ def test_create_resource(mocker, fxtr_users_in_group, user, expected):
     mocker.patch("gn3.auth.authorisation.checks.require_oauth.acquire",
                  conftest.get_tokeniser(user))
     conn, _group, _users = fxtr_users_in_group
-    resource = create_resource(conn, "test_resource", resource_category, user)
+    resource = create_resource(
+        conn, "test_resource", resource_category, user, False)
     assert resource == expected
 
     with db.cursor(conn) as cursor:
@@ -68,7 +69,7 @@ def test_create_resource_raises_for_unauthorised_users(
     conn, _group, _users = fxtr_users_in_group
     with pytest.raises(AuthorisationError):
         assert create_resource(
-            conn, "test_resource", resource_category, user) == expected
+            conn, "test_resource", resource_category, user, False) == expected
 
 SORTKEY = lambda resource: resource.resource_id
 

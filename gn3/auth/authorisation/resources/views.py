@@ -47,9 +47,11 @@ def create_resource() -> Response:
         with db.connection(db_uri) as conn:
             try:
                 resource = _create_resource(
-                    conn, resource_name, resource_category_by_id(
-                        conn, resource_category_id),
-                    the_token.user)
+                    conn,
+                    resource_name,
+                    resource_category_by_id(conn, resource_category_id),
+                    the_token.user,
+                    (form.get("public") == "on"))
                 return jsonify(dictify(resource))
             except sqlite3.IntegrityError as sql3ie:
                 if sql3ie.args[0] == ("UNIQUE constraint failed: "

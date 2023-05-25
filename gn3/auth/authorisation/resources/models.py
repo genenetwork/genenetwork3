@@ -84,7 +84,8 @@ def __assign_resource_owner_role__(cursor, resource, user):
               oauth2_scope="profile resource")
 def create_resource(
         conn: db.DbConnection, resource_name: str,
-        resource_category: ResourceCategory, user: User) -> Resource:
+        resource_category: ResourceCategory, user: User,
+        public: bool) -> Resource:
     """Create a resource item."""
     with db.cursor(conn) as cursor:
         group = user_group(conn, user).maybe(
@@ -92,7 +93,8 @@ def create_resource(
         if not group:
             raise MissingGroupError(
                 "User with no group cannot create a resource.")
-        resource = Resource(group, uuid4(), resource_name, resource_category, False)
+        resource = Resource(
+            group, uuid4(), resource_name, resource_category, public)
         cursor.execute(
             "INSERT INTO resources VALUES (?, ?, ?, ?, ?)",
             (str(resource.group.group_id), str(resource.resource_id),
