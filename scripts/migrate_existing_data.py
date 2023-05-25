@@ -4,6 +4,7 @@ group for accessibility purposes.
 """
 import sys
 import json
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import click
@@ -336,12 +337,17 @@ def assign_data_to_resource(authconn, bioconn, resource: Resource):
         authconn, bioconn, resource)
 
 @click.command()
-@click.argument("authdburi") # "URI to the Auth(entic|oris)ation database"
+@click.argument("authdbpath") # "Path to the Auth(entic|oris)ation database"
 @click.argument("mysqldburi") # "URI to the MySQL database with the biology data"
-def run(authdburi, mysqldburi):
+def run(authdbpath, mysqldburi):
     """Entry-point for data migration."""
+    if not Path(authdbpath).exists():
+        print(
+            f"ERROR: Auth db file `{authdbpath}` does not exist.",
+            file=sys.stderr)
+        sys.exit(2)
     try:
-        with (authdb.connection(authdburi) as authconn,
+        with (authdb.connection(authdbpath) as authconn,
               biodb.database_connection(mysqldburi) as bioconn):
             admin = select_sys_admin(sys_admins(authconn))
             resources = default_resources(
