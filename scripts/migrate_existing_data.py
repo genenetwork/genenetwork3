@@ -336,10 +336,7 @@ def assign_data_to_resource(authconn, bioconn, resource: Resource):
     return assigner_fns[resource.resource_category.resource_category_key](
         authconn, bioconn, resource)
 
-@click.command()
-@click.argument("authdbpath") # "Path to the Auth(entic|oris)ation database"
-@click.argument("mysqldburi") # "URI to the MySQL database with the biology data"
-def run(authdbpath, mysqldburi):
+def entry(authdbpath, mysqldburi):
     """Entry-point for data migration."""
     if not Path(authdbpath).exists():
         print(
@@ -359,6 +356,13 @@ def run(authdbpath, mysqldburi):
     except DataNotFound as dnf:
         print(dnf.args[0], file=sys.stderr)
         sys.exit(1)
+
+@click.command()
+@click.argument("authdbpath") # "Path to the Auth(entic|oris)ation database"
+@click.argument("mysqldburi") # "URI to the MySQL database with the biology data"
+def run(authdbpath, mysqldburi):
+    """Setup command-line arguments."""
+    entry(authdbpath, mysqldburi)
 
 if __name__ == "__main__":
     run() # pylint: disable=[no-value-for-parameter]

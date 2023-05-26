@@ -108,6 +108,12 @@ def assign_system_admin(user_id: uuid.UUID):
               file=sys.stderr)
         sys.exit(1)
 
+@app.cli.command()
+def make_data_public():
+    """Make existing data that is not assigned to any group publicly visible."""
+    from scripts.migrate_existing_data import entry
+    entry(app.config["AUTH_DB"], app.config["SQL_URI"])
+
 ##### END: CLI Commands #####
 
 if __name__ == '__main__':

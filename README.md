@@ -127,6 +127,10 @@ These configurations should be set in an external config file, pointed to with t
 
 TMPDIR also needs to be set correctly for the R script(s) (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp)
 
+## Command-Line Utility Scripts
+
+This project has a number of utility scripts that are needed in specific cirscumstances, and whose purpose is to support the operation of this application in one way or another. Have a look at the [Scripts.md file](./docs/Scripts.md] to see the details for each of the scripts that are available.
+
 ## Migrations
 
 **NOTE**: Do not create migration scripts manually. Use the processes indicated below.
