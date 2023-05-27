@@ -43,6 +43,18 @@ then set that user as a system administrator by running:
 FLASK_APP="main.py" flask assign-system-admin 5b15ef01-a9d7-4ee4-9a38-fe9dd1d871b8
 ```
 
+You can retrieve the user ID from the (SQLite) database, with something like:
+
+```sh
+$ sqlite3 /home/frederick/genenetwork/gn3_files/db/auth.db
+SQLite version 3.40.0 2022-11-16 12:10:08
+Enter ".help" for usage hints.
+sqlite> SELECT * FROM users;
+0ad1917c-57da-46dc-b79e-c81c91e5b928|test@development.user|Test Development User
+9c5d4ddf-c361-4133-add3-9ab9845bb9f2|fredtest02@gmail.com|A New Group Member
+b4a8ed7a-a878-4884-94e0-26d3fe0c56a3|fredleader@gmail.com|Frederick the Group Leader
+```
+
 ## Make Existing Data Publicly Visible
 
 This will only act on any existing data that is not already linked with a user
