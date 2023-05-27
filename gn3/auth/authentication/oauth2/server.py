@@ -4,6 +4,7 @@ import datetime
 from typing import Callable
 
 from flask import Flask, current_app
+from authlib.oauth2.rfc6749.errors import InvalidClientError
 from authlib.integrations.flask_oauth2 import AuthorizationServer
 # from authlib.oauth2.rfc7636 import CodeChallenge
 
@@ -24,7 +25,12 @@ def create_query_client_func() -> Callable:
         # use current_app rather than passing the db_uri to avoid issues
         # when config changes, e.g. while testing.
         with db.connection(current_app.config["AUTH_DB"]) as conn:
-            return client(conn, client_id).maybe(None, lambda clt: clt) # type: ignore[misc]
+            the_client = client(conn, client_id).maybe(
+                None, lambda clt: clt) # type: ignore[misc]
+            if bool(the_client):
+                return the_client
+            raise InvalidClientError(
+                "No client found for the given CLIENT_ID and CLIENT_SECRET.")
 
     return __query_client__
 

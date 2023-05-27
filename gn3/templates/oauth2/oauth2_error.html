@@ -1,0 +1,16 @@
+{%extends "base.html"%}
+
+{%block title%}OAuth2 Error{%endblock%}
+
+{%block content%}
+{{flash_messages()}}
+
+<h1>Error: {{error.status_code}}</h1>
+
+There was an error trying to fulfill your request:
+
+<p>
+  <strong>{{error.error}}</strong>:
+  {{error.description}}
+</p>
+{%endblock%}
