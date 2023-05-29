@@ -26,11 +26,6 @@ from ..users import valid_login, NotFoundError, user_by_email
 
 auth = Blueprint("auth", __name__)
 
-@auth.route("/register-client", methods=["GET", "POST"])
-def register_client():
-    """Register an OAuth2 client."""
-    return "WOULD REGISTER ..."
-
 @auth.route("/delete-client/<uuid:client_id>", methods=["GET", "POST"])
 def delete_client(client_id: uuid.UUID):
     """Delete an OAuth2 client."""
@@ -77,8 +72,8 @@ def authorise():
 
         return with_db_connection(__authorise__)
     except InvalidClientError as ice:
-            return render_template(
-                "oauth2/oauth2_error.html", error=ice), ice.status_code
+        return render_template(
+            "oauth2/oauth2_error.html", error=ice), ice.status_code
 
 @auth.route("/token", methods=["POST"])
 def token():

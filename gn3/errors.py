@@ -13,6 +13,7 @@ def handle_authorisation_error(exc: AuthorisationError):
     }), exc.error_code
 
 def handle_oauth2_errors(exc: OAuth2Error):
+    """Handle OAuth2Error if not handled anywhere else."""
     current_app.logger.error(exc)
     return jsonify({
         "error": exc.error,

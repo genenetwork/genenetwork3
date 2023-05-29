@@ -15,6 +15,8 @@ from gn3.auth.authentication.users import hash_password
 
 from gn3.auth import db
 
+from scripts import migrate_existing_data as med# type: ignore[import]
+
 app = create_app()
 
 ##### BEGIN: CLI Commands #####
@@ -111,8 +113,7 @@ def assign_system_admin(user_id: uuid.UUID):
 @app.cli.command()
 def make_data_public():
     """Make existing data that is not assigned to any group publicly visible."""
-    from scripts.migrate_existing_data import entry
-    entry(app.config["AUTH_DB"], app.config["SQL_URI"])
+    med.entry(app.config["AUTH_DB"], app.config["SQL_URI"])
 
 ##### END: CLI Commands #####
 
