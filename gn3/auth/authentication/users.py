@@ -48,6 +48,13 @@ def user_by_id(conn: db.DbConnection, user_id: UUID) -> User:
 
     raise NotFoundError(f"Could not find user with ID {user_id}")
 
+def same_password(password: str, hashed: str) -> bool:
+    """Check that `raw_password` is hashed to `hash`"""
+    try:
+        return hasher().verify(hashed, password)
+    except VerifyMismatchError as _vme:
+        return False
+
 def valid_login(conn: db.DbConnection, user: User, password: str) -> bool:
     """Check the validity of the provided credentials for login."""
     with db.cursor(conn) as cursor:
@@ -61,10 +68,7 @@ def valid_login(conn: db.DbConnection, user: User, password: str) -> bool:
     if row is None:
         return False
 
-    try:
-        return hasher().verify(row["password"], password)
-    except VerifyMismatchError as _vme:
-        return False
+    return same_password(password, row["password"])
 
 def save_user(cursor: db.DbCursor, email: str, name: str) -> User:
     """

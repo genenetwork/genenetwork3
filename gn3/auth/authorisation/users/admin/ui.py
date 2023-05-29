@@ -20,7 +20,8 @@ def logged_in(func):
         if bool(session.get(SESSION_KEY)) and not __session_expired__():
             return func(*args, **kwargs)
         flash("You need to be logged in to access that page.", "alert-danger")
-        return redirect(url_for("oauth2.admin.login", next=request.url))
+        return redirect(url_for(
+            "oauth2.admin.login", next=request.url_rule.endpoint))
     return __logged_in__
 
 def is_admin(func):

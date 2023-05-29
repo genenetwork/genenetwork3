@@ -1,0 +1,16 @@
+{%extends "base.html"%}
+
+{%block title%}Genenetwork3: Admin Dashboard{%endblock%}
+
+{%block content%}
+{{flash_messages()}}
+
+<h1>Genenetwork3: Admin Dashboard</h1>
+
+<ul class="nav">
+  <li>
+    <a href="{{url_for('oauth2.admin.register_client')}}"
+       title="Register a new OAuth2 client.">Register OAuth2 Client</a>
+  </li>
+</ul>
+{%endblock%}

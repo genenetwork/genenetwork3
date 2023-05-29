@@ -1,0 +1,21 @@
+{%extends "base.html"%}
+
+{%block title%}Genenetwork3: Register OAuth2 Client{%endblock%}
+
+{%block content%}
+{{flash_messages()}}
+
+<h1>Genenetwork3: Register OAuth2 Client</h1>
+
+<p>Client has been registered successfully.</p>
+
+<p>Please save the following client details somewhere. There is no way to
+  retrieve the the <strong>CLIENT_SECRET</strong> once you leave this page.</p>
+
+<dl>
+  <dt>CLIENT_ID</dt>
+  <dd>{{client.client_id}}</dd>
+  <dt>CLIENT_SECRET</dt>
+  <dd>{{client_secret}}</dd>
+</dl>
+{%endblock%}

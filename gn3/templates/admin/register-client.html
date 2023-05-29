@@ -1,0 +1,78 @@
+{%extends "base.html"%}
+
+{%block title%}Genenetwork3: Register OAuth2 Client{%endblock%}
+
+{%block content%}
+{{flash_messages()}}
+
+<h1>Genenetwork3: Register OAuth2 Client</h1>
+
+<form method="POST" action="{{url_for('oauth2.admin.register_client')}}">
+
+  <fieldset>
+    <legend>Select client scope</legend>
+
+    {%for scp in scope%}
+    <input name="scope[]" id="chk:{{scp}}"type="checkbox" value="{{scp}}"
+	   {%if scp=="profile"%}checked="checked"{%endif%} />
+    <label for="chk:{{scp}}">{{scp}}</label><br />
+    {%endfor%}
+
+  </fieldset>
+
+  <fieldset>
+    <legend>Basic OAuth2 client information</legend>
+
+    
+    <label for="txt:client-name">Client name</label>
+    <input name="client_name" type="text" id="txt:client-name"
+	   required="required" />
+    <br /><br />
+
+    <label for="txt:redirect-uri">Redirect URI</label>
+    <input name="redirect_uri" type="text" id="txt:redirect-uri"
+	   required="required" />
+    <br /><br />
+
+    <label for="txt:other-redirect-uris">
+      Other redirect URIs (Enter one URI per line)</label>
+    <br />
+    <textarea name="other_redirect_uris" id="txt:other-redirect-uris"
+	      cols="80" rows="10"
+	      title="Enter one URI per line."></textarea>
+    <br /><br />
+    <fieldset>
+      <legend>Supported grant types</legend>
+      <input name="grants[]"
+	     type="checkbox"
+	     value="authorization_code"
+	     id="chk:authorization-code"
+	     checked="checked" />
+      <label for="chk:authorization-code">Authorization Code</label>
+      <br /><br />
+
+      <input name="grants[]"
+	     type="checkbox"
+	     value="refresh_token"
+	     id="chk:refresh-token" />
+      <label for="chk:refresh-token">Refresh Token</label>
+    </fieldset>
+  </fieldset>
+
+  <fieldset>
+    <legend>User information</legend>
+
+    <p>The user to register this client for</p>
+    <select name="user" required="required">
+      {%for user in users%}
+      <option value="{{user.user_id}}"
+	      {%if user.user_id==current_user.user_id%}
+	      selected="selected"
+	      {%endif%}>{{user.name}} ({{user.email}})</option>
+      {%endfor%}
+    </select>
+  </fieldset>
+  
+  <input type="submit" value="register client" />
+</form>
+{%endblock%}
