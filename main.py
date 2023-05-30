@@ -15,6 +15,7 @@ from gn3.auth.authentication.users import hash_password
 
 from gn3.auth import db
 
+from scripts import register_sys_admin as rsysadm# type: ignore[import]
 from scripts import migrate_existing_data as med# type: ignore[import]
 
 app = create_app()
@@ -114,6 +115,11 @@ def assign_system_admin(user_id: uuid.UUID):
 def make_data_public():
     """Make existing data that is not assigned to any group publicly visible."""
     med.entry(app.config["AUTH_DB"], app.config["SQL_URI"])
+
+@app.cli.command()
+def register_admin():
+    """Register the administrator."""
+    rsysadm.register_admin(app.config["AUTH_DB"])
 
 ##### END: CLI Commands #####
 
