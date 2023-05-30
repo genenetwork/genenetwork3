@@ -78,4 +78,4 @@ if __name__ == "__main__":
         """Entry-point for when script is run directly"""
         return register_admin(Path(authdbpath).absolute())
 
-    run()
+    run()# pylint: disable=[no-value-for-parameter]

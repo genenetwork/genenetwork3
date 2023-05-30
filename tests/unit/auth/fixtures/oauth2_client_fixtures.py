@@ -6,6 +6,7 @@ import datetime
 import pytest
 
 from gn3.auth import db
+from gn3.auth.authentication.users import hash_password
 from gn3.auth.authentication.oauth2.models.oauth2client import OAuth2Client
 
 @pytest.fixture(autouse=True)
@@ -36,7 +37,7 @@ def fxtr_oauth2_clients(fxtr_users_with_passwords):
     with db.cursor(conn) as cursor:
         cursor.executemany(
             "INSERT INTO oauth2_clients VALUES (?, ?, ?, ?, ?, ?)",
-            ((str(client.client_id), client.client_secret,
+            ((str(client.client_id), hash_password(client.client_secret),
               int(client.client_id_issued_at.timestamp()),
               int(client.client_secret_expires_at.timestamp()),
               json.dumps(client.client_metadata), str(client.user.user_id))
