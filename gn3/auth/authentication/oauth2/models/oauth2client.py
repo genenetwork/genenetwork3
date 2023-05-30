@@ -27,7 +27,7 @@ class OAuth2Client(NamedTuple):
 
     def check_client_secret(self, client_secret: str) -> bool:
         """Check whether the `client_secret` matches this client."""
-        return self.client_secret == client_secret
+        return same_password(client_secret, self.client_secret)
 
     @property
     def token_endpoint_auth_method(self) -> str:
