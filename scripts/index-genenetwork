@@ -20,6 +20,7 @@ import os
 import pathlib
 import resource
 import shutil
+import sys
 import tempfile
 from typing import Callable, Generator, Iterable, List
 
@@ -359,7 +360,15 @@ def xapian_compact(combined_index: pathlib.Path, indices: List[pathlib.Path]) ->
 def main(xapian_directory: str, sql_uri: str) -> None:
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"),
                         format='%(relativeCreated)s: %(levelname)s: %(message)s')
-    pathlib.Path(xapian_directory).mkdir(exist_ok=True)
+
+    # Ensure no other build process is running.
+    if pathlib.Path(xapian_directory).exists():
+        logging.error("Build directory %s already exists; "
+                      "perhaps another build process is running.",
+                      xapian_directory)
+        sys.exit(1)
+
+    pathlib.Path(xapian_directory).mkdir()
     with temporary_directory("combined", xapian_directory) as combined_index:
         with temporary_directory("build", xapian_directory) as xapian_build_directory:
             logging.info("Indexing genes")
