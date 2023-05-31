@@ -152,7 +152,8 @@ def locked_xapian_writable_database(path: pathlib.Path) -> xapian.WritableDataba
 
 
 # pylint: disable=invalid-name
-def write_document(db: xapian.WritableDatabase, identifier: str, doctype: str, doc: xapian.Document) -> None:
+def write_document(db: xapian.WritableDatabase, identifier: str,
+                   doctype: str, doc: xapian.Document) -> None:
     """Write document into xapian database."""
     # We use the XT and Q prefixes to indicate the type and idterm
     # respectively.
@@ -302,7 +303,8 @@ def worker_queue(number_of_workers: int = os.cpu_count() or 1) -> Generator:
         process.join()
 
 
-def index_query(index_function: Callable, query: SQLQuery, xapian_build_directory: pathlib.Path, sql_uri: str, start: int = 0) -> None:
+def index_query(index_function: Callable, query: SQLQuery,
+                xapian_build_directory: pathlib.Path, sql_uri: str, start: int = 0) -> None:
     """Run SQL query, and index its results for Xapian."""
     i = start
     try:
