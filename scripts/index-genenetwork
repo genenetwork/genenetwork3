@@ -38,6 +38,8 @@ DOCUMENTS_PER_CHUNK = 100000
 SQLQuery = namedtuple("SQLQuery",
                       ["fields", "tables", "where", "offset", "limit"],
                       defaults=[Nothing, 0, Nothing])
+SQLTableClause = namedtuple("SQLTableClause",
+                            ["join_type", "table", "condition"])
 
 # FIXME: Some Max LRS values in the DB are wrongly listed as 0.000,
 # but shouldn't be displayed. Make them NULLs in the database.
@@ -62,14 +64,20 @@ genes_query = SQLQuery(
      "Geno.Chr AS geno_chr",
      "Geno.Mb as geno_mb"],
     ["Species",
-     "INNER JOIN InbredSet ON InbredSet.SpeciesId = Species.Id",
-     "INNER JOIN ProbeFreeze ON ProbeFreeze.InbredSetId = InbredSet.Id",
-     "INNER JOIN Tissue ON ProbeFreeze.TissueId = Tissue.Id",
-     "INNER JOIN ProbeSetFreeze ON ProbeSetFreeze.ProbeFreezeId = ProbeFreeze.Id",
-     "INNER JOIN ProbeSetXRef ON ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id",
-     "INNER JOIN ProbeSet ON ProbeSet.Id = ProbeSetXRef.ProbeSetId",
-     """LEFT JOIN Geno ON ProbeSetXRef.Locus = Geno.Name
-                          AND Geno.SpeciesId = Species.Id"""],
+     SQLTableClause("INNER JOIN", "InbredSet",
+                    "InbredSet.SpeciesId = Species.Id"),
+     SQLTableClause("INNER JOIN", "ProbeFreeze",
+                    "ProbeFreeze.InbredSetId = InbredSet.Id"),
+     SQLTableClause("INNER JOIN", "Tissue",
+                    "ProbeFreeze.TissueId = Tissue.Id"),
+     SQLTableClause("INNER JOIN", "ProbeSetFreeze",
+                    "ProbeSetFreeze.ProbeFreezeId = ProbeFreeze.Id"),
+     SQLTableClause("INNER JOIN", "ProbeSetXRef",
+                    "ProbeSetXRef.ProbeSetFreezeId = ProbeSetFreeze.Id"),
+     SQLTableClause("INNER JOIN", "ProbeSet",
+                    "ProbeSet.Id = ProbeSetXRef.ProbeSetId"),
+     SQLTableClause("LEFT JOIN", "Geno",
+                    "ProbeSetXRef.Locus = Geno.Name AND Geno.SpeciesId = Species.Id")],
     Just("ProbeSetFreeze.confidentiality < 1 AND ProbeSetFreeze.public > 0"))
 
 # FIXME: Some years are blank strings or strings that contain text
@@ -101,17 +109,26 @@ phenotypes_query = SQLQuery(
      "Geno.Chr as geno_chr",
      "Geno.Mb as geno_mb"],
     ["Species",
-     "INNER JOIN InbredSet ON InbredSet.SpeciesId = Species.Id",
-     "INNER JOIN PublishFreeze ON PublishFreeze.InbredSetId = InbredSet.Id",
-     "INNER JOIN PublishXRef ON PublishXRef.InbredSetId = InbredSet.Id",
-     "INNER JOIN Phenotype ON PublishXRef.PhenotypeId = Phenotype.Id",
-     "INNER JOIN Publication ON PublishXRef.PublicationId = Publication.Id",
-     "LEFT JOIN Geno ON PublishXRef.Locus = Geno.Name AND Geno.SpeciesId = Species.Id"])
+     SQLTableClause("INNER JOIN", "InbredSet",
+                    "InbredSet.SpeciesId = Species.Id"),
+     SQLTableClause("INNER JOIN", "PublishFreeze",
+                    "PublishFreeze.InbredSetId = InbredSet.Id"),
+     SQLTableClause("INNER JOIN", "PublishXRef",
+                    "PublishXRef.InbredSetId = InbredSet.Id"),
+     SQLTableClause("INNER JOIN", "Phenotype",
+                    "PublishXRef.PhenotypeId = Phenotype.Id"),
+     SQLTableClause("INNER JOIN", "Publication",
+                    "PublishXRef.PublicationId = Publication.Id"),
+     SQLTableClause("LEFT JOIN", "Geno",
+                    "PublishXRef.Locus = Geno.Name AND Geno.SpeciesId = Species.Id")])
 
 
 def serialize_sql(query: SQLQuery) -> str:
     """Serialize SQLQuery object to a string."""
-    sql = f"SELECT {', '.join(query.fields)} FROM {' '.join(query.tables)}"
+    table_clauses = [clause if isinstance(clause, str)
+                     else f"{clause.join_type} {clause.table} ON {clause.condition}"
+                     for clause in query.tables]
+    sql = f"SELECT {', '.join(query.fields)} FROM {' '.join(table_clauses)}"
     def append_to_sql(appendee):
         nonlocal sql
         sql += appendee
