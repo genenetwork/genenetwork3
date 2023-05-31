@@ -396,6 +396,19 @@ def main(xapian_directory: str, sql_uri: str) -> None:
             index_query(index_phenotypes, phenotypes_query, xapian_build_directory, sql_uri)
             logging.info("Combining and compacting indices")
             xapian_compact(combined_index, list(xapian_build_directory.iterdir()))
+            logging.info("Writing table checksums into index")
+            with locked_xapian_writable_database(combined_index) as db:
+                # Build a (deduplicated) set of all tables referenced in
+                # queries.
+                tables = set(clause if isinstance(clause, str) else clause.table
+                             for clause in genes_query.tables + phenotypes_query.tables)
+                with database_connection(sql_uri) as conn:
+                    checksums = [
+                        result["Checksum"].bind(str) # type: ignore
+                        for result in query_sql(conn, f"CHECKSUM TABLE {', '.join(tables)}")
+                    ]
+                db.set_metadata("tables", " ".join(tables))
+                db.set_metadata("checksums", " ".join(checksums))
         for child in combined_index.iterdir():
             shutil.move(child, xapian_directory)
     logging.info("Index built")
