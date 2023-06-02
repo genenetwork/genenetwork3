@@ -41,8 +41,8 @@ def choose_admin(enum_admins: dict[int, User]) -> int:
             print("We found the following system administrators:")
             for idx, admin in enum_admins.items():
                 print(f"\t{idx}: {admin.name} ({admin.email})")
-                choice = input(f"Choose [1 .. {len(enum_admins)}]: ")
-                return int(choice)
+            choice = input(f"Choose [1 .. {len(enum_admins)}]: ")
+            return int(choice)
         except ValueError as _verr:
             if choice.lower() == "quit":
                 print("Goodbye!")
