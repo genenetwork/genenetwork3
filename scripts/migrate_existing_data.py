@@ -4,6 +4,8 @@ group for accessibility purposes.
 """
 import sys
 import json
+import time
+import random
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -148,6 +150,10 @@ def default_resources(conn: authdb.DbConnection, group: Group) -> tuple[
             tuple()
         ) for row in rows)
 
+def delay():
+    """Delay a while: anything from 2 seconds to 15 seconds."""
+    time.sleep(random.choice(range(2,16)))
+
 def __assigned_mrna__(authconn):
     """Retrieve assigned mRNA items."""
     with authdb.cursor(authconn) as cursor:
@@ -205,6 +211,7 @@ def __assign_mrna__(authconn, bioconn, resource):
                 "(:group_id, :resource_id, :data_link_id)",
                 unassigned)
             print(f"-> mRNA: Linked {len(unassigned)}")
+            delay()
 
 def __assigned_geno__(authconn):
     """Retrieve assigned genotype data."""
@@ -262,6 +269,7 @@ def __assign_geno__(authconn, bioconn, resource):
                 "(:group_id, :resource_id, :data_link_id)",
                 unassigned)
             print(f"-> Genotype: Linked {len(unassigned)}")
+            delay()
 
 def __assigned_pheno__(authconn):
     """Retrieve assigned phenotype data."""
@@ -325,6 +333,7 @@ def __assign_pheno__(authconn, bioconn, resource):
                 "(:group_id, :resource_id, :data_link_id)",
                 unassigned)
             print(f"-> Phenotype: Linked {len(unassigned)}")
+            delay()
 
 def assign_data_to_resource(authconn, bioconn, resource: Resource):
     """Assign existing data, not linked to any group to the resource."""
