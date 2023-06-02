@@ -180,7 +180,7 @@ def __unassigned_mrna__(bioconn, assigned):
             "WHERE (s.SpeciesId, iset.InbredSetId, pf.ProbeFreezeId, psf.Id) "
             f"NOT IN ({paramstr}) ")
 
-    query = query + "LIMIT 5000"
+    query = query + "LIMIT 100000"
     with bioconn.cursor(DictCursor) as cursor:
         cursor.execute(query, tuple(item for row in assigned for item in row))
         return (row for row in cursor.fetchall())
@@ -238,7 +238,7 @@ def __unassigned_geno__(bioconn, assigned):
             "WHERE (s.SpeciesId, iset.InbredSetId, gf.Id) "
             f"NOT IN ({paramstr}) ")
 
-    query = query + "LIMIT 5000"
+    query = query + "LIMIT 100000"
     with bioconn.cursor(DictCursor) as cursor:
         cursor.execute(query, tuple(item for row in assigned for item in row))
         return (row for row in cursor.fetchall())
@@ -302,7 +302,7 @@ def __unassigned_pheno__(bioconn, assigned):
             "WHERE (spc.SpeciesId, iset.InbredSetId, pf.Id, pxr.Id) "
             f"NOT IN ({paramstr}) ")
 
-    query = query + "LIMIT 5000"
+    query = query + "LIMIT 100000"
     with bioconn.cursor(DictCursor) as cursor:
         cursor.execute(query, tuple(item for row in assigned for item in row))
         return (row for row in cursor.fetchall())
