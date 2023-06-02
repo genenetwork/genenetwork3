@@ -5,6 +5,9 @@ This module is a collection of functions that handle SPARQL queries.
 """
 from typing import Tuple
 from string import Template
+from urllib.parse import unquote
+from urllib.parse import urlparse
+
 from SPARQLWrapper import JSON, SPARQLWrapper
 from pymonad.maybe import Just
 from gn3.monads import MonadicDict
@@ -35,6 +38,14 @@ def sparql_query(
     if _r := results["results"]["bindings"]:  # type: ignore
         return (*(MonadicDict(bindings) for bindings in _r),)  # type: ignore
     return (MonadicDict(),)
+
+
+def strip_url(string: str) -> str:
+    """Get the last item after a '/" from a URL"""
+    if string.startswith("http"):
+        url = urlparse(string)
+        return unquote(url.path).rpartition("/")[-1]
+    return string
 
 
 def get_dataset_metadata(
