@@ -18,7 +18,7 @@ metadata = Blueprint("metadata", __name__)
 
 
 @metadata.route("/dataset/<name>", methods=["GET"])
-def dataset_metadata(name):
+def dataset(name):
     """Fetch a dataset's metadata given it's ACCESSION_ID"""
     try:
         return jsonify(
