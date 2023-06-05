@@ -46,6 +46,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
 
     # DO NOT log anything before this point
     setup_app_handlers(app)
+    app.logger.info(f"Guix Profile: {os.environ.get('GUIX_PROFILE')}.")
     app.logger.info(f"Python Executable: '{sys.executable}'.")
 
     CORS(
