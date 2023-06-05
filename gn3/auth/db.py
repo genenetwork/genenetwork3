@@ -48,7 +48,7 @@ class DbCursor(Protocol):
 @contextlib.contextmanager
 def connection(db_path: str, row_factory: Callable = sqlite3.Row) -> Iterator[DbConnection]:
     """Create the connection to the auth database."""
-    logging.debug("SQLite3 DB Path: '%s'." % (db_path,))
+    logging.debug("SQLite3 DB Path: '%s'.", db_path)
     conn = sqlite3.connect(db_path)
     conn.row_factory = row_factory
     conn.set_trace_callback(logging.debug)
