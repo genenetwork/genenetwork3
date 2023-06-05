@@ -9,7 +9,7 @@ from urllib.parse import unquote
 from urllib.parse import urlparse
 
 from SPARQLWrapper import JSON, SPARQLWrapper
-from pymonad.maybe import Just, Nothing
+from pymonad.maybe import Just
 
 from gn3.monads import MonadicDict
 
@@ -30,18 +30,29 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 def sparql_query(
-        sparql_conn: SPARQLWrapper, query: str
+        sparql_conn: SPARQLWrapper, query: str,
 ) -> Tuple[MonadicDict, ...]:
     """Run a SPARQL query and return the bound variables."""
     sparql_conn.setQuery(query)
     sparql_conn.setReturnFormat(JSON)
-    results = sparql_conn.queryAndConvert()
-    if _r := results["results"]["bindings"]:  # type: ignore
-        return (*(MonadicDict(bindings) for bindings in _r),)  # type: ignore
-    return (MonadicDict(),)
+    parsed_response = MonadicDict()
+    results = sparql_conn.queryAndConvert()["results"]["bindings"]  # type: ignore
+    if results:
+        for result in results:
+            if "s" in result:  # A CONSTRUCT
+                parsed_response[
+                        get_url_local_name(
+                            result["p"]["value"]  # type: ignore
+                        )
+                    ] = Just(result["o"]["value"])  # type: ignore
+            elif "key" in result:  # A SELECT
+                parsed_response[
+                    result["key"]  # type: ignore
+                ] = Just(result["value"])  # type: ignore
+    return (parsed_response,)
 
 
-def strip_url(string: str) -> str:
+def get_url_local_name(string: str) -> str:
     """Get the last item after a '/" from a URL"""
     if string.startswith("http"):
         url = urlparse(string)
@@ -63,6 +74,11 @@ CONSTRUCT {
     gn:dataset gn:investigatorName ?investigatorName .
     gn:dataset gn:investigatorWebUrl ?investigatorWebUrl .
     gn:dataset gn:tissueName ?tissueName .
+    gn:dataset gn:organism ?speciesDisplayName .
+    gn:dataset gn:organismUrl ?ncbiReference .
+    gn:dataset gn:inbredSetName ?inbredSetName .
+    gn:dataset gn:geoPlatform ?geoPlatform .
+    gn:dataset gn:platformName ?platform_name .
 } WHERE {
     ?subClass rdf:subClassOf gn:dataset .
     ?dataset rdf:type ?subclass ;
@@ -78,8 +94,21 @@ CONSTRUCT {
         ?normalizationType gn:name ?normalization .
     } .
     OPTIONAL{
+        ?dataset gn:datasetOfSpecies ?species .
+        ?species gn:displayName ?speciesDisplayName .
+        ?species gn:organism ?ncbiReference .
+    } .
+    OPTIONAL {
+        ?dataset gn:datasetOfInbredSet ?inbredSet .
+        ?inbredSet gn:binomialName ?inbredSetName .
+        ?inbredSet gn:inbredSetOfSpecies ?species .
+        ?species gn:displayName ?speciesDisplayName .
+        ?species gn:organism ?ncbiReference .
+    } .
+    OPTIONAL{
         ?dataset gn:datasetOfPlatform ?platform .
         ?platform gn:name ?platform_name .
+        ?platform gn:geoPlatform ?geoPlatform .
     } .
     OPTIONAL{
         ?dataset gn:datasetOfTissue ?tissue .
@@ -90,35 +119,25 @@ CONSTRUCT {
         gn:aboutTissue gn:accessionId gn:acknowledgment gn:citation
         gn:contributors gn:datasetGroup gn:datasetOfinvestigator
         gn:experimentDesign gn:geoSeries gn:name gn:notes
-        gn:specifics gn:summary gn:title
+        gn:specifics gn:summary gn:title gn:publicationTitle
+        gn:datasetStatusName gn:datasetOfOrganization
     }
 }
 """
-    result: MonadicDict = MonadicDict()
-    results = sparql_query(
-        sparql_conn,
-        Template(__metadata_query).substitute(prefix=RDF_PREFIXES, name=name),
-    )
-    for item in results:
-        predicate = (item["p"]
-                     .map(lambda x: x["value"]) # type: ignore
-                     .map(strip_url))
-        subject = (
-            item["s"]
-            .map(lambda x: x["value"]) # type: ignore
-            .map(strip_url)
-            .maybe(None, lambda x: x)
-        )
-        object_ = (item["o"]
-                   .maybe(
-                       Nothing,
-                       lambda x: Just(x["value"])) # type: ignore
-                   )
-        if subject == "homepage":
-            object_ = object_.map(strip_url) # type: ignore
-        if _p := predicate.maybe(None, lambda x: x):  # type: ignore
-            result[_p] = object_
-    return result
+    response: MonadicDict = MonadicDict()
+    for key, value in sparql_query(
+            sparql_conn,
+            Template(__metadata_query)
+            .substitute(
+                prefix=RDF_PREFIXES,
+                name=name
+            )
+    )[0].items():
+        if key.endswith("Url"):
+            response[key] = value
+        else:
+            response[key] = value.map(get_url_local_name)
+    return response
 
 
 def get_trait_metadata(
