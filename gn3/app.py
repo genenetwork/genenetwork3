@@ -1,6 +1,8 @@
 """Entry point from spinning up flask"""
 import os
 import sys
+import logging
+import getpass
 
 from typing import Dict
 from typing import Union
@@ -44,10 +46,11 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
         elif config.endswith(".py"):
             app.config.from_pyfile(config)
 
-    # DO NOT log anything before this point
     setup_app_handlers(app)
-    app.logger.info(f"Guix Profile: {os.environ.get('GUIX_PROFILE')}.")
-    app.logger.info(f"Python Executable: '{sys.executable}'.")
+    # DO NOT log anything before this point
+    logging.info("Guix Profile: '%s'." % (os.environ.get("GUIX_PROFILE"),))
+    logging.info("Python Executable: '%s'." % sys.executable)
+    logging.info("Effective User: '%s'." % getpass.getuser())
 
     CORS(
         app,
