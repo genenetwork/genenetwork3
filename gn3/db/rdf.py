@@ -22,7 +22,7 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX pubmed: <http://rdf.ncbi.nlm.nih.gov/pubmed/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX taxon: <http://purl.uniprot.org/taxonomy/>
+PREFIX ncbiTaxon: <https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=>
 PREFIX up: <http://purl.uniprot.org/core/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
