@@ -77,7 +77,7 @@ CONSTRUCT {
     gn:dataset gn:organism ?speciesDisplayName .
     gn:dataset gn:organismUrl ?ncbiReference .
     gn:dataset gn:inbredSetName ?inbredSetName .
-    gn:dataset gn:geoPlatform ?geoPlatform .
+    gn:dataset gn:geoPlatformUrl ?geoPlatform .
     gn:dataset gn:platformName ?platform_name .
 } WHERE {
     ?subClass rdf:subClassOf gn:dataset .
