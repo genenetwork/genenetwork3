@@ -133,7 +133,7 @@ CONSTRUCT {
                 name=name
             )
     )[0].items():
-        if key.endswith("Url"):
+        if key.endswith("Url") or key == "geoSeries":
             response[key] = value
         else:
             response[key] = value.map(get_url_local_name)
