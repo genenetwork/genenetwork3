@@ -25,7 +25,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX ncbiTaxon: <https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=>
 PREFIX up: <http://purl.uniprot.org/core/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
+PREFIX publication: <http://genenetwork.org/publication/>
 """
 
 
@@ -33,23 +33,40 @@ def sparql_query(
         sparql_conn: SPARQLWrapper, query: str,
 ) -> Tuple[MonadicDict, ...]:
     """Run a SPARQL query and return the bound variables."""
+    def __add_value_to_dict(key, value, my_dict):
+        _values = set()
+        if key in my_dict:
+            if isinstance(my_dict[key], list):
+                _values = set(my_dict[key])
+            else:
+                _values = set([my_dict[key]])
+            _values.add(value)
+        if _values:
+            return list(_values)
+        return value
+
     sparql_conn.setQuery(query)
     sparql_conn.setReturnFormat(JSON)
-    parsed_response = MonadicDict()
+    parsed_response: dict = {}
     results = sparql_conn.queryAndConvert()["results"]["bindings"]  # type: ignore
     if results:
         for result in results:
             if "s" in result:  # A CONSTRUCT
-                parsed_response[
-                        get_url_local_name(
-                            result["p"]["value"]  # type: ignore
-                        )
-                    ] = Just(result["o"]["value"])  # type: ignore
+                key = get_url_local_name(
+                    result["p"]["value"]  # type: ignore
+                )
+                value = result["o"]["value"]  # type: ignore
+                parsed_response[key] = __add_value_to_dict(
+                    key, value, parsed_response
+                )
             elif "key" in result:  # A SELECT
                 parsed_response[
                     result["key"]  # type: ignore
-                ] = Just(result["value"])  # type: ignore
-    return (parsed_response,)
+                ] = __add_value_to_dict(
+                    result["key"], result["value"],  # type: ignore
+                    parsed_response
+                )
+    return (MonadicDict(parsed_response),)
 
 
 def get_url_local_name(string: str) -> str:
@@ -133,10 +150,12 @@ CONSTRUCT {
                 name=name
             )
     )[0].items():
-        if key.endswith("Url") or key == "geoSeries":
-            response[key] = value
-        else:
-            response[key] = value.map(get_url_local_name)
+        response[key] = value
+        if isinstance(value, str) and not (
+                key.endswith("Url") or key == "geoSeries"
+        ):
+            response[key] = value.map(get_url_local_name)  # type: ignore
+    return response
     return response
 
 
