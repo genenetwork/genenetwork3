@@ -74,8 +74,8 @@ AUTH_MIGRATIONS = "migrations/auth"
 AUTH_DB = os.environ.get(
     "AUTH_DB", f"{os.environ.get('HOME')}/genenetwork/gn3_files/db/auth.db")
 OAUTH2_SCOPE = (
-    "profile", "group", "role", "resource", "register-client", "user",
-    "masquerade", "migrate-data", "introspect")
+    "profile", "group", "role", "resource", "user", "masquerade",
+    "migrate-data", "introspect")
 
 try:
     # *** SECURITY CONCERN ***
