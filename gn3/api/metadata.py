@@ -9,6 +9,7 @@ from flask import current_app
 from SPARQLWrapper import SPARQLWrapper
 
 from gn3.db.rdf import get_dataset_metadata
+from gn3.db.rdf import get_publication_metadata
 from gn3.db.rdf import sparql_query
 from gn3.db.rdf import RDF_PREFIXES
 
@@ -31,9 +32,18 @@ def dataset(name):
         return jsonify({})
 
 
+@metadata.route("/publication/<name>", methods=["GET"])
+def publication(name):
+    """Fetch a dataset's metadata given it's ACCESSION_ID"""
     try:
+        if "unpublished" in name:
+            name = f"gn:{name}"
+        else:
+            name = f"publication:{name}"
         return jsonify(
+            get_publication_metadata(
                 SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
+                name,
             ).data
         )
     # The virtuoso server is misconfigured or it isn't running at all
