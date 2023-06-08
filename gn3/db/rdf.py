@@ -184,7 +184,6 @@ CONSTRUCT {
 }
 """
     response: MonadicDict = MonadicDict()
-
     for key, value in sparql_query(
             sparql_conn,
             Template(__metadata_query)
@@ -199,29 +198,12 @@ CONSTRUCT {
     return response
 
 
-def get_trait_metadata(
-        sparql_conn: SPARQLWrapper,
-        trait_name: str,
-        dataset_name: str
 ):
-    """Return metadata about a given trait"""
     __metadata_query = """
-PREFIX gn: <http://genenetwork.org/>
 
-SELECT strafter((str(?key)), "http://genenetwork.org/sampledata:") as ?key
-    ?value WHERE {
-    gn:sampledata_$trait_name gn:sampledata:dataset "$dataset_name" .
-    gn:sampledata_$trait_name ?key ?value .
 }
 """
     result: MonadicDict = MonadicDict()
-    for _r in sparql_query(
             sparql_conn,
             Template(__metadata_query)
-            .substitute(trait_name=trait_name,
-                        dataset_name=dataset_name)
-    ):
-        _key = _r["key"].bind(lambda x: x["value"])  # type:ignore
-        if _key:
-            result[_key] = _r["value"].bind(lambda x: Just(x["value"]))  # type:ignore
     return result
