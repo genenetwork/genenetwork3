@@ -33,7 +33,7 @@ def __toggle_boolean_field__(
     mig_dict = json.loads(rconn.hget("migratable-accounts", email) or "{}")
     if bool(mig_dict):
         rconn.hset("migratable-accounts", email,
-                   {**mig_dict, field: not mig_dict.get(field, True)})
+                   json.dumps({**mig_dict, field: not mig_dict.get(field, True)}))
 
 def __build_email_uuid_bridge__(rconn: Redis):
     """
@@ -69,11 +69,13 @@ def __retrieve_old_accounts__(rconn: Redis) -> dict:
 
 def parse_collection(coll: dict) -> dict:
     """Parse the collection as persisted in redis to a usable python object."""
+    created = coll.get("created", coll.get("created_timestamp"))
+    changed = coll.get("changed", coll.get("changed_timestamp"))
     return {
         "id": UUID(coll["id"]),
         "name": coll["name"],
-        "created": datetime.strptime(coll["created"], "%b %d %Y %I:%M%p"),
-        "changed": datetime.strptime(coll["changed"], "%b %d %Y %I:%M%p"),
+        "created": datetime.strptime(created, "%b %d %Y %I:%M%p"),
+        "changed": datetime.strptime(changed, "%b %d %Y %I:%M%p"),
         "num_members": int(coll["num_members"]),
         "members": coll["members"]
     }
@@ -85,7 +87,7 @@ def dump_collection(pythoncollection: dict) -> str:
 def __retrieve_old_user_collections__(rconn: Redis, old_user_id: UUID) -> tuple:
     """Retrieve any old collections relating to the user."""
     return tuple(parse_collection(coll) for coll in
-                 json.loads(rconn.hget("collections", old_user_id) or "[]"))
+                 json.loads(rconn.hget("collections", str(old_user_id)) or "[]"))
 
 def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
     """Retrieve current user collections."""
@@ -96,8 +98,8 @@ def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
     if (user.email in old_accounts and
         not old_accounts[user.email]["collections-migrated"]):
         old_user_id = old_accounts[user.email]["user_id"]
-        collections = tuple(set(collections + __retrieve_old_user_collections__(
-            rconn, UUID(old_user_id))))
+        collections = tuple(collections + __retrieve_old_user_collections__(
+            rconn, UUID(old_user_id)))
         rconn.hdel("collections", old_user_id)
         __toggle_boolean_field__(rconn, user.email, "collections-migrated")
         rconn.hset(
