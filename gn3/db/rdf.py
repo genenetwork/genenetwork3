@@ -26,6 +26,7 @@ PREFIX ncbiTaxon: <https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode
 PREFIX up: <http://purl.uniprot.org/core/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX publication: <http://genenetwork.org/publication/>
+PREFIX phenotype: <http://genenetwork.org/phenotype/>
 """
 
 
@@ -198,12 +199,48 @@ CONSTRUCT {
     return response
 
 
+def get_phenotype_metadata(
+        sparql_conn: SPARQLWrapper, name: str
 ):
+    """Return info about a phenotype with a given NAME"""
     __metadata_query = """
+$prefix
 
+CONSTRUCT {
+    ?phenotype ?pPredicate ?pValue .
+    ?phenotype ?publicationTerm ?publicationValue .
+    ?phenotype gn:speciesName ?speciesName .
+    ?phenotype gn:inbredSetName ?inbredSetBinomialName .
+    ?phenotype gn:datasetName ?datasetFullName .
+} WHERE {
+    ?phenotype ?pPredicate ?pValue .
+    OPTIONAL {
+        ?phenotype gn:phenotypeOfPublication ?publication .
+        ?publication ?publicationTerm ?publicationValue .
+    } .
+    OPTIONAL {
+        ?phenotype gn:phenotypeOfDataset ?dataset .
+        ?dataset gn:name ?datasetFullName .
+        ?dataset gn:datasetOfInbredSet ?inbredSet .
+        ?inbredSet gn:binomialName ?inbredSetBinomialName .
+        ?inbredSet gn:inbredSetOfSpecies ?species .
+        ?species gn:displayName ?speciesName .
+    } .
+    FILTER( ?phenotype = phenotype:$name ) .
+    MINUS {
+         ?phenotype rdf:type ?pValue .
+    }
+    MINUS {
+         ?publication rdf:type ?publicationValue .
+    }
 }
 """
     result: MonadicDict = MonadicDict()
+    for key, value in sparql_query(
             sparql_conn,
             Template(__metadata_query)
+            .substitute(name=name,
+                        prefix=RDF_PREFIXES)
+    )[0].items():
+        result[key] = value
     return result

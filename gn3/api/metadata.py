@@ -10,6 +10,7 @@ from SPARQLWrapper import SPARQLWrapper
 
 from gn3.db.rdf import get_dataset_metadata
 from gn3.db.rdf import get_publication_metadata
+from gn3.db.rdf import get_phenotype_metadata
 from gn3.db.rdf import sparql_query
 from gn3.db.rdf import RDF_PREFIXES
 
@@ -42,6 +43,21 @@ def publication(name):
             name = f"publication:{name}"
         return jsonify(
             get_publication_metadata(
+                SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
+                name,
+            ).data
+        )
+    # The virtuoso server is misconfigured or it isn't running at all
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
+
+
+@metadata.route("/phenotype/<name>", methods=["GET"])
+def phenotype(name):
+    """Fetch a phenotype's metadata given it's name"""
+    try:
+        return jsonify(
+            get_phenotype_metadata(
                 SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
                 name,
             ).data
