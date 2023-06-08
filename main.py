@@ -3,6 +3,7 @@ import sys
 import uuid
 import json
 from math import ceil
+from pathlib import Path
 from datetime import datetime
 
 
@@ -119,7 +120,7 @@ def make_data_public():
 @app.cli.command()
 def register_admin():
     """Register the administrator."""
-    rsysadm.register_admin(app.config["AUTH_DB"])
+    rsysadm.register_admin(Path(app.config["AUTH_DB"]))
 
 ##### END: CLI Commands #####
 
