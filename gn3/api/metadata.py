@@ -34,7 +34,7 @@ def dataset(name):
 
 @metadata.route("/publication/<name>", methods=["GET"])
 def publication(name):
-    """Fetch a dataset's metadata given it's ACCESSION_ID"""
+    """Fetch a publication's metadata given it's ACCESSION_ID"""
     try:
         if "unpublished" in name:
             name = f"gn:{name}"
