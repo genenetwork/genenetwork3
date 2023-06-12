@@ -9,7 +9,6 @@ from urllib.parse import unquote
 from urllib.parse import urlparse
 
 from SPARQLWrapper import JSON, SPARQLWrapper
-from pymonad.maybe import Just
 
 from gn3.monads import MonadicDict
 
