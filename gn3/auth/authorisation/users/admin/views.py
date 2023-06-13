@@ -8,7 +8,6 @@ from datetime import datetime, timezone, timedelta
 from email_validator import validate_email, EmailNotValidError
 from flask import (
     flash,
-    session,
     request,
     url_for,
     redirect,
@@ -16,6 +15,8 @@ from flask import (
     current_app,
     render_template)
 
+
+from gn3 import session
 from gn3.auth import db
 from gn3.auth.db_utils import with_db_connection
 
@@ -29,22 +30,17 @@ from gn3.auth.authentication.users import (
     user_by_email,
     hash_password)
 
-from .ui import SESSION_KEY, is_admin
+from .ui import is_admin
 
 admin = Blueprint("admin", __name__)
 
 @admin.before_request
 def update_expires():
     """Update session expiration."""
-    if bool(session.get(SESSION_KEY)):
-        now = datetime.now(tz=timezone.utc)
-        if now >= session[SESSION_KEY]["expires"]:
-            flash("Session has expired. Logging out...", "alert-warning")
-            session.pop(SESSION_KEY)
-            return redirect(url_for("oauth2.admin.login"))
-        # If not expired, extend expiry.
-        session[SESSION_KEY]["expires"] = now + timedelta(minutes=10)
-
+    if session.session_info() and not session.update_expiry():
+        flash("Session has expired. Logging out...", "alert-warning")
+        session.clear_session_info()
+        return redirect(url_for("oauth2.admin.login"))
     return None
 
 @admin.route("/dashboard", methods=["GET"])
@@ -71,10 +67,10 @@ def login():
         with db.connection(current_app.config["AUTH_DB"]) as conn:
             user = user_by_email(conn, email["email"])
             if valid_login(conn, user, password):
-                session[SESSION_KEY] = {
-                    "user": user._asdict(),
-                    "expires": datetime.now(tz=timezone.utc) + timedelta(minutes=10)
-                }
+                session.update_session_info(
+                    user=user._asdict(),
+                    expires=(
+                        datetime.now(tz=timezone.utc) + timedelta(minutes=10)))
                 return redirect(url_for(next_uri))
             flash(error_message, "alert-danger")
             return login_page
@@ -85,10 +81,10 @@ def login():
 @admin.route("/logout", methods=["GET"])
 def logout():
     """Log out the admin."""
-    if not bool(session.get(SESSION_KEY)):
+    if not session.session_info():
         flash("Not logged in.", "alert-info")
         return redirect(url_for("oauth2.admin.login"))
-    session.pop(SESSION_KEY)
+    session.clear_session_info()
     flash("Logged out", "alert-success")
     return redirect(url_for("oauth2.admin.login"))
 
@@ -125,7 +121,7 @@ def register_client():
             "admin/register-client.html",
             scope=current_app.config["OAUTH2_SCOPE"],
             users=with_db_connection(__list_users__),
-            current_user=session[SESSION_KEY]["user"])
+            current_user=session.session_user())
 
     form = request.form
     raw_client_secret = random_string()
