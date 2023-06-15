@@ -26,6 +26,7 @@ PREFIX up: <http://purl.uniprot.org/core/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX publication: <http://genenetwork.org/publication/>
 PREFIX phenotype: <http://genenetwork.org/phenotype/>
+PREFIX genotype: <http://genenetwork.org/genotype/>
 """
 
 
@@ -231,6 +232,48 @@ CONSTRUCT {
     }
     MINUS {
          ?publication rdf:type ?publicationValue .
+    }
+}
+"""
+    result: MonadicDict = MonadicDict()
+    for key, value in sparql_query(
+            sparql_conn,
+            Template(__metadata_query)
+            .substitute(name=name,
+                        prefix=RDF_PREFIXES)
+    )[0].items():
+        result[key] = value
+    return result
+
+
+def get_genotype_metadata(
+        sparql_conn: SPARQLWrapper, name: str
+):
+    """Return info about a phenotype with a given NAME"""
+    __metadata_query = """
+$prefix
+
+CONSTRUCT {
+    ?genotype ?pPredicate ?pValue .
+    ?genotype gn:speciesName ?speciesName .
+    ?genotype gn:inbredSetName ?inbredSetBinomialName .
+    ?genotype gn:datasetName ?datasetFullName .
+} WHERE {
+    ?genotype ?pPredicate ?pValue .
+    OPTIONAL {
+        ?genotype gn:genotypeOfDataset ?dataset .
+        ?dataset gn:fullName ?datasetFullName .
+    }.
+    OPTIONAL {
+        ?genotype gn:genotypeOfDataset ?dataset .
+        ?dataset gn:datasetOfInbredSet ?inbredSet .
+        ?inbredSet gn:binomialName ?inbredSetBinomialName .
+        ?inbredSet gn:inbredSetOfSpecies ?species .
+        ?species gn:displayName ?speciesName .
+    } .
+    FILTER( ?genotype = genotype:$name ) .
+    MINUS {
+         ?genotype rdf:type ?pValue .
     }
 }
 """
