@@ -10,6 +10,9 @@ from gn3.auth.authorisation.errors import InvalidData, NotFoundError
 
 from ..models import User
 
+__OLD_COLLECTIONS_DOC__ = "collections"
+__COLLECTIONS_DOC__ = "collections2"
+
 class CollectionJSONEncoder(json.JSONEncoder):
     """Serialise collection objects into JSON."""
     def default(self, obj):# pylint: disable=[arguments-renamed]
@@ -87,7 +90,8 @@ def dump_collection(pythoncollection: dict) -> str:
 def __retrieve_old_user_collections__(rconn: Redis, old_user_id: UUID) -> tuple:
     """Retrieve any old collections relating to the user."""
     return tuple(parse_collection(coll) for coll in
-                 json.loads(rconn.hget("collections", str(old_user_id)) or "[]"))
+                 json.loads(rconn.hget(
+                     __OLD_COLLECTIONS_DOC__, str(old_user_id)) or "[]"))
 
 def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
     """Retrieve current user collections."""
@@ -100,16 +104,17 @@ def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
         old_user_id = old_accounts[user.email]["user_id"]
         collections = tuple(collections + __retrieve_old_user_collections__(
             rconn, UUID(old_user_id)))
-        rconn.hdel("collections", old_user_id)
         __toggle_boolean_field__(rconn, user.email, "collections-migrated")
         rconn.hset(
-            "collections", key=user.user_id, value=json.dumps(collections))
+            __COLLECTIONS_DOC__,
+            key=user.user_id,
+            value=json.dumps(collections))
     return collections
 
 def save_collections(rconn: Redis, user: User, collections: tuple[dict, ...]) -> tuple[dict, ...]:
     """Save the `collections` to redis."""
     rconn.hset(
-        "collections",
+        __COLLECTIONS_DOC__,
         str(user.user_id),
         json.dumps(collections, cls=CollectionJSONEncoder))
     return collections
