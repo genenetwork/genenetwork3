@@ -172,3 +172,26 @@ def parse_tissue_corr_data(symbol_name: str,
         results = (x_vals, data)
 
     return results
+
+
+def run_lmdb_correlation(lmdb_info:dict):
+    """
+    how is this correlation different from the one above:
+    1)  all the preparsing is done in rust which is consinderally fast
+    2) file are read directly format of the file is lmdb
+    can also  compute correlation or unprocessed csv files
+    """
+    tmp_json_file = os.path.join(tmp_dir, f"{random_string(10)}.json")
+    output_file = os.path.join(tmp_dir, f"{random_string(10)}.txt")
+    with open(tmp_json_file, "w", encoding="utf-8") as outputfile:
+        json.dump({"outputfile": output_file, **lmdb_info})
+    command_list = [CORRELATION_COMMAND, json_file, TMPDIR]
+    try:
+        subprocess.run(command_list, check=True, capture_output=True)
+    except subprocess.CalledProcessError as cpe:
+        actual_command = (
+            os.readlink(CORRELATION_COMMAND)
+            if os.path.islink(CORRELATION_COMMAND)
+            else CORRELATION_COMMAND)
+        raise Exception(command_list, actual_command, cpe.stdout) from cpe
+    return parse_correlation_output(output_file, corr_type)
