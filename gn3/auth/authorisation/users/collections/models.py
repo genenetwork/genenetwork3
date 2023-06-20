@@ -107,8 +107,8 @@ def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
         __toggle_boolean_field__(rconn, user.email, "collections-migrated")
         rconn.hset(
             __COLLECTIONS_DOC__,
-            key=user.user_id,
-            value=json.dumps(collections))
+            key=str(user.user_id),
+            value=json.dumps(collections, cls=CollectionJSONEncoder))
     return collections
 
 def save_collections(rconn: Redis, user: User, collections: tuple[dict, ...]) -> tuple[dict, ...]:
