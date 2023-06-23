@@ -10,8 +10,8 @@ from gn3.auth.authorisation.errors import InvalidData, NotFoundError
 
 from ..models import User
 
-__OLD_COLLECTIONS_DOC__ = "collections"
-__COLLECTIONS_DOC__ = "collections2"
+__OLD_REDIS_COLLECTIONS_KEY__ = "collections"
+__REDIS_COLLECTIONS_KEY__ = "collections2"
 
 class CollectionJSONEncoder(json.JSONEncoder):
     """Serialise collection objects into JSON."""
@@ -91,22 +91,25 @@ def __retrieve_old_user_collections__(rconn: Redis, old_user_id: UUID) -> tuple:
     """Retrieve any old collections relating to the user."""
     return tuple(parse_collection(coll) for coll in
                  json.loads(rconn.hget(
-                     __OLD_COLLECTIONS_DOC__, str(old_user_id)) or "[]"))
+                     __OLD_REDIS_COLLECTIONS_KEY__, str(old_user_id)) or "[]"))
 
 def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
     """Retrieve current user collections."""
     collections = tuple(parse_collection(coll) for coll in json.loads(
-        rconn.hget("collections", str(user.user_id)) or
+        rconn.hget(__REDIS_COLLECTIONS_KEY__, str(user.user_id)) or
         "[]"))
     old_accounts = __retrieve_old_accounts__(rconn)
     if (user.email in old_accounts and
         not old_accounts[user.email]["collections-migrated"]):
         old_user_id = old_accounts[user.email]["user_id"]
-        collections = tuple(collections + __retrieve_old_user_collections__(
-            rconn, UUID(old_user_id)))
+        collections = tuple({
+            coll["id"]: coll for coll in (
+                collections + __retrieve_old_user_collections__(
+                    rconn, UUID(old_user_id)))
+        }.values())
         __toggle_boolean_field__(rconn, user.email, "collections-migrated")
         rconn.hset(
-            __COLLECTIONS_DOC__,
+            __REDIS_COLLECTIONS_KEY__,
             key=str(user.user_id),
             value=json.dumps(collections, cls=CollectionJSONEncoder))
     return collections
@@ -114,7 +117,7 @@ def user_collections(rconn: Redis, user: User) -> tuple[dict, ...]:
 def save_collections(rconn: Redis, user: User, collections: tuple[dict, ...]) -> tuple[dict, ...]:
     """Save the `collections` to redis."""
     rconn.hset(
-        __COLLECTIONS_DOC__,
+        __REDIS_COLLECTIONS_KEY__,
         str(user.user_id),
         json.dumps(collections, cls=CollectionJSONEncoder))
     return collections
