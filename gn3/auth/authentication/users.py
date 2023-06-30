@@ -110,3 +110,19 @@ def set_user_password(
          "ON CONFLICT (user_id) DO UPDATE SET password=:hash"),
         {"user_id": str(user.user_id), "hash": hashed_password})
     return user, hashed_password
+
+def users(conn: db.DbConnection,
+          ids: tuple[UUID, ...] = tuple()) -> tuple[User, ...]:
+    """
+    Fetch all users with the given `ids`. If `ids` is empty, return ALL users.
+    """
+    params = ", ".join(["?"] * len(ids))
+    with db.cursor(conn) as cursor:
+        query = "SELECT * FROM users" + (
+            f" WHERE user_id IN ({params})"
+            if len(ids) > 0 else "")
+        print(query)
+        cursor.execute(query, tuple(str(the_id) for the_id in ids))
+        return tuple(User(UUID(row["user_id"]), row["email"], row["name"])
+                     for row in cursor.fetchall())
+    return tuple()

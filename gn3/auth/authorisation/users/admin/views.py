@@ -1,5 +1,6 @@
 """UI for admin stuff"""
 import uuid
+import json
 import random
 import string
 from functools import partial
@@ -22,7 +23,8 @@ from gn3.auth.db_utils import with_db_connection
 
 from gn3.auth.authentication.oauth2.models.oauth2client import (
     save_client,
-    OAuth2Client)
+    OAuth2Client,
+    oauth2_clients)
 from gn3.auth.authentication.users import (
     User,
     user_by_id,
@@ -44,6 +46,7 @@ def update_expires():
     return None
 
 @admin.route("/dashboard", methods=["GET"])
+@is_admin
 def dashboard():
     """Admin dashboard."""
     return render_template("admin/dashboard.html")
@@ -151,3 +154,18 @@ def register_client():
         "admin/registered-client.html",
         client=client,
         client_secret = raw_client_secret)
+
+def __parse_client__(sqlite3Row) -> dict:
+    """Parse the client details into python datatypes."""
+    return {
+        **dict(sqlite3Row),
+        "client_metadata": json.loads(sqlite3Row["client_metadata"])
+    }
+
+@admin.route("/list-client", methods=["GET"])
+@is_admin
+def list_clients():
+    """List all registered OAuth2 clients."""
+    return render_template(
+        "admin/list-oauth2-clients.html",
+        clients=with_db_connection(oauth2_clients))

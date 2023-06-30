@@ -1,0 +1,45 @@
+{%extends "base.html"%}
+
+{%block title%}Genenetwork3: OAuth2 Clients{%endblock%}
+
+{%block content%}
+{{flash_messages()}}
+
+<h1>Genenetwork3: OAuth2 Clients</h1>
+
+<table>
+  <legend>List of registered OAuth2 clients</legend>
+  <thead>
+    <tr>
+      <th>Client ID</th>
+      <th>Client Name</th>
+      <th>Default Redirect URI</th>
+      <th>Owner</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {%for client in clients%}
+    <tr>
+      <td>{{client.client_id}}</td>
+      <td>{{client.client_metadata.client_name}}</td>
+      <td>{{client.client_metadata.default_redirect_uri}}</td>
+      <td>{{client.user.name}} ({{client.user.email}})</td>
+      <td>
+	<a href="#{{client.client_id}}"
+	   title"View/Edit client {{client.client_metadata.client_name}}">
+	  View/Edit
+	</a>
+      </td>
+    </tr>
+    {%else%}
+    <tr>
+      <td colspan="4" style="text-align: center;">
+	No registered OAuth2 clients!
+      </td>
+    </tr>
+    {%endfor%}
+  </tbody>
+</table>
+{%endblock%}
