@@ -1,0 +1,75 @@
+{%extends "base.html"%}
+
+{%block title%}Genenetwork3: View OAuth2 Client{%endblock%}
+
+{%block content%}
+{{flash_messages()}}
+
+<h1>Genenetwork3: View OAuth2 Client</h1>
+
+{%if client.is_nothing()%}
+<p>No such client</p>
+{%else%}
+{%set client = client.value%}
+<form method="POST" action="{{url_for('oauth2.admin.edit_client')}}">
+  <legend>View/Edit Oauth2 Client</legend>
+  <input type="hidden" name="client_id" value="{{client.client_id}}" />
+  <div>
+    <p><strong>Client ID: <strong> {{client.client_id}}</p>
+    <p><strong>Client Name: <strong> {{client.client_metadata.client_name}}</p>
+  </div>
+  <fieldset>
+    <legend>Scope</legend>
+    {%for scp in scope%}
+    <input name="scope[]" id="chk:{{scp}}" type="checkbox" value="{{scp}}"
+	   {%if scp in client.client_metadata.scope%}
+	   checked="checked"
+	   {%endif%} />
+    <label for="chk:{{scp}}">{{scp}}</label><br />
+    {%endfor%}
+  </fieldset>
+
+  <fieldset>
+    <legend>Redirect URIs</legend>
+    <label for="txt:default-redirect-uri">Default Redirect URI</label>
+    <br />
+    <input type="text" name="default_redirect_uri" id="txt:default-redirect-uri"
+	   value="{{client.client_metadata.default_redirect_uri}}"
+	   required="required">
+    <br /><br />
+
+    <label for="txta:other-redirect-uris">Other Redirect URIs</label>
+    <br />
+    <textarea id="txta:other-redirect-uris"
+	      name="other_redirect_uris"
+	      cols="80" rows="10"
+	      title="Enter one URI per line."
+	      >{{"\r\n".join(client.client_metadata.redirect_uris)}}</textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>Grants</legend>
+    <input name="grants[]"
+	   type="checkbox"
+	   value="authorization_code"
+	   id="chk:authorization-code"
+	   {%if "authorization_code" in client.client_metadata.grant_types%}
+	   checked="checked"
+	   {%endif%} />
+      <label for="chk:authorization-code">Authorization Code</label>
+      <br /><br />
+
+      <input name="grants[]"
+	     type="checkbox"
+	     value="refresh_token"
+	     id="chk:refresh-token"
+	     {%if "refresh_token" in client.client_metadata.grant_types%}
+	     checked="checked"
+	     {%endif%} />
+      <label for="chk:refresh-token">Refresh Token</label>
+  </fieldset>
+
+  <input type="submit" value="update client" />
+</form>
+{%endif%}
+{%endblock%}

@@ -24,7 +24,8 @@ from gn3.auth.db_utils import with_db_connection
 from gn3.auth.authentication.oauth2.models.oauth2client import (
     save_client,
     OAuth2Client,
-    oauth2_clients)
+    oauth2_clients,
+    client as oauth2_client)
 from gn3.auth.authentication.users import (
     User,
     user_by_id,
@@ -169,3 +170,43 @@ def list_clients():
     return render_template(
         "admin/list-oauth2-clients.html",
         clients=with_db_connection(oauth2_clients))
+
+@admin.route("/view-client/<uuid:client_id>", methods=["GET"])
+@is_admin
+def view_client(client_id: uuid.UUID):
+    """View details of OAuth2 client with given `client_id`."""
+    return render_template(
+        "admin/view-oauth2-client.html",
+        client=with_db_connection(partial(oauth2_client, client_id=client_id)),
+        scope=current_app.config["OAUTH2_SCOPE"])
+
+@admin.route("/edit-client", methods=["POST"])
+@is_admin
+def edit_client():
+    """Edit the details of the given client."""
+    form = request.form
+    the_client = with_db_connection(partial(
+        oauth2_client, client_id=uuid.UUID(form["client_id"])))
+    if the_client.is_nothing():
+        flash("No such client.", "alert-error")
+        return redirect(url_for("oauth2.admin.list_clients"))
+    the_client = the_client.value
+    client_metadata = {
+        **the_client.client_metadata,
+        "default_redirect_uri": form["default_redirect_uri"],
+        "redirect_uris": list(set(
+            [form["default_redirect_uri"]] +
+            form["other_redirect_uris"].split("\r\n"))),
+        "grants": form.getlist("grants[]"),
+        "scope": form.getlist("scope[]")
+    }
+    with_db_connection(partial(save_client, the_client=OAuth2Client(
+        the_client.client_id,
+        the_client.client_secret,
+        the_client.client_id_issued_at,
+        the_client.client_secret_expires_at,
+        client_metadata,
+        the_client.user)))
+    flash("Client updated.", "alert-success")
+    return redirect(url_for("oauth2.admin.view_client",
+                            client_id=the_client.client_id))
