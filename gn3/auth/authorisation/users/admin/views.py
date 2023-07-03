@@ -189,7 +189,7 @@ def edit_client():
     the_client = with_db_connection(partial(
         oauth2_client, client_id=uuid.UUID(form["client_id"])))
     if the_client.is_nothing():
-        flash("No such client.", "alert-error")
+        flash("No such client.", "alert-danger")
         return redirect(url_for("oauth2.admin.list_clients"))
     the_client = the_client.value
     client_metadata = {
@@ -220,7 +220,7 @@ def delete_client():
     the_client = with_db_connection(partial(
         oauth2_client, client_id=uuid.UUID(form["client_id"])))
     if the_client.is_nothing():
-        flash("No such client.", "alert-error")
+        flash("No such client.", "alert-danger")
         return redirect(url_for("oauth2.admin.list_clients"))
     the_client = the_client.value
     with_db_connection(partial(_delete_client, client=the_client))

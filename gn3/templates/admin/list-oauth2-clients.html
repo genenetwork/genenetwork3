@@ -2,12 +2,12 @@
 
 {%block title%}Genenetwork3: OAuth2 Clients{%endblock%}
 
+{%block pagetitle%}OAuth2 Clients{%endblock%}
+
 {%block content%}
 {{flash_messages()}}
 
-<h1>Genenetwork3: OAuth2 Clients</h1>
-
-<table>
+<table class="table table-hover table-striped cell-border no-footer">
   <caption>List of registered OAuth2 clients</caption>
   <thead>
     <tr>
@@ -15,7 +15,7 @@
       <th>Client Name</th>
       <th>Default Redirect URI</th>
       <th>Owner</th>
-      <th>Actions</th>
+      <th colspan="2">Actions</th>
     </tr>
   </thead>
 
@@ -28,7 +28,8 @@
       <td>{{client.user.name}} ({{client.user.email}})</td>
       <td>
 	<a href="{{url_for('oauth2.admin.view_client', client_id=client.client_id)}}"
-	   title"View/Edit client {{client.client_metadata.client_name}}">
+	   title"View/Edit client {{client.client_metadata.client_name}}"
+	   class="btn btn-info">
 	  View/Edit
 	</a>
       </td>
@@ -38,7 +39,8 @@
 	      method="POST">
 	  <input type="hidden" name="client_id" value="{{client.client_id}}" />
 	  <input type="submit" value="Delete"
-		 title"Delete client {{client.client_metadata.client_name}}" />
+		 title"Delete client {{client.client_metadata.client_name}}"
+		 class="btn btn-danger" />
 	</form>
       </td>
     </tr>

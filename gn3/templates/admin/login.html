@@ -2,10 +2,10 @@
 
 {%block title%}Log in to Genenetwork3{%endblock%}
 
+{%block pagetitle%}Admin Log In{%endblock%}
+
 {%block content%}
 {{flash_messages()}}
-
-<h1>Genenetwork3: Admin Log In</h1>
 
 <form method="POST" action="{{url_for('oauth2.admin.login')}}">
 
@@ -14,19 +14,19 @@
 
     <input name="next_uri" type="hidden" value={{next_uri}}>
 
-    <fieldset>
-      <label for="txt:email">Email Address</label>
+    <fieldset class="form-group">
+      <label for="txt:email" class="form-label">Email Address</label>
       <input name="email" type="email" id="txt:email" required="required"
-	     placeholder="your@email.address" />
+	     placeholder="your@email.address" class="form-control" />
     </fieldset>
 
-    <fieldset>
-      <label for="txt:password">Password</label>
+    <fieldset class="form-group">
+      <label for="txt:password" class="form-label">Password</label>
       <input name="password" type="password" id="txt:password"
-	     required="required" />
+	     required="required" class="form-control" />
     </fieldset>
   </fieldset>
   
-  <input type="submit" value="log in" />
+  <input type="submit" value="log in" class="btn btn-primary" />
 </form>
 {%endblock%}

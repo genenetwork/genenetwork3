@@ -1,0 +1,16 @@
+h1 {
+    color: white;
+    background: #369;
+    text-align: center;
+    padding: 0.1em 0 0.1em 0;
+}
+
+.btn {
+    text-transform: capitalize;
+}
+
+table thead th, table tfoot th {
+    border-right: 1px solid white;
+    color: white;
+    background: #369;
+}

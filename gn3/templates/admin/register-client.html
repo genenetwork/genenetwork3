@@ -2,10 +2,10 @@
 
 {%block title%}Genenetwork3: Register OAuth2 Client{%endblock%}
 
+{%block pagetitle%}Register OAuth2 Client{%endblock%}
+
 {%block content%}
 {{flash_messages()}}
-
-<h1>Genenetwork3: Register OAuth2 Client</h1>
 
 <form method="POST" action="{{url_for('oauth2.admin.register_client')}}">
 
