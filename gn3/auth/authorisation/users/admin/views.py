@@ -25,7 +25,8 @@ from gn3.auth.authentication.oauth2.models.oauth2client import (
     save_client,
     OAuth2Client,
     oauth2_clients,
-    client as oauth2_client)
+    client as oauth2_client,
+    delete_client as _delete_client)
 from gn3.auth.authentication.users import (
     User,
     user_by_id,
@@ -156,11 +157,11 @@ def register_client():
         client=client,
         client_secret = raw_client_secret)
 
-def __parse_client__(sqlite3Row) -> dict:
+def __parse_client__(sqlite3_row) -> dict:
     """Parse the client details into python datatypes."""
     return {
-        **dict(sqlite3Row),
-        "client_metadata": json.loads(sqlite3Row["client_metadata"])
+        **dict(sqlite3_row),
+        "client_metadata": json.loads(sqlite3_row["client_metadata"])
     }
 
 @admin.route("/list-client", methods=["GET"])
@@ -210,3 +211,20 @@ def edit_client():
     flash("Client updated.", "alert-success")
     return redirect(url_for("oauth2.admin.view_client",
                             client_id=the_client.client_id))
+
+@admin.route("/delete-client", methods=["POST"])
+@is_admin
+def delete_client():
+    """Delete the details of the client."""
+    form = request.form
+    the_client = with_db_connection(partial(
+        oauth2_client, client_id=uuid.UUID(form["client_id"])))
+    if the_client.is_nothing():
+        flash("No such client.", "alert-error")
+        return redirect(url_for("oauth2.admin.list_clients"))
+    the_client = the_client.value
+    with_db_connection(partial(_delete_client, client=the_client))
+    flash((f"Client '{the_client.client_metadata.client_name}' was deleted "
+           "successfully."),
+          "alert-success")
+    return redirect(url_for("oauth2.admin.list_clients"))

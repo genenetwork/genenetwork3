@@ -222,3 +222,13 @@ def oauth2_clients(conn: db.DbConnection) -> tuple[OAuth2Client, ...]:
                                   json.loads(result["client_metadata"]),
                                   the_users[UUID(result["user_id"])])
                      for result in clients_rs)
+
+def delete_client(conn: db.DbConnection, the_client: OAuth2Client) -> OAuth2Client:
+    """Delete the given client from the database"""
+    with db.cursor(conn) as cursor:
+        params = (str(the_client.client_id),)
+        cursor.execute("DELETE FROM authorisation_code WHERE client_id=?",
+                       params)
+        cursor.execute("DELETE FROM oauth2_tokens WHERE client_id=?", params)
+        cursor.execute("DELETE FROM oauth2_clients WHERE client_id=?", params)
+        return the_client

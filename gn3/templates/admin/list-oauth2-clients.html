@@ -32,6 +32,15 @@
 	  View/Edit
 	</a>
       </td>
+      <td>
+	<form id="frm:delete:{{client.client_id}}"
+	      action="{{url_for('oauth2.admin.delete_client')}}"
+	      method="POST">
+	  <input type="hidden" name="client_id" value="{{client.client_id}}" />
+	  <input type="submit" value="Delete"
+		 title"Delete client {{client.client_metadata.client_name}}" />
+	</form>
+      </td>
     </tr>
     {%else%}
     <tr>
