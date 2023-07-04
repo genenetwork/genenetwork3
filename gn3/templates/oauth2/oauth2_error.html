@@ -2,10 +2,10 @@
 
 {%block title%}OAuth2 Error{%endblock%}
 
+{%block pagetitle%}Error: {{error.status_code}}{%endblock%}
+
 {%block content%}
 {{flash_messages()}}
-
-<h1>Error: {{error.status_code}}</h1>
 
 There was an error trying to fulfill your request:
 
