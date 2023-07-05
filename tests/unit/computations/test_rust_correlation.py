@@ -37,11 +37,12 @@ def test_generate_input():
 def test_json_file():
     """test for generating json files """
 
-    tmp_file = generate_json_file(tmp_dir="/tmp/correlation",
-                                  tmp_file="/data.txt",
-                                  method="pearson",
-                                  x_vals="12.1,11.3,16.5,7.5,3.2",
-                                  delimiter=",")
+    tmp_file, _tmp_json_file = generate_json_file(
+        tmp_dir="/tmp/correlation",
+        tmp_file="/data.txt",
+        method="pearson",
+        x_vals="12.1,11.3,16.5,7.5,3.2",
+        delimiter=",")
 
     with open(tmp_file, "r+", encoding="utf-8") as file_reader:
         results = json.load(file_reader)
