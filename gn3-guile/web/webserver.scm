@@ -14,27 +14,32 @@
              (web uri))
 
 (define (get-version-str)
-  "\"1.0\"")
+  "2.0")
 
-(define info-list (scm->json-string '(
-                                      ("name"."GeneNetwork REST API")
-                                      ("version"."1.0")
-                                      ("note"."work in progress (WIP)")
-                                      )))
+(define info-list (scm->json-string `(
+                                      ("name" . "GeneNetwork REST API")
+                                      ("version" . ,(get-version-str))
+                                      ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
+                                      ("license" . (("source code" . "AGPL")))
+                                      ("note" . "work in progress (WIP)")
+                                      ("api". #(
+                                                    "https://genenetwork.org/api/v2/species/"
+                                                    "https://genenetwork.org/api/v2/populations/"
+                                                    "https://genenetwork.org/api/v2/datasets/"
+                                                    )
+                                      ))))
 
 (define (get-gn-info-str)
   info-list
   )
 
 (define (get-species-str)
-  "{
-\"Mus_musculus\": {
-  \"id\": \"mouse\"
-  },
-\"Rattus_norvegicus\": {
-  \"id\": \"rat\"
-  }
-}")
+  (scm->json-string '(("Mus_musculus" . (("id" . "mouse" )
+                                         ("api" . "https://genenetwork.org/api/v2/mouse/")))
+                      ("Rattus_norvegicus" . (("id" . "rat")
+                                         ("api" . "https://genenetwork.org/api/v2/rat/")))
+                                              )))
+
 
 ;; ---- REST API web server handler
 
@@ -62,7 +67,7 @@
                          (uri->string (request-uri request)))))
 
 (define (main args)
-  (write "Starting Guile REST API server!")
+  (write (string-append "Starting Guile REST API " (get-version-str) " server!"))
   (write args)
   (newline)
   (let ((listen (inexact->exact (string->number (car (cdr args))))))
