@@ -19,12 +19,12 @@
              (fibers web server)
              )
 
-(define (get-version-str)
+(define (get-version)
   "2.0")
 
 (define info-list `(
                                       ("name" . "GeneNetwork REST API")
-                                      ("version" . ,(get-version-str))
+                                      ("version" . ,(get-version))
                                       ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
                                       ("license" . (("source code" . "AGPL")))
                                       ("note" . "work in progress (WIP)")
@@ -35,39 +35,18 @@
                                                     )
                                       )))
 
-(define (get-species-str)
-  (scm->json-string '(("Mus_musculus" . (("id" . "mouse" )
+(define (get-species)
+  '(("Mus_musculus" . (("id" . "mouse" )
                                          ("api" . "https://genenetwork.org/api/v2/mouse/")))
                       ("Rattus_norvegicus" . (("id" . "rat")
                                          ("api" . "https://genenetwork.org/api/v2/rat/")))
-                                              )))
+                      ))
+
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
                         "https://genenetwork.org/api/v2/rat/")))
 
 ;; ---- REST API web server handler
-
-(define (hello-world-handler request body)
-  (let ((path (uri-path (request-uri request))))
-    (cond
-     ((member path (list "/version.json"))
-      (values '((content-type . (application/json)))
-              (get-version-str)
-              ))
-     ((member path (list "/species/"))
-      (values '((content-type . (application/json)))
-              (get-species-str)
-              ))
-     ((member path (list "/species/api/"))
-      (values '((content-type . (application/json)))
-              (get-species-api-str)
-              ))
-     ((member path (list "/"))
-      (values '((content-type . (application/json)))
-              (get-gn-info-str)
-              ))
-     (else
-      (not-found request)))))
 
 (define (not-found request)
   (values (build-response #:code 404)
@@ -84,7 +63,10 @@
     (('GET)
      (render-json info-list))
     (('GET "version")
-     (render-json (get-version-str)))))
+     (render-json (get-version)))
+    (('GET "species")
+     (render-json (get-species)))
+    ))
 
 (define (request-path-components request)
   (split-and-decode-uri-path (uri-path (request-uri request))))
@@ -112,7 +94,7 @@
               #:port port))
 
 (define (main args)
-  (write (string-append "Starting Guile REST API " (get-version-str) " server!"))
+  (write (string-append "Starting Guile REST API " (get-version) " server!"))
   (write args)
   (newline)
   (let ((listen (inexact->exact (string->number (car (cdr args))))))
