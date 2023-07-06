@@ -7,9 +7,10 @@
 {%block content%}
 {{flash_messages()}}
 
-<form method="POST" action="#">
+<form method="POST" action="{{url_for('oauth2.auth.authorise')}}">
   <input type="hidden" name="response_type" value="{{response_type}}" />
   <input type="hidden" name="scope" value="{{scope | join(' ')}}" />
+  <input type="hidden" name="client_id" value="{{client.client_id}}" />
   <p>
     You are authorising "{{client.client_metadata.client_name}}" to access
     Genenetwork 3 with the following scope:

@@ -36,7 +36,9 @@ def authorise():
     """Authorise a user"""
     try:
         server = app.config["OAUTH2_SERVER"]
-        client_id = uuid.UUID(request.args.get("client_id", str(uuid.uuid4())))
+        client_id = uuid.UUID(request.args.get(
+            "client_id",
+            request.form.get("client_id", str(uuid.uuid4()))))
         client = server.query_client(client_id)
         if not bool(client):
             flash("Invalid OAuth2 client.", "alert-error")
