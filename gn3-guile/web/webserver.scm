@@ -21,18 +21,30 @@
 (define (get-version)
   "2.0")
 
-(define info-list `(
+(define (base-url)
+  "https://genenetwork.org")
+
+(define (prefix)
+  (string-append (base-url) "/api/" (get-version)))
+
+(define (mk-url postfix)
+  (string-append (prefix) "/" postfix))
+
+(define (meta url)
+  (string-append url "/meta"))
+
+(define info `(
   ("name" . "GeneNetwork REST API")
   ("version" . ,(get-version))
   ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
   ("license" . (("source code" . "AGPL")))
   ("note" . "work in progress (WIP)")
-  ("api". #(
-            "https://genenetwork.org/api/v2/species/"
-            "https://genenetwork.org/api/v2/populations/"
-            "https://genenetwork.org/api/v2/datasets/"
-            )
-   )))
+  ("see also". ,(meta (prefix)))
+  ))
+
+(define info-meta `(
+  ("API" .
+   (((mk-url "species")."Get a list of all species")))))
 
 (define (get-species)
   '(("Mus_musculus" . (("id" . "mouse" )
@@ -60,7 +72,9 @@
 (define (controller request body)
   (match-lambda
     (('GET)
-     (render-json info-list))
+     (render-json info))
+    (('GET "meta")
+     (render-json info-meta))
     (('GET "version")
      (render-json (get-version)))
     (('GET "species")
