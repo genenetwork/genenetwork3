@@ -25,12 +25,15 @@
   "https://genenetwork.org")
 
 (define (prefix)
+  "Build the API URL including version"
   (string-append (base-url) "/api/" (get-version)))
 
 (define (mk-url postfix)
+  "Add the path to the API URL"
   (string-append (prefix) "/" postfix))
 
 (define (meta url)
+  "Adds /meta to the URL"
   (string-append url "/meta"))
 
 (define info `(
