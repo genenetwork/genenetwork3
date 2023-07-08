@@ -3,48 +3,47 @@
 !#
 ;; Minimal web server can be started from command line. Current example routes:
 ;;
-;;    localhost:8080/version.json
+;;    localhost:8080/
 ;;
-;; Note that this is a single blocking thread server right now.
 
-(use-modules (json)
-             (ice-9 match)
-             (ice-9 format)
-             (srfi srfi-1)
-             (srfi srfi-26)
-             (web http)
-             (web request)
-             (web response)
-             (web uri)
-             (fibers web server)
-             )
+(use-modules
+ (json)
+ (ice-9 match)
+ (ice-9 format)
+ (srfi srfi-1)
+ (srfi srfi-26)
+ (web http)
+ (web request)
+ (web response)
+ (web uri)
+ (fibers web server))
 
 (define (get-version)
   "2.0")
 
 (define info-list `(
-                                      ("name" . "GeneNetwork REST API")
-                                      ("version" . ,(get-version))
-                                      ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
-                                      ("license" . (("source code" . "AGPL")))
-                                      ("note" . "work in progress (WIP)")
-                                      ("api". #(
-                                                    "https://genenetwork.org/api/v2/species/"
-                                                    "https://genenetwork.org/api/v2/populations/"
-                                                    "https://genenetwork.org/api/v2/datasets/"
-                                                    )
-                                      )))
+  ("name" . "GeneNetwork REST API")
+  ("version" . ,(get-version))
+  ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
+  ("license" . (("source code" . "AGPL")))
+  ("note" . "work in progress (WIP)")
+  ("api". #(
+            "https://genenetwork.org/api/v2/species/"
+            "https://genenetwork.org/api/v2/populations/"
+            "https://genenetwork.org/api/v2/datasets/"
+            )
+   )))
 
 (define (get-species)
   '(("Mus_musculus" . (("id" . "mouse" )
-                                         ("api" . "https://genenetwork.org/api/v2/mouse/")))
-                      ("Rattus_norvegicus" . (("id" . "rat")
-                                         ("api" . "https://genenetwork.org/api/v2/rat/")))
-                      ))
+      ("api" . "https://genenetwork.org/api/v2/mouse/")))
+    ("Rattus_norvegicus" . (("id" . "rat")
+      ("api" . "https://genenetwork.org/api/v2/rat/")))
+    ))
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
-                        "https://genenetwork.org/api/v2/rat/")))
+                      "https://genenetwork.org/api/v2/rat/")))
 
 ;; ---- REST API web server handler
 
@@ -100,5 +99,5 @@
   (let ((listen (inexact->exact (string->number (car (cdr args))))))
     (display `("listening on" ,listen))
     ;; (write listen)
-                                        ; (run-server hello-world-handler 'http `(#:port ,listen))))
+    ;; (run-server hello-world-handler 'http `(#:port ,listen))))
     (start-web-server  "127.0.0.1" listen)))
