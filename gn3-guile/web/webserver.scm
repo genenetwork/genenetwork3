@@ -44,7 +44,9 @@
 
 (define info-meta `(
   ("API" .
-   (((mk-url "species")."Get a list of all species")))))
+   ((,(mk-url "species")."Get a list of all species")
+    (,(mk-url "mouse")."Get information on mouse")
+    (,(mk-url "datasets")."Get a list of datasets")))))
 
 (define (get-species)
   '(("Mus_musculus" . (("id" . "mouse" )
