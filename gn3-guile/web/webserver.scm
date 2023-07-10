@@ -32,6 +32,10 @@
   "Add the path to the API URL"
   (string-append (prefix) "/" postfix))
 
+(define (mk-doc postfix)
+  "Create a pointer to HTML documentation"
+  (string-append (base-url) "/" postfix ".html"))
+
 (define (meta url)
   "Adds /meta to the URL"
   (string-append url "/meta"))
@@ -45,11 +49,12 @@
   ("see also". ,(meta (prefix)))
   ))
 
-(define info-meta `(
-  ("API" .
-   ((,(mk-url "species")."Get a list of all species")
-    (,(mk-url "mouse")."Get information on mouse")
-    (,(mk-url "datasets")."Get a list of datasets")))))
+(define info-meta `(		    
+   ("doc" . ,(mk-doc "info"))
+   ("API" .
+    ((,(mk-url "species")."Get a list of all species")
+     (,(mk-url "mouse")."Get information on mouse")
+     (,(mk-url "datasets")."Get a list of datasets")))))
 
 (define (get-species)
   '(("Mus_musculus" . (("id" . "mouse" )
