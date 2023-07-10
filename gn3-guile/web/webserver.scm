@@ -13,6 +13,7 @@
  (srfi srfi-1)
  (srfi srfi-26)
  (web http)
+ (web client)
  (web request)
  (web response)
  (web uri)
@@ -56,12 +57,42 @@
      (,(mk-url "mouse")."Get information on mouse")
      (,(mk-url "datasets")."Get a list of datasets")))))
 
+(define (sparql-species)
+  "
+PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX generif: <http://www.ncbi.nlm.nih.gov/gene?cmd=Retrieve&dopt=Graphics&list_uids=>
+PREFIX gn: <http://genenetwork.org/>
+PREFIX hgnc: <http://bio2rdf.org/hgnc:>
+PREFIX homologene: <https://bio2rdf.org/homologene:>
+PREFIX kegg: <http://bio2rdf.org/ns/kegg#>
+PREFIX molecularTrait: <http://genenetwork.org/molecular-trait/>
+PREFIX nuccore: <https://www.ncbi.nlm.nih.gov/nuccore/>
+PREFIX omim: <https://www.omim.org/entry/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX phenotype: <http://genenetwork.org/phenotype/>
+PREFIX pubchem: <https://pubchem.ncbi.nlm.nih.gov/>
+PREFIX pubmed: <http://rdf.ncbi.nlm.nih.gov/pubmed/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX taxon: <http://purl.uniprot.org/taxonomy/>
+PREFIX uniprot: <http://purl.uniprot.org/uniprot/>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT {
+    ?s ?p ?o
+} WHERE {
+    ?s rdf:type gn:species .
+    ?s ?p ?o .
+}"
+  )
+
+;; curl "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=prefix+gn%3A+%3Chttp%3A%2F%2Fgenenetwork.org%2F%3E+%0D%0A%0D%0ASELECT+distinct+*+WHERE+%7B%3Fu++gn%3AbinomialName+%3Fo%7D&format=application%2Fsparql-results%2Bjson"|jq
 (define (get-species)
-  '(("Mus_musculus" . (("id" . "mouse" )
-      ("api" . "https://genenetwork.org/api/v2/mouse/")))
-    ("Rattus_norvegicus" . (("id" . "rat")
-      ("api" . "https://genenetwork.org/api/v2/rat/")))
-    ))
+  (http-get "http://sparql.genenetwork.org/sparql?default-graph-uri=&query=")
+    )
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
