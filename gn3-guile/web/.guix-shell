@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #  run with options '-- ./webserver.scm 8091' e.g.
-#  . .guix-shell -- guile -e main ./webserver.scm 8091
+#  . .guix-shell -- guile --listen=1970 -e main ./webserver.scm 8091
 
 echo "Note run: running web-server"
 
-guix shell guile guile-fibers guile-json gnutls guile-readline guile-redis openssl nss-certs $*
+guix shell guile guile-fibers guile-json guile-gnutls guile-readline guile-redis openssl nss-certs $*

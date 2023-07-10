@@ -10,6 +10,8 @@
  (json)
  (ice-9 match)
  (ice-9 format)
+ (ice-9 iconv)
+ (ice-9 receive)
  (srfi srfi-1)
  (srfi srfi-26)
  (web http)
@@ -91,8 +93,11 @@ CONSTRUCT {
 
 ;; curl "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=prefix+gn%3A+%3Chttp%3A%2F%2Fgenenetwork.org%2F%3E+%0D%0A%0D%0ASELECT+distinct+*+WHERE+%7B%3Fu++gn%3AbinomialName+%3Fo%7D&format=application%2Fsparql-results%2Bjson"|jq
 (define (get-species)
-  (http-get "http://sparql.genenetwork.org/sparql?default-graph-uri=&query=")
-    )
+  (bytevector->string (receive (response-status response-body)
+      (http-request "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=prefix+gn%3A+%3Chttp%3A%2F%2Fgenenetwork.org%2F%3E+%0D%0A%0D%0ASELECT+distinct+*+WHERE+%7B%3Fu++gn%3AbinomialName+%3Fo%7D&format=application%2Fsparql-results%2Bjson")
+    
+    response-body) "UTF-8"
+    ))
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
