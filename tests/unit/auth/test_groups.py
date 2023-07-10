@@ -19,7 +19,9 @@ create_group_failure = {
     "message": "Unauthorised: Failed to create group."
 }
 
-uuid_fn = lambda : UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
+def uuid_fn():
+    """Return a specific UUID"""
+    return UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
 
 GROUP = Group(UUID("9988c21d-f02f-4d45-8966-22c968ac2fbf"), "TheTestGroup",
               {"group_description": "The test group"})

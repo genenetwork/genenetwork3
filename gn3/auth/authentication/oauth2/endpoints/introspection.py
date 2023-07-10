@@ -24,7 +24,7 @@ class IntrospectionEndpoint(_IntrospectionEndpoint):
         """Query the token."""
         return _query_token(self, token_string, token_type_hint)
 
-    def introspect_token(self, token: OAuth2Token) -> dict:# pylint: disable=[no-self-use]
+    def introspect_token(self, token: OAuth2Token) -> dict:
         """Return the introspection information."""
         url = urlparse(flask_request.url)
         return {
@@ -43,6 +43,6 @@ class IntrospectionEndpoint(_IntrospectionEndpoint):
             "jti": token.token_id
         }
 
-    def check_permission(self, token, client, request):# pylint: disable=[unused-argument, no-self-use]
+    def check_permission(self, token, client, request):# pylint: disable=[unused-argument]
         """Check that the client has permission to introspect token."""
         return client.client_type == "internal"

@@ -234,7 +234,7 @@ class TestPartialCorrelations(TestCase):
                     tissue_correlation(primary, target, method)
 
     @pytest.mark.unit_test
-    def test_tissue_correlation(self): # pylint: disable=R0201
+    def test_tissue_correlation(self):
         """
         Test that the correct correlation values are computed for the given:
         - primary trait

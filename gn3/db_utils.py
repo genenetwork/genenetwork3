@@ -21,7 +21,6 @@ class Connection(Protocol):
     """Type Annotation for MySQLdb's connection object"""
     def cursor(self, *args) -> Any:
         """A cursor in which queries may be performed"""
-        ...
 
 
 @contextlib.contextmanager

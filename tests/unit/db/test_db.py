@@ -103,7 +103,6 @@ class TestCrudMethods(TestCase):
                 (35, 'Rob'))
 
     @pytest.mark.unit_test
-    # pylint: disable=R0201
     def test_probeset_called_with_right_columns(self):
         """Given a columns argument, test that the correct sql query is
         constructed"""

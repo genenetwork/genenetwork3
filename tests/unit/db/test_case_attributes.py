@@ -140,7 +140,7 @@ def test_approve_deleting_case_attribute(mocker: MockFixture) -> None:
                 "WHERE id = %s",
                 (3,),
             ),
-            mocker.call("DELETE FROM CaseAttribute " "WHERE Id = %s", ("12",)),
+            mocker.call("DELETE FROM CaseAttribute WHERE Id = %s", ("12",)),
             mocker.call(
                 "UPDATE caseattributes_audit SET "
                 "status = 'approved' WHERE id = %s",
@@ -183,14 +183,16 @@ def test_approve_modifying_case_attribute(mocker: MockFixture) -> None:
                 (3,),
             ),
             mocker.call(
-                "UPDATE CaseAttribute SET " "Description = %s WHERE Id = %s",
+                "UPDATE CaseAttribute SET "
+                "Description = %s WHERE Id = %s",
                 (
                     "Test",
                     "12",
                 ),
             ),
             mocker.call(
-                "UPDATE CaseAttribute SET " "Name = %s WHERE Id = %s",
+                "UPDATE CaseAttribute SET "
+                "Name = %s WHERE Id = %s",
                 (
                     "Height (A)",
                     "12",

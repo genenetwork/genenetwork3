@@ -16,7 +16,9 @@ create_role_failure = {
     "message": "Unauthorised: Could not create role"
 }
 
-uuid_fn = lambda : uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
+def uuid_fn():
+    """UUID function for tests"""
+    return uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
 
 PRIVILEGES = (
     Privilege("group:resource:view-resource",

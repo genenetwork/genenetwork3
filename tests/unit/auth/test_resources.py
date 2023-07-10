@@ -21,7 +21,9 @@ create_resource_failure = {
     "status": "error",
     "message": "Unauthorised: Could not create resource"
 }
-uuid_fn = lambda : uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
+def uuid_fn():
+    """UUID function for tests."""
+    return uuid.UUID("d32611e3-07fc-4564-b56c-786c6db6de2b")
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
@@ -71,7 +73,9 @@ def test_create_resource_raises_for_unauthorised_users(
         assert create_resource(
             conn, "test_resource", resource_category, user, False) == expected
 
-SORTKEY = lambda resource: resource.resource_id
+def sort_key(resource):
+    """Return the sort key for resources."""
+    return resource.resource_id
 
 @pytest.mark.unit_test
 def test_public_resources(fxtr_resources):
@@ -81,12 +85,12 @@ def test_public_resources(fxtr_resources):
     THEN: only list the resources that are public
     """
     conn, _res = fxtr_resources
-    assert sorted(public_resources(conn), key=SORTKEY) == sorted(tuple(
-        res for res in conftest.TEST_RESOURCES if res.public), key=SORTKEY)
+    assert sorted(public_resources(conn), key=sort_key) == sorted(tuple(
+        res for res in conftest.TEST_RESOURCES if res.public), key=sort_key)
 
 PUBLIC_RESOURCES = sorted(
     {res.resource_id: res for res in conftest.TEST_RESOURCES_PUBLIC}.values(),
-    key=SORTKEY)
+    key=sort_key)
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
@@ -97,13 +101,13 @@ PUBLIC_RESOURCES = sorted(
             {res.resource_id: res for res in
              (conftest.TEST_RESOURCES_GROUP_01 +
               conftest.TEST_RESOURCES_PUBLIC)}.values(),
-            key=SORTKEY),
+            key=sort_key),
          sorted(
              {res.resource_id: res for res in
               ((conftest.TEST_RESOURCES_GROUP_01[1],) +
                conftest.TEST_RESOURCES_PUBLIC)}.values()
              ,
-             key=SORTKEY),
+             key=sort_key),
          PUBLIC_RESOURCES, PUBLIC_RESOURCES))))
 def test_user_resources(fxtr_group_user_roles, user, expected):
     """
@@ -114,4 +118,4 @@ def test_user_resources(fxtr_group_user_roles, user, expected):
     conn, *_others = fxtr_group_user_roles
     assert sorted(
         {res.resource_id: res for res in user_resources(conn, user)
-         }.values(), key=SORTKEY) == expected
+         }.values(), key=sort_key) == expected

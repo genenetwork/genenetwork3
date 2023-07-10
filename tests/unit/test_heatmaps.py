@@ -29,7 +29,7 @@ class TestHeatmap(TestCase):
     """Class for testing heatmap computation functions"""
 
     @pytest.mark.unit_test
-    def test_cluster_traits(self): # pylint: disable=R0201
+    def test_cluster_traits(self):
         """
         Test that the clustering is working as expected.
         """
