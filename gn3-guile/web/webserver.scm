@@ -21,7 +21,7 @@
  (web uri)
  (fibers web server))
 
-(define (get-version)
+(define get-version
   "2.0")
 
 (define (base-url)
@@ -29,7 +29,7 @@
 
 (define (prefix)
   "Build the API URL including version"
-  (string-append (base-url) "/api/" (get-version)))
+  (string-append (base-url) "/api/" get-version))
 
 (define (mk-url postfix)
   "Add the path to the API URL"
@@ -45,7 +45,7 @@
 
 (define info `(
   ("name" . "GeneNetwork REST API")
-  ("version" . ,(get-version))
+  ("version" . ,get-version)
   ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
   ("license" . (("source code" . "AGPL")))
   ("note" . "work in progress (WIP)")
@@ -59,45 +59,54 @@
      (,(mk-url "mouse")."Get information on mouse")
      (,(mk-url "datasets")."Get a list of datasets")))))
 
-(define (sparql-species)
-  "
-PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-PREFIX generif: <http://www.ncbi.nlm.nih.gov/gene?cmd=Retrieve&dopt=Graphics&list_uids=>
-PREFIX gn: <http://genenetwork.org/>
-PREFIX hgnc: <http://bio2rdf.org/hgnc:>
-PREFIX homologene: <https://bio2rdf.org/homologene:>
-PREFIX kegg: <http://bio2rdf.org/ns/kegg#>
-PREFIX molecularTrait: <http://genenetwork.org/molecular-trait/>
-PREFIX nuccore: <https://www.ncbi.nlm.nih.gov/nuccore/>
-PREFIX omim: <https://www.omim.org/entry/>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX phenotype: <http://genenetwork.org/phenotype/>
-PREFIX pubchem: <https://pubchem.ncbi.nlm.nih.gov/>
-PREFIX pubmed: <http://rdf.ncbi.nlm.nih.gov/pubmed/>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX taxon: <http://purl.uniprot.org/taxonomy/>
-PREFIX uniprot: <http://purl.uniprot.org/uniprot/>
-PREFIX up: <http://purl.uniprot.org/core/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-CONSTRUCT {
-    ?s ?p ?o
-} WHERE {
-    ?s rdf:type gn:species .
-    ?s ?p ?o .
+(define (sparql-scm query)
+  (json-string->scm
+   (bytevector->string (receive (response-status response-body)
+                           (http-request (string-append "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=" (uri-encode query) "&format=application%2Fsparql-results%2Bjson"))
+                         
+                         response-body) "UTF-8"
+                         )))
+
+(define (sparql-exec query)
+  (sparql-scm query))
+
+(define (sparql-results query)
+  (cdr (assoc "bindings" (cdr (assoc "results" (sparql-exec query)
+  )))))
+
+(define (sparql-species)
+  (sparql-results "
+PREFIX gn: <http://genenetwork.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?species WHERE {
+    ?species rdf:type gn:species .
 }"
+               ))
+
+(define (get-species-uris)
+  (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species)))
   )
 
-;; curl "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=prefix+gn%3A+%3Chttp%3A%2F%2Fgenenetwork.org%2F%3E+%0D%0A%0D%0ASELECT+distinct+*+WHERE+%7B%3Fu++gn%3AbinomialName+%3Fo%7D&format=application%2Fsparql-results%2Bjson"|jq
-(define (get-species)
-  (bytevector->string (receive (response-status response-body)
-      (http-request "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=prefix+gn%3A+%3Chttp%3A%2F%2Fgenenetwork.org%2F%3E+%0D%0A%0D%0ASELECT+distinct+*+WHERE+%7B%3Fu++gn%3AbinomialName+%3Fo%7D&format=application%2Fsparql-results%2Bjson")
-    
-    response-body) "UTF-8"
-    ))
+(define (sparql-species-meta)
+  (sparql-results "
+PREFIX gn: <http://genenetwork.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?species ?p ?o WHERE {
+    ?species rdf:type gn:species .
+    ?species ?p ?o .
+}"
+               ))
+
+(define (get-species-all)
+  (sparql-species-meta))
+
+(define (triples)
+  (array->list (get-species-all)))
+
+;; from the triples first harvest the species URIs, followed by creating records of information
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
@@ -122,9 +131,11 @@ CONSTRUCT {
     (('GET "meta")
      (render-json info-meta))
     (('GET "version")
-     (render-json (get-version)))
+     (render-json get-version))
     (('GET "species")
      (render-json (get-species)))
+    (('GET "species-all")
+     (render-json (triples)))
     ))
 
 (define (request-path-components request)
@@ -153,7 +164,7 @@ CONSTRUCT {
               #:port port))
 
 (define (main args)
-  (write (string-append "Starting Guile REST API " (get-version) " server!"))
+  (write (string-append "Starting Guile REST API " get-version " server!"))
   (write args)
   (newline)
   (let ((listen (inexact->exact (string->number (car (cdr args))))))
