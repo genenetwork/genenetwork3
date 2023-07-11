@@ -71,12 +71,16 @@
 (define (sparql-exec query)
   (sparql-scm query))
 
-(define (sparql-results query)
-  (cdr (assoc "bindings" (cdr (assoc "results" (sparql-exec query)
+(define (sparql-names response)
+  (cdr (assoc "vars" (cdr (assoc "head" response))))
+  )
+
+(define (sparql-results response)
+  (cdr (assoc "bindings" (cdr (assoc "results" response
   )))))
 
 (define (sparql-species)
-  (sparql-results "
+  (sparql-exec "
 PREFIX gn: <http://genenetwork.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
