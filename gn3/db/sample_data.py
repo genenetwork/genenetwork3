@@ -407,10 +407,9 @@ def insert_sample_data(
             cursor.execute(
                 "SELECT Id FROM PublishData where Id = %s "
                 "AND StrainId = %s",
-                (data_id, strain_id),
-            )
-            conn.commit()
-        if cursor.fetchone():  # Data already exists
+                (data_id, strain_id))
+            data_exists = cursor.fetchone()
+        if data_exists:  # Data already exists
             return count
 
         for header, value in zip(csv_header.split(","), data.split(",")):
