@@ -99,8 +99,8 @@ SELECT DISTINCT ?species WHERE {
   (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species)))
   )
 
-(define (sparql-species-meta)
-  (sparql-results "
+(define (sparql-species-meta2)
+  (sparql-exec "
 PREFIX gn: <http://genenetwork.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -109,13 +109,36 @@ SELECT DISTINCT ?species ?p ?o WHERE {
     ?species ?p ?o .
 }"
                ))
+(define (sparql-species-meta)
+  (sparql-exec "
+PREFIX gn: <http://genenetwork.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?species ?p ?o WHERE {
+   MINUS { ?species rdf:type ?o . }
+{
+  SELECT DISTINCT ?species ?p ?o WHERE {
+    ?species rdf:type gn:species .
+    ?species ?p ?o .
+   }}}"
+               ))
+
 
 (define (get-species-all)
   (sparql-species-meta))
 
 (define (get-species)
-  (receive (names results) (sparql-species))
-  results)
+  (receive (names results) (sparql-species-meta)
+  results))
+
+(define (get-values name resultlist)
+  (map (lambda (m) (cdr (assoc "value" (cdr (assoc name m))))) resultlist)
+  )
+
+(define (filter-results)
+  (get-values "o" (array->list (get-species)))
+  )
+
 
 (define (triples)
   (array->list (get-species-all)))
