@@ -51,6 +51,11 @@ def list_species() -> Response:
 @require_json
 def authorisation() -> Response:
     """Retrive the authorisation level for datasets/traits for the user."""
+    # Access endpoint with something like:
+    # curl -X POST http://127.0.0.1:8080/api/oauth2/data/authorisation \
+    #    -H "Content-Type: application/json" \
+    #    -d '{"traits": ["HC_M2_0606_P::1442370_at", "BXDGeno::01.001.695",
+    #        "BXDPublish::10001"]}'
     db_uri = app.config["AUTH_DB"]
     privileges = {}
     user = User(uuid.uuid4(), "anon@ymous.user", "Anonymous User")
@@ -81,11 +86,6 @@ def authorisation() -> Response:
             else:
                 raise exc from None
 
-        # Access endpoint with somethin like:
-        # curl -X POST http://127.0.0.1:8080/api/oauth2/data/authorisation \
-        #    -H "Content-Type: application/json" \
-        #    -d '{"traits": ["HC_M2_0606_P::1442370_at", "BXDGeno::01.001.695",
-        #        "BXDPublish::10001"]}'
         def __gen_key__(resource, data_item):
             if resource.resource_category.resource_category_key.lower() == "phenotype":
                 return (
