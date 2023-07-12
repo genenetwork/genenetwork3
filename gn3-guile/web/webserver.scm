@@ -79,6 +79,12 @@
   (cdr (assoc "bindings" (cdr (assoc "results" response
   )))))
 
+(define (sparql-exec query)
+  "Return list of varnames and list of results"
+  (let ([response (sparql-scm query)])
+      (values (sparql-names response) (sparql-results response))
+  ))
+
 (define (sparql-species)
   (sparql-exec "
 PREFIX gn: <http://genenetwork.org/>
@@ -107,6 +113,10 @@ SELECT DISTINCT ?species ?p ?o WHERE {
 (define (get-species-all)
   (sparql-species-meta))
 
+(define (get-species)
+  (receive (names results) (sparql-species))
+  results)
+
 (define (triples)
   (array->list (get-species-all)))
 
@@ -118,10 +128,14 @@ SELECT DISTINCT ?species ?p ?o WHERE {
 
 ;; ---- REST API web server handler
 
-(define (not-found request)
+(define (not-found2 request)
   (values (build-response #:code 404)
-          (string-append "Resource not found: "
+          (string-append "Resource X not found: "
                          (uri->string (request-uri request)))))
+
+(define (not-found uri)
+  (list (build-response #:code 404)
+        (string-append "Resource not found: " (uri->string uri))))
 
 (define (render-json json)
   (list '((content-type . (application/json)))
@@ -140,6 +154,7 @@ SELECT DISTINCT ?species ?p ?o WHERE {
      (render-json (get-species)))
     (('GET "species-all")
      (render-json (triples)))
+    (_ (not-found (request-uri request)))
     ))
 
 (define (request-path-components request)
