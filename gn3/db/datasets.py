@@ -4,6 +4,8 @@ This module contains functions relating to specific trait dataset manipulation
 import os
 from typing import Any
 
+from flask import current_app as app
+
 def retrieve_sample_list(group: str):
     """
     Get the sample list for a group (a category that datasets belong to)
@@ -14,7 +16,7 @@ def retrieve_sample_list(group: str):
 
     samplelist = []
     genofile_path = (
-        f'{os.environ.get("GENENETWORK_FILES", "/home/gn2/production/genotype_files/")}'
+        f'{app.config.get("GENENETWORK_FILES", "/home/gn2/production/genotype_files/")}'
         f'/genotype/{group}.geno'
     )
     if os.path.isfile(genofile_path):
