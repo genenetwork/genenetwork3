@@ -77,7 +77,7 @@ ORDER BY st.Name""", (trait_name, phenotype_id))
             sample_data[sample] = {
                 'value': value,
                 'error': error,
-                'n_cases:': n_cases
+                'n_cases': n_cases
             }
 
         return sample_data
