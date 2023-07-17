@@ -60,16 +60,13 @@
      (,(mk-url "datasets")."Get a list of datasets")))))
 
 
-(define (sparql-scm query)
-  (json-string->scm
-   (bytevector->string (receive (response-status response-body)
+(define (sparql-exec query)
+  "Execute raw SPARQL query returning a json object"
+  (bytevector->string (receive (response-status response-body)
                            (http-request (string-append "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=" (uri-encode query) "&format=application%2Fsparql-results%2Bjson"))
                          
                          response-body) "UTF-8"
-                         )))
-
-(define (sparql-exec query)
-  (sparql-scm query))
+                         ))
 
 (define (sparql-names response)
   (cdr (assoc "vars" (cdr (assoc "head" response))))
@@ -78,6 +75,13 @@
 (define (sparql-results response)
   (cdr (assoc "bindings" (cdr (assoc "results" response
   )))))
+
+(define (sparql-scm query)
+  "Return dual S-exp"
+  (let response (((json-string->scm (sparql-exec query)))
+   (values (sparql-names response) (sparql-results response))
+  )))
+
 
 (define (sparql-exec query)
   "Return list of varnames and list of results"
