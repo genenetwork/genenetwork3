@@ -60,20 +60,26 @@
 
 
 (define (sparql-exec query)
-  "Execute raw SPARQL query returning a json object"
+  "Execute raw SPARQL query returning response as a UTF8 string"
   (bytevector->string (receive (response-status response-body)
                            (http-request (string-append "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=" (uri-encode query) "&format=application%2Fsparql-results%2Bjson"))
                          
                          response-body) "UTF-8"))
 
-(define (sparql-names response)
-  (cdr (assoc "vars" (cdr (assoc "head" response)))))
+(define (unpack field response)
+  "Helper to get nested JSON field from SPARQL response"
+  (cdr (assoc field response)))
 
-(define (sparql-results response) (cdr (assoc "bindings" (cdr (assoc "results" response
-  )))))
+(define (sparql-names response)
+  "Helper to get the names part of a SPARQL query"
+  (unpack "vars" (unpack "head" response)))
+
+(define (sparql-results response)
+  "Helper to get the results part of a SPARQL query"
+  (unpack "bindings" (unpack "results" response)))
 
 (define (sparql-scm query)
-  "Return dual S-exp of varnames and results"
+  "Return dual S-exp 'resultset' of varnames and results"
   (let ((response (json-string->scm (sparql-exec query))))
    (values (sparql-names response) (sparql-results response))))
 
@@ -86,8 +92,8 @@ SELECT DISTINCT ?species WHERE {
     ?species rdf:type gn:species .
 }"))
 
-(define (get-species-uris)
-  (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species))))
+;; (define (get-species-uris)
+;;   (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species))))
 
 (define (sparql-species-meta)
   (sparql-scm "
@@ -103,9 +109,9 @@ SELECT ?species ?p ?o WHERE {
    }}}"))
 
 
-;; (define (get-species)
-;;  (receive (names results) (sparql-species-meta)
-;;   results))
+(define (get-species)
+  (receive (names result) (sparql-species-meta)
+   result))
 
 ;; (define (get-values name resultlist)
 ;;  (map (lambda (m) (cdr (assoc "value" (cdr (assoc name m))))) resultlist))
@@ -116,8 +122,11 @@ SELECT ?species ?p ?o WHERE {
 ;; (define (triples)
 ;;  (array->list (get-species-all)))
 
-(define get-matrix #f)
-
+(define (get-matrix resultset)
+  "Format resultset as a list of values"
+  (receive (names results) resultset
+    values name results))
+  
 ;; from the triples first harvest the species URIs, followed by creating records of information
 
 (define (get-species-api-str)
