@@ -49,8 +49,7 @@
   ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
   ("license" . (("source code" . "AGPL")))
   ("note" . "work in progress (WIP)")
-  ("see also". ,(meta (prefix)))
-  ))
+  ("see also". ,(meta (prefix)))))
 
 (define info-meta `(		    
    ("doc" . ,(mk-doc "info"))
@@ -65,56 +64,33 @@
   (bytevector->string (receive (response-status response-body)
                            (http-request (string-append "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=" (uri-encode query) "&format=application%2Fsparql-results%2Bjson"))
                          
-                         response-body) "UTF-8"
-                         ))
+                         response-body) "UTF-8"))
 
 (define (sparql-names response)
-  (cdr (assoc "vars" (cdr (assoc "head" response))))
-  )
+  (cdr (assoc "vars" (cdr (assoc "head" response)))))
 
-(define (sparql-results response)
-  (cdr (assoc "bindings" (cdr (assoc "results" response
+(define (sparql-results response) (cdr (assoc "bindings" (cdr (assoc "results" response
   )))))
 
 (define (sparql-scm query)
-  "Return dual S-exp"
-  (let response (((json-string->scm (sparql-exec query)))
-   (values (sparql-names response) (sparql-results response))
-  )))
-
-
-(define (sparql-exec query)
-  "Return list of varnames and list of results"
-  (let ([response (sparql-scm query)])
-      (values (sparql-names response) (sparql-results response))
-  ))
+  "Return dual S-exp of varnames and results"
+  (let ((response (json-string->scm (sparql-exec query))))
+   (values (sparql-names response) (sparql-results response))))
 
 (define (sparql-species)
-  (sparql-exec "
+  (sparql-scm "
 PREFIX gn: <http://genenetwork.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT DISTINCT ?species WHERE {
     ?species rdf:type gn:species .
-}"
-               ))
+}"))
 
 (define (get-species-uris)
-  (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species)))
-  )
+  (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species))))
 
-(define (sparql-species-meta2)
-  (sparql-exec "
-PREFIX gn: <http://genenetwork.org/>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-SELECT DISTINCT ?species ?p ?o WHERE {
-    ?species rdf:type gn:species .
-    ?species ?p ?o .
-}"
-               ))
 (define (sparql-species-meta)
-  (sparql-exec "
+  (sparql-scm "
 PREFIX gn: <http://genenetwork.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -124,28 +100,23 @@ SELECT ?species ?p ?o WHERE {
   SELECT DISTINCT ?species ?p ?o WHERE {
     ?species rdf:type gn:species .
     ?species ?p ?o .
-   }}}"
-               ))
+   }}}"))
 
 
-(define (get-species-all)
-  (sparql-species-meta))
+;; (define (get-species)
+;;  (receive (names results) (sparql-species-meta)
+;;   results))
 
-(define (get-species)
-  (receive (names results) (sparql-species-meta)
-  results))
+;; (define (get-values name resultlist)
+;;  (map (lambda (m) (cdr (assoc "value" (cdr (assoc name m))))) resultlist))
 
-(define (get-values name resultlist)
-  (map (lambda (m) (cdr (assoc "value" (cdr (assoc name m))))) resultlist)
-  )
+;; (define (filter-results)
+;;  (get-values "o" (array->list (get-species))))
 
-(define (filter-results)
-  (get-values "o" (array->list (get-species)))
-  )
+;; (define (triples)
+;;  (array->list (get-species-all)))
 
-
-(define (triples)
-  (array->list (get-species-all)))
+(define get-matrix #f)
 
 ;; from the triples first harvest the species URIs, followed by creating records of information
 
