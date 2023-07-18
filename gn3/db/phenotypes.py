@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from MySQLdb.cursors import DictCursor
 
-from wqflask.database import Connection as DBConnection
+from gn3.db_utils import Connection as DBConnection
 
 
 @dataclass(frozen=True)

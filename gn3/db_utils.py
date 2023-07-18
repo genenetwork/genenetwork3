@@ -19,7 +19,7 @@ def parse_db_url(sql_uri: str) -> Tuple:
 # pylint: disable=missing-class-docstring, missing-function-docstring, too-few-public-methods
 class Connection(Protocol):
     """Type Annotation for MySQLdb's connection object"""
-    def cursor(self, *args) -> Any:
+    def cursor(self, *args, **kwargs) -> Any:
         """A cursor in which queries may be performed"""
         ...
 
