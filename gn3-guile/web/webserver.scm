@@ -123,10 +123,22 @@ SELECT ?species ?p ?o WHERE {
   
 ;; from the triples first harvest the species URIs, followed by creating records of information
 
-(define (compile-species rows)
+(define (compile-species recs rows)
   "Compile a matrix of species triples into records"
-  (define s '())
-  )
+  (for-each (lambda (r)
+		(let* ([s (car r)]
+		       [v (cdr (cdr r))]
+		       [p (car (cdr r))]
+		       [nrec (assoc s recs)]) ; track records
+		  (if nrec
+		      (begin
+			(display nrec)
+			(set! nrec (assoc-set! nrec p v))
+			(set! recs (assoc-set! recs s nrec)))
+		      (set! recs (assoc-set! recs s '()))
+		  )))
+		rows)
+  recs)
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
@@ -158,8 +170,6 @@ SELECT ?species ?p ?o WHERE {
      (render-json get-version))
     (('GET "species")
      (render-json (get-species)))
-    (('GET "species-all")
-     (render-json (triples)))
     (_ (not-found (request-uri request)))
     ))
 
