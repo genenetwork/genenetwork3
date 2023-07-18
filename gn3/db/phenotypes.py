@@ -166,7 +166,7 @@ def fetch_trait(conn: DBConnection, dataset_id: int, trait_name: str) -> dict:
     """Fetch phenotype 'traits' by `dataset_id` and `trait_name`."""
     query = (
         "SELECT "
-        "pxr.Id AS _id, pxr.Id as trait_name, pxr.PhenotypeId AS phenotype_id, "
+        "pxr.Id AS id_, pxr.Id as trait_name, pxr.PhenotypeId AS phenotype_id, "
         "pxr.PublicationId AS publication_id, pxr.DataId AS data_id, "
         "pxr.mean, pxr.locus, pxr.LRS as lrs, pxr.additive, "
         "pxr.Sequence as sequence, pxr.comments "
