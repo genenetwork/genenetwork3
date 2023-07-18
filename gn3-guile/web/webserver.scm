@@ -113,21 +113,20 @@ SELECT ?species ?p ?o WHERE {
   (receive (names result) (sparql-species-meta)
    result))
 
-;; (define (get-values name resultlist)
-;;  (map (lambda (m) (cdr (assoc "value" (cdr (assoc name m))))) resultlist))
+(define (get-values names row)
+  "Get values by name from a resultset row"
+  (map (lambda (n) (unpack "value" (unpack n row))) (array->list names)))
 
-;; (define (filter-results)
-;;  (get-values "o" (array->list (get-species))))
-
-;; (define (triples)
-;;  (array->list (get-species-all)))
-
-(define (get-matrix resultset)
-  "Format resultset as a list of values"
-  (receive (names results) resultset
-    values name results))
+(define (get-rows names results)
+  "Format results as a list of values ordered by names"
+  (map (lambda (row) (get-values names row)) (array->list results)))
   
 ;; from the triples first harvest the species URIs, followed by creating records of information
+
+(define (compile-species rows)
+  "Compile a matrix of species triples into records"
+  (define s '())
+  )
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
