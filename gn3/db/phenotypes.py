@@ -178,3 +178,19 @@ def fetch_trait(conn: DBConnection, dataset_id: int, trait_name: str) -> dict:
         cursor.execute(
             query, {"dataset_id": dataset_id, "trait_name": trait_name})
         return cursor.fetchone()
+
+def _mapping_to_query_columns_(mapping_dict: dict[str, str]) -> tuple[str, ...]:
+    """
+    Internal function to convert mapping dicts into column clauses for queries.
+    """
+    return tuple(f"{tcol} as {dcol}" for dcol, tcol in mapping_dict.items())
+
+def fetch_metadata(conn: DBConnection, phenotype_id: int) -> dict:
+    """Get the phenotype metadata by ID."""
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cols = ', '.join(_mapping_to_query_columns_(phenotype_mapping))
+        cursor.execute(
+            (f"SELECT Id as id, {cols} FROM Phenotype "
+             "WHERE Id=%(phenotype_id)s"),
+            {"phenotype_id": phenotype_id})
+        return cursor.fetchone()
