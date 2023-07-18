@@ -194,3 +194,13 @@ def fetch_metadata(conn: DBConnection, phenotype_id: int) -> dict:
              "WHERE Id=%(phenotype_id)s"),
             {"phenotype_id": phenotype_id})
         return cursor.fetchone()
+
+def fetch_publication(conn: DBConnection, publication_id: int) -> dict:
+    """Fetch the publication by its ID."""
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cols = ', '.join(_mapping_to_query_columns_(publication_mapping))
+        cursor.execute(
+            (f"SELECT Id as id, {cols} FROM Publication "
+             "WHERE Id=%(publication_id)s"),
+            {"publication_id": publication_id})
+        return cursor.fetchone()
