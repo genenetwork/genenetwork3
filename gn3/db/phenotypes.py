@@ -1,9 +1,12 @@
 # pylint: disable=[R0902, R0903]
 """This contains all the necessary functions that access the phenotypes from
 the db"""
+from typing import Optional
 from dataclasses import dataclass
 
-from typing import Optional
+from MySQLdb.cursors import DictCursor
+
+from wqflask.database import Connection as DBConnection
 
 
 @dataclass(frozen=True)
@@ -158,3 +161,20 @@ probeset_mapping = {
     "probe_set_note_by_rw": "Probe_set_Note_by_RW",
     "flag": "flag"
 }
+
+def fetch_trait(conn: DBConnection, dataset_id: int, trait_name: str) -> dict:
+    """Fetch phenotype 'traits' by `dataset_id` and `trait_name`."""
+    query = (
+        "SELECT "
+        "pxr.Id AS _id, pxr.Id as trait_name, pxr.PhenotypeId AS phenotype_id, "
+        "pxr.PublicationId AS publication_id, pxr.DataId AS data_id, "
+        "pxr.mean, pxr.locus, pxr.LRS as lrs, pxr.additive, "
+        "pxr.Sequence as sequence, pxr.comments "
+        "FROM PublishFreeze AS pf INNER JOIN InbredSet AS iset "
+        "ON pf.InbredSetId=iset.Id "
+        "INNER JOIN PublishXRef AS pxr ON iset.Id=pxr.InbredSetId "
+        "WHERE pf.Id=%(dataset_id)s AND pxr.Id=%(trait_name)s")
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            query, {"dataset_id": dataset_id, "trait_name": trait_name})
+        return cursor.fetchone()
