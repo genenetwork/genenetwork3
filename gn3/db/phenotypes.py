@@ -8,6 +8,8 @@ from MySQLdb.cursors import DictCursor
 
 from gn3.db_utils import Connection as DBConnection
 
+from .query_tools import mapping_to_query_columns
+
 
 @dataclass(frozen=True)
 class Phenotype:
@@ -179,16 +181,10 @@ def fetch_trait(conn: DBConnection, dataset_id: int, trait_name: str) -> dict:
             query, {"dataset_id": dataset_id, "trait_name": trait_name})
         return cursor.fetchone()
 
-def _mapping_to_query_columns_(mapping_dict: dict[str, str]) -> tuple[str, ...]:
-    """
-    Internal function to convert mapping dicts into column clauses for queries.
-    """
-    return tuple(f"{tcol} as {dcol}" for dcol, tcol in mapping_dict.items())
-
 def fetch_metadata(conn: DBConnection, phenotype_id: int) -> dict:
     """Get the phenotype metadata by ID."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
-        cols = ', '.join(_mapping_to_query_columns_(phenotype_mapping))
+        cols = ', '.join(mapping_to_query_columns(phenotype_mapping))
         cursor.execute(
             (f"SELECT Id as id, {cols} FROM Phenotype "
              "WHERE Id=%(phenotype_id)s"),
@@ -198,7 +194,7 @@ def fetch_metadata(conn: DBConnection, phenotype_id: int) -> dict:
 def fetch_publication(conn: DBConnection, publication_id: int) -> dict:
     """Fetch the publication by its ID."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
-        cols = ', '.join(_mapping_to_query_columns_(publication_mapping))
+        cols = ', '.join(mapping_to_query_columns(publication_mapping))
         cursor.execute(
             (f"SELECT Id as id, {cols} FROM Publication "
              "WHERE Id=%(publication_id)s"),
