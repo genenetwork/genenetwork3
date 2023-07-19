@@ -5,15 +5,15 @@ from typing import Any, Dict, List, Optional, Generator, Tuple, Union
 from typing_extensions import Protocol
 
 from gn3.db.metadata_audit import MetadataAudit
+from gn3.db.probesets import Probeset
 from gn3.db.phenotypes import Phenotype
-from gn3.db.phenotypes import Probeset
 from gn3.db.phenotypes import Publication
 from gn3.db.phenotypes import PublishXRef
 
 
 from gn3.db.metadata_audit import metadata_audit_mapping
+from gn3.db.probesets import probeset_mapping
 from gn3.db.phenotypes import phenotype_mapping
-from gn3.db.phenotypes import probeset_mapping
 from gn3.db.phenotypes import publication_mapping
 from gn3.db.phenotypes import publish_x_ref_mapping
 

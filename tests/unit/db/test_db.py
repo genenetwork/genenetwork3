@@ -8,8 +8,8 @@ from gn3.db import fetchall
 from gn3.db import fetchone
 from gn3.db import update
 from gn3.db import diff_from_dict
+from gn3.db.probesets import Probeset
 from gn3.db.phenotypes import Phenotype
-from gn3.db.phenotypes import Probeset
 from gn3.db.metadata_audit import MetadataAudit
 
 
