@@ -151,3 +151,13 @@ def fetch_publication_by_pubmed_id(conn: DBConnection, pubmed_id: int) -> dict:
              "WHERE PubMed_Id=%(pubmed_id)s"),
             {"pubmed_id": pubmed_id})
         return cursor.fetchone()
+
+def update_publication(conn, data=dict) -> int:
+    """Update the publication with the given data."""
+    updatable_cols = ", ".join(f"{publication_mapping[col]}=%({col})s"
+                               for col in data
+                               if col not in ("id_", "id"))
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            f"UPDATE Publication SET {updatable_cols} WHERE Id=%(id_)s", data)
+        return cursor.rowcount
