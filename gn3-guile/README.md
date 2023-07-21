@@ -10,6 +10,6 @@ GNU Guile allows you to develop against a live running web server using emacs-ge
 
 Note the leading dot. The .guix-shell is defined in `genenetwork3/gn3-guile/web` and loads required packages using GNU Guix. 
 
-Next fire up emacs with `emacs-geiser-guile` and connect to the running web server with `M-x geiser-connect` and the port 1970. Now you can not only inspect procedures, but also update any prodedure on the live server using `C-M-x` and get updated output from the webserver!
+Next fire up emacs with `emacs-geiser-guile` and connect to the running web server with `M-x geiser-connect` and the port `1970`. Now you can not only inspect procedures, but also update any prodedure on the live server using `C-M-x` and get updated output from the webserver!
 
 

@@ -12,6 +12,9 @@
  (ice-9 format)
  (ice-9 iconv)
  (ice-9 receive)
+ ;; (ice-9 debugger)
+ ;; (ice-9 breakpoints)
+ ;; (ice-9 source)
  (srfi srfi-1)
  (srfi srfi-26)
  (web http)
@@ -95,6 +98,13 @@ SELECT DISTINCT ?species WHERE {
 ;; (define (get-species-uris)
 ;;   (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species))))
 
+#!
+(define-values (names res) (sparql-species-meta))
+(define table (get-rows names res))
+(define recs '())
+(compile-species recs table)
+!#
+
 (define (sparql-species-meta)
   (sparql-scm "
 PREFIX gn: <http://genenetwork.org/>
@@ -129,13 +139,12 @@ SELECT ?species ?p ?o WHERE {
 		(let* ([s (car r)]
 		       [v (cdr (cdr r))]
 		       [p (car (cdr r))]
-		       [nrec (assoc s recs)]) ; track records
-		  (if nrec
+		       [nrec (sloppy-assoc s recs)]) ; find record to fill based on subject
+		  (if (nrec)
 		      (begin
-			(display nrec)
 			(set! nrec (assoc-set! nrec p v))
 			(set! recs (assoc-set! recs s nrec)))
-		      (set! recs (assoc-set! recs s '()))
+		      (set! nrec (assoc-set! nrec s '())) ;; start with empty list
 		  )))
 		rows)
   recs)
