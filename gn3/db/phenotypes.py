@@ -132,7 +132,7 @@ def fetch_metadata(conn: DBConnection, phenotype_id: int) -> dict:
             {"phenotype_id": phenotype_id})
         return cursor.fetchone()
 
-def fetch_publication(conn: DBConnection, publication_id: int) -> dict:
+def fetch_publication_by_id(conn: DBConnection, publication_id: int) -> dict:
     """Fetch the publication by its ID."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cols = ', '.join(mapping_to_query_columns(publication_mapping))
