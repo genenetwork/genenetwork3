@@ -141,3 +141,13 @@ def fetch_publication_by_id(conn: DBConnection, publication_id: int) -> dict:
              "WHERE Id=%(publication_id)s"),
             {"publication_id": publication_id})
         return cursor.fetchone()
+
+def fetch_publication_by_pubmed_id(conn: DBConnection, pubmed_id: int) -> dict:
+    """Fetch the publication by its PUBMED ID."""
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cols = ', '.join(mapping_to_query_columns(publication_mapping))
+        cursor.execute(
+            (f"SELECT Id as id, {cols} FROM Publication "
+             "WHERE PubMed_Id=%(pubmed_id)s"),
+            {"pubmed_id": pubmed_id})
+        return cursor.fetchone()
