@@ -139,15 +139,29 @@ SELECT ?species ?p ?o WHERE {
 		(let* ([s (car r)]
 		       [v (cdr (cdr r))]
 		       [p (car (cdr r))]
-		       [nrec (sloppy-assoc s recs)]) ; find record to fill based on subject
-		  (if (nrec)
-		      (begin
-			(set! nrec (assoc-set! nrec p v))
-			(set! recs (assoc-set! recs s nrec)))
-		      (set! nrec (assoc-set! nrec s '())) ;; start with empty list
-		  )))
+		       [nrec '()]
+		       [kv (assoc s recs)]) ; find record to fill based on subject
+		  (if (not kv)
+		      (set! nrec '())
+		      (set! nrec (cdr kv))
+		      )
+		  (set! nrec (assoc-set! nrec p v))
+		  (set! recs (assoc-set! recs s nrec))
+		  ))
 		rows)
   recs)
+
+;; result should be a vector of list of pair
+(define (tojson recs)
+  (for-each (lambda (r)
+	      (let ([k (car r)]
+		    [v (cdr r)])
+		(display k)
+		(newline)
+		(display r)
+		(newline)
+	      )) recs
+  ))
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
@@ -169,10 +183,17 @@ SELECT ?species ?p ?o WHERE {
         (lambda (port)
           (scm->json json port))))
 
+(define (render-json-string2 json)
+  (list '((content-type . (application/json)))
+	(lambda (port)
+	  (display "ThthEST" port))))
+  
 (define (controller request body)
   (match-lambda
     (('GET)
      (render-json info))
+    (('GET "meh")
+     (render-json-string2 "ITEST"))
     (('GET "meta")
      (render-json info-meta))
     (('GET "version")
