@@ -102,7 +102,11 @@ SELECT DISTINCT ?species WHERE {
 (define-values (names res) (sparql-species-meta))
 (define table (get-rows names res))
 (define recs '())
-(compile-species recs table)
+(define h (compile-species recs table))
+(assoc "http://genenetwork.org/species_drosophila_melanogaster" h)
+(assoc-ref h "http://genenetwork.org/species_drosophila_melanogaster") ;; note switch!
+(define d (car h))
+(assoc-ref (list d) "http://genenetwork.org/species_drosophila_melanogaster")
 !#
 
 (define (sparql-species-meta)
@@ -184,15 +188,19 @@ SELECT ?species ?p ?o WHERE {
           (scm->json json port))))
 
 (define (render-json-string2 json)
-  (list '((content-type . (application/json)))
+  (list '((content-type . (text/plain)))
 	(lambda (port)
-	  (display "ThthEST" port))))
+	  ;; (display "ThthxST" port)
+	  (format port "~a" "foo")
+	  )))
   
 (define (controller request body)
   (match-lambda
     (('GET)
      (render-json info))
     (('GET "meh")
+     (render-json-string2 "ITEST"))
+    (('HEAD "meh")
      (render-json-string2 "ITEST"))
     (('GET "meta")
      (render-json info-meta))
