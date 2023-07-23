@@ -95,9 +95,6 @@ SELECT DISTINCT ?species WHERE {
     ?species rdf:type gn:species .
 }"))
 
-;; (define (get-species-uris)
-;;   (map (lambda (m) (cdr (assoc "value"(cdr (car m))))) (array->list (sparql-species))))
-
 #!
 (define-values (names res) (sparql-species-meta))
 (define table (get-rows names res))
@@ -107,6 +104,15 @@ SELECT DISTINCT ?species WHERE {
 (assoc-ref h "http://genenetwork.org/species_drosophila_melanogaster") ;; note switch!
 (define d (car h))
 (assoc-ref (list d) "http://genenetwork.org/species_drosophila_melanogaster")
+
+(scm->json #(1  (("2" . 3))))
+;; [1,{"2":3}]
+(scm->json #("http://genenetwork.org/species_drosophila_melanogaster" (("http://genenetwork.org/menuName" . "Drosophila") ("http://genenetwork.org/binomialName" . "Drosophila melanogaster") )))
+;; ["http://genenetwork.org/species_drosophila_melanogaster",{"http://genenetwork.org/menuName":"Drosophila","http://genenetwork.org/binomialName":"Drosophila melanogaster"}]
+l
+;; (("http://genenetwork.org/menuName" "Drosophila") ("http://genenetwork.org/name" "Drosophila") ("http://genenetwork.org/binomialName" "Drosophila melanogaster"))
+(scm->json (map (lambda (i) (cons (car i) (car (cdr i)))) l))
+;; {"http://genenetwork.org/menuName":"Drosophila","http://genenetwork.org/name":"Drosophila","http://genenetwork.org/binomialName":"Drosophila melanogaster"}
 !#
 
 (define (sparql-species-meta)
@@ -157,15 +163,16 @@ SELECT ?species ?p ?o WHERE {
 
 ;; result should be a vector of list of pair
 (define (tojson recs)
-  (for-each (lambda (r)
-	      (let ([k (car r)]
-		    [v (cdr r)])
-		(display k)
-		(newline)
-		(display r)
-		(newline)
-	      )) recs
-  ))
+  (map (lambda (r)
+	 (let* ([k (car r)]
+		[v (cdr r)])
+	   ; (display k)
+	   ; (display v)
+	   ; (newline)
+	   (scm->json (map (lambda (i) (cons (car i) (car (cdr i)))) v))
+	   ))
+	 recs  )
+  )
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
