@@ -129,9 +129,6 @@ SELECT ?species ?p ?o WHERE {
    }}}"))
 
 
-(define (get-species)
-  (receive (names result) (sparql-species-meta)
-   result))
 
 (define (get-values names row)
   "Get values by name from a resultset row"
@@ -162,17 +159,22 @@ SELECT ?species ?p ?o WHERE {
   recs)
 
 ;; result should be a vector of list of pair
-(define (tojson recs)
+(define (species-digest recs)
   (map (lambda (r)
 	 (let* ([k (car r)]
 		[v (cdr r)])
-	   ; (display k)
-	   ; (display v)
-	   ; (newline)
-	   (scm->json (map (lambda (i) (cons (car i) (car (cdr i)))) v))
+	   (cons k (map (lambda (i) (cons (car i) (car (cdr i)))) v))
 	   ))
 	 recs  )
   )
+
+(define (get-species)
+  (receive (names res) (sparql-species-meta)
+    (let* ([table (get-rows names res)]
+           [recs '()]
+           [h (compile-species recs table)])
+      (species-digest h))
+    ))
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
