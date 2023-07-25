@@ -31,7 +31,10 @@
   "https://genenetwork.org")
 
 (define (gn-sparql-endpoint-url)
-  (string-append "https://sparql.genenetwork.org/sparql"))
+  "https://sparql.genenetwork.org/sparql")
+
+(define (wd-sparql-endpoint-url)
+  "https://query.wikidata.org/sparql")
 
 (define (prefix)
   "Build the API URL including version"
@@ -72,6 +75,13 @@
                          
                          response-body) "UTF-8"))
 
+(define (sparql-exec2 endpoint-url query)
+  "Execute raw SPARQL query returning response as a UTF8 string"
+  (bytevector->string (receive (response-status response-body)
+                          (http-request (string-append endpoint-url "?query=" (uri-encode query) ""))
+                         
+                         response-body) "UTF-8"))
+
 (define (unpack field response)
   "Helper to get nested JSON field from SPARQL response"
   (cdr (assoc field response)))
@@ -108,7 +118,34 @@ l
 ;; (("http://genenetwork.org/menuName" "Drosophila") ("http://genenetwork.org/name" "Drosophila") ("http://genenetwork.org/binomialName" "Drosophila melanogaster"))
 (scm->json (map (lambda (i) (cons (car i) (car (cdr i)))) l))
 ;; {"http://genenetwork.org/menuName":"Drosophila","http://genenetwork.org/name":"Drosophila","http://genenetwork.org/binomialName":"Drosophila melanogaster"}
+
+
+curl -G https://query.wikidata.org/sparql -H "Accept: application/json; charset=utf-8" --data-urlencode query="SELECT DISTINCT * where {
+  wd:Q158695 wdt:P225 ?o .
+} limit 5"
+{
+  "head" : {
+    "vars" : [ "o" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "o" : {
+        "type" : "literal",
+        "value" : "Arabidopsis thaliana"
+      }
+    } ]
+  }
+}
 !#
+
+(define (sparql-wd-species-info species)
+  (sparql-exec2 (wd-sparql-endpoint-url) "
+SELECT DISTINCT * where {
+  wd:Q158695 wdt:P225 ?o .
+} limit 100
+
+"
+  ))
 
 (define (sparql-species)
   (sparql-scm (gn-sparql-endpoint-url) "
