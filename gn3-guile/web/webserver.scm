@@ -30,6 +30,9 @@
 (define (base-url)
   "https://genenetwork.org")
 
+(define (gn-sparql-endpoint-url)
+  (string-append "https://sparql.genenetwork.org/sparql"))
+
 (define (prefix)
   "Build the API URL including version"
   (string-append (base-url) "/api/" get-version))
@@ -62,10 +65,10 @@
      (,(mk-url "datasets")."Get a list of datasets")))))
 
 
-(define (sparql-exec query)
+(define (sparql-exec endpoint-url query)
   "Execute raw SPARQL query returning response as a UTF8 string"
   (bytevector->string (receive (response-status response-body)
-                           (http-request (string-append "https://sparql.genenetwork.org/sparql?default-graph-uri=&query=" (uri-encode query) "&format=application%2Fsparql-results%2Bjson"))
+                          (http-request (string-append endpoint-url "?default-graph-uri=&query=" (uri-encode query) "&format=application%2Fsparql-results%2Bjson"))
                          
                          response-body) "UTF-8"))
 
@@ -81,19 +84,11 @@
   "Helper to get the results part of a SPARQL query"
   (unpack "bindings" (unpack "results" response)))
 
-(define (sparql-scm query)
+(define (sparql-scm endpoint-url query)
   "Return dual S-exp 'resultset' of varnames and results"
-  (let ((response (json-string->scm (sparql-exec query))))
+  (let ((response (json-string->scm (sparql-exec endpoint-url query))))
    (values (sparql-names response) (sparql-results response))))
 
-(define (sparql-species)
-  (sparql-scm "
-PREFIX gn: <http://genenetwork.org/>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-SELECT DISTINCT ?species WHERE {
-    ?species rdf:type gn:species .
-}"))
 
 #!
 (define-values (names res) (sparql-species-meta))
@@ -115,10 +110,19 @@ l
 ;; {"http://genenetwork.org/menuName":"Drosophila","http://genenetwork.org/name":"Drosophila","http://genenetwork.org/binomialName":"Drosophila melanogaster"}
 !#
 
+(define (sparql-species)
+  (sparql-scm (gn-sparql-endpoint-url) "
+PREFIX gn: <http://genenetwork.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?species WHERE {
+    ?species rdf:type gn:species .
+}"))
+
 (define (sparql-species-meta)
-  (sparql-scm "
-PREFIX gn: <http://genenetwork.org/id>
-PREFIX gnterm <http://genenetwork.org/term>
+  (sparql-scm (gn-sparql-endpoint-url) "
+PREFIX gn: <http://genenetwork.org/id/>
+PREFIX gnterm: <http://genenetwork.org/term/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?species ?p ?o WHERE {
@@ -164,7 +168,8 @@ SELECT ?species ?p ?o WHERE {
   (map (lambda (r)
 	 (let* ([k (car r)]
 		[v (cdr r)])
-	   (cons k (map (lambda (i) (cons (car i) (car (cdr i)))) v))
+	   ; (cons k (map (lambda (i) (cons (car i) (car (cdr i)))) v))
+	   (map (lambda (i) (cons (car i) (car (cdr i)))) v)
 	   ))
 	 recs  )
   )
@@ -176,6 +181,9 @@ SELECT ?species ?p ?o WHERE {
            [h (compile-species recs table)])
       (species-digest h))
     ))
+
+; (define (wd-species-info wd)
+;  )
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
@@ -217,7 +225,7 @@ SELECT ?species ?p ?o WHERE {
     (('GET "version")
      (render-json get-version))
     (('GET "species")
-     (render-json (get-species)))
+     (render-json (list->vector (get-species))))
     (_ (not-found (request-uri request)))
     ))
 
