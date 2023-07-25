@@ -117,7 +117,8 @@ l
 
 (define (sparql-species-meta)
   (sparql-scm "
-PREFIX gn: <http://genenetwork.org/>
+PREFIX gn: <http://genenetwork.org/id>
+PREFIX gnterm <http://genenetwork.org/term>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?species ?p ?o WHERE {
