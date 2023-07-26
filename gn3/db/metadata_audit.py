@@ -3,9 +3,10 @@
 table from the db
 
 """
-from dataclasses import dataclass
 from typing import Optional
+from dataclasses import dataclass
 
+from MySQLdb.cursors import DictCursor
 
 @dataclass(frozen=True)
 class MetadataAudit:
@@ -26,3 +27,12 @@ metadata_audit_mapping = {
     "json_data": "json_diff_data",
     "time_stamp": "time_stamp",
 }
+
+def create_metadata_audit(conn, metadata: dict) -> int:
+    """Create a new metadata audit trail."""
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            "INSERT INTO metadata_audit (dataset_id, editor, json_diff_data) "
+            "VALUES (%(dataset_id)s, %(editor)s, %(json_data)s)",
+            metadata)
+        return cursor.rowcount
