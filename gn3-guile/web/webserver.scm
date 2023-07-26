@@ -77,9 +77,9 @@
 
 (define (sparql-exec2 endpoint-url query)
   "Execute raw SPARQL query returning response as a UTF8 string"
+  ; GET /sparql?query=SELECT%20DISTINCT%20%2A%20where%20%7B%0A%20%20wd%3AQ158695%20wdt%3AP225%20%3Fo%20.%0A%7D%20limit%205 HTTP/2
   (bytevector->string (receive (response-status response-body)
-                          (http-request (string-append endpoint-url "?query=" (uri-encode query) ""))
-                         
+                          (http-request (pk (string-append endpoint-url "?query=" (uri-encode query) "")))
                          response-body) "UTF-8"))
 
 (define (unpack field response)
