@@ -58,7 +58,6 @@ def fetch_phenotype_metadata_audit_by_dataset_id(conn, dataset_id) -> tuple[dict
             "AND ma.json_diff_data LIKE '%%phenotype%%' "
             "ORDER BY time_stamp ASC",
             {"dataset_id": dataset_id})
-        __pk__(cursor._executed, "THE RUN QUERY")
         return tuple(__parse_metadata_audit__(row) for row in cursor.fetchall())
 
 def fetch_probeset_metadata_audit_by_trait_name(conn, trait_name) -> tuple[dict, ...]:
