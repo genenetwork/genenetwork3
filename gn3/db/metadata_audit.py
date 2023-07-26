@@ -62,7 +62,7 @@ def fetch_phenotype_metadata_audit_by_dataset_id(conn, dataset_id) -> tuple[dict
 
 def fetch_probeset_metadata_audit_by_trait_name(conn, trait_name) -> tuple[dict, ...]:
     """Fetch a probeset metadata audit trail by `dataset_id`."""
-    assert bool(dataset_id), "`dataset_id` MUST be provided."
+    assert bool(trait_name), "`trait_name` MUST be provided."
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             "SELECT ma.* "
