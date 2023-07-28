@@ -247,6 +247,13 @@ SELECT ?species ?p ?o WHERE {
       "unknown"
       ))
 
+(define (strip-lang s)
+  (list->string (match (string->list s)
+		  [(#\"rest ... #\") rest]
+		  [(#\"rest ... #\" #\@ #\e #\n) rest]
+		  [rest rest]))
+  )
+
 (define (get-expanded-species)
   "Here we add information related to each species"
   (map (lambda (rec)
@@ -258,11 +265,14 @@ SELECT ?species ?p ?o WHERE {
 		 (match (pk (car row))
 		   ((taxonomy-name ncbi descr)
 		    (cons `("wikidata" . ,wd-id)
-		      (cons `("ncbi" . ,ncbi)
-		      (cons `("taxonomy-name" . ,taxonomy-name)
+		      (cons `("ncbi" . ,(strip-lang ncbi))
+		      (cons `("ncbi-url" . ,(string-append "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=" (strip-lang ncbi)))
+		      (cons `("uniprot-url" . ,(string-append "https://www.uniprot.org/taxonomy/" (strip-lang ncbi)))
+				  
+		      (cons `("taxonomy-name" . ,(strip-lang taxonomy-name))
 		      ; (cons `("shortname" . ,shortname)
-		      (cons `("description" . ,descr)
-			    rec)))))
+		      (cons `("description" . ,(strip-lang descr))
+			    rec)))))))
 		      )
 	   )))
 	 ) (get-species)
