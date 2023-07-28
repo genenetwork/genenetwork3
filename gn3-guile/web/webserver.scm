@@ -156,10 +156,11 @@ SELECT DISTINCT * where {  wd:Q158695 wdt:P225 ?o . } limit 10
 
 "
   (sparql-tsv (wd-sparql-endpoint-url) (string-append "
-SELECT DISTINCT * where {  
+SELECT DISTINCT ?taxon ?ncbi ?descr where {  
     wd:" species " " (wdt-taxon-name) " ?taxon ;
                wdt:P685 ?ncbi ;
       schema:description ?descr .
+    ?species wdt:P685 ?ncbi .
     FILTER (lang(?descr)='en')
 } limit 5
 
@@ -252,15 +253,17 @@ SELECT ?species ?p ?o WHERE {
 	 (let ([wd-id (url-parse-id (assoc-ref rec "22-rdf-syntax-ns#isDefinedBy"))])
 	   (if (string=? wd-id "unknown")
 	       rec
-	   ; wikidata query:
-	   (receive (names row) (tsv->scm (sparql-wd-species-info wd-id)) 
-	     (display wd-id)
-	     (display row)
-	     (let ([ncbi (car (cdr (car row)) )])
-	       (cons `("wikidata" . ,wd-id)
-		     (cons `("ncbi" . ,ncbi)
-		   (cons `("taxonomy-name" . ,(car (car row))) rec))
-	     ))
+	       ; wikidata query:
+	       (receive (names row) (tsv->scm (sparql-wd-species-info wd-id))
+		 (match (pk (car row))
+		   ((taxonomy-name ncbi descr)
+		    (cons `("wikidata" . ,wd-id)
+		      (cons `("ncbi" . ,ncbi)
+		      (cons `("taxonomy-name" . ,taxonomy-name)
+		      ; (cons `("shortname" . ,shortname)
+		      (cons `("description" . ,descr)
+			    rec)))))
+		      )
 	   )))
 	 ) (get-species)
 ))
