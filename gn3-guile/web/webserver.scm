@@ -52,6 +52,8 @@
   "Adds /meta to the URL"
   (string-append url "/meta"))
 
+(define (wdt-taxon-name) "wdt:P225")
+
 (define info `(
   ("name" . "GeneNetwork REST API")
   ("version" . ,get-version)
@@ -75,12 +77,14 @@
                          
                          response-body) "UTF-8"))
 
-(define (sparql-exec2 endpoint-url query)
-  "Execute raw SPARQL query returning response as a UTF8 string"
+(define (sparql-tsv endpoint-url query)
+  "Execute raw SPARQL query returning response as a UTF8 string, e.g.
+(tsv->scm (sparql-tsv (wd-sparql-endpoint-url) \"wd:Q158695\"))
+"
   ; GET /sparql?query=SELECT%20DISTINCT%20%2A%20where%20%7B%0A%20%20wd%3AQ158695%20wdt%3AP225%20%3Fo%20.%0A%7D%20limit%205 HTTP/2
-  (bytevector->string (receive (response-status response-body)
-                          (http-request (pk (string-append endpoint-url "?query=" (uri-encode query) "")))
-                         response-body) "UTF-8"))
+  (receive (response-status response-body)
+                          (http-get (pk (string-append endpoint-url "?query=" (uri-encode query))) #:headers '((Accept . "text/tab-separated-values")(user-agent . "curl/7.74.0")))
+                         response-body))
 
 (define (unpack field response)
   "Helper to get nested JSON field from SPARQL response"
@@ -99,6 +103,11 @@
   (let ((response (json-string->scm (sparql-exec endpoint-url query))))
    (values (sparql-names response) (sparql-results response))))
 
+(define (tsv->scm text)
+  "Split a TSV string into a list of fields. Returns list of names header) and rows"
+  (let ([lst (map (lambda (f) (string-split f #\tab) ) (delete "" (string-split text #\newline)))])
+    (values (car lst) (cdr lst))
+  ))
 
 #!
 (define-values (names res) (sparql-species-meta))
@@ -139,13 +148,22 @@ curl -G https://query.wikidata.org/sparql -H "Accept: application/json; charset=
 !#
 
 (define (sparql-wd-species-info species)
-  (sparql-exec2 (wd-sparql-endpoint-url) "
-SELECT DISTINCT * where {
-  wd:Q158695 wdt:P225 ?o .
-} limit 100
+  "Returns wikidata entry for species, e.g.:
+
+   (sparql-wd-species-info \"Q158695\") generates something like
+
+SELECT DISTINCT * where {  wd:Q158695 wdt:P225 ?o . } limit 10
 
 "
-  ))
+  (sparql-tsv (wd-sparql-endpoint-url) (string-append "
+SELECT DISTINCT * where {  
+    wd:" species " " (wdt-taxon-name) " ?taxon ;
+               wdt:P685 ?ncbi ;
+      schema:description ?descr .
+    FILTER (lang(?descr)='en')
+} limit 5
+
+")))
 
 (define (sparql-species)
   (sparql-scm (gn-sparql-endpoint-url) "
@@ -205,8 +223,8 @@ SELECT ?species ?p ?o WHERE {
   (map (lambda (r)
 	 (let* ([k (car r)]
 		[v (cdr r)])
-	   ; (cons k (map (lambda (i) (cons (car i) (car (cdr i)))) v))
-	   (map (lambda (i) (cons (car i) (car (cdr i)))) v)
+	   ; with key use (cons k (map (lambda (i) (cons (car i) (car (cdr i)))) v))
+	   (map (lambda (i) (cons (url-parse-id (car i)) (car (cdr i)))) v)
 	   ))
 	 recs  )
   )
@@ -221,6 +239,31 @@ SELECT ?species ?p ?o WHERE {
 
 ; (define (wd-species-info wd)
 ;  )
+
+(define (url-parse-id uri)
+  (if uri
+      (car (reverse (string-split uri #\057)))
+      "unknown"
+      ))
+
+(define (get-expanded-species)
+  "Here we add information related to each species"
+  (map (lambda (rec)
+	 (let ([wd-id (url-parse-id (assoc-ref rec "22-rdf-syntax-ns#isDefinedBy"))])
+	   (if (string=? wd-id "unknown")
+	       rec
+	   ; wikidata query:
+	   (receive (names row) (tsv->scm (sparql-wd-species-info wd-id)) 
+	     (display wd-id)
+	     (display row)
+	     (let ([ncbi (car (cdr (car row)) )])
+	       (cons `("wikidata" . ,wd-id)
+		     (cons `("ncbi" . ,ncbi)
+		   (cons `("taxonomy-name" . ,(car (car row))) rec))
+	     ))
+	   )))
+	 ) (get-species)
+))
 
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
@@ -262,7 +305,7 @@ SELECT ?species ?p ?o WHERE {
     (('GET "version")
      (render-json get-version))
     (('GET "species")
-     (render-json (list->vector (get-species))))
+     (render-json (list->vector (get-expanded-species))))
     (_ (not-found (request-uri request)))
     ))
 
