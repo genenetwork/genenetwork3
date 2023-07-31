@@ -243,8 +243,7 @@ def mrna_resource_data(cursor: db.DbCursor,
           "INNER JOIN linked_mrna_data AS lmr "
           "ON mr.data_link_id=lmr.data_link_id "
           "WHERE mr.resource_id=?") + (
-              f" LIMIT {limit}" if bool(limit) else "") (
-                  f" LIMIT {limit} OFFSET {offset}" if bool(limit) else "")),
+              f" LIMIT {limit} OFFSET {offset}" if bool(limit) else "")),
         (str(resource_id),))
     return cursor.fetchall()
 
@@ -294,11 +293,11 @@ def resource_by_id(
                        {"id": str(resource_id)})
         row = cursor.fetchone()
         if row:
-            return attach_resource_data(cursor, Resource(
+            return Resource(
                 group_by_id(conn, UUID(row["group_id"])),
                 UUID(row["resource_id"]), row["resource_name"],
                 resource_category_by_id(conn, row["resource_category_id"]),
-                bool(int(row["public"]))))
+                bool(int(row["public"])))
 
     raise NotFoundError(f"Could not find a resource with id '{resource_id}'")
 

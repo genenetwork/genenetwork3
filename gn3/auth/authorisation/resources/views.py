@@ -96,13 +96,13 @@ def view_resource_data(resource_id: uuid.UUID) -> Response:
     with require_oauth.acquire("profile group resource") as the_token:
         db_uri = app.config["AUTH_DB"]
         count_per_page = __safe_get_requests_count__("count_per_page")
-        page = (__safe_get_requests_page__("page") - 1)
+        offset = (__safe_get_requests_page__("page") - 1)
         with db.connection(db_uri) as conn:
             resource = resource_by_id(conn, the_token.user, resource_id)
             return jsonify(resource_data(
                 conn,
                 resource,
-                ((page * count_per_page) if bool(count_per_page) else page),
+                ((offset * count_per_page) if bool(count_per_page) else offset),
                 count_per_page))
 
 @resources.route("/data/link", methods=["POST"])
