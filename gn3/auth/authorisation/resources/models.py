@@ -268,7 +268,6 @@ def phenotype_resource_data(
         offset: int = 0,
         limit: Optional[int] = None) -> Sequence[sqlite3.Row]:
     """Fetch data linked to a Phenotype resource"""
-    from gn3.debug import __pk__
     cursor.execute(
         ("SELECT * FROM phenotype_resources AS pr "
          "INNER JOIN linked_phenotype_data AS lpd "
