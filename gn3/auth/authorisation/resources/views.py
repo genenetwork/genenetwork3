@@ -82,7 +82,7 @@ def __safe_get_requests_page__(key: str = "page") -> int:
 def __safe_get_requests_count__(key: str = "count_per_page") -> int:
     """Get the results page if it exists or default to the first page."""
     try:
-        count = request.args.get(key, 0)
+        count = request.args.get(key, "0")
         if count != 0:
             return abs(int(count, base=10))
         return 0
