@@ -10,7 +10,7 @@ from gn3.auth.db_utils import with_db_connection
 
 from .checks import authorised_for
 from .models import (
-    Resource, save_resource, resource_by_id, resource_categories,
+    Resource, save_resource, resource_data, resource_by_id, resource_categories,
     assign_resource_user, link_data_to_resource, unassign_resource_user,
     resource_category_by_id, unlink_data_from_resource,
     create_resource as _create_resource)
@@ -71,6 +71,39 @@ def view_resource(resource_id: uuid.UUID) -> Response:
         with db.connection(db_uri) as conn:
             return jsonify(dictify(resource_by_id(
                 conn, the_token.user, resource_id)))
+
+def __safe_get_requests_page__(key: str = "page") -> int:
+    """Get the results page if it exists or default to the first page."""
+    try:
+        return abs(int(request.args.get(key, "1"), base=10))
+    except ValueError as _valerr:
+        return 1
+
+def __safe_get_requests_count__(key: str = "count_per_page") -> int:
+    """Get the results page if it exists or default to the first page."""
+    try:
+        count = request.args.get(key)
+        if count is None:
+            return None
+        return abs(int(count, base=10))
+    except ValueError as _valerr:
+        return None
+
+@resources.route("/view/<uuid:resource_id>/data")
+@require_oauth("profile group resource")
+def view_resource_data(resource_id: uuid.UUID) -> Response:
+    """Retrieve a particular resource's data."""
+    with require_oauth.acquire("profile group resource") as the_token:
+        db_uri = app.config["AUTH_DB"]
+        count_per_page = __safe_get_requests_count__("count_per_page")
+        page = (__safe_get_requests_page__("page") - 1)
+        with db.connection(db_uri) as conn:
+            resource = resource_by_id(conn, the_token.user, resource_id)
+            return jsonify(resource_data(
+                conn,
+                resource,
+                ((page * count_per_page) if bool(count_per_page) else page),
+                count_per_page))
 
 @resources.route("/data/link", methods=["POST"])
 @require_oauth("profile group resource")

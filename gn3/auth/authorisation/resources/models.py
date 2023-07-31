@@ -3,7 +3,7 @@ import json
 import sqlite3
 from uuid import UUID, uuid4
 from functools import reduce, partial
-from typing import Any, Dict, Sequence, NamedTuple
+from typing import Any, Dict, Sequence, Optional, NamedTuple
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
@@ -201,6 +201,22 @@ def user_resources(conn: db.DbConnection, user: User) -> Sequence[Resource]:
         return user_group(conn, user).map(__all_resources__).maybe(# type: ignore[arg-type,misc]
             public_resources(conn), lambda res: res)# type: ignore[arg-type,return-value]
 
+def resource_data(conn, resource, offset: int = 0, limit: Optional[int] = None) -> tuple[dict, ...]:
+    """
+    Retrieve the data for `resource`, optionally limiting the number of items.
+    """
+    resource_data_function = {
+        "mrna": mrna_resource_data,
+        "genotype": genotype_resource_data,
+        "phenotype": phenotype_resource_data
+    }
+    with db.cursor(conn) as cursor:
+        return tuple(
+            dict(data_row) for data_row in
+            resource_data_function[
+                resource.resource_category.resource_category_key](
+                    cursor, resource.resource_id, offset, limit))
+
 def attach_resource_data(cursor: db.DbCursor, resource: Resource) -> Resource:
     """Attach the linked data to the resource"""
     resource_data_function = {
@@ -217,35 +233,49 @@ def attach_resource_data(cursor: db.DbCursor, resource: Resource) -> Resource:
         resource.group, resource.resource_id, resource.resource_name,
         resource.resource_category, resource.public, data_rows)
 
-def mrna_resource_data(
-        cursor: db.DbCursor, resource_id: UUID) -> Sequence[sqlite3.Row]:
+def mrna_resource_data(cursor: db.DbCursor,
+                       resource_id: UUID,
+                       offset: int = 0,
+                       limit: Optional[int] = None) -> Sequence[sqlite3.Row]:
     """Fetch data linked to a mRNA resource"""
     cursor.execute(
-        "SELECT * FROM mrna_resources AS mr INNER JOIN linked_mrna_data AS lmr"
-        " ON mr.data_link_id=lmr.data_link_id "
-        "WHERE mr.resource_id=?",
+        (("SELECT * FROM mrna_resources AS mr "
+          "INNER JOIN linked_mrna_data AS lmr "
+          "ON mr.data_link_id=lmr.data_link_id "
+          "WHERE mr.resource_id=?") + (
+              f" LIMIT {limit}" if bool(limit) else "") (
+                  f" LIMIT {limit} OFFSET {offset}" if bool(limit) else "")),
         (str(resource_id),))
     return cursor.fetchall()
 
 def genotype_resource_data(
-        cursor: db.DbCursor, resource_id: UUID) -> Sequence[sqlite3.Row]:
+        cursor: db.DbCursor,
+        resource_id: UUID,
+        offset: int = 0,
+        limit: Optional[int] = None) -> Sequence[sqlite3.Row]:
     """Fetch data linked to a Genotype resource"""
     cursor.execute(
-        "SELECT * FROM genotype_resources AS gr "
-        "INNER JOIN linked_genotype_data AS lgd "
-        "ON gr.data_link_id=lgd.data_link_id "
-        "WHERE gr.resource_id=?",
+        (("SELECT * FROM genotype_resources AS gr "
+          "INNER JOIN linked_genotype_data AS lgd "
+          "ON gr.data_link_id=lgd.data_link_id "
+          "WHERE gr.resource_id=?") + (
+              f" LIMIT {limit} OFFSET {offset}" if bool(limit) else "")),
         (str(resource_id),))
     return cursor.fetchall()
 
 def phenotype_resource_data(
-        cursor: db.DbCursor, resource_id: UUID) -> Sequence[sqlite3.Row]:
+        cursor: db.DbCursor,
+        resource_id: UUID,
+        offset: int = 0,
+        limit: Optional[int] = None) -> Sequence[sqlite3.Row]:
     """Fetch data linked to a Phenotype resource"""
+    from gn3.debug import __pk__
     cursor.execute(
-        "SELECT * FROM phenotype_resources AS pr "
-        "INNER JOIN linked_phenotype_data AS lpd "
-        "ON pr.data_link_id=lpd.data_link_id "
-        "WHERE pr.resource_id=?",
+        ("SELECT * FROM phenotype_resources AS pr "
+         "INNER JOIN linked_phenotype_data AS lpd "
+         "ON pr.data_link_id=lpd.data_link_id "
+         "WHERE pr.resource_id=?") + (
+             f" LIMIT {limit} OFFSET {offset}" if bool(limit) else ""),
         (str(resource_id),))
     return cursor.fetchall()
 
