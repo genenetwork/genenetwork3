@@ -45,13 +45,21 @@
   "Add the path to the API URL"
   (string-append (prefix) "/" postfix))
 
-(define (mk-html postfix)
+(define (mk-html path)
   "Create a pointer to HTML documentation"
-  (string-append (base-url) "/" postfix ".html"))
+  (string-append (base-url) "/" path ".html"))
+
+(define (mk-doc path)
+  "Create a pointer to HTML documentation"
+  (mk-html (string-append "doc/" path)))
 
 (define (mk-meta path)
   "Create a meta URL for the API path"
   (mk-url (string-append path ".meta.json")))
+
+(define (mk-rec path)
+  "Create a JSON URL for the API path"
+  (mk-url (string-append path ".json")))
 
 (define (mk-term postfix)
   (mk-html (string-append "term" "/" postfix)))
@@ -70,7 +78,8 @@
   ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
   ("license" . (("source code" . "AGPL")))
   ("note" . "work in progress (WIP)")
-  ("see also". ,(mk-meta (prefix)))))
+  ("prefix" . ,(prefix))
+  ("links". (("species" . ,(mk-meta "species"))))))
 
 (define info-meta `(		    
    ("doc" . ,(mk-html "info"))
@@ -187,7 +196,8 @@ gn:Mus_musculus gnt:organism taxon:10090 .
 
 (define (sparql-species)
   (sparql-scm (gn-sparql-endpoint-url) "
-PREFIX gn: <http://genenetwork.org/>
+PREFIX gn: <http://genenetwork.org/id/>
+PREFIX gnc: <http://genenetwork.org/category/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT DISTINCT ?species WHERE {
@@ -198,7 +208,7 @@ SELECT DISTINCT ?species WHERE {
   (sparql-scm (gn-sparql-endpoint-url) "
 PREFIX gn: <http://genenetwork.org/id/>
 PREFIX gnc: <http://genenetwork.org/category/>
-PREFIX gnterm: <http://genenetwork.org/term/>
+PREFIX gnt: <http://genenetwork.org/term/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?species ?p ?o WHERE {
@@ -268,6 +278,7 @@ SELECT ?species ?p ?o WHERE {
       ))
 
 (define (strip-lang s)
+  "Strip quotes and language tag (@en) from RDF entries"
   (list->string (match (string->list s)
 		  [(#\"rest ... #\") rest]
 		  [(#\"rest ... #\" #\@ #\e #\n) rest]
@@ -290,14 +301,15 @@ SELECT ?species ?p ?o WHERE {
 	       (receive (names row) (tsv->scm (sparql-wd-species-info wd-id))
 		 (match (pk (car row))
 		   ((taxonomy-name ncbi descr)
-		    (let ([ncbi-id (strip-lang ncbi)])
+		    (let ([ncbi-id (strip-lang ncbi)]
+			  [taxonomy-lnk (string-replace-substring (strip-lang taxonomy-name) " " "_")])
 		      (cons `("id" . ,short-name)
 		      (cons `("wikidata" . ,wd-id)
 		      (cons `("taxonomy-id" . ,ncbi-id)
 		      (cons `("ncbi-url" . ,(string-append "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=" ncbi-id))
 		      (cons `("uniprot-url" . ,(string-append "https://www.uniprot.org/taxonomy/" ncbi-id))
 		      (cons `("wikidata-url" . ,(string-append "http://www.wikidata.org/entity/" wd-id))
-		      (cons `("wikispecies-url" . ,(string-append "https://species.wikimedia.org/wiki/" (strip-lang taxonomy-name))
+		      (cons `("wikispecies-url" . ,(string-append "https://species.wikimedia.org/wiki/" taxonomy-lnk))
 		      (cons `("taxonomy-name" . ,(strip-lang taxonomy-name))
 		      ; (cons `("shortname" . ,shortname) - problematic
 		      (cons `("description" . ,(strip-lang descr))
@@ -311,17 +323,21 @@ SELECT ?species ?p ?o WHERE {
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
                       "https://genenetwork.org/api/v2/rat/")))
 
-(define (get-species-links recs)
-  recs
+(define (get-species-links)
+  '(("description" . "URI"))
   )
 
 (define (get-species-rec)
-  (let ([recs (get-expanded-species)])
-  `(("items" . ,(list->vector recs))
-    ("doc" . ,(mk-term "species"))
-    ("meta" . ,(mk-meta "species"))
-    ("links" . ,(list->vector (get-species-links recs))
-  ))))
+  (list->vector (get-expanded-species)))
+
+(define (get-species-meta)
+    `(
+      ("comment" . "Get information on species")
+      ("doc" . ,(mk-doc "species"))
+      ("meta" . ,(mk-meta "species"))
+      ("rec" . ,(mk-rec "species"))
+      ("links" . ,(get-species-links)
+	)))
 
 ;; ---- REST API web server handler
 
@@ -350,16 +366,14 @@ SELECT ?species ?p ?o WHERE {
   (match-lambda
     (('GET)
      (render-json info))
-    (('GET "meh")
-     (render-json-string2 "ITEST"))
-    (('HEAD "meh")
-     (render-json-string2 "ITEST"))
-    (('GET "meta")
-     (render-json info-meta))
     (('GET "version")
      (render-json get-version))
-    (('GET "species")
+    (('GET "species.json")
      (render-json (get-species-rec)))
+    (('GET "species.meta.json")
+     (render-json (get-species-meta)))
+    (('GET "species")
+     (render-json (get-species-meta)))
     (_ (not-found (request-uri request)))
     ))
 
