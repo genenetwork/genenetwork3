@@ -111,6 +111,7 @@ def authorisation() -> Response:
         traits_names = args["traits"] # type: ignore[index]
         def __translate__(val):
             return {
+                "Temp": "Temp",
                 "ProbeSet": "mRNA",
                 "Geno": "Genotype",
                 "Publish": "Phenotype"
@@ -134,7 +135,12 @@ def authorisation() -> Response:
                     data_to_resource_map.get(
                         __trait_key__(trait),
                         uuid.UUID("4afa415e-94cb-4189-b2c6-f9ce2b6a878d")),
-                    tuple())
+                    tuple()) + (
+                        # Temporary traits do not exist in db: Set them
+                        # as public-read
+                        ("system:resource:public-read",)
+                        if trait["db"]["dataset_type"] == "Temp"
+                        else tuple())
             } for trait in
             (build_trait_name(trait_fullname)
              for trait_fullname in traits_names)))
