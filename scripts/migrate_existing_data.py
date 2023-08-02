@@ -17,7 +17,7 @@ from gn3 import db_utils as biodb
 from gn3.auth import db as authdb
 from gn3.auth.authentication.users import User
 from gn3.auth.authorisation.groups.models import Group, save_group
-from gn3.auth.roles.models import (
+from gn3.auth.authorisation.roles.models import (
     revoke_user_role_by_name, assign_user_role_by_name)
 from gn3.auth.authorisation.resources.models import (
     Resource, ResourceCategory, __assign_resource_owner_role__)
