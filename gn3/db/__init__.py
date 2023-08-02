@@ -63,53 +63,6 @@ def update(conn: Any,
         conn.commit()
         return cursor.rowcount
 
-
-def fetchone(conn: Any,
-             table: str,
-             where: Optional[Dataclass],
-             columns: Union[str, List[str]] = "*") -> Optional[Dataclass]:
-    """Run a SELECT on a table. Returns only one result!"""
-    if not any(astuple(where)):
-        return None
-    where_ = {TABLEMAP[table].get(k): v for k, v in asdict(where).items()
-              if v is not None and k in TABLEMAP[table]}
-    sql = ""
-    if columns != "*":
-        sql = f"SELECT {', '.join(columns)} FROM {table} "
-    else:
-        sql = f"SELECT * FROM {table} "
-    if where:
-        sql += "WHERE "
-        sql += " AND ".join(f"{k} = "
-                            "%s" for k in where_.keys())
-    with conn.cursor() as cursor:
-        cursor.execute(sql, tuple(where_.values()))
-        return DATACLASSMAP[table](*cursor.fetchone())
-
-
-def fetchall(conn: Any,
-             table: str,
-             where: Optional[Dataclass],
-             columns: Union[str, List[str]] = "*") -> Optional[Generator]:
-    """Run a SELECT on a table. Returns all the results as a tuple!"""
-    if not any(astuple(where)):
-        return None
-    where_ = {TABLEMAP[table].get(k): v for k, v in asdict(where).items()
-              if v is not None and k in TABLEMAP[table]}
-    sql = ""
-    if columns != "*":
-        sql = f"SELECT {', '.join(columns)} FROM {table} "
-    else:
-        sql = f"SELECT * FROM {table} "
-    if where:
-        sql += "WHERE "
-        sql += " AND ".join(f"{k} = "
-                            "%s" for k in where_.keys())
-    with conn.cursor() as cursor:
-        cursor.execute(sql, tuple(where_.values()))
-        return (DATACLASSMAP[table](*record) for record in cursor.fetchall())
-
-
 def insert(conn: Any,
            table: str,
            data: Dataclass) -> Optional[int]:
