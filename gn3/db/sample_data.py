@@ -57,10 +57,35 @@ def __extract_actions(
             )
     return result
 
-def get_trait_sample_data(
+def get_mrna_sample_data(
+    conn: Any, trait_name: str
+) -> Dict:
+    """Fetch a mRNA Assay (ProbeSet in the DB) trait's sample data and return it as a dict"""
+    with conn.cursor() as cursor:
+        cursor.execute("""
+SELECT st.Name, ifnull(pd.value, 'x'), ifnull(ps.error, 'x'), ifnull(ns.count, 'x')
+FROM ProbeSetFreeze pf JOIN ProbeSetXRef px ON px.InbredSetId = pf.InbredSetId
+     JOIN ProbeSetData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
+     LEFT JOIN ProbeSetSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
+     LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
+WHERE px.Id = %s
+ORDER BY st.Name""", (trait_name))
+
+        sample_data = {}
+        for data in cursor.fetchall():
+            sample, value, error, n_cases = data
+            sample_data[sample] = {
+                'value': value,
+                'error': error,
+                'n_cases': n_cases
+            }
+
+        return sample_data
+
+def get_pheno_sample_data(
     conn: Any, trait_name: int, phenotype_id: int
 ) -> Dict:
-    """Fetch a trait's sample data and return it as a dict"""
+    """Fetch a phenotype (Publish in the DB) trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
         cursor.execute("""
 SELECT st.Name, ifnull(pd.value, 'x'), ifnull(ps.error, 'x'), ifnull(ns.count, 'x')
@@ -82,10 +107,39 @@ ORDER BY st.Name""", (trait_name, phenotype_id))
 
         return sample_data
 
-def get_trait_csv_sample_data(
+def get_mrna_csv_sample_data(
+    conn: Any, trait_name: int, sample_list: list
+) -> str:
+    """Fetch a mRNA Assay (ProbeSet in DB) trait and return it as a csv string"""
+    with conn.cursor() as cursor:
+        cursor.execute("""
+SELECT DISTINCT st.Name, concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
+ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data'
+FROM ProbeSetFreeze pf JOIN ProbeSetXRef px ON px.InbredSetId = pf.InbredSetId
+JOIN ProbeSetData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
+LEFT JOIN ProbeSetSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
+LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
+WHERE px.Id = %s ORDER BY st.Name""",
+                       (trait_name))
+        if not (data := cursor.fetchall()):
+            return "No Sample Data Found"
+
+        # Get list of samples with data in the DB
+        existing_samples = [el[0] for el in data]
+
+        trait_csv = ["Strain Name,Value,SE,Count"]
+        for sample in sample_list:
+            if sample in existing_samples:
+                trait_csv.append(data[existing_samples.index(sample)][1])
+            else:
+                trait_csv.append(sample + ",x,x,x")
+
+        return "\n".join(trait_csv)
+
+def get_pheno_csv_sample_data(
     conn: Any, trait_name: int, phenotype_id: int, sample_list: list
 ) -> str:
-    """Fetch a trait and return it as a csv string"""
+    """Fetch a phenotype (Publish in DB) trait and return it as a csv string"""
     with conn.cursor() as cursor:
         cursor.execute("""
 SELECT DISTINCT st.Name, concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
@@ -111,8 +165,39 @@ WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name""",
 
         return "\n".join(trait_csv)
 
+def get_mrna_sample_data_ids(
+    conn: Any, probsetxref_id: int, strain_name: str
+) -> Tuple:
+    """Get the strain_id, probesetdata_id and inbredset_id for a given strain"""
+    strain_id, probesetdata_id, inbredset_id = None, None, None
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT st.id, pd.Id, pf.InbredSetId "
+            "FROM ProbeSetData pd "
+            "JOIN Strain st ON pd.StrainId = st.Id "
+            "JOIN ProbeSetXRef px ON px.DataId = pd.Id "
+            "JOIN ProbeSetFreeze pf ON pf.InbredSetId "
+            "= px.InbredSetId WHERE px.Id = %s "
+            "AND px.PhenotypeId = %s AND st.Name = %s",
+            (probsetxref_id, strain_name),
+        )
+        if _result := cursor.fetchone():
+            strain_id, probesetdata_id, inbredset_id = _result
+        if not all([strain_id, probesetdata_id, inbredset_id]):
+            # Applies for data to be inserted:
+            cursor.execute(
+                "SELECT DataId, InbredSetId FROM ProbeSetXRef "
+                "WHERE Id = %s",
+                (probesetxref_id),
+            )
+            probsetdata_id, inbredset_id = cursor.fetchone()
+            cursor.execute(
+                "SELECT Id FROM Strain WHERE Name = %s", (strain_name,)
+            )
+            strain_id = cursor.fetchone()[0]
+    return (strain_id, probesetdata_id, inbredset_id)
 
-def get_sample_data_ids(
+def get_pheno_sample_data_ids(
     conn: Any, publishxref_id: int, phenotype_id: int, strain_name: str
 ) -> Tuple:
     """Get the strain_id, publishdata_id and inbredset_id for a given strain"""
