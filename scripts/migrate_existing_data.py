@@ -88,8 +88,8 @@ def admin_group(conn: authdb.DbConnection, admin: User) -> Group:
         })
         cursor.execute("INSERT INTO group_users VALUES (?, ?)",
                        (str(new_group.group_id), str(admin.user_id)))
-        revoke_user_role_by_name(cursor, group_leader, "group-creator")
-        assign_user_role_by_name(cursor, group_leader, "group-leader")
+        revoke_user_role_by_name(cursor, admin, "group-creator")
+        assign_user_role_by_name(cursor, admin, "group-leader")
         return new_group
 
 def __resource_category_by_key__(
