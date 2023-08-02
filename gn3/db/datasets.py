@@ -38,6 +38,24 @@ def retrieve_sample_list(group: str):
                 samplelist = headers[3:]
     return samplelist
 
+def retrieve_mrna_group_name(connection: Any, probeset_id: int):
+    """
+    Given the trait id (ProbeSet.Id in the database), retrieve the name
+    of the group the dataset belongs to.
+    """
+    query = (
+        "SELECT iset.Name "
+        "FROM ProbeSet AS ps "
+        "INNER JOIN ProbeSetXRef AS px ON ps.Id = px.ProbeSetId "
+        "INNER JOIN InbredSet AS id ON px.InbredSetId = is.Id "
+        "WHERE ps.Id = %(probeset_id)s")
+    with connection.cursor() as cursor:
+        cursor.execute(query, {"probeset_id": probeset_id})
+        res = cursor.fetchone()
+        if res:
+            return res[0]
+        return None
+
 def retrieve_phenotype_group_name(connection: Any, dataset_id: int):
     """
     Given the dataset id (PublishFreeze.Id in the database), retrieve the name
