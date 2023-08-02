@@ -1,5 +1,6 @@
 # pylint: disable=[R0902, R0903]
 """Module that exposes common db operations"""
+import logging
 from dataclasses import asdict, astuple
 from typing import Any, Dict, List, Optional, Generator, Tuple, Union
 from typing_extensions import Protocol
@@ -16,6 +17,8 @@ from gn3.db.probesets import probeset_mapping
 from gn3.db.phenotypes import phenotype_mapping
 from gn3.db.phenotypes import publication_mapping
 from gn3.db.phenotypes import publish_x_ref_mapping
+
+logger = logging.getLogger(__name__)
 
 
 TABLEMAP = {
@@ -45,6 +48,11 @@ def update(conn: Any,
            data: Dataclass,
            where: Dataclass) -> Optional[int]:
     """Run an UPDATE on a table"""
+    logger.warning(
+        "DEPRECATION WARNING: The function `%s.update` is deprecated and will "
+        "be removed soon. **DO NOT** use it, and remove all references to it "
+        "from your code.",
+        __name__)
     if not (any(astuple(data)) and any(astuple(where))):
         return None
     data_ = {k: v for k, v in asdict(data).items()
