@@ -17,6 +17,8 @@ from gn3 import db_utils as biodb
 from gn3.auth import db as authdb
 from gn3.auth.authentication.users import User
 from gn3.auth.authorisation.groups.models import Group, save_group
+from gn3.auth.roles.models import (
+    revoke_user_role_by_name, assign_user_role_by_name)
 from gn3.auth.authorisation.resources.models import (
     Resource, ResourceCategory, __assign_resource_owner_role__)
 
@@ -86,6 +88,8 @@ def admin_group(conn: authdb.DbConnection, admin: User) -> Group:
         })
         cursor.execute("INSERT INTO group_users VALUES (?, ?)",
                        (str(new_group.group_id), str(admin.user_id)))
+        revoke_user_role_by_name(cursor, group_leader, "group-creator")
+        assign_user_role_by_name(cursor, group_leader, "group-leader")
         return new_group
 
 def __resource_category_by_key__(
