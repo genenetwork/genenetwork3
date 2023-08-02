@@ -70,7 +70,7 @@ def fetch_probeset_metadata_by_name(conn: DBConnection, name: str) -> dict:
     """Fetch a ProbeSet's metadata by its `name`."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cols = ", ".join(mapping_to_query_columns(probeset_mapping))
-        cursor.execute((f"SELECT Id as id, {cols} "
+        cursor.execute((f"SELECT {cols} "
                         "FROM ProbeSet "
                         "WHERE Name = %(name)s"),
                        {"name": name})
