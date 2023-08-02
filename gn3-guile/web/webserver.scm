@@ -176,18 +176,28 @@ SELECT DISTINCT ?taxon ?ncbi ?descr where {
 
 ")))
 
+#!
+gn:Mus_musculus rdf:type gnc:species .
+gn:Mus_musculus gnt:name "Mouse" .
+gn:Mus_musculus rdfs:label "Mouse (Mus musculus, mm10)" .
+gn:Mus_musculus gnt:binomialName "Mus musculus" .
+gn:Mus_musculus gnt:family "Vertebrates" .
+gn:Mus_musculus gnt:organism taxon:10090 .
+!#
+
 (define (sparql-species)
   (sparql-scm (gn-sparql-endpoint-url) "
 PREFIX gn: <http://genenetwork.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT DISTINCT ?species WHERE {
-    ?species rdf:type gn:species .
+    ?species rdf:type gnc:species .
 }"))
 
 (define (sparql-species-meta)
   (sparql-scm (gn-sparql-endpoint-url) "
 PREFIX gn: <http://genenetwork.org/id/>
+PREFIX gnc: <http://genenetwork.org/category/>
 PREFIX gnterm: <http://genenetwork.org/term/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -195,7 +205,7 @@ SELECT ?species ?p ?o WHERE {
    MINUS { ?species rdf:type ?o . }
 {
   SELECT DISTINCT ?species ?p ?o WHERE {
-    ?species rdf:type gn:species .
+    ?species rdf:type gnc:species .
     ?species ?p ?o .
    }}}"))
 
@@ -286,11 +296,12 @@ SELECT ?species ?p ?o WHERE {
 		      (cons `("taxonomy-id" . ,ncbi-id)
 		      (cons `("ncbi-url" . ,(string-append "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=" ncbi-id))
 		      (cons `("uniprot-url" . ,(string-append "https://www.uniprot.org/taxonomy/" ncbi-id))
-		      (cons `("wikidata-url" . ,(string-append "http://www.wikidata.org/entity/" wd-id))				  
+		      (cons `("wikidata-url" . ,(string-append "http://www.wikidata.org/entity/" wd-id))
+		      (cons `("wikispecies-url" . ,(string-append "https://species.wikimedia.org/wiki/" (strip-lang taxonomy-name))
 		      (cons `("taxonomy-name" . ,(strip-lang taxonomy-name))
 		      ; (cons `("shortname" . ,shortname) - problematic
 		      (cons `("description" . ,(strip-lang descr))
-			    rec))))))))))
+			    rec)))))))))))
 		      )
 	   )))
 	 ) (get-species)
