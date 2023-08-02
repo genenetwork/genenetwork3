@@ -12,6 +12,7 @@
  (ice-9 format)
  (ice-9 iconv)
  (ice-9 receive)
+ (ice-9 string-fun)
  ;; (ice-9 debugger)
  ;; (ice-9 breakpoints)
  ;; (ice-9 source)
@@ -44,13 +45,22 @@
   "Add the path to the API URL"
   (string-append (prefix) "/" postfix))
 
-(define (mk-doc postfix)
+(define (mk-html postfix)
   "Create a pointer to HTML documentation"
   (string-append (base-url) "/" postfix ".html"))
 
-(define (meta url)
-  "Adds /meta to the URL"
-  (string-append url "/meta"))
+(define (mk-meta path)
+  "Create a meta URL for the API path"
+  (mk-url (string-append path ".meta.json")))
+
+(define (mk-term postfix)
+  (mk-html (string-append "term" "/" postfix)))
+
+(define (mk-id postfix)
+  (mk-html (string-append "id" "/" postfix)))
+
+(define (mk-predicate postfix)
+  (mk-html (string-append "predicate" "/" postfix)))
 
 (define (wdt-taxon-name) "wdt:P225")
 
@@ -60,10 +70,10 @@
   ("comment" . "This is the official REST API for the GeneNetwork service hosted at https://genenetwork.org/")
   ("license" . (("source code" . "AGPL")))
   ("note" . "work in progress (WIP)")
-  ("see also". ,(meta (prefix)))))
+  ("see also". ,(mk-meta (prefix)))))
 
 (define info-meta `(		    
-   ("doc" . ,(mk-doc "info"))
+   ("doc" . ,(mk-html "info"))
    ("API" .
     ((,(mk-url "species")."Get a list of all species")
      (,(mk-url "mouse")."Get information on mouse")
@@ -254,25 +264,33 @@ SELECT ?species ?p ?o WHERE {
 		  [rest rest]))
   )
 
+(define (normalize-id str)
+  ;; (string-replace-substring (string-downcase str) " " "_")
+  (string-replace-substring str " " "_")
+  )
+
 (define (get-expanded-species)
   "Here we add information related to each species"
   (map (lambda (rec)
-	 (let ([wd-id (url-parse-id (assoc-ref rec "22-rdf-syntax-ns#isDefinedBy"))])
+	 (let ([wd-id (url-parse-id (assoc-ref rec "22-rdf-syntax-ns#isDefinedBy"))]
+	       [short-name (normalize-id (assoc-ref rec "name"))])
 	   (if (string=? wd-id "unknown")
 	       rec
 	       ; wikidata query:
 	       (receive (names row) (tsv->scm (sparql-wd-species-info wd-id))
 		 (match (pk (car row))
 		   ((taxonomy-name ncbi descr)
-		    (cons `("wikidata" . ,wd-id)
-		      (cons `("ncbi" . ,(strip-lang ncbi))
-		      (cons `("ncbi-url" . ,(string-append "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=" (strip-lang ncbi)))
-		      (cons `("uniprot-url" . ,(string-append "https://www.uniprot.org/taxonomy/" (strip-lang ncbi)))
-				  
+		    (let ([ncbi-id (strip-lang ncbi)])
+		      (cons `("id" . ,short-name)
+		      (cons `("wikidata" . ,wd-id)
+		      (cons `("taxonomy-id" . ,ncbi-id)
+		      (cons `("ncbi-url" . ,(string-append "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=" ncbi-id))
+		      (cons `("uniprot-url" . ,(string-append "https://www.uniprot.org/taxonomy/" ncbi-id))
+		      (cons `("wikidata-url" . ,(string-append "http://www.wikidata.org/entity/" wd-id))				  
 		      (cons `("taxonomy-name" . ,(strip-lang taxonomy-name))
-		      ; (cons `("shortname" . ,shortname)
+		      ; (cons `("shortname" . ,shortname) - problematic
 		      (cons `("description" . ,(strip-lang descr))
-			    rec)))))))
+			    rec))))))))))
 		      )
 	   )))
 	 ) (get-species)
@@ -281,6 +299,18 @@ SELECT ?species ?p ?o WHERE {
 (define (get-species-api-str)
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
                       "https://genenetwork.org/api/v2/rat/")))
+
+(define (get-species-links recs)
+  recs
+  )
+
+(define (get-species-rec)
+  (let ([recs (get-expanded-species)])
+  `(("items" . ,(list->vector recs))
+    ("doc" . ,(mk-term "species"))
+    ("meta" . ,(mk-meta "species"))
+    ("links" . ,(list->vector (get-species-links recs))
+  ))))
 
 ;; ---- REST API web server handler
 
@@ -318,7 +348,7 @@ SELECT ?species ?p ?o WHERE {
     (('GET "version")
      (render-json get-version))
     (('GET "species")
-     (render-json (list->vector (get-expanded-species))))
+     (render-json (get-species-rec)))
     (_ (not-found (request-uri request)))
     ))
 
