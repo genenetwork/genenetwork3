@@ -41,9 +41,9 @@
   "Build the API URL including version"
   (string-append (base-url) "/api/" get-version))
 
-(define (mk-url postfix)
+(define* (mk-url postfix #:optional (ext ""))
   "Add the path to the API URL"
-  (string-append (prefix) "/" postfix))
+  (string-append (prefix) "/" postfix ext))
 
 (define (mk-html path)
   "Create a pointer to HTML documentation"
@@ -55,11 +55,11 @@
 
 (define (mk-meta path)
   "Create a meta URL for the API path"
-  (mk-url (string-append path ".meta.json")))
+  (mk-url path ".meta.json"))
 
 (define (mk-rec path)
   "Create a JSON URL for the API path"
-  (mk-url (string-append path ".json")))
+  (mk-url path ".json"))
 
 (define (mk-term postfix)
   (mk-html (string-append "term" "/" postfix)))
@@ -321,11 +321,14 @@ SELECT ?species ?p ?o WHERE {
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
                       "https://genenetwork.org/api/v2/rat/")))
 
+(define (get-species-shortnames recs)
+  (map (lambda r (assoc-ref (car r) "shortName")) recs))
+
 (define (get-species-links recs)
   "Return a list of short names and expand them to URIs"
   (map (lambda r
 	 (let ([shortname (assoc-ref (car r) "shortName")])
-	   (cons shortname (mk-url shortname)))) recs)
+	   (cons shortname (mk-rec shortname)))) recs)
   )
 
 (define (get-species-rec)
@@ -374,6 +377,13 @@ SELECT ?species ?p ?o WHERE {
      (render-json (get-species-meta)))
     (('GET "species")
      (render-json (get-species-meta)))
+    (('GET shortname)
+     (let ([names (get-species-shortnames (get-expanded-species))])
+       (if (string-contains shortname ".json")
+	   (if (member (string-replace-substring shortname ".json" "") names)
+	       (render-json shortname)
+	       )
+	   (render-json "doc"))))
     (_ (not-found (request-uri request)))
     ))
 
