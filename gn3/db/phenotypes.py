@@ -157,7 +157,42 @@ def update_publication(conn, data=dict) -> int:
     updatable_cols = ", ".join(f"{publication_mapping[col]}=%({col})s"
                                for col in data
                                if col not in ("id_", "id"))
+    if not bool(updatable_cols):
+        return 0
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             f"UPDATE Publication SET {updatable_cols} WHERE Id=%(id_)s", data)
+        return cursor.rowcount
+
+def update_phenotype(conn, data:dict) -> int:
+    """Update the `Phenotype` table with the given data."""
+    cols = ", ".join(f"{phenotype_mapping[col]}=%({col})s"
+                     for col in data
+                     if col not in ("id_", "id"))
+    if not bool(cols):
+        return 0
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            f"UPDATE Phenotype SET {cols} WHERE Id=%(id_)s", data)
+        return cursor.rowcount
+
+def update_cross_reference(conn, dataset_id, trait_name, data:dict) -> int:
+    """Update the `PublishXRef` table with data."""
+    cols = ", ".join(f"{publish_x_ref_mapping[col]}=%({col})s"
+                     for col in data
+                     if (col not in ("id_", "id") and
+                         col in publish_x_ref_mapping))
+    if not bool(cols):
+        return 0
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            f"UPDATE PublishXRef SET {cols} WHERE "
+            "Id=%(trait_name)s AND "
+            "InbredSetId="
+            "(SELECT InbredSetId FROM PublishFreeze WHERE Id=%(dataset_id)s)",
+            {
+                "dataset_id": dataset_id,
+                "trait_name": trait_name,
+                **data
+            })
         return cursor.rowcount

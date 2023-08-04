@@ -43,35 +43,6 @@ class Dataclass(Protocol):
     __dataclass_fields__: Dict
 
 
-def update(conn: Any,
-           table: str,
-           data: Dataclass,
-           where: Dataclass) -> Optional[int]:
-    """Run an UPDATE on a table"""
-    logger.warning(
-        "DEPRECATION WARNING: The function `%s.update` is deprecated and will "
-        "be removed soon. **DO NOT** use it, and remove all references to it "
-        "from your code.",
-        __name__)
-    if not (any(astuple(data)) and any(astuple(where))):
-        return None
-    data_ = {k: v for k, v in asdict(data).items()
-             if v is not None and k in TABLEMAP[table]}
-    where_ = {k: v for k, v in asdict(where).items()
-              if v is not None and k in TABLEMAP[table]}
-    sql = f"UPDATE {table} SET "
-    sql += ", ".join(f"{TABLEMAP[table].get(k)} "
-                     "= %s" for k in data_.keys())
-    sql += " WHERE "
-    sql += " AND ".join(f"{TABLEMAP[table].get(k)} = "
-                        "%s" for k in where_.keys())
-    with conn.cursor() as cursor:
-        cursor.execute(sql,
-                       tuple(data_.values()) + tuple(where_.values()))
-        conn.commit()
-        return cursor.rowcount
-
-
 def diff_from_dict(old: Dict, new: Dict) -> Dict:
     """Construct a new dict with a specific structure that contains the difference
 between the 2 dicts in the structure:
