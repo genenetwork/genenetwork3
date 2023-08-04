@@ -219,8 +219,6 @@ SELECT ?species ?p ?o WHERE {
     ?species ?p ?o .
    }}}"))
 
-
-
 (define (get-values names row)
   "Get values by name from a resultset row"
   (map (lambda (n) (unpack "value" (unpack n row))) (array->list names)))
@@ -323,21 +321,23 @@ SELECT ?species ?p ?o WHERE {
   (scm->json-string #("https://genenetwork.org/api/v2/mouse/"
                       "https://genenetwork.org/api/v2/rat/")))
 
-(define (get-species-links)
-  '(("description" . "URI"))
+(define (get-species-links recs)
+  "Return a list of short names and expand them to URIs"
+  (map (lambda r
+	 (let ([shortname (assoc-ref (car r) "shortName")])
+	   (cons shortname (mk-url shortname)))) recs)
   )
 
 (define (get-species-rec)
   (list->vector (get-expanded-species)))
 
 (define (get-species-meta)
-    `(
-      ("comment" . "Get information on species")
+  (let ([recs (get-expanded-species)])
+    `(("comment" . "Get information on species")
       ("doc" . ,(mk-doc "species"))
       ("meta" . ,(mk-meta "species"))
       ("rec" . ,(mk-rec "species"))
-      ("links" . ,(get-species-links)
-	)))
+      ("links" . ,(get-species-links recs)))))
 
 ;; ---- REST API web server handler
 
