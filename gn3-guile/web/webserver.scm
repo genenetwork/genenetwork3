@@ -377,13 +377,14 @@ SELECT ?species ?p ?o WHERE {
      (render-json (get-species-meta)))
     (('GET "species")
      (render-json (get-species-meta)))
-    (('GET shortname)
+    (('GET id)
      (let ([names (get-species-shortnames (get-expanded-species))])
-       (if (string-contains shortname ".json")
-	   (if (member (string-replace-substring shortname ".json" "") names)
-	       (render-json shortname)
-	       )
-	   (render-json "doc"))))
+       (if
+	(match (string->list "mouse.json")
+          [(name ... #\. #\j #\s #\o #\n) (list->string name)]
+	  [rest #f])
+        (render-json name)
+        (render-json "WIP"))))
     (_ (not-found (request-uri request)))
     ))
 
