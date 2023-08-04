@@ -379,12 +379,9 @@ SELECT ?species ?p ?o WHERE {
      (render-json (get-species-meta)))
     (('GET id)
      (let ([names (get-species-shortnames (get-expanded-species))])
-       (if
-	(match (string->list "mouse.json")
-          [(name ... #\. #\j #\s #\o #\n) (list->string name)]
-	  [rest #f])
-        (render-json name)
-        (render-json "WIP"))))
+       (match (string->list id)
+	 [(name ... #\. #\j #\s #\o #\n) (render-json (list->string name))]
+	 [rest (render-json "WIP")])))
     (_ (not-found (request-uri request)))
     ))
 
