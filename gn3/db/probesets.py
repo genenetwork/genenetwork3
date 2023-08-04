@@ -75,3 +75,17 @@ def fetch_probeset_metadata_by_name(conn: DBConnection, name: str) -> dict:
                         "WHERE Name = %(name)s"),
                        {"name": name})
         return cursor.fetchone()
+
+def update_probeset(conn, probeset_id, data:dict) -> int:
+    """Update the ProbeSet table with given `data`."""
+    cols = ", ".join(f"{probeset_mapping[col]}=%({col})s"
+                     for col in data
+                     if (col not in ("id_", "id") and
+                         col in probeset_mapping))
+    if not bool(cols):
+        return 0
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            f"UPDATE ProbeSet SET {cols} WHERE Id=%(probeset_id)s",
+            {"probeset_id": probeset_id, **data})
+        return cursor.rowcount
