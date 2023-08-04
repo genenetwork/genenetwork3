@@ -17,6 +17,7 @@
  ;; (ice-9 breakpoints)
  ;; (ice-9 source)
  (srfi srfi-1)
+ (srfi srfi-13) ; hash table for memoize
  (srfi srfi-26)
  (web http)
  (web client)
@@ -24,6 +25,18 @@
  (web response)
  (web uri)
  (fibers web server))
+
+(define (memoize function) 
+   (let ((table (make-hash-table))) 
+     (lambda args
+       (apply values (hash-ref table args 
+                       ;; If the entry isn't there, call the function.    
+			      (lambda () 
+				(call-with-values 
+				    (lambda () (apply function args)) 
+				  (lambda results 
+				    (hash-set! table args results) 
+				    results)))))))) 
 
 (define get-version
   "2.0")
