@@ -1,6 +1,5 @@
 """Tests for db/phenotypes.py"""
 from unittest import TestCase
-from unittest import mock
 
 import pytest
 
