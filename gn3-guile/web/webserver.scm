@@ -17,6 +17,7 @@
  ;; (ice-9 breakpoints)
  ;; (ice-9 source)
  (srfi srfi-1)
+ (srfi srfi-11) ; let-values
  (srfi srfi-13) ; hash table for memoize
  (srfi srfi-26)
  (web http)
@@ -26,17 +27,27 @@
  (web uri)
  (fibers web server))
 
-(define (memoize function) 
-   (let ((table (make-hash-table))) 
-     (lambda args
-       (apply values (hash-ref table args 
-                       ;; If the entry isn't there, call the function.    
-			      (lambda () 
-				(call-with-values 
-				    (lambda () (apply function args)) 
-				  (lambda results 
-				    (hash-set! table args results) 
-				    results)))))))) 
+(define (memoize f)
+  "Simple memoize just uses alists at this point and does not expire"
+  (let ((result-table '()))
+    (lambda (. args)
+      (let ((cache-value (assoc args (pk result-table))))
+	(if (pk cache-value)
+	    (cdr cache-value)
+	    (let ((result (apply f args)))
+	      (set! result-table 
+                    (alist-cons args result result-table)) result))))))
+
+(define (memoize2 f)
+  "Simple memoize functions that returns values pair and uses alists at this point and does not expire"
+  (let ((result-table '()))
+    (lambda (. args)
+      (let ((c (assoc args (pk result-table))))
+	(if (pk c)
+	    (values (car (cdr c)) (car (cdr (cdr c))))
+	    (let-values (((r1 r2) (apply f args)))
+	      (set! result-table 
+                    (alist-cons args (list r1 r2) result-table)) (values r1 r2)))))))
 
 (define get-version
   "2.0")
@@ -198,6 +209,9 @@ SELECT DISTINCT ?taxon ?ncbi ?descr where {
 
 ")))
 
+(define memo-sparql-wd-species-info
+  (memoize sparql-wd-species-info))
+
 #!
 gn:Mus_musculus rdf:type gnc:species .
 gn:Mus_musculus gnt:name "Mouse" .
@@ -217,7 +231,11 @@ SELECT DISTINCT ?species WHERE {
     ?species rdf:type gnc:species .
 }"))
 
+(define memo-sparql-species
+  (memoize2 sparql-species))
+
 (define (sparql-species-meta)
+  "Return values names recs"
   (sparql-scm (gn-sparql-endpoint-url) "
 PREFIX gn: <http://genenetwork.org/id/>
 PREFIX gnc: <http://genenetwork.org/category/>
@@ -231,6 +249,10 @@ SELECT ?species ?p ?o WHERE {
     ?species rdf:type gnc:species .
     ?species ?p ?o .
    }}}"))
+
+(define memo-sparql-species-meta
+  (memoize2 sparql-species-meta))
+
 
 (define (get-values names row)
   "Get values by name from a resultset row"
@@ -272,7 +294,7 @@ SELECT ?species ?p ?o WHERE {
   )
 
 (define (get-species)
-  (receive (names res) (sparql-species-meta)
+  (receive (names res) (memo-sparql-species-meta)
     (let* ([table (get-rows names res)]
            [recs '()]
            [h (compile-species recs table)])
@@ -309,7 +331,7 @@ SELECT ?species ?p ?o WHERE {
 	   (if (string=? wd-id "unknown")
 	       rec
 	       ; wikidata query:
-	       (receive (names row) (tsv->scm (sparql-wd-species-info wd-id))
+	       (receive (names row) (tsv->scm (memo-sparql-wd-species-info wd-id))
 		 (match (pk (car row))
 		   ((taxonomy-name ncbi descr)
 		    (let ([ncbi-id (strip-lang ncbi)]
