@@ -27,6 +27,8 @@
  (web uri)
  (fibers web server))
 
+;; basically lifted from https://lispdreams.wordpress.com/2016/04/08/lisp-memoization-techniques/
+
 (define (memoize f)
   "Simple memoize just uses alists at this point and does not expire"
   (let ((result-table '()))
@@ -321,6 +323,11 @@ SELECT ?species ?p ?o WHERE {
 (define (normalize-id str)
   ;; (string-replace-substring (string-downcase str) " " "_")
   (string-replace-substring str " " "_")
+  )
+
+(define (get-expanded-taxon id)
+  "Get information on a specific species, e.g. mouse"
+  #f
   )
 
 (define (get-expanded-species)
