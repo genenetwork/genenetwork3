@@ -44,11 +44,11 @@ def retrieve_mrna_group_name(connection: Any, probeset_id: int):
     of the group the dataset belongs to.
     """
     query = (
-        "SELECT is.Name "
-        "FROM ProbeSet ps LEFT JOIN ProbeSetXRef psx ON px.ProbeSetId = ps.Id "
-        "INNER JOIN ProbeSetFreeze psf ON psx.ProbeSetFreezeId = psf.Id "
-        "INNER JOIN ProbeFreeze pf ON psf.ProbeFreezeId = ProbeFreeze.Id "
-        "INNER JOIN InbredSet is ON pf.InbredSetId = is.Id "
+        "SELECT iset.Name "
+        "FROM ProbeSet ps LEFT JOIN ProbeSetXRef psx ON psx.ProbeSetId = ps.Id "
+        "LEFT JOIN ProbeSetFreeze psf ON psx.ProbeSetFreezeId = psf.Id "
+        "LEFT JOIN ProbeFreeze pf ON psf.ProbeFreezeId = pf.Id "
+        "LEFT JOIN InbredSet iset ON pf.InbredSetId = iset.Id "
         "WHERE ps.Id = %(probeset_id)s")
     with connection.cursor() as cursor:
         cursor.execute(query, {"probeset_id": probeset_id})
