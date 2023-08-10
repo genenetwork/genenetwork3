@@ -58,21 +58,20 @@ def __extract_actions(
     return result
 
 def get_mrna_sample_data(
-    conn: Any, probeset_id: str
+    conn: Any, probeset_id: str, dataset_name: str
 ) -> Dict:
     """Fetch a mRNA Assay (ProbeSet in the DB) trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
         cursor.execute("""
 SELECT st.Name, ifnull(psd.value, 'x'), ifnull(psse.error, 'x'), ifnull(ns.count, 'x')
-FROM ProbeFreeze pf
-    JOIN ProbeSetFreeze psf ON psf.ProbeFreezeId = pf.Id
+FROM ProbeSetFreeze psf
     JOIN ProbeSetXRef psx ON psx.ProbeSetFreezeId = psf.Id
     JOIN ProbeSet ps ON ps.Id = psx.ProbeSetId
     JOIN ProbeSetData psd ON psd.Id = psx.DataId
     JOIN Strain st ON psd.StrainId = st.Id
     LEFT JOIN ProbeSetSE psse ON psse.DataId = psd.Id AND psse.StrainId = psd.StrainId
     LEFT JOIN NStrain ns ON ns.DataId = psd.Id AND ns.StrainId = psd.StrainId
-WHERE ps.Id = %s""", (probeset_id,))
+WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
 
         sample_data = {}
         for data in cursor.fetchall():
@@ -84,6 +83,38 @@ WHERE ps.Id = %s""", (probeset_id,))
             }
 
         return sample_data
+
+def get_mrna_csv_sample_data(
+    conn: Any, probeset_id: str, dataset_name: str, sample_list: list
+) -> str:
+    """Fetch a mRNA Assay (ProbeSet in DB) trait and return it as a csv string"""
+    with conn.cursor() as cursor:
+        cursor.execute("""
+SELECT DISTINCT st.Name, concat(st.Name, ',', ifnull(psd.value, 'x'), ',',
+    ifnull(psse.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data'
+FROM ProbeSetFreeze psf
+    JOIN ProbeSetXRef psx ON psx.ProbeSetFreezeId = psf.Id
+    JOIN ProbeSet ps ON ps.Id = psx.ProbeSetId
+    JOIN ProbeSetData psd ON psd.Id = psx.DataId
+    JOIN Strain st ON psd.StrainId = st.Id
+    LEFT JOIN ProbeSetSE psse ON psse.DataId = psd.Id AND psse.StrainId = psd.StrainId
+    LEFT JOIN NStrain ns ON ns.DataId = psd.Id AND ns.StrainId = psd.StrainId
+WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
+
+        if not (data := cursor.fetchall()):
+            return "No Sample Data Found"
+
+        # Get list of samples with data in the DB
+        existing_samples = [el[0] for el in data]
+
+        trait_csv = ["Strain Name,Value,SE,Count"]
+        for sample in sample_list:
+            if sample in existing_samples:
+                trait_csv.append(data[existing_samples.index(sample)][1])
+            else:
+                trait_csv.append(sample + ",x,x,x")
+
+        return "\n".join(trait_csv)
 
 def get_pheno_sample_data(
     conn: Any, trait_name: int, phenotype_id: int
@@ -109,35 +140,6 @@ ORDER BY st.Name""", (trait_name, phenotype_id))
             }
 
         return sample_data
-
-def get_mrna_csv_sample_data(
-    conn: Any, trait_name: int, sample_list: list
-) -> str:
-    """Fetch a mRNA Assay (ProbeSet in DB) trait and return it as a csv string"""
-    with conn.cursor() as cursor:
-        cursor.execute("""
-SELECT DISTINCT st.Name, concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
-ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data'
-FROM ProbeSetFreeze pf JOIN ProbeSetXRef px ON px.InbredSetId = pf.InbredSetId
-JOIN ProbeSetData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
-LEFT JOIN ProbeSetSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
-LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
-WHERE px.Id = %s ORDER BY st.Name""",
-                       (trait_name))
-        if not (data := cursor.fetchall()):
-            return "No Sample Data Found"
-
-        # Get list of samples with data in the DB
-        existing_samples = [el[0] for el in data]
-
-        trait_csv = ["Strain Name,Value,SE,Count"]
-        for sample in sample_list:
-            if sample in existing_samples:
-                trait_csv.append(data[existing_samples.index(sample)][1])
-            else:
-                trait_csv.append(sample + ",x,x,x")
-
-        return "\n".join(trait_csv)
 
 def get_pheno_csv_sample_data(
     conn: Any, trait_name: int, phenotype_id: int, sample_list: list
