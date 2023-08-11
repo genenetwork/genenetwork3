@@ -514,8 +514,8 @@ def delete_mrna_sample_data(
 
     none_case_attrs: Dict[str, Any] = {
         "Strain Name": lambda: 0,
-        "Value": lambda: __delete_data(conn, "PublishData"),
-        "SE": lambda: __delete_data(conn, "PublishSE"),
+        "Value": lambda: __delete_data(conn, "ProbeSetData"),
+        "SE": lambda: __delete_data(conn, "ProbeSetSE"),
         "Count": lambda: __delete_data(conn, "NStrain"),
     }
     count = 0
@@ -668,8 +668,8 @@ def insert_mrna_sample_data(
 
     none_case_attrs: Dict[str, Any] = {
         "Strain Name": lambda _: 0,
-        "Value": lambda x: __insert_data(conn, "PublishData", x),
-        "SE": lambda x: __insert_data(conn, "PublishSE", x),
+        "Value": lambda x: __insert_data(conn, "ProbeSetData", x),
+        "SE": lambda x: __insert_data(conn, "ProbeSetSE", x),
         "Count": lambda x: __insert_data(conn, "NStrain", x),
     }
 
@@ -679,7 +679,7 @@ def insert_mrna_sample_data(
         # Check if the data already exists:
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT Id FROM PublishData where Id = %s "
+                "SELECT Id FROM ProbeSetData where Id = %s "
                 "AND StrainId = %s",
                 (data_id, strain_id))
             data_exists = cursor.fetchone()
