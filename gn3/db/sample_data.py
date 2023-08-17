@@ -192,11 +192,14 @@ WHERE ps.Id = %s AND psf.Name= %s AND st.Name = %s""", (probeset_id, dataset_nam
             strain_id, probesetdata_id, inbredset_id = _result
         if not all([strain_id, probesetdata_id, inbredset_id]):
             # Applies for data to be inserted:
-            cursor.execute(
-                "SELECT DataId, InbredSetId FROM ProbeSetXRef "
-                "WHERE Id = %s",
-                (probesetxref_id),
-            )
+            cursor.execute("""
+SELECT psx.DataId, pf.InbredSetId
+FROM ProbeFreeze pf
+    JOIN ProbeSetFreeze psf ON psf.ProbeFreezeId = pf.Id
+    JOIN ProbeSetXRef psx ON psx.ProbeSetFreezeId = psf.Id
+WHERE psx.ProbeSetId = %s AND
+      psf.Name = %s""", (probeset_id, dataset_name))
+
             probesetdata_id, inbredset_id = cursor.fetchone()
             cursor.execute(
                 "SELECT Id FROM Strain WHERE Name = %s", (strain_name,)
