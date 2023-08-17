@@ -116,7 +116,7 @@ def fetch_trait(conn: DBConnection, dataset_id: int, trait_name: str) -> dict:
         "FROM PublishFreeze AS pf INNER JOIN InbredSet AS iset "
         "ON pf.InbredSetId=iset.Id "
         "INNER JOIN PublishXRef AS pxr ON iset.Id=pxr.InbredSetId "
-        "WHERE pf.Id=%(dataset_id)s AND pxr.Id=%(trait_name)s")
+        "WHERE iset.Id=%(dataset_id)s AND pxr.Id=%(trait_name)s")
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cursor.execute(
             query, {"dataset_id": dataset_id, "trait_name": trait_name})
