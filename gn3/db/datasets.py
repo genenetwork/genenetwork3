@@ -38,7 +38,7 @@ def retrieve_sample_list(group: str):
                 samplelist = headers[3:]
     return samplelist
 
-def retrieve_mrna_group_name(connection: Any, probeset_id: int):
+def retrieve_mrna_group_name(connection: Any, probeset_id: int, dataset_name: str):
     """
     Given the trait id (ProbeSet.Id in the database), retrieve the name
     of the group the dataset belongs to.
@@ -49,9 +49,9 @@ def retrieve_mrna_group_name(connection: Any, probeset_id: int):
         "LEFT JOIN ProbeSetFreeze psf ON psx.ProbeSetFreezeId = psf.Id "
         "LEFT JOIN ProbeFreeze pf ON psf.ProbeFreezeId = pf.Id "
         "LEFT JOIN InbredSet iset ON pf.InbredSetId = iset.Id "
-        "WHERE ps.Id = %(probeset_id)s")
+        "WHERE ps.Id = %(probeset_id)s AND psf.Name=%(dataset_name)s")
     with connection.cursor() as cursor:
-        cursor.execute(query, {"probeset_id": probeset_id})
+        cursor.execute(query, {"probeset_id": probeset_id, "dataset_name": dataset_name})
         res = cursor.fetchone()
         if res:
             return res[0]
@@ -64,9 +64,8 @@ def retrieve_phenotype_group_name(connection: Any, dataset_id: int):
     """
     query = (
         "SELECT iset.Name "
-        "FROM PublishFreeze AS pf INNER JOIN InbredSet AS iset "
-        "ON pf.InbredSetId=iset.Id "
-        "WHERE pf.Id = %(dataset_id)s")
+        "FROM InbredSet AS iset "
+        "WHERE iset.Id = %(dataset_id)s")
     with connection.cursor() as cursor:
         cursor.execute(query, {"dataset_id": dataset_id})
         res = cursor.fetchone()
