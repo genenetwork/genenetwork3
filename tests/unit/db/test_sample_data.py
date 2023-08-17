@@ -23,15 +23,14 @@ def test_insert_sample_data(mocker):
             0,
         )
         mocker.patch(
-            "gn3.db.sample_data.get_sample_data_ids",
+            "gn3.db.sample_data.get_pheno_sample_data_ids",
             return_value=(strain_id, data_id, inbredset_id),
         )
         insert_sample_data(
             conn=mock_conn,
-            trait_name=35,
             data="BXD1,18,3,0,Red,M",
             csv_header="Strain Name,Value,SE,Count,Color,Sex (13)",
-            phenotype_id=10007,
+            trait_info={'trait_name': 35, 'phenotype_id': 10007}
         )
         calls = [
             mocker.call(
@@ -90,15 +89,14 @@ def test_delete_sample_data(mocker):
     strain_id, data_id, inbredset_id = 1, 17373, 20
     with mock_conn.cursor() as cursor:
         mocker.patch(
-            "gn3.db.sample_data.get_sample_data_ids",
+            "gn3.db.sample_data.get_pheno_sample_data_ids",
             return_value=(strain_id, data_id, inbredset_id),
         )
         delete_sample_data(
             conn=mock_conn,
-            trait_name=35,
             data="BXD1,18,3,0,Red,M",
             csv_header="Strain Name,Value,SE,Count,Color,Sex (17)",
-            phenotype_id=10007,
+            trait_info={'trait_name': 35, 'phenotype_id': 10007}
         )
         calls = [
             mocker.call(
@@ -164,35 +162,32 @@ def test_update_sample_data(mocker):
     strain_id, data_id, inbredset_id = 1, 17373, 20
     with mock_conn.cursor() as cursor:
         mocker.patch(
-            "gn3.db.sample_data.get_sample_data_ids",
+            "gn3.db.sample_data.get_pheno_sample_data_ids",
             return_value=(strain_id, data_id, inbredset_id),
         )
         mocker.patch("gn3.db.sample_data.insert_sample_data", return_value=1)
         mocker.patch("gn3.db.sample_data.delete_sample_data", return_value=1)
         update_sample_data(
             conn=mock_conn,
-            trait_name=35,
             original_data="BXD1,18,x,0,x,M,x,Red",
             updated_data="BXD1,x,2,1,2,F,2,Green",
             csv_header="Strain Name,Value,SE,Count,pH,Sex (13),Age,Color",
-            phenotype_id=10007,
+            trait_info={'trait_name': 35, 'phenotype_id': 10007}
         )
         # pylint: disable=[E1101]
         gn3.db.sample_data.insert_sample_data.assert_called_once_with(
             conn=mock_conn,
-            trait_name=35,
             data="BXD1,2,2,2",
             csv_header="Strain Name,SE,pH,Age",
-            phenotype_id=10007,
+            trait_info={'trait_name': 35, 'phenotype_id': 10007}
         )
 
         # pylint: disable=[E1101]
         gn3.db.sample_data.delete_sample_data.assert_called_once_with(
             conn=mock_conn,
-            trait_name=35,
             data="BXD1,18",
             csv_header="Strain Name,Value",
-            phenotype_id=10007,
+            trait_info={'trait_name': 35, 'phenotype_id': 10007}
         )
 
         cursor.execute.assert_has_calls(
