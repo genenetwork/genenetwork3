@@ -421,7 +421,7 @@ def delete_sample_data(
             conn=conn,
             probeset_id=int(probeset_id),
             dataset_name=dataset_name,
-            strain_name=extract_strain_name(csv_header, original_data),
+            strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs: Dict[str, Any] = {
             "Strain Name": lambda: 0,
@@ -434,7 +434,7 @@ def delete_sample_data(
             conn=conn,
             publishxref_id=int(trait_name),
             phenotype_id=phenotype_id,
-            strain_name=extract_strain_name(csv_header, original_data),
+            strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs: Dict[str, Any] = {
             "Strain Name": lambda: 0,
@@ -527,7 +527,7 @@ def insert_sample_data(
             conn=conn,
             probeset_id=int(probeset_id),
             dataset_name=dataset_name,
-            strain_name=extract_strain_name(csv_header, original_data),
+            strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs: Dict[str, Any] = {
             "Strain Name": lambda _: 0,
@@ -540,13 +540,13 @@ def insert_sample_data(
             conn=conn,
             publishxref_id=int(trait_name),
             phenotype_id=phenotype_id,
-            strain_name=extract_strain_name(csv_header, original_data),
+            strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs: Dict[str, Any] = {
             "Strain Name": lambda _: 0,
-            "Value": lambda: __insert_data(conn, "PublishData", x),
-            "SE": lambda: __insert_data(conn, "PublishSE", x),
-            "Count": lambda: __insert_data(conn, "NStrain", x),
+            "Value": lambda x: __insert_data(conn, "PublishData", x),
+            "SE": lambda x: __insert_data(conn, "PublishSE", x),
+            "Count": lambda x: __insert_data(conn, "NStrain", x),
         }
 
     try:
