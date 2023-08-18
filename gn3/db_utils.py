@@ -35,7 +35,10 @@ def database_connection(sql_uri) -> Iterator[Connection]:
                              port=port or 3306)
     try:
         yield connection
+    except mdb.Error as _mbde:
+        connection.rollback()
     finally:
+        connection.commit()
         connection.close()
 
 
