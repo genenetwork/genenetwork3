@@ -143,7 +143,7 @@ ORDER BY st.Name""", (trait_name, phenotype_id))
         return sample_data
 
 def get_pheno_csv_sample_data(
-    conn: Any, trait_name: int, phenotype_id: int, sample_list: list
+    conn: Any, trait_name: int, group_id: int, sample_list: list
 ) -> str:
     """Fetch a phenotype (Publish in DB) trait and return it as a csv string"""
     with conn.cursor() as cursor:
@@ -151,11 +151,11 @@ def get_pheno_csv_sample_data(
 SELECT DISTINCT st.Name, concat(st.Name, ',', ifnull(pd.value, 'x'), ',',
 ifnull(ps.error, 'x'), ',', ifnull(ns.count, 'x')) AS 'Data'
 FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
-JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
-LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
-LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
-WHERE px.Id = %s AND px.PhenotypeId = %s ORDER BY st.Name""",
-                       (trait_name, phenotype_id))
+     JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
+     LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
+     LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
+WHERE px.Id = %s AND px.InbredSetId = %s ORDER BY st.Name""",
+                       (trait_name, group_id))
         if not (data := cursor.fetchall()):
             return "No Sample Data Found"
 
