@@ -4,7 +4,7 @@ from functools import reduce
 from MySQLdb.cursors import DictCursor
 from flask import jsonify, Response, Blueprint, current_app
 
-from gn3.db_utils import database_connection
+from gn3.db_utils import Connection, database_connection
 
 caseattr = Blueprint("case-attribute", __name__)
 
@@ -42,12 +42,13 @@ def __by_strain__(accumulator, item):
         }
     }
 
-@caseattr.route("/<int:inbredset_id>/values")
-def inbredset_case_attribute_values(inbredset_id: int) -> Response:
-    """Retrieve the group's (InbredSet's) case-attribute values."""
-    with (database_connection(current_app.config["SQL_URI"]) as conn,
-          conn.cursor(cursorclass=DictCursor) as cursor):
-        cursor.execute(
+def __case_attributes_by_inbred_set__(
+        conn: Connection, inbredset_id: int) -> tuple[dict, ...]:
+    """
+    Retrieve Case-Attributes by their InbredSet ID. Do not call this outside
+    this module.
+    """
+    cursor.execute(
             "SELECT ca.Name AS CaseAttributeName, "
             "caxrn.Value AS CaseAttributeValue, s.Name AS StrainName, "
             "s.Name2 AS StrainName2, s.Symbol, s.Alias "
@@ -59,5 +60,11 @@ def inbredset_case_attribute_values(inbredset_id: int) -> Response:
             "WHERE ca.InbredSetId=%(inbredset_id)s "
             "ORDER BY StrainName",
             {"inbredset_id": inbredset_id})
-        return jsonify(tuple(
-            reduce(__by_strain__, cursor.fetchall(), {}).values()))
+    return tuple(
+        reduce(__by_strain__, cursor.fetchall(), {}).values())
+
+@caseattr.route("/<int:inbredset_id>/values", methods=["GET"])
+def inbredset_case_attribute_values(inbredset_id: int) -> Response:
+    """Retrieve the group's (InbredSet's) case-attribute values."""
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        return jsonify(__case_attributes_by_inbred_set__(conn, inbredset_id))
