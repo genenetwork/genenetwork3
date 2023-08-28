@@ -47,7 +47,7 @@ def __by_strain__(accumulator, item):
         }
     }
 
-def __case_attributes_by_inbred_set__(
+def __case_attribute_values_by_inbred_set__(
         conn: Connection, inbredset_id: int) -> tuple[dict, ...]:
     """
     Retrieve Case-Attributes by their InbredSet ID. Do not call this outside
@@ -73,7 +73,7 @@ def __case_attributes_by_inbred_set__(
 def inbredset_case_attribute_values(inbredset_id: int) -> Response:
     """Retrieve the group's (InbredSet's) case-attribute values."""
     with database_connection(current_app.config["SQL_URI"]) as conn:
-        return jsonify(__case_attributes_by_inbred_set__(conn, inbredset_id))
+        return jsonify(__case_attribute_values_by_inbred_set__(conn, inbredset_id))
 
 def __process_edit_data__(form_data) -> tuple[dict, ...]:
     """Process data from form and return tuple of dicts."""
