@@ -112,6 +112,22 @@ def __reject_diff__(conn: Connection, user: User, diff_filename) -> None:
     # TODO: Check user has "approve/reject case attribute diff privileges"
     raise NotImplementedError
 
+@caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
+def add_case_attributes(inbredset_id: int) -> Response:
+    """Add a new case attribute for `InbredSetId`."""
+    with (require_oauth.acquire("profile resource") as the_token,
+          database_connection(current_app.config["SQL_URI"]) as conn):
+        # TODO: Check user has "add/delete case attribute privileges."
+        raise NotImplementedError
+
+@caseattr.route("/<int:inbredset_id>/delete", methods=["POST"])
+def delete_case_attributes(inbredset_id: int) -> Response:
+    """Delete a case attribute from `InbredSetId`."""
+    with (require_oauth.acquire("profile resource") as the_token,
+          database_connection(current_app.config["SQL_URI"]) as conn):
+        # TODO: Check user has "add/delete case attribute privileges."
+        raise NotImplementedError
+
 @caseattr.route("/<int:inbredset_id>/edit", methods=["POST"])
 def edit_case_attributes(inbredset_id: int) -> Response:
     """Edit the case attributes for `InbredSetId` based on data received."""
