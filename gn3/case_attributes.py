@@ -53,7 +53,8 @@ def __case_attributes_by_inbred_set__(
     Retrieve Case-Attributes by their InbredSet ID. Do not call this outside
     this module.
     """
-    cursor.execute(
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
             "SELECT ca.Name AS CaseAttributeName, "
             "caxrn.Value AS CaseAttributeValue, s.Name AS StrainName, "
             "s.Name2 AS StrainName2, s.Symbol, s.Alias "
@@ -65,8 +66,8 @@ def __case_attributes_by_inbred_set__(
             "WHERE ca.InbredSetId=%(inbredset_id)s "
             "ORDER BY StrainName",
             {"inbredset_id": inbredset_id})
-    return tuple(
-        reduce(__by_strain__, cursor.fetchall(), {}).values())
+        return tuple(
+            reduce(__by_strain__, cursor.fetchall(), {}).values())
 
 @caseattr.route("/<int:inbredset_id>/values", methods=["GET"])
 def inbredset_case_attribute_values(inbredset_id: int) -> Response:
@@ -149,7 +150,7 @@ def edit_case_attributes(inbredset_id: int) -> Response:
             return jsonify({
                 "diff-status": "queued",
                 "message": ("The changes to the case-attributes have been "
-                            "queued for approval.")
+                            "queued for approval."),
                 "diff-filename": diff_filename
             })
 
