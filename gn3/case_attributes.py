@@ -85,6 +85,17 @@ def inbredset_case_attribute_values(inbredset_id: int) -> Response:
     with database_connection(current_app.config["SQL_URI"]) as conn:
         return jsonify(__case_attribute_values_by_inbred_set__(conn, inbredset_id))
 
+def __process_orig_data__(data) -> tuple[dict, ...]:
+    """Process data from database and return tuple of dicts."""
+    return tuple(
+        {
+            "Strain": row["StrainName"],
+            **{
+                key: row["case-attributes"][key]
+                for key in sorted(row["case-attributes"].keys())
+            }
+        } for row in data)
+
 def __process_edit_data__(form_data) -> tuple[dict, ...]:
     """Process data from form and return tuple of dicts."""
     raise NotImplementedError
@@ -167,7 +178,11 @@ def edit_case_attributes(inbredset_id: int) -> Response:
         # TODO: Check user has "edit case attribute privileges"
         user = the_token.user
         diff_filename = __queue_diff__(conn, user, __compute_diff__(
-            __case_attributes_by_inbred_set__(conn, inbredset_id)
+            (["Strain"] + sorted(
+                attr["Name"] for attr in
+                __case_attribute_labels_by_inbred_set__(conn, inbredset_id))),
+            __process_orig_data__(
+                __case_attribute_values_by_inbred_set__(conn, inbredset_id)),
             __process_edit_data__(request.form)))
         try:
             __apply_diff__(conn, user, diff_filename)
