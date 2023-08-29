@@ -26,6 +26,16 @@ def __inbredset_group__(conn, inbredset_id):
             {"inbredset_id": inbredset_id})
         return dict(cursor.fetchone())
 
+def __inbred_set_strains__(conn, inbredset_id):
+    """Return all samples/strains for given InbredSet group."""
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            "SELECT s.* FROM StrainXRef AS sxr INNER JOIN Strain AS s "
+            "ON sxr.StrainId=s.Id WHERE sxr.InbredSetId=%(inbredset_id)s "
+            "ORDER BY s.Name ASC",
+            {"inbredset_id": inbredset_id})
+        return tuple(dict(row) for row in cursor.fetchall())
+
 def __case_attribute_labels_by_inbred_set__(conn, inbredset_id):
     """Return the case-attribute labels/names for the given InbredSet group."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
@@ -39,6 +49,12 @@ def inbredset_group(inbredset_id: int) -> Response:
     """Retrieve InbredSet group's details."""
     with database_connection(current_app.config["SQL_URI"]) as conn:
         return jsonify(__inbredset_group__(conn, inbredset_id))
+
+@caseattr.route("/<int:inbredset_id>/strains", methods=["GET"])
+def inbredset_strains(inbredset_id: int) -> Response:
+    """Retrieve ALL strains/samples relating to a specific InbredSet group."""
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        return jsonify(__inbred_set_strains__(conn, inbredset_id))
 
 @caseattr.route("/<int:inbredset_id>/names", methods=["GET"])
 def inbredset_case_attribute_names(inbredset_id: int) -> Response:
