@@ -18,6 +18,14 @@ from gn3.auth.authorisation.errors import AuthorisationError
 
 caseattr = Blueprint("case-attribute", __name__)
 
+def __inbredset_group__(conn, inbredset_id):
+    """Return InbredSet group's top-level details."""
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        cursor.execute(
+            "SELECT * FROM InbredSet WHERE InbredSetId=%(inbredset_id)s",
+            {"inbredset_id": inbredset_id})
+        return dict(cursor.fetchone())
+
 def __case_attribute_labels_by_inbred_set__(conn, inbredset_id):
     """Return the case-attribute labels/names for the given InbredSet group."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
@@ -25,6 +33,12 @@ def __case_attribute_labels_by_inbred_set__(conn, inbredset_id):
             "SELECT * FROM CaseAttribute WHERE InbredSetId=%(inbredset_id)s",
             {"inbredset_id": inbredset_id})
         return tuple(dict(row) for row in cursor.fetchall())
+
+@caseattr.route("/<int:inbredset_id>", methods=["GET"])
+def inbredset_group(inbredset_id: int) -> Response:
+    """Retrieve InbredSet group's details."""
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        return jsonify(__inbredset_group__(conn, inbredset_id))
 
 @caseattr.route("/<int:inbredset_id>/names", methods=["GET"])
 def inbredset_case_attribute_names(inbredset_id: int) -> Response:
