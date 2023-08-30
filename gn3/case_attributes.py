@@ -3,7 +3,9 @@ import os
 import csv
 import json
 import tempfile
+from pathlib import Path
 from functools import reduce
+from datetime import datetime
 
 from MySQLdb.cursors import DictCursor
 from flask import jsonify, request, Response, Blueprint, current_app
@@ -18,6 +20,8 @@ from gn3.auth.authentication.oauth2.resource_server import require_oauth
 from gn3.auth.authorisation.errors import AuthorisationError
 
 caseattr = Blueprint("case-attribute", __name__)
+
+CATTR_DIFFS_DIR = "case-attribute-diffs"
 
 class NoDiffError(ValueError):
     """Raised if there is no difference between the old and new data."""
@@ -171,7 +175,7 @@ def __compute_diff__(fieldnames: tuple[str, ...], original_data: tuple[dict, ...
         return json.loads(diff_results["output"])
     return {}
 
-def __queue_diff__(conn: Connection, user: User, diff) -> str:
+def __queue_diff__(conn: Connection, diff_data, diff_data_dir: Path) -> Path:
     """
     Queue diff for future processing.
 
@@ -179,9 +183,20 @@ def __queue_diff__(conn: Connection, user: User, diff) -> str:
         On success, this will return the filename where the diff was saved.
         On failure, it will raise a MySQL error.
     """
+    diff = diff_data["diff"]
     if bool(diff["Additions"]) or bool(diff["Modifications"]) or bool(diff["Deletions"]):
         # TODO: Check user has "edit case attribute privileges"
-        raise NotImplementedError
+        diff_data_dir.mkdir(parents=True, exist_ok=True)
+
+        created = datetime.now()
+        filepath = Path(
+            diff_data_dir,
+            f"{diff_data['inbredset_id']}:::{diff_data['user_id']}:::"
+            f"{created.isoformat()}.json")
+        with open(filepath, "w", encoding="utf8") as diff_file:
+            # We want this to fail if the metadata items below are not provided.
+            diff_file.write(json.dumps({**diff_data, "created": created.isoformat()}))
+        return filepath
     raise NoDiffError
 
 def __apply_diff__(conn: Connection, user: User, diff_filename) -> None:
@@ -226,24 +241,24 @@ def edit_case_attributes(inbredset_id: int) -> Response:
           database_connection(current_app.config["SQL_URI"]) as conn):
         # TODO: Check user has "edit case attribute privileges"
         user = the_token.user
+        fieldnames = (["Strain"] + sorted(
+            attr["Name"] for attr in
+            __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
         try:
-            fieldnames = (["Strain"] + sorted(
-                attr["Name"] for attr in
-                __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
-            diff_filename = __queue_diff__(conn, user, __compute_diff__(
-                fieldnames,
-                __process_orig_data__(
-                    fieldnames,
-                    __case_attribute_values_by_inbred_set__(conn, inbredset_id),
-                    __inbredset_strains__(conn, inbredset_id)),
-                __process_edit_data__(fieldnames, request.json["edit-data"])))
-
-            __apply_diff__(conn, user, diff_filename)
-            return jsonify({
-                "diff-status": "applied",
-                "message": ("The changes to the case-attributes have been "
-                            "applied successfully.")
-            })
+            diff_filename = __queue_diff__(
+                conn, {
+                    "inbredset_id": inbredset_id,
+                    "user_id": str(user.user_id),
+                    "fieldnames": fieldnames,
+                    "diff": __compute_diff__(
+                        fieldnames,
+                        __process_orig_data__(
+                            fieldnames,
+                            __case_attribute_values_by_inbred_set__(conn, inbredset_id),
+                            __inbredset_strains__(conn, inbredset_id)),
+                        __process_edit_data__(fieldnames, request.json["edit-data"]))
+                },
+                Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR))
         except NoDiffError as _nde:
             msg = "There were no changes to make from submitted data."
             response = jsonify({
@@ -252,6 +267,14 @@ def edit_case_attributes(inbredset_id: int) -> Response:
             })
             response.status_code = 400
             return response
+
+        try:
+            __apply_diff__(conn, user, diff_filename)
+            return jsonify({
+                "diff-status": "applied",
+                "message": ("The changes to the case-attributes have been "
+                            "applied successfully.")
+            })
         except AuthorisationError as _auth_err:
             return jsonify({
                 "diff-status": "queued",
