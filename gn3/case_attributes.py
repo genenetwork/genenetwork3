@@ -19,6 +19,13 @@ from gn3.auth.authorisation.errors import AuthorisationError
 
 caseattr = Blueprint("case-attribute", __name__)
 
+class NoDiffError(ValueError):
+    """Raised if there is no difference between the old and new data."""
+    def __init__(self):
+        """Initialise exception."""
+        super().__init__(
+            self, "No difference between existing data and sent data.")
+
 def __inbredset_group__(conn, inbredset_id):
     """Return InbredSet group's top-level details."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
@@ -172,8 +179,10 @@ def __queue_diff__(conn: Connection, user: User, diff) -> str:
         On success, this will return the filename where the diff was saved.
         On failure, it will raise a MySQL error.
     """
-    # TODO: Check user has "edit case attribute privileges"
-    raise NotImplementedError
+    if bool(diff["Additions"]) or bool(diff["Modifications"]) or bool(diff["Deletions"]):
+        # TODO: Check user has "edit case attribute privileges"
+        raise NotImplementedError
+    raise NoDiffError
 
 def __apply_diff__(conn: Connection, user: User, diff_filename) -> None:
     """
@@ -217,23 +226,32 @@ def edit_case_attributes(inbredset_id: int) -> Response:
           database_connection(current_app.config["SQL_URI"]) as conn):
         # TODO: Check user has "edit case attribute privileges"
         user = the_token.user
-        fieldnames = (["Strain"] + sorted(
-            attr["Name"] for attr in
-            __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
-        diff_filename = __queue_diff__(conn, user, __compute_diff__(
-            fieldnames,
-            __process_orig_data__(
-                fieldnames,
-                __case_attribute_values_by_inbred_set__(conn, inbredset_id),
-                __inbredset_strains__(conn, inbredset_id)),
-            __process_edit_data__(fieldnames, request.json["edit-data"])))
         try:
+            fieldnames = (["Strain"] + sorted(
+                attr["Name"] for attr in
+                __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
+            diff_filename = __queue_diff__(conn, user, __compute_diff__(
+                fieldnames,
+                __process_orig_data__(
+                    fieldnames,
+                    __case_attribute_values_by_inbred_set__(conn, inbredset_id),
+                    __inbredset_strains__(conn, inbredset_id)),
+                __process_edit_data__(fieldnames, request.json["edit-data"])))
+
             __apply_diff__(conn, user, diff_filename)
             return jsonify({
                 "diff-status": "applied",
                 "message": ("The changes to the case-attributes have been "
                             "applied successfully.")
             })
+        except NoDiffError as _nde:
+            msg = "There were no changes to make from submitted data."
+            response = jsonify({
+                "diff-status": "error",
+                "error_description": msg
+            })
+            response.status_code = 400
+            return response
         except AuthorisationError as _auth_err:
             return jsonify({
                 "diff-status": "queued",
