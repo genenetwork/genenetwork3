@@ -306,7 +306,7 @@ def update_sample_data(
             dataset_name=dataset_name,
             strain_name=extract_strain_name(csv_header, original_data),
         )
-        none_case_attrs: Dict[str, Callable] = {
+        none_case_attrs = {
             "Strain Name": lambda x: 0,
             "Value": lambda x: __update_data(conn, "ProbeSetData", x),
             "SE": lambda x: __update_data(conn, "ProbeSetSE", x),
@@ -319,7 +319,7 @@ def update_sample_data(
             phenotype_id=phenotype_id,
             strain_name=extract_strain_name(csv_header, original_data),
         )
-        none_case_attrs: Dict[str, Callable] = {
+        none_case_attrs = {
             "Strain Name": lambda x: 0,
             "Value": lambda x: __update_data(conn, "PublishData", x),
             "SE": lambda x: __update_data(conn, "PublishSE", x),
@@ -439,7 +439,7 @@ def delete_sample_data(
             phenotype_id=phenotype_id,
             strain_name=extract_strain_name(csv_header, data),
         )
-        none_case_attrs: Dict[str, Any] = {
+        none_case_attrs = {
             "Strain Name": lambda: 0,
             "Value": lambda: __delete_data(conn, "PublishData"),
             "SE": lambda: __delete_data(conn, "PublishSE"),
@@ -532,7 +532,7 @@ def insert_sample_data(
             dataset_name=dataset_name,
             strain_name=extract_strain_name(csv_header, data),
         )
-        none_case_attrs: Dict[str, Any] = {
+        none_case_attrs = {
             "Strain Name": lambda _: 0,
             "Value": lambda x: __insert_data(conn, "ProbeSetData", x),
             "SE": lambda x: __insert_data(conn, "ProbeSetSE", x),
@@ -545,7 +545,7 @@ def insert_sample_data(
             phenotype_id=phenotype_id,
             strain_name=extract_strain_name(csv_header, data),
         )
-        none_case_attrs: Dict[str, Any] = {
+        none_case_attrs = {
             "Strain Name": lambda _: 0,
             "Value": lambda x: __insert_data(conn, "PublishData", x),
             "SE": lambda x: __insert_data(conn, "PublishSE", x),
