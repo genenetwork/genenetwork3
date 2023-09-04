@@ -9,7 +9,6 @@ import pytest
 from gn3.fs_helpers import extract_uploaded_file
 from gn3.fs_helpers import get_dir_hash
 from gn3.fs_helpers import jsonfile_to_dict
-from gn3.fs_helpers import cache_ipfs_file
 
 
 @dataclass
