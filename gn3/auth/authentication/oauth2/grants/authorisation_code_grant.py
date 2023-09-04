@@ -41,7 +41,7 @@ class AuthorisationCodeGrant(grants.AuthorizationCodeGrant):
         """Retrieve the code from the database."""
         return __query_authorization_code__(code, client)
 
-    def delete_authorization_code(self, authorization_code):# pylint: disable=[no-self-use]
+    def delete_authorization_code(self, authorization_code):
         """Delete the authorisation code."""
         with db.connection(app.config["AUTH_DB"]) as conn:
             with db.cursor(conn) as cursor:
