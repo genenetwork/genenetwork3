@@ -3,7 +3,6 @@ groups. Particularly useful when generating the menu
 
 """
 from typing import Any, Optional, Tuple
-from MySQLdb import escape_string
 
 
 def get_all_species(conn: Any) -> Optional[Tuple]:
@@ -23,15 +22,15 @@ def get_chromosome(name: str, is_species: bool, conn: Any) -> Optional[Tuple]:
             "Length FROM Chr_Length, Species WHERE "
             "Chr_Length.SpeciesId = Species.SpeciesId AND "
             "Species.Name = "
-            f"'{escape_string(name).decode('UTF-8')}' ORDER BY OrderId")
+            "%(name)s ORDER BY OrderId")
     if not is_species:
         _sql = ("SELECT Chr_Length.Name, Chr_Length.OrderId, "
                 "Length FROM Chr_Length, InbredSet WHERE "
                 "Chr_Length.SpeciesId = InbredSet.SpeciesId AND "
                 "InbredSet.Name = "
-                f"'{escape_string(name).decode('UTF-8')}' ORDER BY OrderId")
+                "%(name)s ORDER BY OrderId")
     with conn.cursor() as cursor:
-        cursor.execute(_sql)
+        cursor.execute(_sql, {'name': name})
         return cursor.fetchall()
 
 def translate_to_mouse_gene_id(species: str, geneid: int, conn: Any) -> int:

@@ -24,7 +24,8 @@ class TestChromosomes(TestCase):
                 "SELECT Chr_Length.Name, Chr_Length.OrderId, "
                 "Length FROM Chr_Length, Species WHERE "
                 "Chr_Length.SpeciesId = Species.SpeciesId AND "
-                "Species.Name = 'TestCase' ORDER BY OrderId"
+                "Species.Name = %(name)s ORDER BY OrderId",
+                {'name': 'TestCase'}
             )
 
     @pytest.mark.unit_test
@@ -40,7 +41,8 @@ class TestChromosomes(TestCase):
                 "SELECT Chr_Length.Name, Chr_Length.OrderId, "
                 "Length FROM Chr_Length, InbredSet WHERE "
                 "Chr_Length.SpeciesId = InbredSet.SpeciesId AND "
-                "InbredSet.Name = 'TestCase' ORDER BY OrderId"
+                "InbredSet.Name = %(name)s ORDER BY OrderId",
+                {'name': 'TestCase'}
             )
 
     @pytest.mark.unit_test
