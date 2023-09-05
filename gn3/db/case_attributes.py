@@ -90,7 +90,7 @@ def approve_case_attribute(conn: Any, case_attr_audit_id: int) -> int:
                 elif diff_data.get("Deletion"):
                     data = diff_data.get("Deletion")
                     cursor.execute(
-                        "DELETE FROM CaseAttribute " "WHERE Id = %s",
+                        "DELETE FROM CaseAttribute WHERE Id = %s",
                         (data.get("id"),),
                     )
                 # Modification
