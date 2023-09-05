@@ -1,5 +1,5 @@
 """Module containing functions that work with sample data"""
-from typing import Any, Tuple, Dict, Callable
+from typing import Any, Tuple, Dict
 
 import MySQLdb
 
