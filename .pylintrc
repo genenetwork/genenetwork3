@@ -1,3 +1,7 @@
+[MAIN]
+ignore=CVS
+ignore-paths=migrations
+
 [SIMILARITIES]
 
 ignore-imports=yes
