@@ -1,5 +1,5 @@
+"""Run tests"""
 import os
-import sys
 from distutils.core import Command
 
 class RunTests(Command):
