@@ -12,7 +12,8 @@ def query_token(# pylint: disable=[unused-argument]
         endpoint_object: Any, token_str: str, token_type_hint) -> Optional[
             OAuth2Token]:
     """Retrieve the token from the database."""
-    __identity__ = lambda val: val
+    def __identity__(val):
+        return val
     token = Nothing
     with db.connection(current_app.config["AUTH_DB"]) as conn:
         if token_type_hint == "access_token":

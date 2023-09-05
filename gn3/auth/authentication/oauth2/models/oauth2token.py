@@ -51,7 +51,8 @@ class OAuth2Token(NamedTuple):
         return self.revoked
 
 def __token_from_resultset__(conn: db.DbConnection, rset) -> Maybe:
-    __identity__ = lambda val: val
+    def __identity__(val):
+        return val
     try:
         the_user = user_by_id(conn, uuid.UUID(rset["user_id"]))
     except NotFoundError as _nfe:

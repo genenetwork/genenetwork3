@@ -422,8 +422,7 @@ def set_bxd(group_info):
     return {
         **group_info,
         "group": (
-            "BXD" if group_info.get("Name") == "BXD300"
-            else group_info.get("Name", "")),
+            "BXD" if group_info.get("Name") == "BXD300" else group_info.get("Name", "")),
         "groupid": group_info["Id"]
     }
 
