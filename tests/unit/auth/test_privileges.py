@@ -6,7 +6,6 @@ from gn3.auth.authorisation.privileges import Privilege, user_privileges
 
 from tests.unit.auth import conftest
 
-SORT_KEY = lambda x: x.privilege_id
 
 PRIVILEGES = sorted(
     (Privilege("system:group:create-group", "Create a group"),
@@ -29,7 +28,7 @@ PRIVILEGES = sorted(
      Privilege("group:role:edit-role", "edit/update an existing role"),
      Privilege("group:user:assign-role", "Assign a role to an existing user"),
      Privilege("group:role:delete-role", "Delete an existing role")),
-    key=SORT_KEY)
+    key=lambda x: x.privilege_id)
 
 @pytest.mark.unit_test
 @pytest.mark.parametrize(
@@ -43,4 +42,4 @@ def test_user_privileges(auth_testdb_path, fxtr_users, user, expected):# pylint:
     """
     with db.connection(auth_testdb_path) as conn:
         assert sorted(
-            user_privileges(conn, user), key=SORT_KEY) == expected
+            user_privileges(conn, user), key=lambda x: x.privilege_id) == expected

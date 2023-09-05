@@ -421,9 +421,7 @@ def literature_correlation_by_list(
     `web.webqtl.correlation.CorrelationPage.getLiteratureCorrelationByList`
     function in GeneNetwork1.
     """
-    if any((lambda t: (
-            bool(t.get("tissue_corr")) and
-            bool(t.get("tissue_p_value"))))(trait)
+    if any(bool(trait.get("tissue_corr")) and bool(trait.get("tissue_p_value"))
            for trait in trait_list):
         temporary_table_name = f"LITERATURE{random_string(8)}"
         query1 = (
@@ -491,7 +489,7 @@ def tissue_correlation_by_list(
             "tissue_p_value": result["p-val"]
         }
 
-    if any((lambda t: bool(t.get("l_corr")))(trait) for trait in trait_list):
+    if any(bool(trait.get("l_corr")) for trait in trait_list):
         prim_trait_symbol_value_dict = fetch_gene_symbol_tissue_value_dict_for_trait(
             (primary_trait_symbol,), tissue_probeset_freeze_id, conn)
         if primary_trait_symbol.lower() in prim_trait_symbol_value_dict:

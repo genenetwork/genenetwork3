@@ -152,7 +152,8 @@ def parse_position_field(location_slot: int, query: bytes) -> xapian.Query:
     """Parse position and return a xapian query."""
     start, end = parse_position(query.decode("utf-8"))
     # TODO: Convert the xapian index to use bases instead of megabases.
-    to_megabases = lambda x: str(Decimal(x)/10**6)
+    def to_megabases(val):
+        return str(Decimal(val)/10**6)
     return (xapian.NumberRangeProcessor(location_slot)
             (start.maybe("", to_megabases), end.maybe("", to_megabases))) # type: ignore
 
@@ -176,7 +177,8 @@ def parse_location_field(species_query: xapian.Query,
 
     def make_query(interval: ChromosomalInterval) -> xapian.Query:
         # TODO: Convert the xapian index to use bases instead of megabases.
-        to_megabases = lambda x: str(Decimal(x)/10**6)
+        def to_megabases(val):
+            return str(Decimal(val)/10**6)
         return combine_queries(xapian.Query.OP_AND,
                                species_query,
                                xapian.Query(chromosome_prefix + interval.chromosome),
