@@ -1,6 +1,6 @@
 """Run tests"""
 import os
-from distutils.core import Command
+from distutils.core import Command  # pylint: disable=W0402
 
 class RunTests(Command):
     """
