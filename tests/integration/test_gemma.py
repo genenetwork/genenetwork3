@@ -382,7 +382,7 @@ class GemmaAPITest(unittest.TestCase):
             "snps": "snpfile.txt",
         }
         mock_hash.return_value = "hash"
-        response = self.app.post(("/api/gemma/k-gwa-compute/" "my-token"))
+        response = self.app.post(("/api/gemma/k-gwa-compute/my-token"))
         mock_hash.assert_called_with([
             ('/tmp/cache/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/'
              'genotype.txt'), '/tmp/my-token/phenofile.txt',
