@@ -193,9 +193,8 @@ pytest -k unit_test
 ```
 
 Running pylint:
-
 ```bash
-pylint *py tests gn3 scripts sheepdog
+pylint $(find . -name '*.py' | xargs)
 ```
 
 Running mypy(type-checker):
