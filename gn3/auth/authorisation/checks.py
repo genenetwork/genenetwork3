@@ -5,11 +5,10 @@ from typing import Callable
 from flask import request, current_app as app
 
 from gn3.auth import db
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 from . import privileges as auth_privs
 from .errors import InvalidData, AuthorisationError
-
-from ..authentication.oauth2.resource_server import require_oauth
 
 def __system_privileges_in_roles__(conn, user):
     """

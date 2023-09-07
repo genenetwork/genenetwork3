@@ -7,7 +7,7 @@ from pymonad.either import Left, Right, Either
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
-from gn3.auth.authentication.users import User
+from gn3.auth.authorisation.users import User
 from gn3.auth.authorisation.errors import AuthorisationError
 
 from ..checks import authorised_p

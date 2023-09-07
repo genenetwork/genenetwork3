@@ -6,9 +6,9 @@ from typing import NamedTuple, Optional
 from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
-from gn3.auth.authentication.users import User, user_by_id
 
 from gn3.auth.authorisation.errors import NotFoundError
+from gn3.auth.authorisation.users import User, user_by_id
 
 from .oauth2client import client, OAuth2Client
 

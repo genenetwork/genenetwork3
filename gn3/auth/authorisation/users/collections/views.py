@@ -9,8 +9,8 @@ from gn3.auth.db_utils import with_db_connection
 from gn3.auth.authorisation.checks import require_json
 from gn3.auth.authorisation.errors import NotFoundError
 
-from gn3.auth.authentication.users import User, user_by_id
-from gn3.auth.authentication.oauth2.resource_server import require_oauth
+from gn3.auth.authorisation.users import User, user_by_id
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 from .models import (
     add_traits,

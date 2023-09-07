@@ -7,7 +7,7 @@ from gn3.auth.authorisation.roles.models import Role
 from gn3.auth.authorisation.checks import authorised_p
 from gn3.auth.authorisation.privileges import Privilege
 
-from gn3.auth.authentication.users import User
+from .base import User
 
 @authorised_p(
     ("system:user:list",),

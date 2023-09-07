@@ -29,9 +29,9 @@ from gn3.auth.authorisation.resources.checks import authorised_for
 from gn3.auth.authorisation.resources.models import (
     user_resources, public_resources, attach_resources_data)
 
-from gn3.auth.authentication.users import User
-from gn3.auth.authentication.oauth2.resource_server import require_oauth
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
+from gn3.auth.authorisation.users import User
 from gn3.auth.authorisation.data.phenotypes import link_phenotype_data
 from gn3.auth.authorisation.data.mrna import link_mrna_data, ungrouped_mrna_data
 from gn3.auth.authorisation.data.genotypes import (

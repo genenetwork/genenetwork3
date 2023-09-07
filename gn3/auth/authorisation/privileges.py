@@ -2,7 +2,7 @@
 from typing import Any, Iterable, NamedTuple
 
 from gn3.auth import db
-from gn3.auth.authentication.users import User
+from gn3.auth.authorisation.users import User
 
 class Privilege(NamedTuple):
     """Class representing a privilege: creates immutable objects."""

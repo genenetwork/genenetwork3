@@ -7,7 +7,7 @@ from typing import Any, Dict, Sequence, Optional, NamedTuple
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
-from gn3.auth.authentication.users import User
+from gn3.auth.authorisation.users import User
 from gn3.auth.db_utils import with_db_connection
 
 from .checks import authorised_for

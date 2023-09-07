@@ -9,7 +9,7 @@ from pymonad.maybe import Just, Maybe, Nothing
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
-from gn3.auth.authentication.users import User, user_by_id
+from gn3.auth.authorisation.users import User, user_by_id
 
 from ..checks import authorised_p
 from ..privileges import Privilege

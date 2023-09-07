@@ -27,7 +27,6 @@ from gn3.api.search import search
 from gn3.api.metadata import metadata
 from gn3.api.sampledata import sampledata
 from gn3.auth import oauth2
-from gn3.auth.authentication.oauth2.server import setup_oauth2_server
 
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
@@ -79,5 +78,4 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(oauth2, url_prefix="/api/oauth2")
 
     register_error_handlers(app)
-    setup_oauth2_server(app)
     return app

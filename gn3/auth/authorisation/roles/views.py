@@ -5,10 +5,9 @@ from flask import jsonify, Response, Blueprint, current_app
 
 from gn3.auth import db
 from gn3.auth.dictify import dictify
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 from .models import user_role
-
-from ...authentication.oauth2.resource_server import require_oauth
 
 roles = Blueprint("roles", __name__)
 

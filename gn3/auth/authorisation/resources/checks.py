@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Sequence
 
 from gn3.auth import db
-from gn3.auth.authentication.users import User
+from gn3.auth.authorisation.users import User
 
 def __organise_privileges_by_resource_id__(rows):
     def __organise__(privs, row):

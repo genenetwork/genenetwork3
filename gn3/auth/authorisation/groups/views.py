@@ -12,6 +12,8 @@ from gn3 import db_utils as gn3db
 
 from gn3.auth.dictify import dictify
 from gn3.auth.db_utils import with_db_connection
+from gn3.auth.authorisation.users import User
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 from .data import link_data_to_group
 from .models import (
@@ -27,9 +29,6 @@ from ..roles.models import user_roles
 from ..checks import authorised_p
 from ..privileges import Privilege, privileges_by_ids
 from ..errors import InvalidData, NotFoundError, AuthorisationError
-
-from ...authentication.users import User
-from ...authentication.oauth2.resource_server import require_oauth
 
 groups = Blueprint("groups", __name__)
 
