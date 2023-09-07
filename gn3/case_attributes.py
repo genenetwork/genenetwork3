@@ -14,10 +14,9 @@ from gn3.commands import run_cmd
 
 from gn3.db_utils import Connection, database_connection
 
-from gn3.auth.authentication.users import User
-from gn3.auth.authentication.oauth2.resource_server import require_oauth
-
+from gn3.auth.authorisation.users import User
 from gn3.auth.authorisation.errors import AuthorisationError
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 caseattr = Blueprint("case-attribute", __name__)
 
@@ -154,8 +153,8 @@ def __process_edit_data__(fieldnames, form_data) -> tuple[dict, ...]:
 
 def __write_csv__(fieldnames, data):
     """Write the given `data` to a csv file and return the path to the file."""
-    fd, filepath = tempfile.mkstemp(".csv")
-    os.close(fd)
+    fdesc, filepath = tempfile.mkstemp(".csv")
+    os.close(fdesc)
     with open(filepath, "w", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect="unix")
         writer.writeheader()
@@ -163,7 +162,10 @@ def __write_csv__(fieldnames, data):
 
     return filepath
 
-def __compute_diff__(fieldnames: tuple[str, ...], original_data: tuple[dict, ...], edit_data: tuple[dict, ...]):
+def __compute_diff__(
+        fieldnames: tuple[str, ...],
+        original_data: tuple[dict, ...],
+        edit_data: tuple[dict, ...]):
     """Return the diff of the data."""
     basefilename = __write_csv__(fieldnames, original_data)
     deltafilename = __write_csv__(fieldnames, edit_data)
