@@ -188,8 +188,7 @@ def update_cross_reference(conn, dataset_id, trait_name, data:dict) -> int:
         cursor.execute(
             f"UPDATE PublishXRef SET {cols} WHERE "
             "Id=%(trait_name)s AND "
-            "InbredSetId="
-            "(SELECT InbredSetId FROM PublishFreeze WHERE Id=%(dataset_id)s)",
+            "InbredSetId=%(dataset_id)s",
             {
                 "dataset_id": dataset_id,
                 "trait_name": trait_name,
