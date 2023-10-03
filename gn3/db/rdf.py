@@ -89,80 +89,42 @@ def get_dataset_metadata(
         sparql_conn: SPARQLWrapper, name: str
 ) -> MonadicDict:
     """Return info about dataset with a given NAME"""
-    __metadata_query = """
-$prefix
-
-CONSTRUCT {
-    gn:dataset ?datasetTerm ?datasetValue .
-    gn:dataset ?platformName ?platform_name .
-    gn:dataset gn:normalization ?normalization .
-    gn:dataset gn:investigatorName ?investigatorName .
-    gn:dataset gn:investigatorWebUrl ?investigatorWebUrl .
-    gn:dataset gn:tissueName ?tissueName .
-    gn:dataset gn:organism ?speciesDisplayName .
-    gn:dataset gn:organismUrl ?ncbiReference .
-    gn:dataset gn:inbredSetName ?inbredSetName .
-    gn:dataset gn:geoPlatformUrl ?geoPlatform .
-    gn:dataset gn:platformName ?platform_name .
-} WHERE {
-    ?subClass rdf:subClassOf gn:dataset .
-    ?dataset rdf:type ?subclass ;
-             gn:name "$name";
-             ?datasetTerm ?datasetValue .
-    OPTIONAL {
-        ?dataset gn:datasetOfInvestigator ?investigator .
-        ?investigator foaf:name ?investigatorName .
-        ?investigator foaf:homepage ?investigatorWebUrl .
-    } .
-    OPTIONAL{
-        ?dataset gn:normalization ?normalizationType .
-        ?normalizationType gn:name ?normalization .
-    } .
-    OPTIONAL{
-        ?dataset gn:datasetOfSpecies ?species .
-        ?species gn:displayName ?speciesDisplayName .
-        ?species gn:organism ?ncbiReference .
-    } .
-    OPTIONAL {
-        ?dataset gn:datasetOfInbredSet ?inbredSet .
-        ?inbredSet gn:binomialName ?inbredSetName .
-        ?inbredSet gn:inbredSetOfSpecies ?species .
-        ?species gn:displayName ?speciesDisplayName .
-        ?species gn:organism ?ncbiReference .
-    } .
-    OPTIONAL{
-        ?dataset gn:datasetOfPlatform ?platform .
-        ?platform gn:name ?platform_name .
-        ?platform gn:geoPlatform ?geoPlatform .
-    } .
-    OPTIONAL{
-        ?dataset gn:datasetOfTissue ?tissue .
-        ?tissue gn:name ?tissueName .
-    } .
-    VALUES ?datasetTerm {
-        dct:created gn:aboutCases gn:aboutDataProcessing gn:aboutPlatform
-        gn:aboutTissue gn:accessionId gn:acknowledgment gn:citation
-        gn:contributors gn:datasetGroup gn:datasetOfinvestigator
-        gn:experimentDesign gn:geoSeries gn:name gn:notes
-        gn:specifics gn:summary gn:title gn:publicationTitle
-        gn:datasetStatusName gn:datasetOfOrganization
-    }
-}
-"""
     response: MonadicDict = MonadicDict()
     for key, value in sparql_query(
             sparql_conn,
-            Template(__metadata_query)
+            Template("""
+$prefix
+
+CONSTRUCT {
+	  ?dataset ?predicate ?term .
+	  ?dataset gnt:classifiedUnder ?inbredSetName .
+          ?dataset gnt:usesNormalization ?normalizationLabel .
+          ?typePredicate ex:DatasetType ?typeName .
+} WHERE {
+	 ?dataset rdf:type dcat:Dataset .
+	 ?dataset ?predicate ?term .
+	 ?dataset xkos:classifiedUnder ?inbredSet .
+	 gnc:Set skos:member ?inbredSet .
+	 ?dataset (rdfs:label|dct:identifier) "$name" .
+	 ?inbredSet rdfs:label ?inbredSetName .
+         OPTIONAL {
+            ?dataset xkos:classifiedUnder ?type .
+            gnc:DatasetType skos:member ?type .
+            ?type ?typePredicate ?typeName .
+            ?type (skos:altLabel|skos:prefLabel) ?typeName .
+         } .
+         OPTIONAL {
+            ?dataset gnt:usesNormalization ?normalization .
+            ?normalization rdfs:label ?normalizationLabel .
+         }
+	 FILTER (!regex(str(?predicate), '(classifiedUnder|usesNormalization)','i')) .
+}""")
             .substitute(
                 prefix=RDF_PREFIXES,
                 name=name
             )
     )[0].items():
         response[key] = value
-        if isinstance(value, str) and not (
-                key.endswith("Url") or key == "geoSeries"
-        ):
-            response[key] = value.map(get_url_local_name)  # type: ignore
     return response
 
 
