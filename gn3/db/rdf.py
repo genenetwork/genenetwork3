@@ -60,9 +60,7 @@ def sparql_query(
     if results:
         for result in results:
             if "s" in result:  # A CONSTRUCT
-                key = get_url_local_name(
-                    result["p"]["value"]  # type: ignore
-                )
+                key = result["p"]["value"]  # type: ignore
                 value = result["o"]["value"]  # type: ignore
                 parsed_response[key] = __add_value_to_dict(
                     key, value, parsed_response
