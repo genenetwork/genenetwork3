@@ -2,12 +2,12 @@
 
 import os
 import gzip
+from typing import Union
+from pathlib import Path
 
-from gn3.settings import GENOTYPE_FILES
-
-def build_genotype_file(
-        geno_name: str, base_dir: str = GENOTYPE_FILES,
-        extension: str = "geno"):
+def build_genotype_file(geno_name: str,
+                        base_dir: Union[str, Path],
+                        extension: str = "geno"):
     """Build the absolute path for the genotype file."""
     return f"{os.path.abspath(base_dir)}/{geno_name}.{extension}"
 
