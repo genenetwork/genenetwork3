@@ -31,7 +31,11 @@ def clustered_heatmaps():
         traits_fullnames = [parse_trait_fullname(trait) for trait in traits_names]
 
         with io.StringIO() as io_str:
-            figure = build_heatmap(traits_fullnames, conn, vertical=vertical)
+            figure = build_heatmap(conn,
+                                   traits_fullnames,
+                                   current_app.config["GENOTYPE_FILES"],
+                                   vertical=vertical,
+                                   current_app.config["TMPDIR"])
             figure.write_json(io_str)
             fig_json = io_str.getvalue()
         return fig_json, 200
