@@ -35,7 +35,7 @@ def clustered_heatmaps():
                                    traits_fullnames,
                                    current_app.config["GENOTYPE_FILES"],
                                    vertical=vertical,
-                                   current_app.config["TMPDIR"])
+                                   tmpdir=current_app.config["TMPDIR"])
             figure.write_json(io_str)
             fig_json = io_str.getvalue()
         return fig_json, 200
