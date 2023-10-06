@@ -3,15 +3,15 @@
 https://github.com/Alexanderlacuna/correlation_rust
 
 """
-
 import subprocess
 import json
 import csv
 import os
 
+from flask import current_app
+
 from gn3.computations.qtlreaper import create_output_directory
 from gn3.chancy import random_string
-from gn3.settings import CORRELATION_COMMAND
 from gn3.settings import TMPDIR
 
 
@@ -54,6 +54,7 @@ def run_correlation(
     """entry function to call rust correlation"""
 
     # pylint: disable=too-many-arguments
+    CORRELATION_COMMAND = current_app.config["CORRELATION_COMMAND"] # make arg?
     (tmp_dir, tmp_file) = generate_input_files(dataset)
     (output_file, json_file) = generate_json_file(
         tmp_dir=tmp_dir, tmp_file=tmp_file, method=method, delimiter=delimiter,
