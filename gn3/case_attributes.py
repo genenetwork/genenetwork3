@@ -2,12 +2,15 @@
 import os
 import csv
 import json
+import requests
 import tempfile
 from pathlib import Path
 from functools import reduce
 from datetime import datetime
+from urllib.parse import urljoin
 
 from MySQLdb.cursors import DictCursor
+from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import jsonify, request, Response, Blueprint, current_app
 
 from gn3.commands import run_cmd
@@ -17,6 +20,8 @@ from gn3.db_utils import Connection, database_connection
 from gn3.auth.authorisation.users import User
 from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
+
+from gn3.debug import __pk__
 
 caseattr = Blueprint("case-attribute", __name__)
 
@@ -28,6 +33,40 @@ class NoDiffError(ValueError):
         """Initialise exception."""
         super().__init__(
             self, "No difference between existing data and sent data.")
+
+def required_access(inbredset_id: int, access_levels: tuple[str, ...]) -> bool:
+    """Check whether the user has the appropriate access"""
+    def __species_id__(conn):
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT SpeciesId FROM InbredSet WHERE InbredSetId=%s",
+                (inbredset_id,))
+            return cursor.fetchone()[0]
+    try:
+        with (require_oauth.acquire("profile resource") as the_token,
+              database_connection(current_app.config["SQL_URI"]) as conn):
+            result = requests.get(
+                urljoin(current_app.config["AUTH_SERVER_URL"],
+                        "auth/resource/inbredset/resource-id"
+                        f"/{__species_id__(conn)}/{inbredset_id}"))
+            if result.status_code == 200:
+                resource_id = result.json()["resource-id"]
+                auth = requests.post(
+                    urljoin(current_app.config["AUTH_SERVER_URL"],
+                            "auth/resource/authorisation"),
+                    json={"resource-ids": [resource_id]},
+                    headers={"Authorization": f"Bearer {the_token.access_token}"})
+                if auth.status_code == 200:
+                    privs = (priv.privilege_id for role in auth.json()[resource_id]["roles"]
+                             for priv in role)
+                    authorisedp = all(lvl in privs for lvl in access_levels)
+                    if authorisedp:
+                        return authorisedp
+    except _HTTPException as httpe:
+        raise AuthorisationError("You need to be logged in.") from httpe
+
+    raise AuthorisationError(
+        f"User does not have the privileges {access_levels}")
 
 def __inbredset_group__(conn, inbredset_id):
     """Return InbredSet group's top-level details."""
@@ -187,7 +226,7 @@ def __queue_diff__(conn: Connection, diff_data, diff_data_dir: Path) -> Path:
     """
     diff = diff_data["diff"]
     if bool(diff["Additions"]) or bool(diff["Modifications"]) or bool(diff["Deletions"]):
-        # TODO: Check user has "edit case attribute privileges"
+        __pk__(diff, "THE DIFF")
         diff_data_dir.mkdir(parents=True, exist_ok=True)
 
         created = datetime.now()
@@ -201,39 +240,45 @@ def __queue_diff__(conn: Connection, diff_data, diff_data_dir: Path) -> Path:
         return filepath
     raise NoDiffError
 
-def __apply_diff__(conn: Connection, user: User, diff_filename) -> None:
+def __apply_diff__(
+        conn: Connection, inbredset_id: int, user: User, diff_filename) -> None:
     """
     Apply the changes in the diff at `diff_filename` to the data in the database
     if the user has appropriate privileges.
     """
-    # TODO: Check user has "approve/reject case attribute diff privileges"
+    required_access(
+        inbredset_id, ("system:inbredset:edit-case-attribute",
+                       "system:inbredset:apply-case-attribute-edit"))
     def __save_diff__(conn: Connection, diff_filename):
         """Save to the database."""
         raise NotImplementedError
     raise NotImplementedError
 
-def __reject_diff__(conn: Connection, user: User, diff_filename) -> None:
+def __reject_diff__(
+        conn: Connection, inbredset_id: int, user: User, diff_filename) -> None:
     """
     Reject the changes in the diff at `diff_filename` to the data in the
     database if the user has appropriate privileges.
     """
-    # TODO: Check user has "approve/reject case attribute diff privileges"
+    required_access(
+        inbredset_id, ("system:inbredset:edit-case-attribute",
+                       "system:inbredset:apply-case-attribute-edit"))
     raise NotImplementedError
 
 @caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
 def add_case_attributes(inbredset_id: int) -> Response:
     """Add a new case attribute for `InbredSetId`."""
+    required_access(inbredset_id, ("system:inbredset:create-case-attribute",))
     with (require_oauth.acquire("profile resource") as the_token,
           database_connection(current_app.config["SQL_URI"]) as conn):
-        # TODO: Check user has "add/delete case attribute privileges."
         raise NotImplementedError
 
 @caseattr.route("/<int:inbredset_id>/delete", methods=["POST"])
 def delete_case_attributes(inbredset_id: int) -> Response:
     """Delete a case attribute from `InbredSetId`."""
+    required_access(inbredset_id, ("system:inbredset:delete-case-attribute",))
     with (require_oauth.acquire("profile resource") as the_token,
           database_connection(current_app.config["SQL_URI"]) as conn):
-        # TODO: Check user has "add/delete case attribute privileges."
         raise NotImplementedError
 
 @caseattr.route("/<int:inbredset_id>/edit", methods=["POST"])
@@ -241,8 +286,10 @@ def edit_case_attributes(inbredset_id: int) -> Response:
     """Edit the case attributes for `InbredSetId` based on data received."""
     with (require_oauth.acquire("profile resource") as the_token,
           database_connection(current_app.config["SQL_URI"]) as conn):
-        # TODO: Check user has "edit case attribute privileges"
+        required_access(inbredset_id,
+                        ("system:inbredset:edit-case-attribute",))
         user = the_token.user
+        from gn3.auth.authorisation.users import DUMMY_USER; user=DUMMY_USER
         fieldnames = (["Strain"] + sorted(
             attr["Name"] for attr in
             __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
@@ -288,17 +335,15 @@ def edit_case_attributes(inbredset_id: int) -> Response:
 @caseattr.route("/approve/<path:filename>", methods=["POST"])
 def approve_case_attributes_diff(inbredset_id: int) -> Response:
     """Approve the changes to the case attributes in the diff."""
-    # TODO: Check user has "approve/reject case attribute diff privileges"
     with (require_oauth.acquire("profile resource") as the_token,
           database_connection(current_app.config["SQL_URI"]) as conn):
-        __apply_diff__(conn, the_token.user, diff_filename)
+        __apply_diff__(conn, inbredset_id, the_token.user, diff_filename)
         raise NotImplementedError
 
 @caseattr.route("/reject/<path:filename>", methods=["POST"])
 def reject_case_attributes_diff(inbredset_id: int) -> Response:
     """Reject the changes to the case attributes in the diff."""
-    # TODO: Check user has "approve/reject case attribute diff privileges"
     with (require_oauth.acquire("profile resource") as the_token,
           database_connection(current_app.config["SQL_URI"]) as conn):
-        __reject_diff__(conn, the_token.user, diff_filename)
+        __reject_diff__(conn, inbredset_id, the_token.user, diff_filename)
         raise NotImplementedError

@@ -75,6 +75,7 @@ ROUND_TO = 10
 
 MULTIPROCESSOR_PROCS = 6 # Number of processes to spawn
 
+AUTH_SERVER_URL=""
 AUTH_MIGRATIONS = "migrations/auth"
 AUTH_DB = os.environ.get(
     "AUTH_DB", f"{os.environ.get('HOME')}/genenetwork/gn3_files/db/auth.db")
