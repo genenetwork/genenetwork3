@@ -1,4 +1,6 @@
 """API for fetching metadata using an API"""
+import json
+
 from string import Template
 from http.client import RemoteDisconnected
 from urllib.error import URLError
@@ -6,29 +8,118 @@ from flask import Blueprint
 from flask import jsonify
 from flask import current_app
 
-from SPARQLWrapper import SPARQLWrapper
+from pyld import jsonld
+from SPARQLWrapper import JSON, JSONLD, SPARQLWrapper
 
 from gn3.db.rdf import get_dataset_metadata
 from gn3.db.rdf import get_publication_metadata
 from gn3.db.rdf import get_phenotype_metadata
 from gn3.db.rdf import get_genotype_metadata
 from gn3.db.rdf import sparql_query
-from gn3.db.rdf import RDF_PREFIXES
+from gn3.db.rdf import RDF_PREFIXES, PREFIXES
 
 
 metadata = Blueprint("metadata", __name__)
 
 
-@metadata.route("/dataset/<name>", methods=["GET"])
-def dataset(name):
+@metadata.route("/datasets/<name>", methods=["GET"])
+def datasets(name):
     """Fetch a dataset's metadata given it's ACCESSION_ID or NAME"""
     try:
-        return jsonify(
-            get_dataset_metadata(
-                SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
-                name,
-            ).data
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+	  ?dataset ?predicate ?term ;
+                   rdf:type dcat:Dataset ;
+	           ex:belongsToInbredSet ?inbredSetName ;
+                   gnt:usesNormalization ?normalizationLabel ;
+                   dcat:contactPoint ?investigatorName ;
+                   xkos:classifiedUnder  ?altName ;
+                   ex:platform ?platform ;
+                   ex:tissue ?tissue .
+          ?platform ?platformPred  ?platformObject ;
+                    ex:info ?platformInfo .
+          ?tissue rdfs:label ?tissueName ;
+                  rdf:type gnc:tissue ;
+                  ex:info ?tissueInfo .
+} WHERE {
+	 ?dataset rdf:type dcat:Dataset ;
+	          xkos:classifiedUnder ?inbredSet ;
+                  rdfs:label "$name" .
+         OPTIONAL {
+            ?inbredSet ^skos:member gnc:Set ;
+                       rdfs:label ?inbredSetName .
+         } .
+         OPTIONAL {
+            ?type ^xkos:classifiedUnder ?dataset ;
+                  ^skos:member gnc:DatasetType ;
+                  skos:prefLabel ?altName .
+         } .
+         OPTIONAL {
+            ?normalization ^gnt:usesNormalization ?dataset ;
+                           rdfs:label ?normalizationLabel .
+         } .
+         OPTIONAL {
+           ?investigator foaf:name ?investigatorName ;
+                         ^dcat:contactPoint ?dataset .
+         } .
+         OPTIONAL {
+           ?platform ^gnt:usesPlatform ?dataset ;
+                     ?platformPred  ?platformObject .
+         } .
+         OPTIONAL {
+           ?dataset gnt:hasPlatformInfo ?platformInfo .
+         } .
+         OPTIONAL {
+           ?dataset gnt:hasTissueInfo ?tissueInfo .
+         } .
+         OPTIONAL {
+           ?dataset gnt:hasTissue ?tissue .
+           ?tissue rdfs:label ?tissueName .
+         } .
+	 FILTER (!regex(str(?predicate), '(classifiedUnder|usesNormalization|contactPoint|hasPlatformInfo|tissueInfo)', 'i')) .
+         FILTER (!regex(str(?platformPred), '(classifiedUnder|geoSeriesId|hasGoTreeValue)', 'i')) .
+}""").substitute(prefix=RDF_PREFIXES, name=name))
+        results = sparql.queryAndConvert()
+        results = json.loads(
+            results.serialize(format="json-ld")
         )
+        frame = {
+            "@context": PREFIXES | {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "inbredSet": "ex:belongsToInbredSet",
+                "description": "dct:description",
+                "created":  "dct:created",
+                "normalization": "gnt:usesNormalization",
+                "classifiedUnder": "xkos:classifiedUnder",
+                "accessRights": "dct:accessRights",
+                "accessionId": "dct:identifier",
+                "title": "dct:title",
+                "label": "rdfs:label",
+                "altLabel": "skos:altLabel",
+                "prefLabel": "skos:prefLabel",
+                "contactPoint": "dcat:contactPoint",
+                "organization": "foaf:Organization",
+                "info": "ex:info",
+                "caseInfo": "gnt:hasCaseInfo",
+                "geoSeriesId": "gnt:hasGeoSeriesId",
+                "experimentDesignInfo": "gnt:hasExperimentDesignInfo",
+                "notes": "gnt:hasNotes",
+                "processingInfo": "gnt:hasDataProcessingInfo",
+                "acknowledgement": "gnt:hasAcknowledgement",
+                "tissue": "ex:tissue",
+                "platform": "ex:platform",
+            },
+            "type": "dcat:Dataset",
+        }
+        return jsonld.compact(jsonld.frame(results, frame), frame)
+    # The virtuoso server is misconfigured or it isn't running at all
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
     # The virtuoso server is misconfigured or it isn't running at all
     except (RemoteDisconnected, URLError):
         return jsonify({})
