@@ -69,8 +69,8 @@ def required_access(inbredset_id: int, access_levels: tuple[str, ...]) -> bool:
                     json={"resource-ids": [resource_id]},
                     headers={"Authorization": f"Bearer {the_token.access_token}"})
                 if auth.status_code == 200:
-                    privs = (priv.privilege_id for role in auth.json()[resource_id]["roles"]
-                             for priv in role)
+                    privs = (priv["privilege_id"] for role in auth.json()[resource_id]["roles"]
+                             for priv in role["privileges"])
                     authorisedp = all(lvl in privs for lvl in access_levels)
                     if authorisedp:
                         return authorisedp
