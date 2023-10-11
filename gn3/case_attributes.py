@@ -23,8 +23,6 @@ from gn3.auth.authorisation.users import User
 from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
-from gn3.debug import __pk__
-
 caseattr = Blueprint("case-attribute", __name__)
 
 CATTR_DIFFS_DIR = "case-attribute-diffs"
@@ -238,7 +236,6 @@ def __queue_diff__(conn: Connection, diff_data, diff_data_dir: Path) -> Path:
     """
     diff = diff_data["diff"]
     if bool(diff["Additions"]) or bool(diff["Modifications"]) or bool(diff["Deletions"]):
-        __pk__(diff, "THE DIFF")
         diff_data_dir.mkdir(parents=True, exist_ok=True)
 
         created = datetime.now()
@@ -273,18 +270,6 @@ def __save_diff__(conn: Connection, diff_data: dict, status: EditStatus) -> int:
 
 def __load_diff__(diff_filename):
     """Load the diff."""
-    {
-                    "inbredset_id": inbredset_id,
-                    "user_id": str(user.user_id),
-                    "fieldnames": fieldnames,
-                    "diff": __compute_diff__(
-                        fieldnames,
-                        __process_orig_data__(
-                            fieldnames,
-                            __case_attribute_values_by_inbred_set__(conn, inbredset_id),
-                            __inbredset_strains__(conn, inbredset_id)),
-                        __process_edit_data__(fieldnames, request.json["edit-data"]))
-                }
     with open(diff_filename, encoding="utf8") as diff_file:
         the_diff = json.loads(diff_file.read())
         return {
@@ -345,7 +330,6 @@ def edit_case_attributes(inbredset_id: int) -> Response:
         required_access(inbredset_id,
                         ("system:inbredset:edit-case-attribute",))
         user = the_token.user
-        from gn3.auth.authorisation.users import DUMMY_USER; user=DUMMY_USER
         fieldnames = (["Strain"] + sorted(
             attr["Name"] for attr in
             __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
