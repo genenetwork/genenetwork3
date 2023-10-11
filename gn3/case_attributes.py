@@ -44,6 +44,16 @@ class EditStatus(Enum):
         """Print out human-readable form."""
         return self.name
 
+class CAJSONEncoder(json.JSONEncoder):
+    """Encoder for CaseAttribute-specific data"""
+    def default(self, obj):
+        """Default encoder"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
+
 def required_access(inbredset_id: int, access_levels: tuple[str, ...]) -> bool:
     """Check whether the user has the appropriate access"""
     def __species_id__(conn):
@@ -245,9 +255,10 @@ def __queue_diff__(conn: Connection, diff_data, diff_data_dir: Path) -> Path:
             f"{created.isoformat()}.json")
         with open(filepath, "w", encoding="utf8") as diff_file:
             # We want this to fail if the metadata items below are not provided.
-            the_diff = {**diff_data, "created": created.isoformat()}
+            the_diff = {**diff_data, "created": created}
             insert_id = __save_diff__(conn, the_diff, EditStatus.review)
-            diff_file.write(json.dumps({**the_diff, "db_id": insert_id}))
+            diff_file.write(json.dumps({**the_diff, "db_id": insert_id},
+                                       cls=CAJSONEncoder))
         return filepath
     raise NoDiffError
 
@@ -263,7 +274,7 @@ def __save_diff__(conn: Connection, diff_data: dict, status: EditStatus) -> int:
                 "db_id": diff_data.get("db_id"),
                 "status": str(status),
                 "editor": str(diff_data["user_id"]),
-                "diff": json.dumps(diff_data),
+                "diff": json.dumps(diff_data, cls=CAJSONEncoder),
                 "ts": diff_data["created"].isoformat()
             })
         return diff_data.get("db_id") or cursor.lastrowid
@@ -276,7 +287,8 @@ def __load_diff__(diff_filename):
             **the_diff,
             "db_id": int(the_diff["db_id"]),
             "inbredset_id": int(the_diff["inbredset_id"]),
-            "user_id": uuid.UUID(the_diff["user_id"])
+            "user_id": uuid.UUID(the_diff["user_id"]),
+            "created": datetime.fromisoformat(the_diff["created"])
         }
 
 def __apply_diff__(
