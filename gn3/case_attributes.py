@@ -247,7 +247,9 @@ def __queue_diff__(conn: Connection, diff_data, diff_data_dir: Path) -> Path:
             f"{created.isoformat()}.json")
         with open(filepath, "w", encoding="utf8") as diff_file:
             # We want this to fail if the metadata items below are not provided.
-            diff_file.write(json.dumps({**diff_data, "created": created.isoformat()}))
+            the_diff = {**diff_data, "created": created.isoformat()}
+            insert_id = __save_diff__(conn, the_diff, EditStatus.review)
+            diff_file.write(json.dumps({**the_diff, "db_id": insert_id}))
         return filepath
     raise NoDiffError
 
