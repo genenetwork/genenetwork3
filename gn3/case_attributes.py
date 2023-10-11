@@ -305,8 +305,10 @@ def __apply_diff__(
                        "system:inbredset:apply-case-attribute-edit"))
     raise NotImplementedError
 
-def __reject_diff__(
-        conn: Connection, inbredset_id: int, user: User, diff_filename) -> None:
+def __reject_diff__(conn: Connection,
+                    inbredset_id: int,
+                    user: User,
+                    diff_filename: Path) -> Path:
     """
     Reject the changes in the diff at `diff_filename` to the data in the
     database if the user has appropriate privileges.
@@ -314,7 +316,10 @@ def __reject_diff__(
     required_access(
         inbredset_id, ("system:inbredset:edit-case-attribute",
                        "system:inbredset:apply-case-attribute-edit"))
-    raise NotImplementedError
+    the_diff == __load_diff__(diff_filename)
+    __save_diff__(conn, the_diff, EditStatus.rejected)
+    os.remove(diff_filename)
+    return diff_filename
 
 @caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
 def add_case_attributes(inbredset_id: int) -> Response:
