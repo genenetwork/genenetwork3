@@ -267,7 +267,7 @@ def __save_diff__(conn: Connection, diff_data: dict, status: EditStatus) -> int:
     with conn.cursor() as cursor:
         cursor.execute(
             "INSERT INTO "
-            "caseattributes_audit(id, status, editor, json_diff_data) "
+            "caseattributes_audit(id, status, editor, json_diff_data, time_stamp) "
             "VALUES(%(db_id)s, %(status)s, %(editor)s, %(diff)s, %(ts)s) "
             "ON DUPLICATE KEY UPDATE status=%(status)s",
             {
