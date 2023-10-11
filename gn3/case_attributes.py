@@ -4,6 +4,7 @@ import csv
 import json
 import requests
 import tempfile
+from enum import Enum, auto
 from pathlib import Path
 from functools import reduce
 from datetime import datetime
@@ -33,6 +34,16 @@ class NoDiffError(ValueError):
         """Initialise exception."""
         super().__init__(
             self, "No difference between existing data and sent data.")
+
+class EditStatus(Enum):
+    """Enumeration for the status of the edits."""
+    review = auto()
+    approved = auto()
+    rejected = auto()
+
+    def __str__(self):
+        """Print out human-readable form."""
+        return self.name
 
 def required_access(inbredset_id: int, access_levels: tuple[str, ...]) -> bool:
     """Check whether the user has the appropriate access"""
@@ -240,6 +251,22 @@ def __queue_diff__(conn: Connection, diff_data, diff_data_dir: Path) -> Path:
         return filepath
     raise NoDiffError
 
+def __save_diff__(conn: Connection, diff_data: dict, status: EditStatus) -> int:
+    """Save to the database."""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO "
+            "caseattributes_audit(id, status, editor, json_diff_data) "
+            "VALUES(%(db_id)s, %(status)s, %(editor)s, %(diff)s, %(ts)s) "
+            "ON DUPLICATE KEY UPDATE status=%(status)s",
+            {
+                "db_id": diff_data.get("db_id"),
+                "status": str(status),
+                "editor": str(diff_data["user_id"]),
+                "diff": json.dumps(diff_data),
+                "ts": diff_data["created"].isoformat()
+            })
+        return diff_data.get("db_id") or cursor.lastrowid
 def __apply_diff__(
         conn: Connection, inbredset_id: int, user: User, diff_filename) -> None:
     """
@@ -249,9 +276,6 @@ def __apply_diff__(
     required_access(
         inbredset_id, ("system:inbredset:edit-case-attribute",
                        "system:inbredset:apply-case-attribute-edit"))
-    def __save_diff__(conn: Connection, diff_filename):
-        """Save to the database."""
-        raise NotImplementedError
     raise NotImplementedError
 
 def __reject_diff__(
