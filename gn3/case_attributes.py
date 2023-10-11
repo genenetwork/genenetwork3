@@ -2,6 +2,7 @@
 import os
 import csv
 import json
+import uuid
 import requests
 import tempfile
 from enum import Enum, auto
@@ -269,6 +270,30 @@ def __save_diff__(conn: Connection, diff_data: dict, status: EditStatus) -> int:
                 "ts": diff_data["created"].isoformat()
             })
         return diff_data.get("db_id") or cursor.lastrowid
+
+def __load_diff__(diff_filename):
+    """Load the diff."""
+    {
+                    "inbredset_id": inbredset_id,
+                    "user_id": str(user.user_id),
+                    "fieldnames": fieldnames,
+                    "diff": __compute_diff__(
+                        fieldnames,
+                        __process_orig_data__(
+                            fieldnames,
+                            __case_attribute_values_by_inbred_set__(conn, inbredset_id),
+                            __inbredset_strains__(conn, inbredset_id)),
+                        __process_edit_data__(fieldnames, request.json["edit-data"]))
+                }
+    with open(diff_filename, encoding="utf8") as diff_file:
+        the_diff = json.loads(diff_file.read())
+        return {
+            **the_diff,
+            "db_id": int(the_diff["db_id"]),
+            "inbredset_id": int(the_diff["inbredset_id"]),
+            "user_id": uuid.UUID(the_diff["user_id"])
+        }
+
 def __apply_diff__(
         conn: Connection, inbredset_id: int, user: User, diff_filename) -> None:
     """
