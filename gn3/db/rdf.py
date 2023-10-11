@@ -13,6 +13,7 @@ from SPARQLWrapper import JSON, SPARQLWrapper
 from gn3.monads import MonadicDict
 
 PREFIXES = {
+    "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",
     "ex": "http://example.org/stuff/1.0/",
     "foaf": "http://xmlns.com/foaf/0.1/",
