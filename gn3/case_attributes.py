@@ -77,11 +77,11 @@ def required_access(inbredset_id: int, access_levels: tuple[str, ...]) -> bool:
                     json={"resource-ids": [resource_id]},
                     headers={"Authorization": f"Bearer {the_token.access_token}"})
                 if auth.status_code == 200:
-                    privs = (priv["privilege_id"] for role in auth.json()[resource_id]["roles"]
-                             for priv in role["privileges"])
-                    authorisedp = all(lvl in privs for lvl in access_levels)
-                    if authorisedp:
-                        return authorisedp
+                    privs = tuple(priv["privilege_id"]
+                                  for role in auth.json()[resource_id]["roles"]
+                                  for priv in role["privileges"])
+                    if all(lvl in privs for lvl in access_levels):
+                        return privs
     except _HTTPException as httpe:
         raise AuthorisationError("You need to be logged in.") from httpe
 
