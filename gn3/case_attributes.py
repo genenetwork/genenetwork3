@@ -305,7 +305,8 @@ def __apply_diff__(
 def __reject_diff__(conn: Connection,
                     inbredset_id: int,
                     user: User,
-                    diff_filename: Path) -> Path:
+                    diff_filename: Path,
+                    diff: dict) -> Path:
     """
     Reject the changes in the diff at `diff_filename` to the data in the
     database if the user has appropriate privileges.
@@ -313,9 +314,9 @@ def __reject_diff__(conn: Connection,
     required_access(
         inbredset_id, ("system:inbredset:edit-case-attribute",
                        "system:inbredset:apply-case-attribute-edit"))
-    the_diff == __load_diff__(diff_filename)
-    __save_diff__(conn, the_diff, EditStatus.rejected)
-    os.remove(diff_filename)
+    __save_diff__(conn, diff, EditStatus.rejected)
+    new_path = Path(diff_filename.parent, f"{diff_filename.stem}-rejected{diff_filename.suffix}")
+    os.rename(diff_filename, new_path)
     return diff_filename
 
 @caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
@@ -381,7 +382,7 @@ def edit_case_attributes(inbredset_id: int) -> Response:
                 "diff-status": "queued",
                 "message": ("The changes to the case-attributes have been "
                             "queued for approval."),
-                "diff-filename": diff_filename
+                "diff-filename": str(diff_filename.name)
             })
 
 @caseattr.route("/approve/<path:filename>", methods=["POST"])
@@ -393,9 +394,15 @@ def approve_case_attributes_diff(inbredset_id: int) -> Response:
         raise NotImplementedError
 
 @caseattr.route("/reject/<path:filename>", methods=["POST"])
-def reject_case_attributes_diff(inbredset_id: int) -> Response:
+def reject_case_attributes_diff(filename: str) -> Response:
     """Reject the changes to the case attributes in the diff."""
+    diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
+    diff_filename = Path(diff_dir, filename)
+    the_diff = __load_diff__(diff_filename)
     with (require_oauth.acquire("profile resource") as the_token,
           database_connection(current_app.config["SQL_URI"]) as conn):
-        __reject_diff__(conn, inbredset_id, the_token.user, diff_filename)
-        raise NotImplementedError
+        __reject_diff__(conn, the_diff["inbredset_id"], the_token.user, diff_filename, the_diff)
+        return jsonify({
+            "message": f"Rejected diff successfully",
+            "diff_filename": diff_filename.name
+        })
