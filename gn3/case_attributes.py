@@ -13,7 +13,13 @@ from urllib.parse import urljoin
 
 from MySQLdb.cursors import DictCursor
 from authlib.integrations.flask_oauth2.errors import _HTTPException
-from flask import jsonify, request, Response, Blueprint, current_app
+from flask import (
+    jsonify,
+    request,
+    Response,
+    Blueprint,
+    current_app,
+    make_response)
 
 from gn3.commands import run_cmd
 
@@ -279,17 +285,24 @@ def __save_diff__(conn: Connection, diff_data: dict, status: EditStatus) -> int:
             })
         return diff_data.get("db_id") or cursor.lastrowid
 
+def __parse_diff_json__(json_str):
+    """Parse the json string to python objects."""
+    raw_diff = json.loads(json_str)
+    return {
+        **raw_diff,
+        "db_id": int(raw_diff["db_id"]) if raw_diff.get("db_id") else None,
+        "inbredset_id": (int(raw_diff["inbredset_id"])
+                         if raw_diff.get("inbredset_id") else None),
+        "user_id": (uuid.UUID(raw_diff["user_id"])
+                    if raw_diff.get("user_id") else None),
+        "created": (datetime.fromisoformat(raw_diff["created"])
+                    if raw_diff.get("created") else None)
+    }
+
 def __load_diff__(diff_filename):
     """Load the diff."""
     with open(diff_filename, encoding="utf8") as diff_file:
-        the_diff = json.loads(diff_file.read())
-        return {
-            **the_diff,
-            "db_id": int(the_diff["db_id"]),
-            "inbredset_id": int(the_diff["inbredset_id"]),
-            "user_id": uuid.UUID(the_diff["user_id"]),
-            "created": datetime.fromisoformat(the_diff["created"])
-        }
+        return __parse_diff_json__(diff_file.read())
 
 def __apply_diff__(
         conn: Connection, inbredset_id: int, user: User, diff_filename) -> None:
@@ -384,6 +397,48 @@ def edit_case_attributes(inbredset_id: int) -> Response:
                             "queued for approval."),
                 "diff-filename": str(diff_filename.name)
             })
+
+@caseattr.route("/list/<int:inbredset_id>", methods=["GET"])
+def list_diffs(inbredset_id: int) -> Response:
+    """List any changes that have not been approved/rejected."""
+    def __generate_diff_files__(diffs):
+        diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
+        review_files = set(afile.name for afile in diff_dir.iterdir()
+                           if ("-rejected" not in afile.name
+                               and "-approved" not in afile.name))
+        for diff in diffs:
+            the_diff = diff["json_diff_data"]
+            diff_filepath = Path(
+                diff_dir,
+                f"{the_diff['inbredset_id']}:::{the_diff['user_id']}:::"
+                f"{the_diff['created'].isoformat()}.json")
+            if diff_filepath not in review_files:
+                with open(diff_filepath, "w", encoding="utf-8") as dfile:
+                    dfile.write(json.dumps(
+                        {**the_diff, "db_id": diff["id"]},
+                        cls=CAJSONEncoder))
+
+    with (database_connection(current_app.config["SQL_URI"]) as conn,
+          conn.cursor(cursorclass=DictCursor) as cursor):
+        cursor.execute(
+            "SELECT * FROM caseattributes_audit WHERE status='review'")
+        diffs = tuple({
+            **row,
+            "json_diff_data": {
+                **__parse_diff_json__(row["json_diff_data"]),
+                "db_id": row["id"],
+                "created": row["time_stamp"],
+                "user_id": uuid.UUID(row["editor"])
+            }
+        } for row in cursor.fetchall())
+
+    __generate_diff_files__(diffs)
+    resp = make_response(json.dumps(
+        tuple(diff for diff in diffs
+              if diff["json_diff_data"].get("inbredset_id") == inbredset_id),
+        cls=CAJSONEncoder))
+    resp.headers["Content-Type"] = "application/json"
+    return resp
 
 @caseattr.route("/approve/<path:filename>", methods=["POST"])
 def approve_case_attributes_diff(inbredset_id: int) -> Response:
