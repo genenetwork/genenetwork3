@@ -6,6 +6,7 @@ from http.client import RemoteDisconnected
 from urllib.error import URLError
 from flask import Blueprint
 from flask import jsonify
+from flask import request
 from flask import current_app
 
 from pyld import jsonld
@@ -120,6 +121,81 @@ CONSTRUCT {
     # The virtuoso server is misconfigured or it isn't running at all
     except (RemoteDisconnected, URLError):
         return jsonify({})
+
+
+@metadata.route("/datasets/search/<term>", methods=["GET"])
+def search_datasets(term):
+    """Search datasets"""
+    try:
+        args = request.args
+        page = args.get("page", 0)
+        page_size = args.get("limit", 10)
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ex:result rdf:type ex:resultType ;
+                  ex:totalCount ?totalCount ;
+                  ex:currentPage $offset ;
+                  ex:items [
+                    rdfs:label ?label ;
+                    dct:title ?title ;
+                    ex:belongsToInbredSet ?inbredSetName ;
+                    xkos:classifiedUnder ?datasetType
+          ]
+} WHERE {
+{
+        SELECT ?dataset ?label ?inbredSetName ?datasetType ?title WHERE {
+        ?dataset rdf:type dcat:Dataset ;
+                 rdfs:label ?label ;
+                 xkos:classifiedUnder ?inbredSet .
+        ?inbredSet ^skos:member gnc:Set ;
+                   rdfs:label ?inbredSetName .
+        ?label bif:contains "'$term'" .
+        OPTIONAL {
+          ?dataset dct:title ?title .
+        } .
+        OPTIONAL {
+          ?classification ^xkos:classifiedUnder ?dataset ;
+                          ^skos:member gnc:DatasetType ;
+                          ?typePredicate ?typeName ;
+			  skos:prefLabel ?datasetType .
+        }
+    } ORDER BY ?dataset LIMIT $limit OFFSET $offset
+}
+
+{
+        SELECT (COUNT(*)/$limit+1 AS ?totalCount) WHERE {
+        ?dataset rdf:type dcat:Dataset ;
+                 rdfs:label ?label .
+        ?label bif:contains "'$term'" .
+        }
+}
+
+}
+""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page))
+        return jsonld.frame(
+            json.loads(
+                sparql.queryAndConvert().serialize(format="json-ld")),
+            {
+                "@context": PREFIXES | {
+                    "data": "@graph",
+                    "type": "@type",
+                    "id": "@id",
+                    "inbredSet": "ex:belongsToInbredSet",
+                    "classifiedUnder": "xkos:classifiedUnder",
+                    "dataset": "rdfs:label",
+                    "title": "dct:title",
+                    "currentPage": "ex:currentPage",
+                    "result": "ex:result",
+                    "results": "ex:items",
+                    "resultItem": "ex:resultType",
+                    "pages": "ex:totalCount"
+                },
+                "type": "resultItem",
+            }
+        )
     # The virtuoso server is misconfigured or it isn't running at all
     except (RemoteDisconnected, URLError):
         return jsonify({})
