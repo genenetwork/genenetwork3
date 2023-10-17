@@ -247,6 +247,70 @@ CONSTRUCT {
         return jsonify({})
 
 
+@metadata.route("/publications/search/<term>", methods=["GET"])
+def search_publications(term):
+    """Search publications"""
+    try:
+        args = request.args
+        page = args.get("page", 0)
+        page_size = args.get("limit", 10)
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ex:result rdf:type ex:resultType ;
+                  ex:totalCount ?totalCount ;
+                  ex:currentPage $offset ;
+                  ex:items [
+                     rdfs:label ?publication ;
+                     dct:title ?title ;
+        ]
+} WHERE {
+{
+        SELECT ?publication ?title ?pmid WHERE {
+        ?pub rdf:type fabio:ResearchPaper ;
+             ?predicate ?object ;
+             dct:title ?title .
+        ?object bif:contains "'$term'" .
+        BIND( STR(?pub) AS ?publication ) .
+        }  ORDER BY ?title LIMIT $limit OFFSET $offset
+    }
+{
+        SELECT (COUNT(*)/$limit+1 AS ?totalCount) WHERE {
+        ?publication rdf:type fabio:ResearchPaper ;
+                     ?predicate ?object .
+        ?object bif:contains "'$term'" .
+        }
+}
+}
+""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page))
+        results = sparql.queryAndConvert()
+        results = json.loads(results.serialize(format="json-ld"))
+        frame = {
+            "@context": PREFIXES | {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "title": "dct:title",
+                "pubmed": "fabio:hasPubMedId",
+                "currentPage": "ex:currentPage",
+                "result": "ex:result",
+                "results": "ex:items",
+                "resultItem": "ex:resultType",
+                "pages": "ex:totalCount",
+                "url": "rdfs:label",
+            },
+            "type": "resultItem",
+            "paper": {
+                "@type": "fabio:ResearchPaper",
+                "@container": "@index"
+            }
+        }
+        return jsonld.frame(results, frame)
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
+
 @metadata.route("/phenotype/<name>", methods=["GET"])
 def phenotype(name):
     """Fetch a phenotype's metadata given it's name"""
