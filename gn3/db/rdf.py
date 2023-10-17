@@ -130,46 +130,6 @@ CONSTRUCT {
     return response
 
 
-def get_publication_metadata(
-        sparql_conn: SPARQLWrapper, name: str
-):
-    """Return info about a publication with a given NAME"""
-    __metadata_query = """
-$prefix
-
-CONSTRUCT {
-    gn:publication ?publicationTerm ?publicationValue .
-    gn:publication ?predicate ?subject .
-} WHERE {
-    $name ?publicationTerm ?publicationValue .
-    ?publication ?publicationTerm ?publicationValue .
-    OPTIONAL {
-       ?subject ?predicate ?publication .
-    } .
-    VALUES ?publicationTerm {
-        gn:pubMedId gn:title gn:volume
-        gn:abstract gn:pages gn:month gn:year gn:author
-    }
-    VALUES ?predicate {
-        gn:phenotypeOfPublication
-    }
-}
-"""
-    response: MonadicDict = MonadicDict()
-    for key, value in sparql_query(
-            sparql_conn,
-            Template(__metadata_query)
-            .substitute(
-                prefix=RDF_PREFIXES,
-                name=name
-            )
-    )[0].items():
-        response[key] = value
-        if isinstance(value, str) and not key.endswith("pubMedId"):
-            response[key] = value.map(get_url_local_name)  # type: ignore
-    return response
-
-
 def get_phenotype_metadata(
         sparql_conn: SPARQLWrapper, name: str
 ):

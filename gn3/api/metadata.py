@@ -13,7 +13,6 @@ from pyld import jsonld
 from SPARQLWrapper import JSON, JSONLD, SPARQLWrapper
 
 from gn3.db.rdf import get_dataset_metadata
-from gn3.db.rdf import get_publication_metadata
 from gn3.db.rdf import get_phenotype_metadata
 from gn3.db.rdf import get_genotype_metadata
 from gn3.db.rdf import sparql_query
@@ -201,20 +200,48 @@ CONSTRUCT {
         return jsonify({})
 
 
-@metadata.route("/publication/<name>", methods=["GET"])
-def publication(name):
+@metadata.route("/publications/<name>", methods=["GET"])
+def publications(name):
     """Fetch a publication's metadata given it's ACCESSION_ID"""
     try:
         if "unpublished" in name:
-            name = f"gn:{name}"
+            name = f"gn:unpublished{name}"
         else:
-            name = f"publication:{name}"
-        return jsonify(
-            get_publication_metadata(
-                SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
-                name,
-            ).data
-        )
+            name = f"pubmed:{name}"
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+    $name ?predicate ?object .
+} WHERE {
+    $name rdf:type fabio:ResearchPaper ;
+          ?predicate ?object .
+    FILTER (!regex(str(?predicate), '(hasPubMedId)', 'i')) .
+}
+""").substitute(name=name, prefix=RDF_PREFIXES))
+        return jsonld.compact(
+            json.loads(sparql.queryAndConvert().serialize(format="json-ld")),
+            {
+                "@context": PREFIXES | {
+                    "type": "@type",
+                    "id": "@id",
+                    "title": "dct:title",
+                    "journal": "fabio:Journal",
+                    "volume": "prism:volume",
+                    "page": "fabio:page",
+                    "creator": "dct:creator",
+                    "abstract": "dct:abstract",
+                    "year": {
+                        "@id": "fabio:hasPublicationYear",
+                        "@type": "xsd:gYear",
+                    },
+                    "month": {
+                        "@id": "prism:publicationDate",
+                        "@type": "xsd:gMonth"
+                    },
+                },
+            })
     # The virtuoso server is misconfigured or it isn't running at all
     except (RemoteDisconnected, URLError):
         return jsonify({})
