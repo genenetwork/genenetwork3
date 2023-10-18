@@ -14,7 +14,6 @@ from SPARQLWrapper import JSON, JSONLD, SPARQLWrapper
 
 from gn3.db.rdf import get_dataset_metadata
 from gn3.db.rdf import get_phenotype_metadata
-from gn3.db.rdf import get_genotype_metadata
 from gn3.db.rdf import sparql_query
 from gn3.db.rdf import RDF_PREFIXES, PREFIXES
 
@@ -326,17 +325,53 @@ def phenotype(name):
         return jsonify({})
 
 
-@metadata.route("/genotype/<name>", methods=["GET"])
-def genotype(name):
+@metadata.route("/genotypes/<name>", methods=["GET"])
+def genotypes(name):
     """Fetch a genotype's metadata given it's name"""
     try:
-        return jsonify(
-            get_genotype_metadata(
-                SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
-                name,
-            ).data
-        )
-    # The virtuoso server is misconfigured or it isn't running at all
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ?genotype ?predicate ?object .
+        ?species rdfs:label ?speciesName .
+} WHERE {
+        ?genotype rdf:type gnc:Genotype ;
+                  rdfs:label "$name" ;
+                  ?predicate ?object .
+        OPTIONAL {
+            ?species ^xkos:classifiedUnder ?genotype ;
+                      rdfs:label ?speciesName .
+        }
+}
+""").substitute(prefix=RDF_PREFIXES, name=name))
+        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+        if not results:
+            return jsonify({})
+        frame = {
+            "@context": PREFIXES | {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "name": "rdfs:label",
+                "chr": "gnt:chr",
+                "mb": "gnt:mb",
+                "mbMm8": "gnt:mbMm8",
+                "mb2016": "gnt:mb2016",
+                "sequence": "gnt:hasSequence",
+                "source": "gnt:hasSource",
+                "species": "xkos:classifiedUnder",
+                "alternateSource": "gnt:hasAltSourceName",
+                "comments": "rdfs:comments",
+                "chrNum": {
+                    "@id": "gnt:chrNum",
+                    "@type": "xsd:int",
+                }
+            },
+            "type": "gnc:Genotype",
+        }
+        return jsonld.compact(jsonld.frame(results, frame), frame)
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
