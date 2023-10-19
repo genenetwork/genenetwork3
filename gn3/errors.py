@@ -5,6 +5,12 @@ from authlib.oauth2.rfc6749.errors import OAuth2Error
 
 from gn3.auth.authorisation.errors import AuthorisationError
 
+def page_not_found(pnf):
+    return jsonify({
+        "error": pnf.name,
+        "error_description": pnf.description
+    }), 404
+
 def handle_authorisation_error(exc: AuthorisationError):
     """Handle AuthorisationError if not handled anywhere else."""
     current_app.logger.error(exc)
@@ -31,6 +37,7 @@ def handle_sqlite3_errors(exc: OperationalError):
 
 def register_error_handlers(app: Flask):
     """Register application-level error handlers."""
+    app.register_error_handler(404, page_not_found)
     app.register_error_handler(OAuth2Error, handle_oauth2_errors)
     app.register_error_handler(OperationalError, handle_sqlite3_errors)
     app.register_error_handler(AuthorisationError, handle_authorisation_error)
