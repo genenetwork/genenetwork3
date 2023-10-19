@@ -398,9 +398,12 @@ def edit_case_attributes(inbredset_id: int) -> Response:
                 "diff-filename": str(diff_filename.name)
             })
 
-@caseattr.route("/list/<int:inbredset_id>", methods=["GET"])
+@caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
 def list_diffs(inbredset_id: int) -> Response:
     """List any changes that have not been approved/rejected."""
+    Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR).mkdir(
+        parents=True, exist_ok=True)
+
     def __generate_diff_files__(diffs):
         diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
         review_files = set(afile.name for afile in diff_dir.iterdir()
@@ -434,7 +437,13 @@ def list_diffs(inbredset_id: int) -> Response:
 
     __generate_diff_files__(diffs)
     resp = make_response(json.dumps(
-        tuple(diff for diff in diffs
+        tuple({
+            **diff,
+            "filename": (
+                f"{diff['json_diff_data']['inbredset_id']}:::"
+                f"{diff['json_diff_data']['user_id']}:::"
+                f"{diff['time_stamp'].isoformat()}")
+        } for diff in diffs
               if diff["json_diff_data"].get("inbredset_id") == inbredset_id),
         cls=CAJSONEncoder))
     resp.headers["Content-Type"] = "application/json"
