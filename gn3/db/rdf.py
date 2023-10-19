@@ -87,49 +87,6 @@ def get_url_local_name(string: str) -> str:
     return string
 
 
-def get_dataset_metadata(
-        sparql_conn: SPARQLWrapper, name: str
-) -> MonadicDict:
-    """Return info about dataset with a given NAME"""
-    response: MonadicDict = MonadicDict()
-    for key, value in sparql_query(
-            sparql_conn,
-            Template("""
-$prefix
-
-CONSTRUCT {
-	  ?dataset ?predicate ?term .
-	  ?dataset gnt:classifiedUnder ?inbredSetName .
-          ?dataset gnt:usesNormalization ?normalizationLabel .
-          ?typePredicate ex:DatasetType ?typeName .
-} WHERE {
-	 ?dataset rdf:type dcat:Dataset .
-	 ?dataset ?predicate ?term .
-	 ?dataset xkos:classifiedUnder ?inbredSet .
-	 gnc:Set skos:member ?inbredSet .
-	 ?dataset (rdfs:label|dct:identifier) "$name" .
-	 ?inbredSet rdfs:label ?inbredSetName .
-         OPTIONAL {
-            ?dataset xkos:classifiedUnder ?type .
-            gnc:DatasetType skos:member ?type .
-            ?type ?typePredicate ?typeName .
-            ?type (skos:altLabel|skos:prefLabel) ?typeName .
-         } .
-         OPTIONAL {
-            ?dataset gnt:usesNormalization ?normalization .
-            ?normalization rdfs:label ?normalizationLabel .
-         }
-	 FILTER (!regex(str(?predicate), '(classifiedUnder|usesNormalization)','i')) .
-}""")
-            .substitute(
-                prefix=RDF_PREFIXES,
-                name=name
-            )
-    )[0].items():
-        response[key] = value
-    return response
-
-
 def get_phenotype_metadata(
         sparql_conn: SPARQLWrapper, name: str
 ):
