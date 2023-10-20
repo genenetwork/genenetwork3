@@ -77,11 +77,3 @@ def sparql_query(
                     parsed_response
                 )
     return (MonadicDict(parsed_response),)
-
-
-def get_url_local_name(string: str) -> str:
-    """Get the last item after a '/" from a URL"""
-    if string.startswith("http"):
-        url = urlparse(string)
-        return unquote(url.path).rpartition("/")[-1]
-    return string
