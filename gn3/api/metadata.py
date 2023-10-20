@@ -12,7 +12,6 @@ from flask import current_app
 from pyld import jsonld
 from SPARQLWrapper import JSON, JSONLD, SPARQLWrapper
 
-from gn3.db.rdf import get_dataset_metadata
 from gn3.db.rdf import get_phenotype_metadata
 from gn3.db.rdf import sparql_query
 from gn3.db.rdf import RDF_PREFIXES, PREFIXES
