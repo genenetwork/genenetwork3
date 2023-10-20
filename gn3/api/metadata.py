@@ -12,7 +12,6 @@ from flask import current_app
 from pyld import jsonld
 from SPARQLWrapper import JSON, JSONLD, SPARQLWrapper
 
-from gn3.db.rdf import get_phenotype_metadata
 from gn3.db.rdf import sparql_query
 from gn3.db.rdf import RDF_PREFIXES, PREFIXES
 
@@ -309,17 +308,88 @@ CONSTRUCT {
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
-@metadata.route("/phenotype/<name>", methods=["GET"])
-def phenotype(name):
+@metadata.route("/phenotypes/<name>", methods=["GET"])
+def phenotypes(name):
     """Fetch a phenotype's metadata given it's name"""
     try:
-        return jsonify(
-            get_phenotype_metadata(
-                SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
-                name,
-            ).data
-        )
-    # The virtuoso server is misconfigured or it isn't running at all
+        args = request.args
+        dataset = args.get("dataset", "")
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ?phenotype ?predicate ?object ;
+                   ?pubPredicate ?pubObject ;
+                   ex:species ?speciesName ;
+                   ex:inbredSet ?inbredSetName ;
+                   ex:dataset ?datasetName .
+} WHERE {
+        ?phenotype skos:altLabel "$name" ;
+                   xkos:classifiedUnder ?inbredSet ;
+                   ?predicate ?object .
+        ?inbredSet ^xkos:classifiedUnder ?phenotype ;
+                   rdfs:label ?inbredSetName ;
+                   xkos:generalizes ?species .
+        ?species skos:prefLabel ?speciesName .
+        FILTER (!regex(str(?predicate), '(classifiedUnder)', 'i')) .
+        OPTIONAL {
+        ?publication ^dct:isReferencedBy ?phenotype ;
+                     rdf:type fabio:ResearchPaper ;
+                     ?pubPredicate ?pubObject .
+        FILTER (!regex(str(?pubPredicate), '(hasPubMedId|type)', 'i')) .
+        } .
+	OPTIONAL {
+	?dataset rdf:type dcat:Dataset ;
+                 xkos:classifiedUnder  ?type;
+		 rdfs:label "$dataset" ;
+		 skos:prefLabel ?datasetName .
+	?type ^skos:member gnc:DatasetType .
+	FILTER(?type = gnc:Phenotype) .
+	}
+}
+""").substitute(prefix=RDF_PREFIXES, name=name,
+                dataset=dataset))
+        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+        if not results:
+            return jsonify({})
+        frame = {
+            "@context": PREFIXES | {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "traitName": "skos:altLabel",
+                "trait": "rdfs:label",
+                "altName": "rdfs:altLabel",
+                "description": "dct:description",
+                "abbreviation": "dct:abbreviation",
+                "labCode": "gnt:labCode",
+                "submitter": "gnt:submitter",
+                "contributor": "dct:contributor",
+                "mean": "gnt:mean",
+                "locus": "gnt:locus",
+                "LRS": "gnt:LRS",
+                "references": "dct:isReferencedBy",
+                "additive": "gnt:additive",
+                "sequence": "gnt:sequence",
+                "title": "dct:title",
+                "journal": "fabio:Journal",
+                "volume": "prism:volume",
+                "page": "fabio:page",
+                "creator": "dct:creator",
+                "abstract": "dct:abstract",
+                "year": {
+                    "@id": "fabio:hasPublicationYear",
+                    "@type": "xsd:gYear",
+                },
+                "month": {
+                    "@id": "prism:publicationDate",
+                    "@type": "xsd:gMonth"
+                },
+            },
+            "type": "gnc:Phenotype",
+        }
+        return jsonld.compact(jsonld.frame(results, frame), frame)
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
