@@ -470,3 +470,41 @@ def reject_case_attributes_diff(filename: str) -> Response:
             "message": f"Rejected diff successfully",
             "diff_filename": diff_filename.name
         })
+
+@caseattr.route("/<int:inbredset_id>/diff/<int:diff_id>/view", methods=["GET"])
+def view_diff(inbredset_id: int, diff_id: int) -> Response:
+    """View a diff."""
+    with (require_oauth.acquire("profile resource") as the_token,
+          database_connection(current_app.config["SQL_URI"]) as conn,
+          conn.cursor(cursorclass=DictCursor) as cursor):
+        required_access(inbredset_id, ("system:inbredset:view-case-attribute",))
+        cursor.execute(
+            "SELECT * FROM caseattributes_audit WHERE id=%s",
+            (diff_id,))
+        diff = cursor.fetchone()
+        if diff:
+            json_diff_data = __parse_diff_json__(diff["json_diff_data"])
+            if json_diff_data["inbredset_id"] != inbredset_id:
+                return jsonify({
+                    "error": "Not Found",
+                    "error_description": (
+                        "Could not find diff with the given ID for the "
+                        "InbredSet chosen.")
+                })
+            return jsonify({
+                **diff,
+                "json_diff_data": {
+                    **json_diff_data,
+                    "db_id": diff["id"],
+                    "created": diff["time_stamp"],
+                    "user_id": uuid.UUID(diff["editor"])
+                }
+            })
+        return jsonify({
+            "error": "Not Found",
+            "error_description": "Could not find diff with the given ID."
+        })
+    return jsonify({
+        "error": "Code Error",
+        "error_description": "The code should never run this."
+    }), 500
