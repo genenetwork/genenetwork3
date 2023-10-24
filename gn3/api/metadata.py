@@ -648,10 +648,58 @@ CONSTRUCT {
             results.serialize(format="json-ld")
         )
         return jsonld.compact(results, {
-            "@context": PREFIXES | {
+            "@context": {
                 "data": "@graph",
                 "type": "@type",
                 "id": "@id",
+                "skos": "http://www.w3.org/2004/02/skos/core#",
+                "gnt": "http://genenetwork.org/term/",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "name": "rdfs:label",
+                "family": "gnt:family",
+                "shortName": "gnt:shortName",
+                "alternateName": "skos:altLabel",
+                "taxonomicId": "skos:notation",
+                "fullName": "skos:prefLabel",
+            },
+        })
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
+
+@metadata.route("/species/<name>", methods=["GET"])
+def fetch_species(name):
+    """Fetch a Single species information"""
+    try:
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ?species ?predicate ?object .
+} WHERE {
+        ?species ^skos:member gnc:Species ;
+                 gnt:shortName "$name" ;
+                 ?predicate ?object .
+        VALUES ?predicate {
+               rdfs:label skos:prefLabel
+               skos:altLabel gnt:shortName
+               gnt:family skos:notation
+        }
+
+}
+""").substitute(prefix=RDF_PREFIXES, name=name))
+        results = sparql.queryAndConvert()
+        results = json.loads(
+            results.serialize(format="json-ld")
+        )
+        return jsonld.compact(results, {
+            "@context": {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "skos": "http://www.w3.org/2004/02/skos/core#",
+                "gnt": "http://genenetwork.org/term/",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
                 "name": "rdfs:label",
                 "family": "gnt:family",
                 "shortName": "gnt:shortName",
