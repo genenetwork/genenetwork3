@@ -496,7 +496,7 @@ def view_diff(inbredset_id: int, diff_id: int) -> Response:
                 "json_diff_data": {
                     **json_diff_data,
                     "db_id": diff["id"],
-                    "created": diff["time_stamp"],
+                    "created": diff["time_stamp"].isoformat(),
                     "user_id": uuid.UUID(diff["editor"])
                 }
             })
