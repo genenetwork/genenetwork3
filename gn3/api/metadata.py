@@ -131,6 +131,88 @@ CONSTRUCT {
         return jsonify({})
 
 
+@metadata.route("/datasets/<group>/list", methods=["GET"])
+def list_datasets_by_group(group):
+    """List datasets that belong to a given group"""
+    try:
+        args = request.args
+        page = args.get("page", 0)
+        page_size = args.get("per-page", 10)
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+         ex:result rdf:type ex:resultType ;
+                  ex:totalCount ?totalCount ;
+                  ex:currentPage $offset ;
+                  ex:items [
+                     rdfs:label ?datasetName ;
+                     dct:identifier ?accessionId ;
+                     dct:created ?createTime ;
+                     dct:title ?title ;
+         ] .
+} WHERE {
+{
+         SELECT ?datasetName ?accessionId ?createTime ?title WHERE {
+	 ?dataset rdf:type dcat:Dataset ;
+                  rdfs:label ?datasetName .
+         ?inbredSet ^skos:member gnc:Set ;
+                    ^xkos:classifiedUnder ?dataset ;
+                    rdfs:label ?inbredSetName ;
+                    skos:prefLabel ?group .
+         ?group bif:contains "$group" .
+         OPTIONAL { ?dataset dct:identifier ?accesionId . } .
+         OPTIONAL { ?dataset dct:created ?createTime . } .
+         OPTIONAL { ?dataset dct:title ?title . } .
+        } ORDER BY ?createTime LIMIT $limit OFFSET $offset
+}
+{
+        SELECT (COUNT(DISTINCT ?dataset)/$limit+1 AS ?totalCount) WHERE {
+        ?dataset rdf:type dcat:Dataset ;
+                 rdfs:label ?datasetName .
+        ?inbredSet ^skos:member gnc:Set ;
+                   ^xkos:classifiedUnder ?dataset ;
+                   rdfs:label ?inbredSetName ;
+                   skos:prefLabel ?group .
+        ?group bif:contains "$group" .
+        }
+}
+}
+""").substitute(prefix=RDF_PREFIXES, group=group, limit=page_size, offset=page))
+        results = sparql.queryAndConvert()
+        results = json.loads(
+            results.serialize(format="json-ld")
+        )
+        frame = {
+            "@context": {
+                "classifiedUnder": "xkos:classifiedUnder",
+                "created":  "dct:created",
+                "data": "@graph",
+                "dct": "http://purl.org/dc/terms/",
+                "ex": "http://example.org/stuff/1.0/",
+                "id": "@id",
+                "title": "dct:title",
+                "name": "rdfs:label",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "type": "@type",
+                "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
+                "pages": "ex:totalCount",
+                "result": "ex:result",
+                "results": "ex:items",
+                "resultItem": "ex:resultType",
+                "currentPage": "ex:currentPage",
+            },
+"type": "resultItem",
+        }
+        return jsonld.compact(
+            jsonld.frame(results, frame),
+            frame)
+    # The virtuoso server is misconfigured or it isn't running at all
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
+
+
 @metadata.route("/datasets/search/<term>", methods=["GET"])
 def search_datasets(term):
     """Search datasets"""
