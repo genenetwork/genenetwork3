@@ -269,10 +269,14 @@ CONSTRUCT {
             json.loads(
                 sparql.queryAndConvert().serialize(format="json-ld")),
             {
-                "@context": PREFIXES | {
+                "@context": {
                     "data": "@graph",
                     "type": "@type",
                     "id": "@id",
+                    "ex": "http://example.org/stuff/1.0/",
+                    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                    "dct": "http://purl.org/dc/terms/",
+                    "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
                     "inbredSet": "ex:belongsToInbredSet",
                     "classifiedUnder": "xkos:classifiedUnder",
                     "dataset": "rdfs:label",
