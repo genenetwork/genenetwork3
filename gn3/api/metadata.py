@@ -29,6 +29,8 @@ $prefix
 CONSTRUCT {
 	  ?dataset ?predicate ?term ;
                    rdf:type dcat:Dataset ;
+                   rdfs:label ?datasetName ;
+                   dct:identifier ?accesionId ;
 	           ex:belongsToInbredSet ?inbredSetName ;
                    gnt:usesNormalization ?normalizationLabel ;
                    dcat:contactPoint ?investigatorName ;
@@ -43,7 +45,9 @@ CONSTRUCT {
 } WHERE {
 	 ?dataset rdf:type dcat:Dataset ;
 	          xkos:classifiedUnder ?inbredSet ;
-                  rdfs:label "$name" .
+                  rdfs:label ?datasetName ;
+                  (rdfs:label|dct:identifier|skos:prefLabel) "$name" .
+         OPTIONAL { ?dataset dct:identifier ?accesionId . } .
          OPTIONAL {
             ?inbredSet ^skos:member gnc:Set ;
                        rdfs:label ?inbredSetName .
