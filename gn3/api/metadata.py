@@ -445,72 +445,91 @@ CONSTRUCT {
         return jsonify({})
 
 
-@metadata.route("/genewiki/<symbol>", methods=["GET"])
-def get_genewiki_entries(symbol):
+@metadata.route("/genewikis/gn/<symbol>", methods=["GET"])
+def get_gn_genewiki_entries(symbol):
     """Fetch the GN and NCBI GeneRIF entries"""
     try:
-        gn_entries = sparql_query(
-            sparql_conn=SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
-            query=Template("""
-$rdf_prefixes
+        args = request.args
+        page = args.get("page", 0)
+        page_size = args.get("limit", 10)
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
 
-SELECT ?author ?geneCategory (STR(?gnEntry) AS ?entry)
-       (STR(?createdOn) AS ?created)
-       (GROUP_CONCAT(DISTINCT ?pmid; SEPARATOR=',') AS ?PubMedId)
-       ?weburl
-WHERE {
-  ?generif gn:symbol ?symbol .
-  ?generif gn:geneWikiEntryOfGn _:gnEntry .
-  _:gnEntry gn:geneWikiEntry ?gnEntry;
-            dct:creator ?author;
-            dct:created ?createdOn .
-  OPTIONAL { _:gnEntry gn:geneCategory ?geneCategory } .
-  OPTIONAL { _:gnEntry foaf:homepage ?weburl } .
-  OPTIONAL { _:gnEntry dct:source ?pmid} .
-  OPTIONAL {
-    ?generif gn:wikiEntryOfSpecies ?speciesName .
-    ?species gn:name ?speciesName ;
-             gn:binomialName ?speciesBinomialName .
-  } .
-  FILTER( lcase(?symbol) = '$symbol' )
-} GROUP BY ?author ?createdOn ?gnEntry
-           ?generif ?symbol ?weburl
-	   ?geneCategory
-ORDER BY ASC(?createdOn)""").substitute(rdf_prefixes=RDF_PREFIXES,
-                                        symbol=str(symbol).lower()))
-        ncbi_entries = sparql_query(
-            sparql_conn=SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT")),
-            query=Template("""
-$rdf_prefixes
+CONSTRUCT {
+         ?symbol ex:entries [
+              rdfs:comment ?comment ;
+              ex:species ?species_ ;
+              dct:created ?createTime ;
+              dct:references ?pmids ;
+              dct:creator ?creator ;
+              gnt:belongsToCategory ?categories ;
+         ] .
+         ?symbol rdf:type gnc:GNWikiEntry ;
+                 ex:totalCount ?totalCount ;
+                 ex:currentPage $offset .
+} WHERE {
+{
+    SELECT ?symbol ?comment (GROUP_CONCAT(DISTINCT ?speciesName; SEPARATOR='; ') AS ?species_)
+        ?createTime ?creator
+        (GROUP_CONCAT(DISTINCT ?pubmed; SEPARATOR='; ') AS ?pmids)
+        (GROUP_CONCAT(DISTINCT ?category; SEPARATOR='; ') AS ?categories)
+        WHERE {
+        ?symbol rdfs:label ?label ;
+                rdfs:comment _:entry .
+        ?label bif:contains "'$symbol'" .
+        _:entry rdf:type gnc:GNWikiEntry ;
+                rdfs:comment ?comment .
+        OPTIONAL {
+        ?species ^xkos:classifiedUnder _:entry ;
+                 ^skos:member gnc:Species ;
+                 skos:prefLabel ?speciesName .
+        } .
+        OPTIONAL { _:entry dct:created ?createTime . } .
+        OPTIONAL { _:entry dct:references ?pubmed . } .
+        OPTIONAL {
+        ?investigator foaf:name ?creator ;
+                      ^dct:creator _:entry .
+        } .
+        OPTIONAL { _:entry gnt:belongsToCategory ?category . } .
+    } GROUP BY ?comment ?symbol ?createTime ?creator ORDER BY ?createTime LIMIT $limit OFFSET $offset
+}
 
-SELECT ?speciesBinomialName (STR(?gnEntry) AS ?entry)
-       (STR(?createdOn) AS ?createdOn)
-       (GROUP_CONCAT(DISTINCT REPLACE(STR(?pmid), pubmed:, ''); SEPARATOR=',') AS ?PubMedId)
-       ?generif
-WHERE {
-  ?generif gn:symbol ?symbol .
-  ?generif gn:geneWikiEntryOfNCBI [
-    gn:geneWikiEntry ?gnEntry ;
-    dct:created ?createdOn ;
-    dct:source ?pmid
-  ] .
-  OPTIONAL {
-    ?generif gn:wikiEntryOfSpecies ?speciesName .
-    ?species gn:name ?speciesName ;
-             gn:binomialName ?speciesBinomialName .
-  } .
-  FILTER( lcase(?symbol) = '$symbol' )
-} GROUP BY ?createdOn ?gnEntry
-           ?generif ?symbol
-	   ?speciesBinomialName
-ORDER BY ASC(?createdOn)""").substitute(rdf_prefixes=RDF_PREFIXES,
-                                        symbol=str(symbol).lower()))
-        return jsonify({
-            "gn_entries": list(map(lambda x: x.data, gn_entries)),
-            "ncbi_entries": list(map(lambda x: x.data, ncbi_entries)),
-        })
+{
+        SELECT (COUNT(DISTINCT ?comment)/$limit+1 AS ?totalCount) WHERE {
+        ?symbol rdfs:comment _:entry ;
+                rdfs:label ?label .
+        _:entry rdfs:comment ?comment ;
+                rdf:type gnc:GNWikiEntry .
+        ?label bif:contains "'$symbol'" .
+        }
+}
+}
+""").substitute(prefix=RDF_PREFIXES, symbol=symbol,
+                limit=page_size, offset=page))
+        results = sparql.queryAndConvert()
+        results = json.loads(results.serialize(format="json-ld"))
+        context = {
+            "@context": PREFIXES | {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "entries": "ex:entries",
+                "comment": "rdfs:comment",
+                "category": 'gnt:belongsToCategory',
+                "author": "dct:creator",
+                "pubmed": "dct:references",
+                "currentPage": "ex:currentPage",
+                "pages": "ex:totalCount",
+                "created": {
+                    "@id": "dct:created",
+                    "@type": "xsd:datetime"
+                },
+            },
+            "type": "gnc:GNWikiEntry"
+        }
+        return jsonld.compact(
+            jsonld.frame(results, context),
+            context)
     except (RemoteDisconnected, URLError):
-        return jsonify({
-            "gn_entries": {},
-            "ncbi_entries": {},
-        })
+        return jsonify({})
