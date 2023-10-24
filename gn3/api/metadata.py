@@ -626,10 +626,15 @@ CONSTRUCT {
         if not results:
             return jsonify({})
         frame = {
-            "@context": PREFIXES | {
+            "@context": {
                 "data": "@graph",
                 "type": "@type",
                 "id": "@id",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "gnt": "http://genenetwork.org/term/",
+                "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
+                "gnc": "http://genenetwork.org/category/",
+                "xsd": "http://www.w3.org/2001/XMLSchema#",
                 "name": "rdfs:label",
                 "chr": "gnt:chr",
                 "mb": "gnt:mb",
@@ -717,10 +722,16 @@ CONSTRUCT {
         results = sparql.queryAndConvert()
         results = json.loads(results.serialize(format="json-ld"))
         context = {
-            "@context": PREFIXES | {
+            "@context": {
                 "data": "@graph",
                 "type": "@type",
                 "id": "@id",
+                "ex": "http://example.org/stuff/1.0/",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "gnt": "http://genenetwork.org/term/",
+                "gnc": "http://genenetwork.org/category/",
+                "dct": "http://purl.org/dc/terms/",
+                "xsd": "http://www.w3.org/2001/XMLSchema#",
                 "entries": "ex:entries",
                 "comment": "rdfs:comment",
                 "category": 'gnt:belongsToCategory',
