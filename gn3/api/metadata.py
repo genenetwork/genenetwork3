@@ -219,7 +219,7 @@ def search_datasets(term):
     try:
         args = request.args
         page = args.get("page", 0)
-        page_size = args.get("limit", 10)
+        page_size = args.get("per-page", 10)
         sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
         sparql.setQuery(Template("""
 $prefix
@@ -353,7 +353,7 @@ def search_publications(term):
     try:
         args = request.args
         page = args.get("page", 0)
-        page_size = args.get("limit", 10)
+        page_size = args.get("per-page", 10)
         sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
         sparql.setQuery(Template("""
 $prefix
@@ -663,7 +663,7 @@ def get_gn_genewiki_entries(symbol):
     try:
         args = request.args
         page = args.get("page", 0)
-        page_size = args.get("limit", 10)
+        page_size = args.get("per-page", 10)
         sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
         sparql.setQuery(Template("""
 $prefix
@@ -758,7 +758,7 @@ def get_ncbi_genewiki_entries(symbol):
     try:
         args = request.args
         page = args.get("page", 0)
-        page_size = args.get("limit", 10)
+        page_size = args.get("per-page", 10)
         sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
         sparql.setQuery(Template("""
 $prefix
