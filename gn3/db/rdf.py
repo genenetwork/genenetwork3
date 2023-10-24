@@ -3,15 +3,6 @@
 This module is a collection of functions that handle SPARQL queries.
 
 """
-from typing import Tuple
-from string import Template
-from urllib.parse import unquote
-from urllib.parse import urlparse
-
-from SPARQLWrapper import JSON, SPARQLWrapper
-
-from gn3.monads import MonadicDict
-
 PREFIXES = {
     "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",
@@ -39,41 +30,3 @@ PREFIXES = {
 
 
 RDF_PREFIXES = "\n".join([f"PREFIX {key}: <{value}>"for key, value in PREFIXES.items()])
-
-
-def sparql_query(
-        sparql_conn: SPARQLWrapper, query: str,
-) -> Tuple[MonadicDict, ...]:
-    """Run a SPARQL query and return the bound variables."""
-    def __add_value_to_dict(key, value, my_dict):
-        _values = set()
-        if key in my_dict:
-            if isinstance(my_dict[key], list):
-                _values = set(my_dict[key])
-            else:
-                _values = set([my_dict[key]])
-            _values.add(value)
-        if _values:
-            return list(_values)
-        return value
-
-    sparql_conn.setQuery(query)
-    sparql_conn.setReturnFormat(JSON)
-    parsed_response: dict = {}
-    results = sparql_conn.queryAndConvert()["results"]["bindings"]  # type: ignore
-    if results:
-        for result in results:
-            if "s" in result:  # A CONSTRUCT
-                key = result["p"]["value"]  # type: ignore
-                value = result["o"]["value"]  # type: ignore
-                parsed_response[key] = __add_value_to_dict(
-                    key, value, parsed_response
-                )
-            elif "key" in result:  # A SELECT
-                parsed_response[
-                    result["key"]  # type: ignore
-                ] = __add_value_to_dict(
-                    result["key"], result["value"],  # type: ignore
-                    parsed_response
-                )
-    return (MonadicDict(parsed_response),)
