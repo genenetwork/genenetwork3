@@ -232,17 +232,18 @@ CONSTRUCT {
                     rdfs:label ?label ;
                     dct:title ?title ;
                     ex:belongsToInbredSet ?inbredSetName ;
-                    xkos:classifiedUnder ?datasetType
+                    xkos:classifiedUnder ?datasetType ;
           ]
 } WHERE {
 {
         SELECT ?dataset ?label ?inbredSetName ?datasetType ?title WHERE {
         ?dataset rdf:type dcat:Dataset ;
                  rdfs:label ?label ;
+                 ?datasetPredicate ?datasetObject ;
                  xkos:classifiedUnder ?inbredSet .
         ?inbredSet ^skos:member gnc:Set ;
                    rdfs:label ?inbredSetName .
-        ?label bif:contains "'$term'" .
+        ?datasetObject bif:contains "'$term'" .
         OPTIONAL {
           ?dataset dct:title ?title .
         } .
@@ -258,8 +259,8 @@ CONSTRUCT {
 {
         SELECT (COUNT(*)/$limit+1 AS ?totalCount) WHERE {
         ?dataset rdf:type dcat:Dataset ;
-                 rdfs:label ?label .
-        ?label bif:contains "'$term'" .
+                 ?p ?o .
+        ?o bif:contains "'$term'" .
         }
 }
 
