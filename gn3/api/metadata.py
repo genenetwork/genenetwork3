@@ -750,6 +750,14 @@ CONSTRUCT {
                 "shortName": "gnt:shortName",
                 "code": "gnt:code",
                 "mappingMethod": "gnt:mappingMethod",
+                "geneticType": "gnt:geneticType",
+                "fullName": "skos:prefLabel",
+            },
+        })
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
+
+
 @metadata.route("/groups/<name>", methods=["GET"])
 def fetch_group_by_species(name):
     """Fetch the list of groups"""
