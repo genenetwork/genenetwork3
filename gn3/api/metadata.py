@@ -298,7 +298,7 @@ CONSTRUCT {
 
 @metadata.route("/publications/<name>", methods=["GET"])
 def publications(name):
-    """Fetch a publication's metadata given it's ACCESSION_ID"""
+    """Fetch a publication's metadata given it's NAME"""
     try:
         if "unpublished" in name:
             name = f"gn:unpublished{name}"
@@ -319,9 +319,13 @@ CONSTRUCT {
         return jsonld.compact(
             json.loads(sparql.queryAndConvert().serialize(format="json-ld")),
             {
-                "@context": PREFIXES | {
+                "@context": {
                     "type": "@type",
                     "id": "@id",
+                    "dct": "http://purl.org/dc/terms/",
+                    "fabio": "http://purl.org/spar/fabio/",
+                    "prism": "http://prismstandard.org/namespaces/basic/2.0/",
+                    "xsd": "http://www.w3.org/2001/XMLSchema#",
                     "title": "dct:title",
                     "journal": "fabio:Journal",
                     "volume": "prism:volume",
