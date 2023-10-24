@@ -411,6 +411,7 @@ CONSTRUCT {
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
+
 @metadata.route("/phenotypes/<name>", methods=["GET"])
 def phenotypes(name):
     """Fetch a phenotype's metadata given it's name"""
@@ -457,10 +458,18 @@ CONSTRUCT {
         if not results:
             return jsonify({})
         frame = {
-            "@context": PREFIXES | {
+            "@context": {
                 "data": "@graph",
                 "type": "@type",
                 "id": "@id",
+                "skos": "http://www.w3.org/2004/02/skos/core#",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "dct": "http://purl.org/dc/terms/",
+                "gnt": "http://genenetwork.org/term/",
+                "fabio": "http://purl.org/spar/fabio/",
+                "xsd": "http://www.w3.org/2001/XMLSchema#",
+                "prism": "http://prismstandard.org/namespaces/basic/2.0/",
+                "gnc": "http://genenetwork.org/category/",
                 "traitName": "skos:altLabel",
                 "trait": "rdfs:label",
                 "altName": "rdfs:altLabel",
