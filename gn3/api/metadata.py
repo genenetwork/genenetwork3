@@ -1420,3 +1420,50 @@ CONSTRUCT {
         return jsonify({})
 
 
+@metadata.route("/groups/<name>", methods=["GET"])
+def fetch_group_by_species(name):
+    """Fetch the list of groups"""
+    try:
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ?group ?predicate ?object .
+} WHERE {
+        ?species gnt:shortName "$name" ;
+                 ^skos:member gnc:Species .
+        ?group ^skos:member gnc:Set ;
+               xkos:generalizes ?species ;
+               ?predicate ?object .
+        VALUES ?predicate {
+               rdfs:label skos:prefLabel
+               gnt:geneticType gnt:mappingMethod
+               gnt:code gnt:family
+        }
+
+}
+""").substitute(prefix=RDF_PREFIXES, name=name))
+        results = sparql.queryAndConvert()
+        results = json.loads(
+            results.serialize(format="json-ld")
+        )
+        return jsonld.compact(results, {
+            "@context": {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "skos": "http://www.w3.org/2004/02/skos/core#",
+                "gnt": "http://genenetwork.org/term/",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "name": "rdfs:label",
+                "family": "gnt:family",
+                "shortName": "gnt:shortName",
+                "code": "gnt:code",
+                "mappingMethod": "gnt:mappingMethod",
+                "geneticType": "gnt:geneticType",
+                "fullName": "skos:prefLabel",
+            },
+        })
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
