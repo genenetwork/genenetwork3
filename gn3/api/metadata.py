@@ -1033,3 +1033,60 @@ CONSTRUCT {
         })
     except (RemoteDisconnected, URLError):
         return jsonify({})
+
+
+@metadata.route("/genotypes/<name>", methods=["GET"])
+def genotypes(name):
+    """Fetch a genotype's metadata given it's name"""
+    try:
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ?genotype ?predicate ?object .
+        ?species rdfs:label ?speciesName .
+} WHERE {
+        ?genotype rdf:type gnc:Genotype ;
+                  rdfs:label "$name" ;
+                  ?predicate ?object .
+        OPTIONAL {
+            ?species ^xkos:classifiedUnder ?genotype ;
+                      rdfs:label ?speciesName .
+        }
+}
+""").substitute(prefix=RDF_PREFIXES, name=name))
+        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+        if not results:
+            return jsonify({})
+        frame = {
+            "@context": {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "gnt": "http://genenetwork.org/term/",
+                "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
+                "gnc": "http://genenetwork.org/category/",
+                "xsd": "http://www.w3.org/2001/XMLSchema#",
+                "name": "rdfs:label",
+                "chr": "gnt:chr",
+                "mb": "gnt:mb",
+                "mbMm8": "gnt:mbMm8",
+                "mb2016": "gnt:mb2016",
+                "sequence": "gnt:hasSequence",
+                "source": "gnt:hasSource",
+                "species": "xkos:classifiedUnder",
+                "alternateSource": "gnt:hasAltSourceName",
+                "comments": "rdfs:comments",
+                "chrNum": {
+                    "@id": "gnt:chrNum",
+                    "@type": "xsd:int",
+                }
+            },
+            "type": "gnc:Genotype",
+        }
+        return jsonld.compact(jsonld.frame(results, frame), frame)
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
+
