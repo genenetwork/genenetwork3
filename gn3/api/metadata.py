@@ -1033,3 +1033,70 @@ CONSTRUCT {
         })
     except (RemoteDisconnected, URLError):
         return jsonify({})
+
+@metadata.route("/probesets/<name>", methods=["GET"])
+def probesets(name):
+    """Fetch a probesets's metadata given it's name"""
+    try:
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+        ?probeset ?predicate ?object ;
+                  gnt:hasChip ?chipName .
+} WHERE {
+        ?probeset rdf:type gnc:Probeset ;
+                  rdfs:label "$name" ;
+                  ?predicate ?object .
+        FILTER (?predicate != gnt:hasChip) .
+        OPTIONAL{
+            ?probeset gnt:hasChip ?chip .
+            ?chip rdfs:label ?chipName .
+        } .
+}
+""").substitute(prefix=RDF_PREFIXES, name=name))
+        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+        if not results:
+            return jsonify({})
+        frame = {
+            "@context": {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "gnt": "http://genenetwork.org/term/",
+                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "skos": "http://www.w3.org/2004/02/skos/core#",
+                "dct": "http://purl.org/dc/terms/",
+                "name": "rdfs:label",
+                "alias": "skos:altLabel",
+                "chip": "gnt:hasChip",
+                "targetId": "gnt:hasTargetId",
+                "symbol": "gnt:symbol",
+                "description": "dct:description",
+                "targetsRegion": "gnt:targetsRegion",
+                "chr": "gnt:chr",
+                "mb": "gnt:mb",
+                "mbMm8": "gnt:mbMm8",
+                "mb2016": "gnt:mb2016",
+                "specificity": "gnt:hasSpecificity",
+                "blatScore": "gnt:hasBlatScore",
+                "blatMbStart": "gnt:hasBlatMbStart",
+                "blatMbStart2016": "gnt:hasBlatMbStart2016",
+                "blatMbEnd": "gnt:hasBlatMbEnd",
+                "blatMbEnd2016": "gnt:hasBlatMbEnd2016",
+                "blatSeq": "gnt:hasBlatSeq",
+                "targetSeq": "gnt:hasTargetSeq",
+                "homologene": "gnt:hasHomologeneId",
+                "uniprot": "gnt:hasUniprotId",
+                "pubchem": "gnt:hasPubChemId",
+                "kegg": "gnt:hasKeggId",
+                "omim": "gnt:hasOmimId",
+                "chebi": "gnt:hasChebiId",
+            },
+        }
+        return jsonld.compact(results, frame)
+        # return jsonld.compact(jsonld.frame(results, frame), frame)
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
