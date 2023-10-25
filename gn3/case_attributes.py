@@ -154,6 +154,7 @@ def __by_strain__(accumulator, item):
             }
         }
     return {
+        **accumulator,
         strain_name: {
             **{
                 key: value for key,value in item.items()
