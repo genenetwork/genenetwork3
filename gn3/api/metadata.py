@@ -10,7 +10,7 @@ from flask import request
 from flask import current_app
 
 from pyld import jsonld
-from SPARQLWrapper import JSON, JSONLD, SPARQLWrapper
+from SPARQLWrapper import SPARQLWrapper
 
 from gn3.db.rdf import RDF_PREFIXES, PREFIXES
 
