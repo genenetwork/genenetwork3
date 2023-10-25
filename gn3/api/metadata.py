@@ -1090,3 +1090,100 @@ CONSTRUCT {
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
+
+@metadata.route("/genewikis/gn/<symbol>", methods=["GET"])
+def get_gn_genewiki_entries(symbol):
+    """Fetch the GN and NCBI GeneRIF entries"""
+    try:
+        args = request.args
+        page = args.get("page", 0)
+        page_size = args.get("per-page", 10)
+        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
+        sparql.setQuery(Template("""
+$prefix
+
+CONSTRUCT {
+         ?symbol ex:entries [
+              rdfs:comment ?comment ;
+              ex:species ?species_ ;
+              dct:created ?createTime ;
+              dct:references ?pmids ;
+              dct:creator ?creator ;
+              gnt:belongsToCategory ?categories ;
+         ] .
+         ?symbol rdf:type gnc:GNWikiEntry ;
+                 ex:totalCount ?totalCount ;
+                 ex:currentPage $offset .
+} WHERE {
+{
+    SELECT ?symbol ?comment (GROUP_CONCAT(DISTINCT ?speciesName; SEPARATOR='; ') AS ?species_)
+        ?createTime ?creator
+        (GROUP_CONCAT(DISTINCT ?pubmed; SEPARATOR='; ') AS ?pmids)
+        (GROUP_CONCAT(DISTINCT ?category; SEPARATOR='; ') AS ?categories)
+        WHERE {
+        ?symbol rdfs:label ?label ;
+                rdfs:comment _:entry .
+        ?label bif:contains "'$symbol'" .
+        _:entry rdf:type gnc:GNWikiEntry ;
+                rdfs:comment ?comment .
+        OPTIONAL {
+        ?species ^xkos:classifiedUnder _:entry ;
+                 ^skos:member gnc:Species ;
+                 skos:prefLabel ?speciesName .
+        } .
+        OPTIONAL { _:entry dct:created ?createTime . } .
+        OPTIONAL { _:entry dct:references ?pubmed . } .
+        OPTIONAL {
+        ?investigator foaf:name ?creator ;
+                      ^dct:creator _:entry .
+        } .
+        OPTIONAL { _:entry gnt:belongsToCategory ?category . } .
+    } GROUP BY ?comment ?symbol ?createTime ?creator ORDER BY ?createTime LIMIT $limit OFFSET $offset
+}
+
+{
+        SELECT (COUNT(DISTINCT ?comment)/$limit+1 AS ?totalCount) WHERE {
+        ?symbol rdfs:comment _:entry ;
+                rdfs:label ?label .
+        _:entry rdfs:comment ?comment ;
+                rdf:type gnc:GNWikiEntry .
+        ?label bif:contains "'$symbol'" .
+        }
+}
+}
+""").substitute(prefix=RDF_PREFIXES, symbol=symbol,
+                limit=page_size, offset=page))
+        results = sparql.queryAndConvert()
+        results = json.loads(results.serialize(format="json-ld"))
+        context = {
+            "@context": {
+                "data": "@graph",
+                "type": "@type",
+                "id": "@id",
+                "ex": "http://example.org/stuff/1.0/",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "gnt": "http://genenetwork.org/term/",
+                "gnc": "http://genenetwork.org/category/",
+                "dct": "http://purl.org/dc/terms/",
+                "xsd": "http://www.w3.org/2001/XMLSchema#",
+                "entries": "ex:entries",
+                "comment": "rdfs:comment",
+                "species": "ex:species",
+                "category": 'gnt:belongsToCategory',
+                "author": "dct:creator",
+                "pubmed": "dct:references",
+                "currentPage": "ex:currentPage",
+                "pages": "ex:totalCount",
+                "created": {
+                    "@id": "dct:created",
+                    "@type": "xsd:datetime"
+                },
+            },
+            "type": "gnc:GNWikiEntry"
+        }
+        return jsonld.compact(
+            jsonld.frame(results, context),
+            context)
+    except (RemoteDisconnected, URLError):
+        return jsonify({})
+
