@@ -305,8 +305,97 @@ def __load_diff__(diff_filename):
     with open(diff_filename, encoding="utf8") as diff_file:
         return __parse_diff_json__(diff_file.read())
 
+def __apply_additions__(
+        cursor, inbredset_id: int, additions_diff) -> None:
+    """Apply additions: creates new case attributes."""
+    # TODO: Not tested... will probably fail.
+    cursor.execute(
+        "INSERT INTO CaseAttribute(InbredSetId, Name, Description) "
+        "VALUES (:inbredset_id, :name, :desc)",
+        tuple({
+            "inbredset_id": inbredset_id,
+            "name": diff["name"],
+            "desc": diff["description"]
+        } for diff in additions_diff))
+
+def __apply_modifications__(
+        cursor, inbredset_id: int, modifications_diff, fieldnames) -> None:
+    """Apply modifications: changes values of existing case attributes."""
+    cattrs = tuple(field for field in fieldnames if field != "Strain")
+
+    def __retrieve_changes__(acc, row):
+        orig = dict(zip(fieldnames, row["Original"].split(",")))
+        new = dict(zip(fieldnames, row["Current"].split(",")))
+        return acc + tuple({
+            "Strain": new["Strain"],
+            cattr: new[cattr]
+        } for cattr in cattrs if new[cattr] != orig[cattr])
+
+    new_rows = reduce(__retrieve_changes__, modifications_diff, tuple())
+    strain_names = tuple({row["Strain"] for row in new_rows})
+    cursor.execute("SELECT Id AS StrainId, Name AS StrainName FROM Strain "
+                   f"WHERE Name IN ({', '.join(['%s'] * len(strain_names))})",
+                   strain_names)
+    strain_ids = {
+        row["StrainName"]: int(row["StrainId"])
+        for row in cursor.fetchall()}
+
+    cursor.execute("SELECT CaseAttributeId, Name AS CaseAttributeName "
+                   "FROM CaseAttribute WHERE InbredSetId=%s "
+                   f"AND Name IN ({', '.join(['%s'] * len(cattrs))})",
+                   (inbredset_id,) + cattrs)
+    cattr_ids = {
+        row["CaseAttributeName"]: row["CaseAttributeId"]
+        for row in cursor.fetchall()
+    }
+
+    cursor.executemany(
+        "INSERT INTO CaseAttributeXRefNew"
+        "(InbredSetId, StrainId, CaseAttributeId, Value) "
+        "VALUES(%(isetid)s, %(strainid)s, %(cattrid)s, %(value)s) "
+        "ON DUPLICATE KEY UPDATE Value=VALUES(value)",
+        tuple(
+            {
+                "isetid": inbredset_id,
+                "strainid": strain_ids[row["Strain"]],
+                "cattrid": cattr_ids[cattr],
+                "value": row[cattr]
+            }
+            for cattr in cattrs for row in new_rows
+            if bool(row.get(cattr, "").strip())))
+    cursor.executemany(
+        "DELETE FROM CaseAttributeXRefNew WHERE "
+        "InbredSetId=%(isetid)s AND StrainId=%(strainid)s "
+        "AND CaseAttributeId=%(cattrid)s",
+        tuple(
+            {
+                "isetid": inbredset_id,
+                "strainid": strain_ids[row["Strain"]],
+                "cattrid": cattr_ids[cattr]
+            }
+            for row in new_rows
+            for cattr in (key for key in row.keys() if key != "Strain")
+            if not bool(row[cattr].strip())))
+
+def __apply_deletions__(
+        cursor, inbredset_id: int, deletions_diff) -> None:
+    """Apply deletions: delete existing case attributes and their values."""
+    # TODO: Not tested... will probably fail.
+    params = tuple({
+        "inbredset_id": inbredset_id,
+        "case_attribute_id": diff["case_attribute_id"]
+    } for diff in deletions_diff)
+    cursor.executemany(
+        "DELETE FROM CaseAttributeXRefNew WHERE "
+        "InbredSetId=:inbredset_id AND CaseAttributeId=:case_attribute_id",
+        params)
+    cursor.executemany(
+        "DELETE FROM CaseAttribute WHERE "
+        "InbredSetId=:inbredset_id AND CaseAttributeId=:case_attribute_id",
+        params)
+
 def __apply_diff__(
-        conn: Connection, inbredset_id: int, user: User, diff_filename) -> None:
+        conn: Connection, inbredset_id: int, user: User, diff_filename, the_diff) -> None:
     """
     Apply the changes in the diff at `diff_filename` to the data in the database
     if the user has appropriate privileges.
@@ -314,7 +403,17 @@ def __apply_diff__(
     required_access(
         inbredset_id, ("system:inbredset:edit-case-attribute",
                        "system:inbredset:apply-case-attribute-edit"))
-    raise NotImplementedError
+    diffs = the_diff["diff"]
+    with conn.cursor(cursorclass=DictCursor) as cursor:
+        # __apply_additions__(cursor, inbredset_id, diffs["Additions"])
+        __apply_modifications__(
+            cursor, inbredset_id, diffs["Modifications"], the_diff["fieldnames"])
+        # __apply_deletions__(cursor, inbredset_id, diffs["Deletions"])
+        __save_diff__(conn, the_diff, EditStatus.approved)
+        new_path = Path(
+            diff_filename.parent,
+            f"{diff_filename.stem}-approved{diff_filename.suffix}")
+        os.rename(diff_filename, new_path)
 
 def __reject_diff__(conn: Connection,
                     inbredset_id: int,
@@ -370,9 +469,11 @@ def edit_case_attributes(inbredset_id: int) -> Response:
                         fieldnames,
                         __process_orig_data__(
                             fieldnames,
-                            __case_attribute_values_by_inbred_set__(conn, inbredset_id),
+                            __case_attribute_values_by_inbred_set__(
+                                conn, inbredset_id),
                             __inbredset_strains__(conn, inbredset_id)),
-                        __process_edit_data__(fieldnames, request.json["edit-data"]))
+                        __process_edit_data__(
+                            fieldnames, request.json["edit-data"]))
                 },
                 Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR))
         except NoDiffError as _nde:
@@ -385,7 +486,8 @@ def edit_case_attributes(inbredset_id: int) -> Response:
             return response
 
         try:
-            __apply_diff__(conn, user, diff_filename)
+            __apply_diff__(
+                conn, inbredset_id, user, diff_filename, __load_diff__(diff_filename))
             return jsonify({
                 "diff-status": "applied",
                 "message": ("The changes to the case-attributes have been "
@@ -451,12 +553,18 @@ def list_diffs(inbredset_id: int) -> Response:
     return resp
 
 @caseattr.route("/approve/<path:filename>", methods=["POST"])
-def approve_case_attributes_diff(inbredset_id: int) -> Response:
+def approve_case_attributes_diff(filename: str) -> Response:
     """Approve the changes to the case attributes in the diff."""
+    diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
+    diff_filename = Path(diff_dir, filename)
+    the_diff = __load_diff__(diff_filename)
     with (require_oauth.acquire("profile resource") as the_token,
           database_connection(current_app.config["SQL_URI"]) as conn):
-        __apply_diff__(conn, inbredset_id, the_token.user, diff_filename)
-        raise NotImplementedError
+        __apply_diff__(conn, the_diff["inbredset_id"], the_token.user, diff_filename, the_diff)
+        return jsonify({
+            "message": "Applied the diff successfully.",
+            "diff_filename": diff_filename.name
+        })
 
 @caseattr.route("/reject/<path:filename>", methods=["POST"])
 def reject_case_attributes_diff(filename: str) -> Response:
