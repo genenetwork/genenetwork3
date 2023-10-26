@@ -1,6 +1,4 @@
 """API for fetching metadata using an API"""
-import json
-
 from string import Template
 from http.client import RemoteDisconnected
 from urllib.error import URLError
@@ -10,10 +8,112 @@ from flask import request
 from flask import current_app
 
 from pyld import jsonld
-from SPARQLWrapper import SPARQLWrapper
 
-from gn3.db.rdf import RDF_PREFIXES, PREFIXES
+from gn3.db.rdf import RDF_PREFIXES
+from gn3.db.rdf import sparql_construct_query
 
+
+BASE_CONTEXT = {
+    "data": "@graph",
+    "id": "@id",
+    "type": "@type",
+}
+
+DATASET_CONTEXT = {
+    "accessRights": "dct:accessRights",
+    "accessionId": "dct:identifier",
+    "acknowledgement": "gnt:hasAcknowledgement",
+    "altLabel": "skos:altLabel",
+    "caseInfo": "gnt:hasCaseInfo",
+    "classifiedUnder": "xkos:classifiedUnder",
+    "contactPoint": "dcat:contactPoint",
+    "created":  "dct:created",
+    "dcat": "http://www.w3.org/ns/dcat#",
+    "dct": "http://purl.org/dc/terms/",
+    "description": "dct:description",
+    "ex": "http://example.org/stuff/1.0/",
+    "experimentDesignInfo": "gnt:hasExperimentDesignInfo",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "geoSeriesId": "gnt:hasGeoSeriesId",
+    "gnt": "http://genenetwork.org/term/",
+    "inbredSet": "ex:belongsToInbredSet",
+    "info": "ex:info",
+    "label": "rdfs:label",
+    "normalization": "gnt:usesNormalization",
+    "notes": "gnt:hasNotes",
+    "organization": "foaf:Organization",
+    "platform": "ex:platform",
+    "prefLabel": "skos:prefLabel",
+    "processingInfo": "gnt:hasDataProcessingInfo",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "tissue": "ex:tissue",
+    "title": "dct:title",
+    "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
+}
+
+SEARCH_CONTEXT = {
+    "pages": "ex:totalCount",
+    "result": "ex:result",
+    "results": "ex:items",
+    "resultItem": "ex:resultType",
+    "currentPage": "ex:currentPage",
+}
+
+DATASET_SEARCH_CONTEXT = SEARCH_CONTEXT | {
+    "classifiedUnder": "xkos:classifiedUnder",
+    "created":  "dct:created",
+    "dct": "http://purl.org/dc/terms/",
+    "ex": "http://example.org/stuff/1.0/",
+    "title": "dct:title",
+    "name": "rdfs:label",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "type": "@type",
+    "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
+}
+
+PUBLICATION_CONTEXT = {
+    "dct": "http://purl.org/dc/terms/",
+    "fabio": "http://purl.org/spar/fabio/",
+    "prism": "http://prismstandard.org/namespaces/basic/2.0/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "title": "dct:title",
+    "journal": "fabio:Journal",
+    "volume": "prism:volume",
+    "page": "fabio:page",
+    "creator": "dct:creator",
+    "abstract": "dct:abstract",
+    "year": {
+        "@id": "fabio:hasPublicationYear",
+        "@type": "xsd:gYear",
+    },
+    "month": {
+        "@id": "prism:publicationDate",
+        "@type": "xsd:gMonth"
+    },
+}
+
+PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "gnt": "http://genenetwork.org/term/",
+    "prism": "http://prismstandard.org/namespaces/basic/2.0/",
+    "gnc": "http://genenetwork.org/category/",
+    "traitName": "skos:altLabel",
+    "trait": "rdfs:label",
+    "altName": "rdfs:altLabel",
+    "description": "dct:description",
+    "abbreviation": "dct:abbreviation",
+    "labCode": "gnt:labCode",
+    "submitter": "gnt:submitter",
+    "contributor": "dct:contributor",
+    "mean": "gnt:mean",
+    "locus": "gnt:locus",
+    "LRS": "gnt:LRS",
+    "references": "dct:isReferencedBy",
+    "additive": "gnt:additive",
+    "sequence": "gnt:sequence",
+}
 
 metadata = Blueprint("metadata", __name__)
 
@@ -22,8 +122,8 @@ metadata = Blueprint("metadata", __name__)
 def datasets(name):
     """Fetch a dataset's metadata given it's ACCESSION_ID or NAME"""
     try:
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            Template("""
 $prefix
 
 CONSTRUCT {
@@ -69,59 +169,19 @@ CONSTRUCT {
            ?platform ^gnt:usesPlatform ?dataset ;
                      ?platformPred  ?platformObject .
          } .
-         OPTIONAL {
-           ?dataset gnt:hasPlatformInfo ?platformInfo .
-         } .
-         OPTIONAL {
-           ?dataset gnt:hasTissueInfo ?tissueInfo .
-         } .
+         OPTIONAL { ?dataset gnt:hasPlatformInfo ?platformInfo . } .
+         OPTIONAL { ?dataset gnt:hasTissueInfo ?tissueInfo . } .
          OPTIONAL {
            ?dataset gnt:hasTissue ?tissue .
            ?tissue rdfs:label ?tissueName .
          } .
 	 FILTER (!regex(str(?predicate), '(classifiedUnder|usesNormalization|contactPoint|hasPlatformInfo|tissueInfo)', 'i')) .
          FILTER (!regex(str(?platformPred), '(classifiedUnder|geoSeriesId|hasGoTreeValue)', 'i')) .
-}""").substitute(prefix=RDF_PREFIXES, name=name))
-        results = sparql.queryAndConvert()
-        results = json.loads(
-            results.serialize(format="json-ld")
+}""").substitute(prefix=RDF_PREFIXES, name=name),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
         )
         frame = {
-            "@context": {
-                "accessRights": "dct:accessRights",
-                "accessionId": "dct:identifier",
-                "acknowledgement": "gnt:hasAcknowledgement",
-                "altLabel": "skos:altLabel",
-                "caseInfo": "gnt:hasCaseInfo",
-                "classifiedUnder": "xkos:classifiedUnder",
-                "contactPoint": "dcat:contactPoint",
-                "created":  "dct:created",
-                "data": "@graph",
-                "dcat": "http://www.w3.org/ns/dcat#",
-                "dct": "http://purl.org/dc/terms/",
-                "description": "dct:description",
-                "ex": "http://example.org/stuff/1.0/",
-                "experimentDesignInfo": "gnt:hasExperimentDesignInfo",
-                "foaf": "http://xmlns.com/foaf/0.1/",
-                "geoSeriesId": "gnt:hasGeoSeriesId",
-                "gnt": "http://genenetwork.org/term/",
-                "id": "@id",
-                "inbredSet": "ex:belongsToInbredSet",
-                "info": "ex:info",
-                "label": "rdfs:label",
-                "normalization": "gnt:usesNormalization",
-                "notes": "gnt:hasNotes",
-                "organization": "foaf:Organization",
-                "platform": "ex:platform",
-                "prefLabel": "skos:prefLabel",
-                "processingInfo": "gnt:hasDataProcessingInfo",
-                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                "skos": "http://www.w3.org/2004/02/skos/core#",
-                "tissue": "ex:tissue",
-                "title": "dct:title",
-                "type": "@type",
-                "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
-            },
+            "@context": BASE_CONTEXT | DATASET_CONTEXT,
             "type": "dcat:Dataset",
         }
         return jsonld.compact(jsonld.frame(results, frame), frame)
@@ -137,8 +197,8 @@ def list_datasets_by_group(group):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -178,31 +238,12 @@ CONSTRUCT {
         }
 }
 }
-""").substitute(prefix=RDF_PREFIXES, group=group, limit=page_size, offset=page))
-        results = sparql.queryAndConvert()
-        results = json.loads(
-            results.serialize(format="json-ld")
+""").substitute(prefix=RDF_PREFIXES, group=group, limit=page_size, offset=page),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
         )
         frame = {
-            "@context": {
-                "classifiedUnder": "xkos:classifiedUnder",
-                "created":  "dct:created",
-                "data": "@graph",
-                "dct": "http://purl.org/dc/terms/",
-                "ex": "http://example.org/stuff/1.0/",
-                "id": "@id",
-                "title": "dct:title",
-                "name": "rdfs:label",
-                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                "type": "@type",
-                "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
-                "pages": "ex:totalCount",
-                "result": "ex:result",
-                "results": "ex:items",
-                "resultItem": "ex:resultType",
-                "currentPage": "ex:currentPage",
-            },
-"type": "resultItem",
+            "@context": BASE_CONTEXT | DATASET_SEARCH_CONTEXT,
+            "type": "resultItem",
         }
         return jsonld.compact(
             jsonld.frame(results, frame),
@@ -219,8 +260,8 @@ def search_datasets(term):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -264,29 +305,12 @@ CONSTRUCT {
 }
 
 }
-""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page))
+""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         return jsonld.frame(
-            json.loads(
-                sparql.queryAndConvert().serialize(format="json-ld")),
-            {
-                "@context": {
-                    "data": "@graph",
-                    "type": "@type",
-                    "id": "@id",
-                    "ex": "http://example.org/stuff/1.0/",
-                    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                    "dct": "http://purl.org/dc/terms/",
-                    "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
-                    "inbredSet": "ex:belongsToInbredSet",
-                    "classifiedUnder": "xkos:classifiedUnder",
-                    "dataset": "rdfs:label",
-                    "title": "dct:title",
-                    "currentPage": "ex:currentPage",
-                    "result": "ex:result",
-                    "results": "ex:items",
-                    "resultItem": "ex:resultType",
-                    "pages": "ex:totalCount"
-                },
+            results, {
+                "@context": BASE_CONTEXT | DATASET_SEARCH_CONTEXT,
                 "type": "resultItem",
             }
         )
@@ -303,8 +327,8 @@ def publications(name):
             name = f"gn:unpublished{name}"
         else:
             name = f"pubmed:{name}"
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -314,33 +338,12 @@ CONSTRUCT {
           ?predicate ?object .
     FILTER (!regex(str(?predicate), '(hasPubMedId)', 'i')) .
 }
-""").substitute(name=name, prefix=RDF_PREFIXES))
+""").substitute(name=name, prefix=RDF_PREFIXES),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         return jsonld.compact(
-            json.loads(sparql.queryAndConvert().serialize(format="json-ld")),
-            {
-                "@context": {
-                    "type": "@type",
-                    "id": "@id",
-                    "dct": "http://purl.org/dc/terms/",
-                    "fabio": "http://purl.org/spar/fabio/",
-                    "prism": "http://prismstandard.org/namespaces/basic/2.0/",
-                    "xsd": "http://www.w3.org/2001/XMLSchema#",
-                    "title": "dct:title",
-                    "journal": "fabio:Journal",
-                    "volume": "prism:volume",
-                    "page": "fabio:page",
-                    "creator": "dct:creator",
-                    "abstract": "dct:abstract",
-                    "year": {
-                        "@id": "fabio:hasPublicationYear",
-                        "@type": "xsd:gYear",
-                    },
-                    "month": {
-                        "@id": "prism:publicationDate",
-                        "@type": "xsd:gMonth"
-                    },
-                },
-            })
+            results, {"@context": BASE_CONTEXT | PUBLICATION_CONTEXT}
+        )
     # The virtuoso server is misconfigured or it isn't running at all
     except (RemoteDisconnected, URLError):
         return jsonify({})
@@ -353,8 +356,8 @@ def search_publications(term):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -383,21 +386,18 @@ CONSTRUCT {
         }
 }
 }
-""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page))
-        results = sparql.queryAndConvert()
-        results = json.loads(results.serialize(format="json-ld"))
+""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         frame = {
-            "@context": PREFIXES | {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | SEARCH_CONTEXT | {
+                "dct": "http://purl.org/dc/terms/",
+                "ex": "http://example.org/stuff/1.0/",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "fabio": "http://purl.org/spar/fabio/",
                 "title": "dct:title",
                 "pubmed": "fabio:hasPubMedId",
                 "currentPage": "ex:currentPage",
-                "result": "ex:result",
-                "results": "ex:items",
-                "resultItem": "ex:resultType",
-                "pages": "ex:totalCount",
                 "url": "rdfs:label",
             },
             "type": "resultItem",
@@ -417,8 +417,8 @@ def phenotypes(name):
     try:
         args = request.args
         dataset = args.get("dataset", "")
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -452,57 +452,19 @@ CONSTRUCT {
 	}
 }
 """).substitute(prefix=RDF_PREFIXES, name=name,
-                dataset=dataset))
-        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+                dataset=dataset),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         if not results:
             return jsonify({})
         frame = {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
-                "skos": "http://www.w3.org/2004/02/skos/core#",
-                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                "dct": "http://purl.org/dc/terms/",
-                "gnt": "http://genenetwork.org/term/",
-                "fabio": "http://purl.org/spar/fabio/",
-                "xsd": "http://www.w3.org/2001/XMLSchema#",
-                "prism": "http://prismstandard.org/namespaces/basic/2.0/",
-                "gnc": "http://genenetwork.org/category/",
-                "traitName": "skos:altLabel",
-                "trait": "rdfs:label",
-                "altName": "rdfs:altLabel",
-                "description": "dct:description",
-                "abbreviation": "dct:abbreviation",
-                "labCode": "gnt:labCode",
-                "submitter": "gnt:submitter",
-                "contributor": "dct:contributor",
-                "mean": "gnt:mean",
-                "locus": "gnt:locus",
-                "LRS": "gnt:LRS",
-                "references": "dct:isReferencedBy",
-                "additive": "gnt:additive",
-                "sequence": "gnt:sequence",
-                "title": "dct:title",
-                "journal": "fabio:Journal",
-                "volume": "prism:volume",
-                "page": "fabio:page",
-                "creator": "dct:creator",
-                "abstract": "dct:abstract",
-                "year": {
-                    "@id": "fabio:hasPublicationYear",
-                    "@type": "xsd:gYear",
-                },
-                "month": {
-                    "@id": "prism:publicationDate",
-                    "@type": "xsd:gMonth"
-                },
-            },
+            "@context": PHENOTYPE_CONTEXT,
             "type": "gnc:Phenotype",
         }
         return jsonld.compact(jsonld.frame(results, frame), frame)
     except (RemoteDisconnected, URLError):
         return jsonify({})
+
 
 @metadata.route("/phenotypes/<group>/<name>", methods=["GET"])
 def fetch_phenotype_by_group(group, name):
@@ -510,8 +472,8 @@ def fetch_phenotype_by_group(group, name):
     try:
         args = request.args
         dataset = args.get("dataset", "")
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -547,52 +509,13 @@ CONSTRUCT {
 """).substitute(prefix=RDF_PREFIXES,
                 group=group,
                 name=name,
-                dataset=dataset))
-        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+                dataset=dataset),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         if not results:
             return jsonify({})
         frame = {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
-                "skos": "http://www.w3.org/2004/02/skos/core#",
-                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                "dct": "http://purl.org/dc/terms/",
-                "gnt": "http://genenetwork.org/term/",
-                "fabio": "http://purl.org/spar/fabio/",
-                "xsd": "http://www.w3.org/2001/XMLSchema#",
-                "prism": "http://prismstandard.org/namespaces/basic/2.0/",
-                "gnc": "http://genenetwork.org/category/",
-                "traitName": "skos:altLabel",
-                "trait": "rdfs:label",
-                "altName": "rdfs:altLabel",
-                "description": "dct:description",
-                "abbreviation": "dct:abbreviation",
-                "labCode": "gnt:labCode",
-                "submitter": "gnt:submitter",
-                "contributor": "dct:contributor",
-                "mean": "gnt:mean",
-                "locus": "gnt:locus",
-                "LRS": "gnt:LRS",
-                "references": "dct:isReferencedBy",
-                "additive": "gnt:additive",
-                "sequence": "gnt:sequence",
-                "title": "dct:title",
-                "journal": "fabio:Journal",
-                "volume": "prism:volume",
-                "page": "fabio:page",
-                "creator": "dct:creator",
-                "abstract": "dct:abstract",
-                "year": {
-                    "@id": "fabio:hasPublicationYear",
-                    "@type": "xsd:gYear",
-                },
-                "month": {
-                    "@id": "prism:publicationDate",
-                    "@type": "xsd:gMonth"
-                },
-            },
+            "@context": PHENOTYPE_CONTEXT,
             "type": "gnc:Phenotype",
         }
         return jsonld.compact(jsonld.frame(results, frame), frame)
@@ -604,8 +527,8 @@ CONSTRUCT {
 def genotypes(name):
     """Fetch a genotype's metadata given it's name"""
     try:
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -620,15 +543,13 @@ CONSTRUCT {
                       rdfs:label ?speciesName .
         }
 }
-""").substitute(prefix=RDF_PREFIXES, name=name))
-        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+""").substitute(prefix=RDF_PREFIXES, name=name),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         if not results:
             return jsonify({})
         frame = {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
                 "gnt": "http://genenetwork.org/term/",
                 "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
@@ -663,8 +584,8 @@ def get_gn_genewiki_entries(symbol):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -717,14 +638,11 @@ CONSTRUCT {
 }
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,
-                limit=page_size, offset=page))
-        results = sparql.queryAndConvert()
-        results = json.loads(results.serialize(format="json-ld"))
+                limit=page_size, offset=page),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         context = {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "ex": "http://example.org/stuff/1.0/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
                 "gnt": "http://genenetwork.org/term/",
@@ -757,10 +675,9 @@ def get_ncbi_genewiki_entries(symbol):
     """Fetch the NCBI GeneRIF entries"""
     try:
         args = request.args
-        page = args.get("page", 0)
-        page_size = args.get("per-page", 10)
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        page, page_size = args.get("page", 0), args.get("per-page", 10)
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -812,14 +729,11 @@ CONSTRUCT {
 }
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,
-                limit=page_size, offset=page))
-        results = sparql.queryAndConvert()
-        results = json.loads(results.serialize(format="json-ld"))
+                limit=page_size, offset=page),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         context = {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "ex": "http://example.org/stuff/1.0/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
                 "gnt": "http://genenetwork.org/term/",
@@ -853,8 +767,8 @@ CONSTRUCT {
 def list_species():
     """List all species"""
     try:
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -869,16 +783,11 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES))
-        results = sparql.queryAndConvert()
-        results = json.loads(
-            results.serialize(format="json-ld")
+""").substitute(prefix=RDF_PREFIXES),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
         )
         return jsonld.compact(results, {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -897,8 +806,8 @@ CONSTRUCT {
 def fetch_species(name):
     """Fetch a Single species information"""
     try:
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -914,16 +823,11 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES, name=name))
-        results = sparql.queryAndConvert()
-        results = json.loads(
-            results.serialize(format="json-ld")
+""").substitute(prefix=RDF_PREFIXES, name=name),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
         )
         return jsonld.compact(results, {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -943,8 +847,8 @@ CONSTRUCT {
 def groups():
     """Fetch the list of groups"""
     try:
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -959,16 +863,11 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES))
-        results = sparql.queryAndConvert()
-        results = json.loads(
-            results.serialize(format="json-ld")
+""").substitute(prefix=RDF_PREFIXES),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
         )
         return jsonld.compact(results, {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -989,8 +888,8 @@ CONSTRUCT {
 def fetch_group_by_species(name):
     """Fetch the list of groups"""
     try:
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -1008,16 +907,11 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES, name=name))
-        results = sparql.queryAndConvert()
-        results = json.loads(
-            results.serialize(format="json-ld")
+""").substitute(prefix=RDF_PREFIXES, name=name),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
         )
         return jsonld.compact(results, {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -1037,8 +931,8 @@ CONSTRUCT {
 def probesets(name):
     """Fetch a probesets's metadata given it's name"""
     try:
-        sparql = SPARQLWrapper(current_app.config.get("SPARQL_ENDPOINT"))
-        sparql.setQuery(Template("""
+        results = sparql_construct_query(
+            query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -1054,15 +948,13 @@ CONSTRUCT {
             ?chip rdfs:label ?chipName .
         } .
 }
-""").substitute(prefix=RDF_PREFIXES, name=name))
-        results = json.loads(sparql.queryAndConvert().serialize(format="json-ld"))
+""").substitute(prefix=RDF_PREFIXES, name=name),
+            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+        )
         if not results:
             return jsonify({})
         frame = {
-            "@context": {
-                "data": "@graph",
-                "type": "@type",
-                "id": "@id",
+            "@context": BASE_CONTEXT | {
                 "gnt": "http://genenetwork.org/term/",
                 "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",

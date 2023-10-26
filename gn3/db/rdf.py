@@ -3,6 +3,11 @@
 This module is a collection of functions that handle SPARQL queries.
 
 """
+import json
+
+from SPARQLWrapper import SPARQLWrapper
+
+
 PREFIXES = {
     "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",
@@ -30,3 +35,11 @@ PREFIXES = {
 
 
 RDF_PREFIXES = "\n".join([f"PREFIX {key}: <{value}>"for key, value in PREFIXES.items()])
+
+
+def sparql_construct_query(query: str, endpoint: str) -> dict:
+    """Query virtuoso using a CONSTRUCT query and return a json-ld dictionary"""
+    sparql = SPARQLWrapper(endpoint)
+    sparql.setQuery(query)
+    results = sparql.queryAndConvert()
+    return json.loads(results.serialize(format="json-ld"))
