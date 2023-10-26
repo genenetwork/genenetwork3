@@ -148,7 +148,7 @@ def run_sample_corr_cmd(method, this_trait_data, target_dataset_data):
 
     return correlation_results
 
-def run_cmd(cmd: str, success_codes: Tuple = (0,), env: str = None) -> Dict:
+def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
     parsed_cmd = json.loads(cmd)
     parsed_env = (json.loads(env) if env is not None else None)
