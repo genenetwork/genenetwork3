@@ -7,7 +7,7 @@ from flask import jsonify
 from flask import request
 from flask import current_app
 
-from pyld import jsonld
+from pyld import jsonld  # type: ignore
 
 from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import sparql_construct_query

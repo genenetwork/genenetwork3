@@ -3,7 +3,7 @@ import os
 
 from base64 import b64encode
 from hashlib import md5
-from typing import Dict
+from typing import Optional, Dict
 from typing import List
 from typing import Optional
 from typing import ValuesView
