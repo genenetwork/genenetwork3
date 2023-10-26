@@ -3,7 +3,6 @@ import os
 import csv
 import json
 import uuid
-import requests
 import tempfile
 from enum import Enum, auto
 from pathlib import Path
@@ -11,6 +10,7 @@ from functools import reduce
 from datetime import datetime
 from urllib.parse import urljoin
 
+import requests
 from MySQLdb.cursors import DictCursor
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
@@ -25,7 +25,6 @@ from gn3.commands import run_cmd
 
 from gn3.db_utils import Connection, database_connection
 
-from gn3.auth.authorisation.users import User
 from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
@@ -42,9 +41,9 @@ class NoDiffError(ValueError):
 
 class EditStatus(Enum):
     """Enumeration for the status of the edits."""
-    review = auto()
-    approved = auto()
-    rejected = auto()
+    review = auto()   # pylint: disable=[invalid-name]
+    approved = auto() # pylint: disable=[invalid-name]
+    rejected = auto() # pylint: disable=[invalid-name]
 
     def __str__(self):
         """Print out human-readable form."""
@@ -52,7 +51,7 @@ class EditStatus(Enum):
 
 class CAJSONEncoder(json.JSONEncoder):
     """Encoder for CaseAttribute-specific data"""
-    def default(self, obj):
+    def default(self, obj): # pylint: disable=[arguments-renamed]
         """Default encoder"""
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -395,7 +394,7 @@ def __apply_deletions__(
         params)
 
 def __apply_diff__(
-        conn: Connection, inbredset_id: int, user: User, diff_filename, the_diff) -> None:
+        conn: Connection, inbredset_id: int, diff_filename, the_diff) -> None:
     """
     Apply the changes in the diff at `diff_filename` to the data in the database
     if the user has appropriate privileges.
@@ -417,7 +416,6 @@ def __apply_diff__(
 
 def __reject_diff__(conn: Connection,
                     inbredset_id: int,
-                    user: User,
                     diff_filename: Path,
                     diff: dict) -> Path:
     """
@@ -436,16 +434,16 @@ def __reject_diff__(conn: Connection,
 def add_case_attributes(inbredset_id: int) -> Response:
     """Add a new case attribute for `InbredSetId`."""
     required_access(inbredset_id, ("system:inbredset:create-case-attribute",))
-    with (require_oauth.acquire("profile resource") as the_token,
-          database_connection(current_app.config["SQL_URI"]) as conn):
+    with (require_oauth.acquire("profile resource") as the_token,      # pylint: disable=[unused-variable]
+          database_connection(current_app.config["SQL_URI"]) as conn): # pylint: disable=[unused-variable]
         raise NotImplementedError
 
 @caseattr.route("/<int:inbredset_id>/delete", methods=["POST"])
 def delete_case_attributes(inbredset_id: int) -> Response:
     """Delete a case attribute from `InbredSetId`."""
     required_access(inbredset_id, ("system:inbredset:delete-case-attribute",))
-    with (require_oauth.acquire("profile resource") as the_token,
-          database_connection(current_app.config["SQL_URI"]) as conn):
+    with (require_oauth.acquire("profile resource") as the_token,      # pylint: disable=[unused-variable]
+          database_connection(current_app.config["SQL_URI"]) as conn): # pylint: disable=[unused-variable]
         raise NotImplementedError
 
 @caseattr.route("/<int:inbredset_id>/edit", methods=["POST"])
@@ -487,7 +485,7 @@ def edit_case_attributes(inbredset_id: int) -> Response:
 
         try:
             __apply_diff__(
-                conn, inbredset_id, user, diff_filename, __load_diff__(diff_filename))
+                conn, inbredset_id, diff_filename, __load_diff__(diff_filename))
             return jsonify({
                 "diff-status": "applied",
                 "message": ("The changes to the case-attributes have been "
@@ -558,9 +556,8 @@ def approve_case_attributes_diff(filename: str) -> Response:
     diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
     diff_filename = Path(diff_dir, filename)
     the_diff = __load_diff__(diff_filename)
-    with (require_oauth.acquire("profile resource") as the_token,
-          database_connection(current_app.config["SQL_URI"]) as conn):
-        __apply_diff__(conn, the_diff["inbredset_id"], the_token.user, diff_filename, the_diff)
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        __apply_diff__(conn, the_diff["inbredset_id"], diff_filename, the_diff)
         return jsonify({
             "message": "Applied the diff successfully.",
             "diff_filename": diff_filename.name
@@ -572,19 +569,17 @@ def reject_case_attributes_diff(filename: str) -> Response:
     diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
     diff_filename = Path(diff_dir, filename)
     the_diff = __load_diff__(diff_filename)
-    with (require_oauth.acquire("profile resource") as the_token,
-          database_connection(current_app.config["SQL_URI"]) as conn):
-        __reject_diff__(conn, the_diff["inbredset_id"], the_token.user, diff_filename, the_diff)
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        __reject_diff__(conn, the_diff["inbredset_id"], diff_filename, the_diff)
         return jsonify({
-            "message": f"Rejected diff successfully",
+            "message": "Rejected diff successfully",
             "diff_filename": diff_filename.name
         })
 
 @caseattr.route("/<int:inbredset_id>/diff/<int:diff_id>/view", methods=["GET"])
 def view_diff(inbredset_id: int, diff_id: int) -> Response:
     """View a diff."""
-    with (require_oauth.acquire("profile resource") as the_token,
-          database_connection(current_app.config["SQL_URI"]) as conn,
+    with (database_connection(current_app.config["SQL_URI"]) as conn,
           conn.cursor(cursorclass=DictCursor) as cursor):
         required_access(inbredset_id, ("system:inbredset:view-case-attribute",))
         cursor.execute(

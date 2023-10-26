@@ -6,6 +6,7 @@ from authlib.oauth2.rfc6749.errors import OAuth2Error
 from gn3.auth.authorisation.errors import AuthorisationError
 
 def page_not_found(pnf):
+    """Generic 404 handler."""
     return jsonify({
         "error": pnf.name,
         "error_description": pnf.description
