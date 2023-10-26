@@ -144,8 +144,8 @@ def get_user_info_by_key(key: str, value: str,
 
 
 def create_group(conn: Redis, group_name: Optional[str],
-                 admin_user_uids: List = None,
-                 member_user_uids: List = None) -> Optional[Dict]:
+                 admin_user_uids: Optional[List] = None,
+                 member_user_uids: Optional[List] = None) -> Optional[Dict]:
     """Create a group given the group name, members and admins of that group."""
     if admin_user_uids is None:
         admin_user_uids = []

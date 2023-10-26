@@ -4,6 +4,7 @@ import csv
 import json
 import uuid
 import tempfile
+from typing import Union
 from enum import Enum, auto
 from pathlib import Path
 from functools import reduce
@@ -59,7 +60,9 @@ class CAJSONEncoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
-def required_access(inbredset_id: int, access_levels: tuple[str, ...]) -> bool:
+def required_access(
+        inbredset_id: int, access_levels: tuple[str, ...]) -> Union[
+            bool, tuple[str, ...]]:
     """Check whether the user has the appropriate access"""
     def __species_id__(conn):
         with conn.cursor() as cursor:
@@ -330,7 +333,8 @@ def __apply_modifications__(
             cattr: new[cattr]
         } for cattr in cattrs if new[cattr] != orig[cattr])
 
-    new_rows = reduce(__retrieve_changes__, modifications_diff, tuple())
+    new_rows: tuple[dict, ...] = reduce(
+        __retrieve_changes__, modifications_diff, tuple())
     strain_names = tuple({row["Strain"] for row in new_rows})
     cursor.execute("SELECT Id AS StrainId, Name AS StrainName FROM Strain "
                    f"WHERE Name IN ({', '.join(['%s'] * len(strain_names))})",
@@ -454,7 +458,7 @@ def edit_case_attributes(inbredset_id: int) -> Response:
         required_access(inbredset_id,
                         ("system:inbredset:edit-case-attribute",))
         user = the_token.user
-        fieldnames = (["Strain"] + sorted(
+        fieldnames = tuple(["Strain"] + sorted(
             attr["Name"] for attr in
             __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
         try:
@@ -471,9 +475,9 @@ def edit_case_attributes(inbredset_id: int) -> Response:
                                 conn, inbredset_id),
                             __inbredset_strains__(conn, inbredset_id)),
                         __process_edit_data__(
-                            fieldnames, request.json["edit-data"]))
+                            fieldnames, request.json["edit-data"])) # type: ignore[index]
                 },
-                Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR))
+                Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR))
         except NoDiffError as _nde:
             msg = "There were no changes to make from submitted data."
             response = jsonify({
@@ -502,11 +506,11 @@ def edit_case_attributes(inbredset_id: int) -> Response:
 @caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
 def list_diffs(inbredset_id: int) -> Response:
     """List any changes that have not been approved/rejected."""
-    Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR).mkdir(
+    Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR).mkdir(
         parents=True, exist_ok=True)
 
     def __generate_diff_files__(diffs):
-        diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
+        diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
         review_files = set(afile.name for afile in diff_dir.iterdir()
                            if ("-rejected" not in afile.name
                                and "-approved" not in afile.name))
@@ -553,7 +557,7 @@ def list_diffs(inbredset_id: int) -> Response:
 @caseattr.route("/approve/<path:filename>", methods=["POST"])
 def approve_case_attributes_diff(filename: str) -> Response:
     """Approve the changes to the case attributes in the diff."""
-    diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
+    diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
     diff_filename = Path(diff_dir, filename)
     the_diff = __load_diff__(diff_filename)
     with database_connection(current_app.config["SQL_URI"]) as conn:
@@ -566,7 +570,7 @@ def approve_case_attributes_diff(filename: str) -> Response:
 @caseattr.route("/reject/<path:filename>", methods=["POST"])
 def reject_case_attributes_diff(filename: str) -> Response:
     """Reject the changes to the case attributes in the diff."""
-    diff_dir = Path(current_app.config.get("TMPDIR"), CATTR_DIFFS_DIR)
+    diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
     diff_filename = Path(diff_dir, filename)
     the_diff = __load_diff__(diff_filename)
     with database_connection(current_app.config["SQL_URI"]) as conn:

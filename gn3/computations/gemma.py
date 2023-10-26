@@ -5,6 +5,7 @@ from base64 import b64encode
 from hashlib import md5
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
 from gn3.fs_helpers import get_hash_of_files
@@ -53,8 +54,8 @@ def generate_gemma_cmd(gemma_cmd: str,
                        output_dir: str,
                        token: str,
                        gemma_kwargs: Dict,
-                       gemma_wrapper_kwargs: Dict = None,
-                       chromosomes: str = None) -> Dict:
+                       gemma_wrapper_kwargs: Optional[Dict] = None,
+                       chromosomes: Optional[str] = None) -> Dict:
     """Compute k values"""
     _hash = get_hash_of_files(
         [v for k, v in gemma_kwargs.items() if k in ["g", "p", "a", "c"]])
