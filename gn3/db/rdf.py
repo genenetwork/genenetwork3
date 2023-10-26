@@ -42,4 +42,4 @@ def sparql_construct_query(query: str, endpoint: str) -> dict:
     sparql = SPARQLWrapper(endpoint)
     sparql.setQuery(query)
     results = sparql.queryAndConvert()
-    return json.loads(results.serialize(format="json-ld"))
+    return json.loads(results.serialize(format="json-ld"))  # type: ignore
