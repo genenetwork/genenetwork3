@@ -34,7 +34,8 @@ PREFIXES = {
 }
 
 
-RDF_PREFIXES = "\n".join([f"PREFIX {key}: <{value}>"for key, value in PREFIXES.items()])
+RDF_PREFIXES = "\n".join([f"PREFIX {key}: <{value}>"
+                          for key, value in PREFIXES.items()])
 
 
 def sparql_construct_query(query: str, endpoint: str) -> dict:
