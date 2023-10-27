@@ -891,7 +891,7 @@ CONSTRUCT {
 def fetch_group_by_species(name):
     """Fetch the list of groups (I.e. Inbredsets)"""
     try:
-        _query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
