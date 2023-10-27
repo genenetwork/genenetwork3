@@ -40,7 +40,8 @@ RDF_PREFIXES = "\n".join([f"PREFIX {key}: <{value}>"
 
 
 def sparql_construct_query(query: str, endpoint: str) -> dict:
-    """Query virtuoso using a CONSTRUCT query and return a json-ld dictionary"""
+    """Query virtuoso using a CONSTRUCT query and return a json-ld
+    dictionary"""
     sparql = SPARQLWrapper(endpoint)
     sparql.setQuery(query)
     results = sparql.queryAndConvert()
