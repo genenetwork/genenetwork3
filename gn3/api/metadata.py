@@ -10,7 +10,10 @@ from flask import current_app
 from pyld import jsonld  # type: ignore
 
 from gn3.db.rdf import RDF_PREFIXES
-from gn3.db.rdf import sparql_construct_query
+from gn3.db.rdf import (sparql_construct_query,
+                        query_frame_and_compact,
+                        query_and_compact,
+                        query_and_frame)
 
 
 BASE_CONTEXT = {
@@ -886,10 +889,9 @@ CONSTRUCT {
 
 @metadata.route("/groups/<name>", methods=["GET"])
 def fetch_group_by_species(name):
-    """Fetch the list of groups"""
+    """Fetch the list of groups (I.e. Inbredsets)"""
     try:
-        results = sparql_construct_query(
-            query=Template("""
+        _query=Template("""
 $prefix
 
 CONSTRUCT {
@@ -907,10 +909,8 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES, name=name),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        return jsonld.compact(results, {
+""").substitute(prefix=RDF_PREFIXES, name=name)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
@@ -923,16 +923,20 @@ CONSTRUCT {
                 "geneticType": "gnt:geneticType",
                 "fullName": "skos:prefLabel",
             },
-        })
+        }
+        return query_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
+
 @metadata.route("/probesets/<name>", methods=["GET"])
 def probesets(name):
-    """Fetch a probesets's metadata given it's name"""
+    """Fetch a probeset's metadata given it's name"""
     try:
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -948,12 +952,8 @@ CONSTRUCT {
             ?chip rdfs:label ?chipName .
         } .
 }
-""").substitute(prefix=RDF_PREFIXES, name=name),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        if not results:
-            return jsonify({})
-        frame = {
+""").substitute(prefix=RDF_PREFIXES, name=name)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "gnt": "http://genenetwork.org/term/",
                 "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -987,7 +987,9 @@ CONSTRUCT {
                 "chebi": "gnt:hasChebiId",
             },
         }
-        return jsonld.compact(results, frame)
-        # return jsonld.compact(jsonld.frame(results, frame), frame)
+        return query_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
