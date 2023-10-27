@@ -26,6 +26,7 @@ setup(author='Bonface M. K.',
           "requests==2.25.1"
           "scipy==1.6.0"
           "plotly==4.14.3"
+          "pyld"
           "flask-cors==3.0.9"
           "xapian-bindings"
       ],
