@@ -7,11 +7,8 @@ from flask import jsonify
 from flask import request
 from flask import current_app
 
-from pyld import jsonld  # type: ignore
-
 from gn3.db.rdf import RDF_PREFIXES
-from gn3.db.rdf import (sparql_construct_query,
-                        query_frame_and_compact,
+from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact,
                         query_and_frame)
 
@@ -125,8 +122,7 @@ metadata = Blueprint("metadata", __name__)
 def datasets(name):
     """Fetch a dataset's metadata given it's ACCESSION_ID or NAME"""
     try:
-        results = sparql_construct_query(
-            Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -180,15 +176,15 @@ CONSTRUCT {
          } .
 	 FILTER (!regex(str(?predicate), '(classifiedUnder|usesNormalization|contactPoint|hasPlatformInfo|tissueInfo)', 'i')) .
          FILTER (!regex(str(?platformPred), '(classifiedUnder|geoSeriesId|hasGoTreeValue)', 'i')) .
-}""").substitute(prefix=RDF_PREFIXES, name=name),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        frame = {
+}""").substitute(prefix=RDF_PREFIXES, name=name)
+        _context = {
             "@context": BASE_CONTEXT | DATASET_CONTEXT,
             "type": "dcat:Dataset",
         }
-        return jsonld.compact(jsonld.frame(results, frame), frame)
-    # The virtuoso server is misconfigured or it isn't running at all
+        return query_frame_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -200,8 +196,7 @@ def list_datasets_by_group(group):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -241,17 +236,15 @@ CONSTRUCT {
         }
 }
 }
-""").substitute(prefix=RDF_PREFIXES, group=group, limit=page_size, offset=page),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        frame = {
+""").substitute(prefix=RDF_PREFIXES, group=group, limit=page_size, offset=page)
+        _context = {
             "@context": BASE_CONTEXT | DATASET_SEARCH_CONTEXT,
             "type": "resultItem",
         }
-        return jsonld.compact(
-            jsonld.frame(results, frame),
-            frame)
-    # The virtuoso server is misconfigured or it isn't running at all
+        return query_frame_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -263,8 +256,7 @@ def search_datasets(term):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -308,16 +300,15 @@ CONSTRUCT {
 }
 
 }
-""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        return jsonld.frame(
-            results, {
+""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page)
+        _context = {
                 "@context": BASE_CONTEXT | DATASET_SEARCH_CONTEXT,
                 "type": "resultItem",
-            }
+        }
+        return query_and_frame(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
         )
-    # The virtuoso server is misconfigured or it isn't running at all
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -330,8 +321,7 @@ def publications(name):
             name = f"gn:unpublished{name}"
         else:
             name = f"pubmed:{name}"
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -341,13 +331,11 @@ CONSTRUCT {
           ?predicate ?object .
     FILTER (!regex(str(?predicate), '(hasPubMedId)', 'i')) .
 }
-""").substitute(name=name, prefix=RDF_PREFIXES),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
+""").substitute(name=name, prefix=RDF_PREFIXES)
+        return query_and_compact(
+            _query, {"@context": BASE_CONTEXT | PUBLICATION_CONTEXT},
+            current_app.config.get("SPARQL_ENDPOINT")
         )
-        return jsonld.compact(
-            results, {"@context": BASE_CONTEXT | PUBLICATION_CONTEXT}
-        )
-    # The virtuoso server is misconfigured or it isn't running at all
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -359,8 +347,7 @@ def search_publications(term):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -389,10 +376,8 @@ CONSTRUCT {
         }
 }
 }
-""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        frame = {
+""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page)
+        _context = {
             "@context": BASE_CONTEXT | SEARCH_CONTEXT | {
                 "dct": "http://purl.org/dc/terms/",
                 "ex": "http://example.org/stuff/1.0/",
@@ -409,7 +394,10 @@ CONSTRUCT {
                 "@container": "@index"
             }
         }
-        return jsonld.frame(results, frame)
+        return query_and_frame(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -420,8 +408,7 @@ def phenotypes(name):
     try:
         args = request.args
         dataset = args.get("dataset", "")
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -454,17 +441,15 @@ CONSTRUCT {
 	FILTER(?type = gnc:Phenotype) .
 	}
 }
-""").substitute(prefix=RDF_PREFIXES, name=name,
-                dataset=dataset),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        if not results:
-            return jsonify({})
-        frame = {
+""").substitute(prefix=RDF_PREFIXES, name=name, dataset=dataset)
+        _context = {
             "@context": PHENOTYPE_CONTEXT,
             "type": "gnc:Phenotype",
         }
-        return jsonld.compact(jsonld.frame(results, frame), frame)
+        return query_frame_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -475,8 +460,7 @@ def fetch_phenotype_by_group(group, name):
     try:
         args = request.args
         dataset = args.get("dataset", "")
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -512,16 +496,15 @@ CONSTRUCT {
 """).substitute(prefix=RDF_PREFIXES,
                 group=group,
                 name=name,
-                dataset=dataset),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        if not results:
-            return jsonify({})
-        frame = {
+                dataset=dataset)
+        _context = {
             "@context": PHENOTYPE_CONTEXT,
             "type": "gnc:Phenotype",
         }
-        return jsonld.compact(jsonld.frame(results, frame), frame)
+        return query_frame_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -530,8 +513,7 @@ CONSTRUCT {
 def genotypes(name):
     """Fetch a genotype's metadata given it's name"""
     try:
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -546,12 +528,8 @@ CONSTRUCT {
                       rdfs:label ?speciesName .
         }
 }
-""").substitute(prefix=RDF_PREFIXES, name=name),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        if not results:
-            return jsonify({})
-        frame = {
+""").substitute(prefix=RDF_PREFIXES, name=name)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
                 "gnt": "http://genenetwork.org/term/",
@@ -575,7 +553,10 @@ CONSTRUCT {
             },
             "type": "gnc:Genotype",
         }
-        return jsonld.compact(jsonld.frame(results, frame), frame)
+        return query_frame_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -587,8 +568,7 @@ def get_gn_genewiki_entries(symbol):
         args = request.args
         page = args.get("page", 0)
         page_size = args.get("per-page", 10)
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -641,10 +621,8 @@ CONSTRUCT {
 }
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,
-                limit=page_size, offset=page),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        context = {
+                limit=page_size, offset=page)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "ex": "http://example.org/stuff/1.0/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -667,11 +645,13 @@ CONSTRUCT {
             },
             "type": "gnc:GNWikiEntry"
         }
-        return jsonld.compact(
-            jsonld.frame(results, context),
-            context)
+        return query_frame_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
+
 
 @metadata.route("/genewikis/ncbi/<symbol>", methods=["GET"])
 def get_ncbi_genewiki_entries(symbol):
@@ -679,8 +659,7 @@ def get_ncbi_genewiki_entries(symbol):
     try:
         args = request.args
         page, page_size = args.get("page", 0), args.get("per-page", 10)
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -732,10 +711,8 @@ CONSTRUCT {
 }
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,
-                limit=page_size, offset=page),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        context = {
+                limit=page_size, offset=page)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "ex": "http://example.org/stuff/1.0/",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -759,9 +736,10 @@ CONSTRUCT {
             },
             "type": "gnc:GNWikiEntry"
         }
-        return jsonld.compact(
-            jsonld.frame(results, context),
-            context)
+        return query_frame_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -770,8 +748,7 @@ CONSTRUCT {
 def list_species():
     """List all species"""
     try:
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -786,10 +763,8 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        return jsonld.compact(results, {
+""").substitute(prefix=RDF_PREFIXES)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
@@ -801,16 +776,20 @@ CONSTRUCT {
                 "taxonomicId": "skos:notation",
                 "fullName": "skos:prefLabel",
             },
-        })
+        }
+        return query_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
+
 
 @metadata.route("/species/<name>", methods=["GET"])
 def fetch_species(name):
     """Fetch a Single species information"""
     try:
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -826,10 +805,8 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES, name=name),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        return jsonld.compact(results, {
+""").substitute(prefix=RDF_PREFIXES, name=name)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
@@ -841,7 +818,11 @@ CONSTRUCT {
                 "taxonomicId": "skos:notation",
                 "fullName": "skos:prefLabel",
             },
-        })
+        }
+        return query_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
@@ -850,8 +831,7 @@ CONSTRUCT {
 def groups():
     """Fetch the list of groups"""
     try:
-        results = sparql_construct_query(
-            query=Template("""
+        _query = Template("""
 $prefix
 
 CONSTRUCT {
@@ -866,10 +846,8 @@ CONSTRUCT {
         }
 
 }
-""").substitute(prefix=RDF_PREFIXES),
-            endpoint=current_app.config.get("SPARQL_ENDPOINT")
-        )
-        return jsonld.compact(results, {
+""").substitute(prefix=RDF_PREFIXES)
+        _context = {
             "@context": BASE_CONTEXT | {
                 "skos": "http://www.w3.org/2004/02/skos/core#",
                 "gnt": "http://genenetwork.org/term/",
@@ -882,7 +860,11 @@ CONSTRUCT {
                 "geneticType": "gnt:geneticType",
                 "fullName": "skos:prefLabel",
             },
-        })
+        }
+        return query_and_compact(
+            _query, _context,
+            current_app.config.get("SPARQL_ENDPOINT")
+        )
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
