@@ -5,11 +5,8 @@ import json
 from math import ceil
 from datetime import datetime
 
-
 import click
-from yoyo import get_backend, read_migrations
 
-from gn3 import migrations
 from gn3.app import create_app
 from gn3.auth.authorisation.users import hash_password
 
@@ -18,13 +15,6 @@ from gn3.auth import db
 app = create_app()
 
 ##### BEGIN: CLI Commands #####
-
-@app.cli.command()
-def apply_migrations():
-    """Apply the dabasase migrations."""
-    migrations.apply_migrations(
-        get_backend(f'sqlite:///{app.config["AUTH_DB"]}'),
-        read_migrations(app.config["AUTH_MIGRATIONS"]))
 
 def __init_dev_users__():
     """Initialise dev users. Get's used in more than one place"""
