@@ -47,6 +47,7 @@ DATASET_CONTEXT = {
     "processingInfo": "gnt:hasDataProcessingInfo",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
+    "specifics": "gnt:hasContentInfo",
     "tissue": "ex:tissue",
     "title": "dct:title",
     "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
@@ -134,6 +135,7 @@ CONSTRUCT {
                    gnt:usesNormalization ?normalizationLabel ;
                    dcat:contactPoint ?investigatorName ;
                    xkos:classifiedUnder  ?altName ;
+                   gnt:hasContentInfo ?contentInfo ;
                    ex:platform ?platform ;
                    ex:tissue ?tissue .
           ?platform ?platformPred  ?platformObject ;
@@ -147,6 +149,7 @@ CONSTRUCT {
                   rdfs:label ?datasetName ;
                   (rdfs:label|dct:identifier|skos:prefLabel) "$name" .
          OPTIONAL { ?dataset dct:identifier ?accesionId . } .
+         OPTIONAL { ?dataset gnt:hasContentInfo ?contentInfo . } .
          OPTIONAL {
             ?inbredSet ^skos:member gnc:Set ;
                        rdfs:label ?inbredSetName .
