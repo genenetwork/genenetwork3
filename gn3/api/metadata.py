@@ -26,6 +26,7 @@ DATASET_CONTEXT = {
     "altLabel": "skos:altLabel",
     "caseInfo": "gnt:hasCaseInfo",
     "classifiedUnder": "xkos:classifiedUnder",
+    "contributors": "dct:creator",
     "contactPoint": "dcat:contactPoint",
     "created":  "dct:created",
     "dcat": "http://www.w3.org/ns/dcat#",
@@ -136,6 +137,7 @@ CONSTRUCT {
                    dcat:contactPoint ?investigatorName ;
                    xkos:classifiedUnder  ?altName ;
                    gnt:hasContentInfo ?contentInfo ;
+                   dct:creator ?contributors ;
                    ex:platform ?platform ;
                    ex:tissue ?tissue .
           ?platform ?platformPred  ?platformObject ;
@@ -149,6 +151,7 @@ CONSTRUCT {
                   rdfs:label ?datasetName ;
                   (rdfs:label|dct:identifier|skos:prefLabel) "$name" .
          OPTIONAL { ?dataset dct:identifier ?accesionId . } .
+         OPTIONAL { ?dataset dct:creator ?contributors . } .
          OPTIONAL { ?dataset gnt:hasContentInfo ?contentInfo . } .
          OPTIONAL {
             ?inbredSet ^skos:member gnc:Set ;
