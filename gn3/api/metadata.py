@@ -55,7 +55,8 @@ DATASET_CONTEXT = {
 }
 
 SEARCH_CONTEXT = {
-    "pages": "ex:totalCount",
+    "pages": "ex:pages",
+    "hits": "ex:hits",
     "result": "ex:result",
     "results": "ex:items",
     "resultItem": "ex:resultType",
@@ -268,7 +269,8 @@ $prefix
 
 CONSTRUCT {
         ex:result rdf:type ex:resultType ;
-                  ex:totalCount ?totalCount ;
+                  ex:pages ?pages ;
+                  ex:hits ?hits ;
                   ex:currentPage $offset ;
                   ex:items [
                     rdfs:label ?label ;
