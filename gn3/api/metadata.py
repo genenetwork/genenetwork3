@@ -67,6 +67,7 @@ DATASET_SEARCH_CONTEXT = SEARCH_CONTEXT | {
     "created":  "dct:created",
     "dct": "http://purl.org/dc/terms/",
     "ex": "http://example.org/stuff/1.0/",
+    "inbredSet": "ex:belongsToInbredSet",
     "title": "dct:title",
     "name": "rdfs:label",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
