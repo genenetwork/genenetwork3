@@ -312,7 +312,7 @@ CONSTRUCT {
                 "@context": BASE_CONTEXT | DATASET_SEARCH_CONTEXT,
                 "type": "resultItem",
         }
-        return query_and_frame(
+        return query_frame_and_compact(
             _query, _context,
             current_app.config.get("SPARQL_ENDPOINT")
         )
