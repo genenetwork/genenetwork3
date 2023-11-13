@@ -280,7 +280,7 @@ CONSTRUCT {
           ]
 } WHERE {
 {
-        SELECT ?dataset ?label ?inbredSetName ?datasetType ?title WHERE {
+        SELECT DISTINCT ?dataset ?label ?inbredSetName ?datasetType ?title WHERE {
         ?dataset rdf:type dcat:Dataset ;
                  rdfs:label ?label ;
                  ?datasetPredicate ?datasetObject ;
@@ -301,7 +301,7 @@ CONSTRUCT {
 }
 
 {
-        SELECT (COUNT(*)/$limit+1 AS ?totalCount) WHERE {
+        SELECT (COUNT(DISTINCT ?dataset)/$limit+1 AS ?pages) (COUNT(DISTINCT ?dataset) AS ?hits) WHERE {
         ?dataset rdf:type dcat:Dataset ;
                  ?p ?o .
         ?o bif:contains "'$term'" .
