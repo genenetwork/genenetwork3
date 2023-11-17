@@ -110,6 +110,8 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "abbreviation": "dct:abbreviation",
     "labCode": "gnt:labCode",
     "submitter": "gnt:submitter",
+    "ex": "http://example.org/stuff/1.0/",
+    "species": "ex:species",
     "contributor": "dct:contributor",
     "mean": "gnt:mean",
     "locus": "gnt:locus",
