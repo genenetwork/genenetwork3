@@ -101,6 +101,7 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "gnt": "http://genenetwork.org/term/",
+    "dcat": "http://www.w3.org/ns/dcat#",
     "prism": "http://prismstandard.org/namespaces/basic/2.0/",
     "gnc": "http://genenetwork.org/category/",
     "traitName": "skos:altLabel",
@@ -110,9 +111,7 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "abbreviation": "gnt:abbreviation",
     "labCode": "gnt:labCode",
     "submitter": "gnt:submitter",
-    "ex": "http://example.org/stuff/1.0/",
-    "species": "ex:species",
-    "group": "ex:inbredSet",
+    "dataset": "dcat:Distribution",
     "contributor": "dct:contributor",
     "mean": "gnt:mean",
     "locus": "gnt:locus",
@@ -120,6 +119,8 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "references": "dct:isReferencedBy",
     "additive": "gnt:additive",
     "sequence": "gnt:sequence",
+    "species": "gnt:belongsToSpecies",
+    "group": "gnt:belongsToGroup",
 }
 
 metadata = Blueprint("metadata", __name__)
@@ -426,9 +427,9 @@ $prefix
 CONSTRUCT {
         ?phenotype ?predicate ?object ;
                    ?pubPredicate ?pubObject ;
-                   ex:species ?speciesName ;
-                   ex:inbredSet ?inbredSetName ;
-                   ex:dataset ?datasetName .
+                   gnt:belongsToSpecies ?speciesName ;
+                   dcat:Distribution ?dataset ;
+                   gnt:belongsToGroup ?inbredSetName .
 } WHERE {
         ?phenotype skos:altLabel "$name" ;
                    xkos:classifiedUnder ?inbredSet ;
