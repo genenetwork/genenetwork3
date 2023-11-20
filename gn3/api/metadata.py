@@ -416,13 +416,14 @@ CONSTRUCT {
     except (RemoteDisconnected, URLError):
         return jsonify({})
 
-
-@metadata.route("/phenotypes/<name>", methods=["GET"])
-def phenotypes(name):
+@metadata.route("/phenotypes/<name>",methods=["GET"])
+@metadata.route("/phenotypes/<group>/<name>", methods=["GET"])
+def phenotypes(name, group=None):
     """Fetch a phenotype's metadata given it's name"""
     try:
         args = request.args
-        dataset = args.get("dataset", "")
+        if group:
+            name = f"{group}_{name}"
         _query = Template("""
 $prefix
 
@@ -466,61 +467,6 @@ CONSTRUCT {
             "dataset": {
                 "type": "dcat:Dataset",
             },
-            "type": "gnc:Phenotype",
-        }
-        return query_frame_and_compact(
-            _query, _context,
-            current_app.config.get("SPARQL_ENDPOINT")
-        )
-    except (RemoteDisconnected, URLError):
-        return jsonify({})
-
-
-@metadata.route("/phenotypes/<group>/<name>", methods=["GET"])
-def fetch_phenotype_by_group(group, name):
-    """Fetch a phenotype's metadata given it's name"""
-    try:
-        args = request.args
-        dataset = args.get("dataset", "")
-        _query = Template("""
-$prefix
-
-CONSTRUCT {
-        ?phenotype ?predicate ?object ;
-                   ?pubPredicate ?pubObject ;
-                   ex:species ?speciesName ;
-                   ex:inbredSet ?inbredSetName ;
-                   ex:dataset ?datasetName .
-} WHERE {
-        ?phenotype rdfs:label "$name" ;
-                   xkos:classifiedUnder ?inbredSet ;
-                   ?predicate ?object .
-        ?inbredSet ^xkos:classifiedUnder ?phenotype ;
-                   (rdfs:label|skos:prefLabel|gnt:code) "$group" ;
-                   xkos:generalizes ?species .
-        ?species skos:prefLabel ?speciesName .
-        FILTER (!regex(str(?predicate), '(classifiedUnder)', 'i')) .
-        OPTIONAL {
-        ?publication ^dct:isReferencedBy ?phenotype ;
-                     rdf:type fabio:ResearchPaper ;
-                     ?pubPredicate ?pubObject .
-        FILTER (!regex(str(?pubPredicate), '(hasPubMedId|type)', 'i')) .
-        } .
-	OPTIONAL {
-	?dataset rdf:type dcat:Dataset ;
-                 xkos:classifiedUnder  ?type;
-		 rdfs:label "$dataset" ;
-		 skos:prefLabel ?datasetName .
-	?type ^skos:member gnc:DatasetType .
-	FILTER(?type = gnc:Phenotype) .
-	}
-}
-""").substitute(prefix=RDF_PREFIXES,
-                group=group,
-                name=name,
-                dataset=dataset)
-        _context = {
-            "@context": PHENOTYPE_CONTEXT,
             "type": "gnc:Phenotype",
         }
         return query_frame_and_compact(
