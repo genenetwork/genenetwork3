@@ -463,6 +463,9 @@ CONSTRUCT {
 """).substitute(prefix=RDF_PREFIXES, name=name)
         _context = {
             "@context": PHENOTYPE_CONTEXT,
+            "dataset": {
+                "type": "dcat:Dataset",
+            },
             "type": "gnc:Phenotype",
         }
         return query_frame_and_compact(
