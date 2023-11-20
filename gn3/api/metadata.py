@@ -119,6 +119,8 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "references": "dct:isReferencedBy",
     "additive": "gnt:additive",
     "sequence": "gnt:sequence",
+    "prefLabel": "skos:prefLabel",
+    "identifier": "dct:identifier",
     "species": "gnt:belongsToSpecies",
     "group": "gnt:belongsToGroup",
 }
@@ -430,6 +432,9 @@ CONSTRUCT {
                    gnt:belongsToSpecies ?speciesName ;
                    dcat:Distribution ?dataset ;
                    gnt:belongsToGroup ?inbredSetName .
+        ?dataset skos:prefLabel ?datasetName ;
+                 dct:identifier ?datasetLabel ;
+                 rdf:type dcat:Dataset .
 } WHERE {
         ?phenotype skos:altLabel "$name" ;
                    xkos:classifiedUnder ?inbredSet ;
@@ -447,8 +452,9 @@ CONSTRUCT {
         } .
 	OPTIONAL {
 	?dataset rdf:type dcat:Dataset ;
-                 xkos:classifiedUnder  ?type;
-		 rdfs:label "$dataset" ;
+                 xkos:classifiedUnder  ?inbredSet ;
+                 xkos:classifiedUnder gnc:Phenotype ;
+                 rdfs:label ?datasetLabel ;
 		 skos:prefLabel ?datasetName .
 	?type ^skos:member gnc:DatasetType .
 	FILTER(?type = gnc:Phenotype) .
