@@ -454,7 +454,7 @@ CONSTRUCT {
 	FILTER(?type = gnc:Phenotype) .
 	}
 }
-""").substitute(prefix=RDF_PREFIXES, name=name, dataset=dataset)
+""").substitute(prefix=RDF_PREFIXES, name=name)
         _context = {
             "@context": PHENOTYPE_CONTEXT,
             "type": "gnc:Phenotype",
