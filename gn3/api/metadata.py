@@ -421,7 +421,6 @@ CONSTRUCT {
 def phenotypes(name, group=None):
     """Fetch a phenotype's metadata given it's name"""
     try:
-        args = request.args
         if group:
             name = f"{group}_{name}"
         _query = Template("""
