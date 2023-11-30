@@ -121,6 +121,9 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "sequence": "gnt:sequence",
     "prefLabel": "skos:prefLabel",
     "identifier": "dct:identifier",
+    "chromosome": "gnt:chr",
+    "mb": "gnt:mb",
+    "peakLocation": "gnt:locus",
     "species": "gnt:belongsToSpecies",
     "group": "gnt:belongsToGroup",
 }
@@ -430,11 +433,15 @@ CONSTRUCT {
         ?phenotype ?predicate ?object ;
                    gnt:belongsToSpecies ?speciesName ;
                    dcat:Distribution ?dataset ;
-                   gnt:belongsToGroup ?inbredSetName .
+                   gnt:belongsToGroup ?inbredSetName ;
+                   gnt:locus ?geno .
         ?dataset skos:prefLabel ?datasetName ;
                  dct:identifier ?datasetLabel ;
                  rdf:type dcat:Dataset .
         ?publication ?pubPredicate ?pubObject .
+        ?geno rdfs:label ?locus ;
+              gnt:chr ?chr ;
+              gnt:mb ?mb .
 } WHERE {
         ?phenotype skos:altLabel "$name" ;
                    xkos:classifiedUnder ?inbredSet ;
@@ -449,6 +456,13 @@ CONSTRUCT {
                      rdf:type fabio:ResearchPaper ;
                      ?pubPredicate ?pubObject .
         FILTER (!regex(str(?pubPredicate), '(hasPubMedId|type)', 'i')) .
+        } .
+        OPTIONAL {
+        ?geno ^gnt:locus ?phenotype ;
+              rdf:type gnc:Genotype ;
+              rdfs:label ?locus ;
+              gnt:chr ?chr ;
+              gnt:mb ?mb .
         } .
 	OPTIONAL {
 	?dataset rdf:type dcat:Dataset ;
