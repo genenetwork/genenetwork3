@@ -428,13 +428,13 @@ $prefix
 
 CONSTRUCT {
         ?phenotype ?predicate ?object ;
-                   ?pubPredicate ?pubObject ;
                    gnt:belongsToSpecies ?speciesName ;
                    dcat:Distribution ?dataset ;
                    gnt:belongsToGroup ?inbredSetName .
         ?dataset skos:prefLabel ?datasetName ;
                  dct:identifier ?datasetLabel ;
                  rdf:type dcat:Dataset .
+        ?publication ?pubPredicate ?pubObject .
 } WHERE {
         ?phenotype skos:altLabel "$name" ;
                    xkos:classifiedUnder ?inbredSet ;
