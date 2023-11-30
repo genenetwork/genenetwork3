@@ -115,7 +115,7 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "contributor": "dct:contributor",
     "mean": "gnt:mean",
     "locus": "gnt:locus",
-    "LRS": "gnt:LRS",
+    "lodScore": "gnt:lodScore",
     "references": "dct:isReferencedBy",
     "additive": "gnt:additive",
     "sequence": "gnt:sequence",
