@@ -444,13 +444,11 @@ CONSTRUCT {
               gnt:mb ?mb .
 } WHERE {
         ?phenotype skos:altLabel "$name" ;
-                   xkos:classifiedUnder ?inbredSet ;
+                   gnt:belongsToGroup ?inbredSet ;
                    ?predicate ?object .
-        ?inbredSet ^xkos:classifiedUnder ?phenotype ;
-                   rdfs:label ?inbredSetName ;
+        ?inbredSet rdfs:label ?inbredSetName ;
                    xkos:generalizes ?species .
         ?species skos:prefLabel ?speciesName .
-        FILTER (!regex(str(?predicate), '(classifiedUnder)', 'i')) .
         OPTIONAL {
         ?publication ^dct:isReferencedBy ?phenotype ;
                      rdf:type fabio:ResearchPaper ;
@@ -466,7 +464,7 @@ CONSTRUCT {
         } .
 	OPTIONAL {
 	?dataset rdf:type dcat:Dataset ;
-                 xkos:classifiedUnder  ?inbredSet ;
+                 gnt:belongsToGroup ?inbredSet ;
                  xkos:classifiedUnder gnc:Phenotype ;
                  rdfs:label ?datasetLabel ;
 		 skos:prefLabel ?datasetName .
