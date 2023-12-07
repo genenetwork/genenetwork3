@@ -45,7 +45,7 @@ DATASET_CONTEXT = {
     "organization": "foaf:Organization",
     "prefLabel": "skos:prefLabel",
     "citation": "dct:isReferencedBy",
-    "GoTree": "gnt:hasGoTreeValue",
+    "GoTree": "gnt:hasGOTreeValue",
     "platform": "gnt:usesPlatform",
     "processingInfo": "gnt:hasDataProcessingInfo",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
