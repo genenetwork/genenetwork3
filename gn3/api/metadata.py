@@ -37,21 +37,26 @@ DATASET_CONTEXT = {
     "foaf": "http://xmlns.com/foaf/0.1/",
     "geoSeriesId": "gnt:hasGeoSeriesId",
     "gnt": "http://genenetwork.org/term/",
-    "inbredSet": "ex:belongsToInbredSet",
-    "info": "ex:info",
+    "inbredSet": "gnt:belongsToGroup",
     "label": "rdfs:label",
     "normalization": "gnt:usesNormalization",
+    "platformInfo": "gnt:hasPlatformInfo",
     "notes": "gnt:hasNotes",
     "organization": "foaf:Organization",
-    "platform": "ex:platform",
     "prefLabel": "skos:prefLabel",
+    "citation": "dct:isReferencedBy",
+    "platform": "gnt:gnt:usePlatform",
+    "GoTree": "gnt:hasGoTreeValue",
     "processingInfo": "gnt:hasDataProcessingInfo",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "specifics": "gnt:hasContentInfo",
-    "tissue": "ex:tissue",
     "title": "dct:title",
     "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
+    "tissueInfo": "gnt:hasTissueInfo",
+    "tissue": "gnt:hasTissue",
+    "contactWebUrl": "foaf:homepage",
+    "contactName": "foaf:name",
 }
 
 SEARCH_CONTEXT = {
@@ -139,34 +144,27 @@ def datasets(name):
 $prefix
 
 CONSTRUCT {
-	  ?dataset ?predicate ?term ;
-                   rdf:type dcat:Dataset ;
-                   rdfs:label ?datasetName ;
-                   dct:identifier ?accesionId ;
-	           ex:belongsToInbredSet ?inbredSetName ;
-                   gnt:usesNormalization ?normalizationLabel ;
-                   dcat:contactPoint ?investigatorName ;
-                   xkos:classifiedUnder  ?altName ;
-                   gnt:hasContentInfo ?contentInfo ;
-                   dct:creator ?contributors ;
-                   ex:platform ?platform ;
-                   ex:tissue ?tissue .
+	  ?dataset ?predicate ?term .
+          ?inbredSet rdfs:label ?inbredSetName .
           ?platform ?platformPred  ?platformObject ;
-                    ex:info ?platformInfo .
-          ?tissue rdfs:label ?tissueName ;
-                  rdf:type gnc:tissue ;
-                  ex:info ?tissueInfo .
+                    gnt:hasPlatformInfo ?platformInfo .
+          ?normalization ?normalizationPred ?normalizationObj .
+          ?tissue ?tissuePred ?tissueObj ;
+                  gnt:hasTissueInfo ?tissueInfo .
+          ?investigator foaf:name ?investigatorName ;
+                       foaf:homepage ?homepage .
+          ?type skos:prefLabel ?altName .
 } WHERE {
 	 ?dataset rdf:type dcat:Dataset ;
-	          xkos:classifiedUnder ?inbredSet ;
-                  rdfs:label ?datasetName ;
+                  ?predicate ?term ;
                   (rdfs:label|dct:identifier|skos:prefLabel) "$name" .
-         OPTIONAL { ?dataset dct:identifier ?accesionId . } .
-         OPTIONAL { ?dataset dct:creator ?contributors . } .
-         OPTIONAL { ?dataset gnt:hasContentInfo ?contentInfo . } .
+        FILTER (!regex(str(?predicate), '(hasTissueInfo)', 'i')) .
+        FILTER (!regex(str(?predicate), '(usesNormalization)', 'i')) .
+        FILTER (!regex(str(?predicate), '(platformInfo)', 'i')) .
          OPTIONAL {
             ?inbredSet ^skos:member gnc:Set ;
-                       rdfs:label ?inbredSetName .
+                       ^gnt:belongsToGroup ?dataset ;
+                        rdfs:label ?inbredSetName .
          } .
          OPTIONAL {
             ?type ^xkos:classifiedUnder ?dataset ;
@@ -174,25 +172,25 @@ CONSTRUCT {
                   skos:prefLabel ?altName .
          } .
          OPTIONAL {
-            ?normalization ^gnt:usesNormalization ?dataset ;
-                           rdfs:label ?normalizationLabel .
-         } .
-         OPTIONAL {
            ?investigator foaf:name ?investigatorName ;
+                         foaf:homepage ?homepage ;
                          ^dcat:contactPoint ?dataset .
          } .
          OPTIONAL {
            ?platform ^gnt:usesPlatform ?dataset ;
                      ?platformPred  ?platformObject .
          } .
+         OPTIONAL {
+           ?normalization ^gnt:usesNormalization ?dataset ;
+                          ?normalizationPred ?normalizationObj .
+         }
          OPTIONAL { ?dataset gnt:hasPlatformInfo ?platformInfo . } .
          OPTIONAL { ?dataset gnt:hasTissueInfo ?tissueInfo . } .
          OPTIONAL {
            ?dataset gnt:hasTissue ?tissue .
-           ?tissue rdfs:label ?tissueName .
+           ?tissue rdfs:label ?tissueName ;
+                   ?tissuePred ?tissueObj .
          } .
-	 FILTER (!regex(str(?predicate), '(classifiedUnder|usesNormalization|contactPoint|hasPlatformInfo|tissueInfo)', 'i')) .
-         FILTER (!regex(str(?platformPred), '(classifiedUnder|geoSeriesId|hasGoTreeValue)', 'i')) .
 }""").substitute(prefix=RDF_PREFIXES, name=name)
         _context = {
             "@context": BASE_CONTEXT | DATASET_CONTEXT,
