@@ -162,6 +162,7 @@ CONSTRUCT {
         FILTER (!regex(str(?predicate), '(hasTissueInfo)', 'i')) .
         FILTER (!regex(str(?predicate), '(usesNormalization)', 'i')) .
         FILTER (!regex(str(?predicate), '(platformInfo)', 'i')) .
+        OPTIONAL { ?dataset gnt:hasPlatformInfo ?platformInfo . } .
          OPTIONAL {
             ?inbredSet ^skos:member gnc:Set ;
                        ^gnt:belongsToGroup ?dataset ;
