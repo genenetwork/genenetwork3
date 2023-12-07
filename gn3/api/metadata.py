@@ -144,11 +144,12 @@ def datasets(name):
 $prefix
 
 CONSTRUCT {
-	  ?dataset ?predicate ?term .
+	  ?dataset ?predicate ?term ;
+                   gnt:usesNormalization ?normalization .
           ?inbredSet rdfs:label ?inbredSetName .
           ?platform ?platformPred  ?platformObject ;
                     gnt:hasPlatformInfo ?platformInfo .
-          ?normalization ?normalizationPred ?normalizationObj .
+          ?normalization rdfs:label ?normalizationName .
           ?tissue ?tissuePred ?tissueObj ;
                   gnt:hasTissueInfo ?tissueInfo .
           ?investigator foaf:name ?investigatorName ;
@@ -181,9 +182,10 @@ CONSTRUCT {
                      ?platformPred  ?platformObject .
          } .
          OPTIONAL {
-           ?normalization ^gnt:usesNormalization ?dataset ;
-                          ?normalizationPred ?normalizationObj .
-         }
+           ?dataset gnt:usesNormalization ?normalization .
+           ?normalization rdf:type gnc:avgMethod ;
+                          rdfs:label ?normalizationName .
+         } .
          OPTIONAL { ?dataset gnt:hasPlatformInfo ?platformInfo . } .
          OPTIONAL { ?dataset gnt:hasTissueInfo ?tissueInfo . } .
          OPTIONAL {
