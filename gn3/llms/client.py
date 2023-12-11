@@ -1,3 +1,9 @@
+
+"""module contains genenetwork client code interface to the 
+genenetworkQa api
+
+"""
+
 import json
 import string
 import os
