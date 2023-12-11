@@ -8,7 +8,7 @@ import os
 This is a respone class to manage JSON responses.
 It will have methods that iterate over a basic json object
 and json lists.
-Hopefully by combining the methods present in this class managing JSON will be cheza watoto.
+Hopefully by combining the methods present in this class managing JSON.
 """
 basedir = os.path.abspath(os.path.dirname(__file__))
 
