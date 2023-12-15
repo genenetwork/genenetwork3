@@ -956,7 +956,7 @@ CONSTRUCT {
             },
             "type": "gnc:Probeset",
         }
-        return query_and_compact(
+        return query_frame_and_compact(
             _query, _context,
             current_app.config.get("SPARQL_ENDPOINT")
         )
