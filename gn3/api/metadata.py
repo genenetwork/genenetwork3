@@ -903,13 +903,24 @@ def probesets(name):
 $prefix
 
 CONSTRUCT {
-        ?probeset ?predicate ?object ;
-                  gnt:hasChip ?chipName .
+        ?probeset ?predicate ?object .
+        ?symbol ?symbolPred ?symbolObj .
+        ?resource rdfs:label ?resourceLabel ;
+                  rdfs:comments ?resourceComments .
+        ?chip rdfs:label ?chipName .
 } WHERE {
         ?probeset rdf:type gnc:Probeset ;
                   rdfs:label "$name" ;
                   ?predicate ?object .
-        FILTER (?predicate != gnt:hasChip) .
+        OPTIONAL {
+           ?symbol ^gnt:symbol ?probeset ;
+                   rdf:type gnc:GeneSymbol ;
+                   ?symbolPred ?symbolObj .
+           ?resource ^dct:references ?symbol ;
+                     a ?resourceLink .
+           ?resourceLink rdfs:label ?resourceLabel ;
+                         rdfs:comments ?resourceComments .
+        } .
         OPTIONAL{
             ?probeset gnt:hasChip ?chip .
             ?chip rdfs:label ?chipName .
