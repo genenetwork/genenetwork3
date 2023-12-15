@@ -17,6 +17,10 @@ BASE_CONTEXT = {
     "data": "@graph",
     "id": "@id",
     "type": "@type",
+    "gnc": "http://genenetwork.org/category/",
+    "gnt": "http://genenetwork.org/term/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
 }
 
 DATASET_CONTEXT = {
@@ -104,11 +108,8 @@ PUBLICATION_CONTEXT = {
 
 PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "skos": "http://www.w3.org/2004/02/skos/core#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "gnt": "http://genenetwork.org/term/",
     "dcat": "http://www.w3.org/ns/dcat#",
     "prism": "http://prismstandard.org/namespaces/basic/2.0/",
-    "gnc": "http://genenetwork.org/category/",
     "traitName": "skos:altLabel",
     "trait": "rdfs:label",
     "altName": "rdfs:altLabel",
