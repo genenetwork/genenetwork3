@@ -2,9 +2,8 @@
 
 [![GeneNetwork3 CI
 badge](https://ci.genenetwork.org/badge/genenetwork3.svg)](https://ci.genenetwork.org/jobs/genenetwork3)
-[![GeneNetwork3 pylint CI
-badge](https://ci.genenetwork.org/badge/genenetwork3-pylint.svg)](https://ci.genenetwork.org/jobs/genenetwork3-pylint)
-[![GeneNetwork3 mypy CI badge](https://ci.genenetwork.org/badge/genenetwork3-mypy.svg)](https://ci.genenetwork.org/jobs/genenetwork3-mypy)
+[![GeneNetwork3 all tests CI
+badge](https://ci.genenetwork.org/badge/genenetwork3-all-tests.svg)](https://ci.genenetwork.org/jobs/genenetwork3-all-tests)
 
 GeneNetwork3 REST API for data science and machine learning
 
