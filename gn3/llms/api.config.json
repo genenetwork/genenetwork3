@@ -1,7 +1,0 @@
-/* ideally this should contain the access token to access the api 
-! for testing purpose look for alternative
-*/
-
-{
-	"Bearer Token": "dummy token "
-}
