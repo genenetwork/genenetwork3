@@ -903,7 +903,8 @@ def probesets(name):
 $prefix
 
 CONSTRUCT {
-        ?probeset ?predicate ?object .
+        ?probeset ?predicate ?object ;
+                  gnt:geneSymbol ?symbol .
         ?symbol ?symbolPred ?symbolObj .
         ?resource rdfs:label ?resourceLabel ;
                   rdfs:comments ?resourceComments .
@@ -912,9 +913,11 @@ CONSTRUCT {
         ?probeset rdf:type gnc:Probeset ;
                   rdfs:label "$name" ;
                   ?predicate ?object .
+        FILTER (!regex(str(?predicate), '(geneSymbol)', 'i')) .
         OPTIONAL {
-           ?symbol ^gnt:symbol ?probeset ;
-                   rdf:type gnc:GeneSymbol ;
+           ?probeset gnt:geneSymbol ?symbolName .
+           ?symbol gnt:geneSymbol ?symbolName ;
+                   rdf:type gnc:Gene ;
                    ?symbolPred ?symbolObj .
            ?resource ^dct:references ?symbol ;
                      a ?resourceLink .
