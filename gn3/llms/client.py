@@ -1,9 +1,4 @@
 
-"""module contains genenetwork client code interface to the 
-genenetworkQa api
-
-"""
-
 import json
 import string
 import os
@@ -61,14 +56,11 @@ class GeneNetworkQAClient(Session):
 
     BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
 
-    def __init__(self, account, api_key, version="v3",
-                 timeout=5, total_retries=5, backoff_factor=30):
+    def __init__(self, account, api_key, version="v3", timeout=5, total_retries=5, backoff_factor=30):
         super().__init__()
-        self.host = f"{self.BASE_URL}/answers"
         self.headers.update(self.get_auth(self.open_api_config()))
-        self.base_url = self.BASE_URL
-        self.answer_url = urljoin(self.base_url, "/answers")
-        self.feedback_url = urljoin(self.base_url, "/feedback")
+        self.answer_url = f"{self.BASE_URL}/answers"
+        self.feedback_url = f"{self.BASE_URL}/feedback"
 
         adapter = TimeoutHTTPAdapter(
             timeout=timeout,
@@ -92,8 +84,7 @@ class GeneNetworkQAClient(Session):
 
     @staticmethod
     def get_auth(api_config):
-        return {"Authorization": "Bearer "
-                + api_config.get('Bearer Token', '')}
+        return {"Authorization": "Bearer " + api_config.get('Bearer Token', '')}
 
     @staticmethod
     def format_bibliography_info(bib_info):
@@ -133,12 +124,13 @@ class GeneNetworkQAClient(Session):
 
     @staticmethod
     def negative_status_msg(response):
-        return f"Problems\n\tStatus\
-        code =>{response.status_code}\n\tReason =>{response.reason}"
+        return f"Problems\n\tStatus code => {response.status_code}\n\tReason => {response.reason}"
+
+
 
     def ask(self, exUrl, *args, **kwargs):
         askUrl = self.BASE_URL + exUrl
-        res = self.custom_request('POST', askUrl, *args, **kwargs)
+        res    = self.custom_request('POST', askUrl, *args, **kwargs)
         if (res.status_code != 200):
             return self.negativeStatusMsg(res), 0
         task_id = self.getTaskIDFromResult(res)
@@ -146,13 +138,45 @@ class GeneNetworkQAClient(Session):
 
     def get_answer(self, taskid, *args, **kwargs):
         query = self.answer_url + self.extendTaskID(taskid)
-        res = self.custom_request('GET', query, *args, **kwargs)
+        res   = self.custom_request('GET', query, *args, **kwargs)
         if (res.status_code != 200):
             return self.negativeStatusMsg(res), 0
         return res, 1
 
+
+
     def custom_request(self, method, url, *args, **kwargs):
-        pass
+        max_retries = 5
+        retry_delay = 3
+
+        print ('[{0}] Request begin'.format(datetime.datetime.now()))
+        response = super().request(method, url, *args, **kwargs)
+        print ('[{0}] Response arrival'.format(datetime.datetime.now()))
+
+        i = 0
+        for i in range(max_retries):
+            try:
+                print ('Raising status for response {0} -- {1}'.format(i+1, datetime.datetime.now()))
+                response.raise_for_status()
+            except requests.exceptions.RequestException as exc:
+                code = exc.response.status_code
+                if code == 422:
+                    raise UnprocessableEntity(exc.request, exc.response)
+                    #from exc
+                elif i == max_retries - 1:
+                    raise
+            if response.ok:
+                print('Status code for response is {0}'.format(response.status_code))
+                # Give time to get all the data
+                print ('[{0}] delay begin'.format(datetime.datetime.now()))
+                time.sleep(retry_delay*3)
+                print ('[{0}] delay   end'.format(datetime.datetime.now()))
+                return response
+            else:
+                print ('[{1}] Retry {0}'.format(i+1, datetime.datetime.now()))
+                time.sleep(retry_delay)
+        return response
+
 
     @staticmethod
     def get_task_id_from_result(response):
@@ -173,19 +197,26 @@ class GeneNetworkQAClient(Session):
 
     @staticmethod
     def filter_response_text(val):
+        """
+        Filters out non-printable characters from the input string and parses it as JSON.
 
-        return json.loads(''.join([str(char) for char
-                                   in val if char in string.printable]))
+        Args:
+            val (str): Input string to be filtered and parsed.
 
+        Returns:
+            dict: Parsed JSON object.
+        # remove  this
+        """
+        return json.loads(''.join([str(char) for char in val if char in string.printable]))
     def getTaskIDFromResult(self, res):
         return json.loads(res.text)
-
     def extendTaskID(self, task_id):
         return '?task_id=' + str(task_id['task_id'])
 
     def get_gnqa(self, query):
         res, task_id = api_client.ask('?ask=' + query)
         res, success = api_client.get_answer(task_id)
+
         if success == 1:
             resp_text = filter_response_text(res.text)
             answer = resp_text.get('data', {}).get('answer', '')
