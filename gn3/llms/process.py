@@ -4,8 +4,8 @@ import time
 import string
 import json
 import os
-from client import GeneNetworkQAClient
-from response import DocIDs, the_doc_ids
+from gn3.llms.client import GeneNetworkQAClient
+from gn3.llms.response import DocIDs
 
 
 baseUrl           = 'https://genenetwork.fahamuai.com/api/tasks'
@@ -95,7 +95,7 @@ def parse_context(context):
         for entry  in summary:
             comboTxt += '\t' + entry['text']
 
-        docInfo = the_doc_ids.getInfo(doc_ids)
+        docInfo = DocIDs().getInfo(doc_ids)
         if doc_ids !=docInfo:
             bibInfo = formatBibliographyInfo(docInfo)
 

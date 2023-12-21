@@ -32,15 +32,12 @@ class DocIDs():
     
     def formatDocIDs(self, values):
         for _key, _val in values.items():
-            print("Key {0}".format(_key))
             if isinstance(_val, list):
-                print("We have a list of values")
                 for theObject in _val:
                     docName = self.formatDocumentName(theObject['filename'])
                     docID   = theObject['id']
-                    print("Tuple --> {0}, {1}".format(docID, docName))
                     self.doc_ids.update({docID: docName})
-
+                    
     def formatDocumentName(self, val):
        result = val.removesuffix('.pdf') 
        result = result.removesuffix('.txt') 
@@ -79,5 +76,3 @@ def createAccordionFromJson(theContext):
         for entry in summaryLst:
             comboTxt += '\t' + entry['text']
     return result
-
-the_doc_ids = DocIDs()

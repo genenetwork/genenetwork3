@@ -14,7 +14,6 @@ from requests.adapters import HTTPAdapter
 
 basedir = os.path.join(os.path.dirname(__file__))
 
-
 class TimeoutHTTPAdapter(HTTPAdapter):
     def __init__(self, timeout, *args, **kwargs):
         """TimeoutHTTPAdapter constructor.
@@ -32,7 +31,6 @@ class TimeoutHTTPAdapter(HTTPAdapter):
             kwargs["timeout"] = self.timeout
 
         return super().send(request, **kwargs)
-
 
 class GeneNetworkQAClient(Session):
     """GeneNetworkQA Client
@@ -145,9 +143,10 @@ class GeneNetworkQAClient(Session):
 
 
 
+
     def custom_request(self, method, url, *args, **kwargs):
-        max_retries = 5
-        retry_delay = 3
+        max_retries = 3
+        retry_delay = 10
 
         print ('[{0}] Request begin'.format(datetime.datetime.now()))
         response = super().request(method, url, *args, **kwargs)
