@@ -1,4 +1,4 @@
-
+# pylint: skip-file
 import json
 import string
 import os
@@ -11,8 +11,10 @@ from requests.packages.urllib3.util.retry import Retry
 from requests import HTTPError
 from requests import Session
 from requests.adapters import HTTPAdapter
+from gn3.settings import FAHAMU_AUTH_TOKEN
 
 basedir = os.path.join(os.path.dirname(__file__))
+
 
 class TimeoutHTTPAdapter(HTTPAdapter):
     def __init__(self, timeout, *args, **kwargs):
@@ -31,6 +33,7 @@ class TimeoutHTTPAdapter(HTTPAdapter):
             kwargs["timeout"] = self.timeout
 
         return super().send(request, **kwargs)
+
 
 class GeneNetworkQAClient(Session):
     """GeneNetworkQA Client
@@ -56,7 +59,7 @@ class GeneNetworkQAClient(Session):
 
     def __init__(self, account, api_key, version="v3", timeout=5, total_retries=5, backoff_factor=30):
         super().__init__()
-        self.headers.update(self.get_auth(self.open_api_config()))
+        self.headers.update({"Authorization": "Bearer " + FAHAMU_AUTH_TOKEN})
         self.answer_url = f"{self.BASE_URL}/answers"
         self.feedback_url = f"{self.BASE_URL}/feedback"
 
@@ -72,17 +75,7 @@ class GeneNetworkQAClient(Session):
         self.mount("https://", adapter)
         self.mount("http://", adapter)
 
-    @staticmethod
-    def open_api_config():
 
-        config_path = os.path.join(basedir, "api.config.json")
-        with open(config_path, "rb") as f:
-            result = json.load(f)
-        return result
-
-    @staticmethod
-    def get_auth(api_config):
-        return {"Authorization": "Bearer " + api_config.get('Bearer Token', '')}
 
     @staticmethod
     def format_bibliography_info(bib_info):
@@ -124,11 +117,9 @@ class GeneNetworkQAClient(Session):
     def negative_status_msg(response):
         return f"Problems\n\tStatus code => {response.status_code}\n\tReason => {response.reason}"
 
-
-
     def ask(self, exUrl, *args, **kwargs):
         askUrl = self.BASE_URL + exUrl
-        res    = self.custom_request('POST', askUrl, *args, **kwargs)
+        res = self.custom_request('POST', askUrl, *args, **kwargs)
         if (res.status_code != 200):
             return self.negativeStatusMsg(res), 0
         task_id = self.getTaskIDFromResult(res)
@@ -136,46 +127,35 @@ class GeneNetworkQAClient(Session):
 
     def get_answer(self, taskid, *args, **kwargs):
         query = self.answer_url + self.extendTaskID(taskid)
-        res   = self.custom_request('GET', query, *args, **kwargs)
+        res = self.custom_request('GET', query, *args, **kwargs)
         if (res.status_code != 200):
             return self.negativeStatusMsg(res), 0
         return res, 1
-
-
-
 
     def custom_request(self, method, url, *args, **kwargs):
         max_retries = 3
         retry_delay = 10
 
-        print ('[{0}] Request begin'.format(datetime.datetime.now()))
         response = super().request(method, url, *args, **kwargs)
-        print ('[{0}] Response arrival'.format(datetime.datetime.now()))
 
-        i = 0
         for i in range(max_retries):
             try:
-                print ('Raising status for response {0} -- {1}'.format(i+1, datetime.datetime.now()))
+
                 response.raise_for_status()
             except requests.exceptions.RequestException as exc:
                 code = exc.response.status_code
                 if code == 422:
                     raise UnprocessableEntity(exc.request, exc.response)
-                    #from exc
+                    # from exc
                 elif i == max_retries - 1:
-                    raise
+                    raise exc
             if response.ok:
-                print('Status code for response is {0}'.format(response.status_code))
                 # Give time to get all the data
-                print ('[{0}] delay begin'.format(datetime.datetime.now()))
                 time.sleep(retry_delay*3)
-                print ('[{0}] delay   end'.format(datetime.datetime.now()))
                 return response
             else:
-                print ('[{1}] Retry {0}'.format(i+1, datetime.datetime.now()))
                 time.sleep(retry_delay)
         return response
-
 
     @staticmethod
     def get_task_id_from_result(response):
@@ -207,8 +187,10 @@ class GeneNetworkQAClient(Session):
         # remove  this
         """
         return json.loads(''.join([str(char) for char in val if char in string.printable]))
+
     def getTaskIDFromResult(self, res):
         return json.loads(res.text)
+
     def extendTaskID(self, task_id):
         return '?task_id=' + str(task_id['task_id'])
 

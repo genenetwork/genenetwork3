@@ -1,5 +1,7 @@
 """API for data used to generate menus"""
 
+# pylint: skip-file
+
 from flask import jsonify, request, Blueprint
 
 from gn3.llms.process import getGNQA

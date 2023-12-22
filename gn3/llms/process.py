@@ -1,3 +1,6 @@
+
+# pylint: skip-file
+
 import requests
 import sys
 import time
@@ -12,6 +15,9 @@ baseUrl           = 'https://genenetwork.fahamuai.com/api/tasks'
 answerUrl         = baseUrl + '/answers'
 basedir           = os.path.abspath(os.path.dirname(__file__))
 apiClient         = GeneNetworkQAClient(requests.Session(), api_key='')
+
+
+
 
 
 

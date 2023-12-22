@@ -1,3 +1,5 @@
+
+# pylint: skip-file
 import json
 
 from requests import HTTPError

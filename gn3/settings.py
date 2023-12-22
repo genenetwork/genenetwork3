@@ -33,6 +33,9 @@ SQL_URI = os.environ.get(
 SECRET_KEY = "password"
 # gn2 results only used in fetching dataset info
 
+# FAHAMU API TOKEN
+FAHAMU_AUTH_TOKEN = os.environ.get("FAHAMU_AUTH_TOKEN","")
+
 GN2_BASE_URL = "http://www.genenetwork.org/"
 
 # wgcna script
