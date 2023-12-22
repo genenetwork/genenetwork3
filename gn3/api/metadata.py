@@ -904,29 +904,38 @@ $prefix
 
 CONSTRUCT {
         ?probeset ?predicate ?object ;
-                  gnt:geneSymbol ?symbol .
-        ?symbol ?symbolPred ?symbolObj .
+                  gnt:geneSymbol ?gene ;
+                  dct:references ?probesetResource .
+        ?gene ?genePred ?geneObj .
         ?resource rdfs:label ?resourceLabel ;
                   rdfs:comments ?resourceComments .
+        ?probesetResource rdfs:label ?probesetResourceLabel ;
+                          rdfs:comments ?probesetResourceComments .
         ?chip rdfs:label ?chipName .
 } WHERE {
         ?probeset rdf:type gnc:Probeset ;
                   rdfs:label "$name" ;
                   ?predicate ?object .
-        FILTER (!regex(str(?predicate), '(geneSymbol)', 'i')) .
         OPTIONAL {
            ?probeset gnt:geneSymbol ?symbolName .
-           ?symbol gnt:geneSymbol ?symbolName ;
-                   rdf:type gnc:Gene ;
-                   ?symbolPred ?symbolObj .
-           ?resource ^dct:references ?symbol ;
+           ?gene gnt:geneSymbol ?symbolName ;
+                 rdf:type gnc:Gene ;
+                 ?genePred ?geneObj .
+           ?resource ^dct:references ?gene ;
                      a ?resourceLink .
-           ?resourceLink rdfs:label ?resourceLabel ;
+           ?resourceLink rdfs:Class gnc:ResourceLink ;
+                         rdfs:label ?resourceLabel ;
                          rdfs:comments ?resourceComments .
         } .
-        OPTIONAL{
+        OPTIONAL {
             ?probeset gnt:hasChip ?chip .
             ?chip rdfs:label ?chipName .
+        } .
+        OPTIONAL {
+            ?probesetResource ^dct:references ?probeset ;
+                              a ?probesetResourceLink .
+            ?probesetResourceLink rdfs:label ?probesetResourceLabel ;
+                                  rdfs:comments ?probesetResourceComments .
         } .
 }
 """).substitute(prefix=RDF_PREFIXES, name=name)
