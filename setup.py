@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Basic setup script for gn3"""
-from setuptools import setup  # type: ignore
+from setuptools import setup, find_packages  # type: ignore
 from setup_commands import RunTests
 
 def long_description():
@@ -35,13 +35,7 @@ setup(author='Bonface M. K.',
       long_description=long_description(),
       long_description_content_type='text/markdown',
       name='gn3',
-      packages=[
-          'gn3',
-          'gn3.api',
-          'gn3.computations',
-          'gn3.db',
-          'tests'
-      ],
+      packages=find_packages(),
       url='https://github.com/genenetwork/genenetwork3',
       version='0.1',
       tests_require=["pytest", "hypothesis"],
