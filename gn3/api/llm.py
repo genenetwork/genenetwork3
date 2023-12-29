@@ -14,9 +14,14 @@ def gnqa():
     query = request.json.get("querygnqa", "")
     if not query:
         return jsonify({"error": "querygnqa is missing in the request"}), 400
-    answer, refs = getGNQA(query)
-    return jsonify({
-        "query": query,
-        "answer": answer,
-        "references": refs
-    })
+
+    try:
+        answer, refs = getGNQA(query)
+        return jsonify({
+            "query": query,
+            "answer": answer,
+            "references": refs
+        })
+
+    except Exception as error:
+        return jsonify({"query": query, "error": "Internal server error"}), 500
