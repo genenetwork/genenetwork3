@@ -30,7 +30,7 @@ def formatBibliographyInfo(bibInfo):
         bibInfo = bibInfo.removesuffix('.txt')
     elif isinstance(bibInfo, dict):
         # format string bibliography information
-        bibInfo = "{0}. ".format(bibInfo['author'], bibInfo['title'], bibInfo['year'], bibInfo['doi'])
+        bibInfo = "{0}.{1}.{2}.{3} ".format(bibInfo['author'], bibInfo['title'], bibInfo['year'], bibInfo['doi'])
     return bibInfo
 
 
@@ -71,7 +71,7 @@ def getTaskIDFromResult(res):
     return result
 
 def negativeStatusMsg(res):
-    return 'Problems\n\tStatus code => {0}\n\tReason=> {res.reason}'.format(res.status_code, res.reason)
+    return 'Problems\n\tStatus code => {0}\n\tReason=> {1}'.format(res.status_code, res.reason)  # mypy: ignore
 
 def filterResponseText(val):
     return json.loads(''.join([str(char) for char in val if char in string.printable]))

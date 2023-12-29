@@ -85,7 +85,7 @@ class GeneNetworkQAClient(Session):
             bib_info = bib_info.removesuffix('.txt')
         elif isinstance(bib_info, dict):
             # Format string bibliography information
-            bib_info = "{0}. ".format(bib_info.get('author', ''),
+            bib_info = "{0}.{1}.{2}.{3} ".format(bib_info.get('author', ''),
                                       bib_info.get('title', ''),
                                       bib_info.get('year', ''),
                                       bib_info.get('doi', ''))
