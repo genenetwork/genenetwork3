@@ -2,8 +2,7 @@
 import os
 import sys
 import logging
-import getpass
-import traceback
+from pathlib import Path
 
 from typing import Dict
 from typing import Union
@@ -53,7 +52,6 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     if secrets_file and Path(secrets_file).exists():
         app.config.from_envvar("GN3_SECRETS")
     # END: SECRETS
-
     setup_app_handlers(app)
     # DO NOT log anything before this point
     logging.info("Guix Profile: '%s'.", os.environ.get("GUIX_PROFILE"))
