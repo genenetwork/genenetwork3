@@ -9,7 +9,7 @@ from typing import Dict
 from typing import Union
 
 from flask import Flask
-from flask_cors import CORS # type: ignore
+from flask_cors import CORS  # type: ignore
 
 from gn3.loggers import setup_app_handlers
 from gn3.api.gemma import gemma
@@ -47,6 +47,12 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
             app.config.update(config)
         elif config.endswith(".py"):
             app.config.from_pyfile(config)
+
+    # BEGIN: SECRETS -- Should be the last of the settings to load
+    secrets_file = os.environ.get("GN3_SECRETS")
+    if secrets_file and Path(secrets_file).exists():
+        app.config.from_envvar("GN3_SECRETS")
+    # END: SECRETS
 
     setup_app_handlers(app)
     # DO NOT log anything before this point
