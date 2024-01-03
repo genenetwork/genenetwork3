@@ -52,11 +52,6 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     # DO NOT log anything before this point
     logging.info("Guix Profile: '%s'.", os.environ.get("GUIX_PROFILE"))
     logging.info("Python Executable: '%s'.", sys.executable)
-    try:
-        logging.info("Effective User: '%s'.", getpass.getuser())
-    except KeyError as kerr:
-        logging.debug("User Error: %s", kerr.args[0])
-        logging.error(traceback.format_exc())
 
     CORS(
         app,
