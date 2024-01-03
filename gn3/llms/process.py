@@ -11,17 +11,9 @@ from gn3.llms.client import GeneNetworkQAClient
 from gn3.llms.response import DocIDs
 
 
-baseUrl           = 'https://genenetwork.fahamuai.com/api/tasks'
-answerUrl         = baseUrl + '/answers'
-basedir           = os.path.abspath(os.path.dirname(__file__))
-apiClient         = GeneNetworkQAClient(requests.Session(), api_key='')
-
-
-
-
-
-
-
+baseUrl = 'https://genenetwork.fahamuai.com/api/tasks'
+answerUrl = baseUrl + '/answers'
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 def formatBibliographyInfo(bibInfo):
@@ -30,27 +22,29 @@ def formatBibliographyInfo(bibInfo):
         bibInfo = bibInfo.removesuffix('.txt')
     elif isinstance(bibInfo, dict):
         # format string bibliography information
-        bibInfo = "{0}.{1}.{2}.{3} ".format(bibInfo['author'], bibInfo['title'], bibInfo['year'], bibInfo['doi'])
+        bibInfo = "{0}.{1}.{2}.{3} ".format(
+            bibInfo['author'], bibInfo['title'], bibInfo['year'], bibInfo['doi'])
     return bibInfo
 
 
-def askTheDocuments( extendUrl, my_auth ):
+def askTheDocuments(extendUrl, my_auth):
     try:
-        res     = requests.post(baseUrl+extendUrl,
+        res = requests.post(baseUrl+extendUrl,
                             data={},
                             headers=my_auth)
         res.raise_for_status()
     except:
-        raise # what
+        raise  # what
     if (res.status_code != 200):
         return negativeStatusMsg(res), 0
-    task_id     = getTaskIDFromResult(res)
-    res         = getAnswerUsingTaskID(task_id, my_auth)
+    task_id = getTaskIDFromResult(res)
+    res = getAnswerUsingTaskID(task_id, my_auth)
     if (res.status_code != 200):
         return negativeStatusMsg(res), 0
     return res, 1
 
-def getAnswerUsingTaskID( extendUrl, my_auth ):
+
+def getAnswerUsingTaskID(extendUrl, my_auth):
     try:
         res = requests.get(answerUrl+extendUrl, data={}, headers=my_auth)
         res.raise_for_status()
@@ -58,8 +52,9 @@ def getAnswerUsingTaskID( extendUrl, my_auth ):
         raise
     return res
 
+
 def openAPIConfig():
-    f = open(os.path.join(basedir, "api.config.json") , "rb" )
+    f = open(os.path.join(basedir, "api.config.json"), "rb")
     result = json.load(f)
     f.close()
     return result
@@ -67,45 +62,50 @@ def openAPIConfig():
 
 def getTaskIDFromResult(res):
     task_id = json.loads(res.text)
-    result  = '?task_id=' + str(task_id['task_id'])
+    result = '?task_id=' + str(task_id['task_id'])
     return result
 
+
 def negativeStatusMsg(res):
-    return 'Problems\n\tStatus code => {0}\n\tReason=> {1}'.format(res.status_code, res.reason)  # mypy: ignore
+    # mypy: ignore
+    return 'Problems\n\tStatus code => {0}\n\tReason=> {1}'.format(res.status_code, res.reason)
+
 
 def filterResponseText(val):
     return json.loads(''.join([str(char) for char in val if char in string.printable]))
 
-def getGNQA(query):
-    res, task_id = apiClient.ask('?ask=' + query)
+
+def getGNQA(query, auth_token):
+    apiClient = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
+    res, task_id = apiClient.ask('?ask=' + query, auth_token)
     res, success = apiClient.get_answer(task_id)
 
-    if ( success == 1 ):
-        respText       = filterResponseText(res.text)
+    if (success == 1):
+        respText = filterResponseText(res.text)
         if respText.get("data") is None:
-            return  "Unfortunately I have nothing on the query",[]
-        answer         = respText['data']['answer']
-        context        = respText['data']['context']
+            return "Unfortunately I have nothing on the query", []
+        answer = respText['data']['answer']
+        context = respText['data']['context']
         references = parse_context(context)
-        return answer,references
+        return answer, references
     else:
         return res, "Unfortunately I have nothing."
-
 
 
 def parse_context(context):
     """parse content map id to reference"""
     result = []
-    for doc_ids,summary in context.items():
+    for doc_ids, summary in context.items():
         comboTxt = ""
-        for entry  in summary:
+        for entry in summary:
             comboTxt += '\t' + entry['text']
 
         docInfo = DocIDs().getInfo(doc_ids)
-        if doc_ids !=docInfo:
+        if doc_ids != docInfo:
             bibInfo = formatBibliographyInfo(docInfo)
 
         else:
             bibInfo = doc_ids
-        result.append({"doc_id":doc_ids,"bibInfo":bibInfo,"comboTxt":comboTxt})
+        result.append(
+            {"doc_id": doc_ids, "bibInfo": bibInfo, "comboTxt": comboTxt})
     return result

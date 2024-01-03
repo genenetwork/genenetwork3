@@ -34,6 +34,7 @@ SECRET_KEY = "password"
 # gn2 results only used in fetching dataset info
 
 # FAHAMU API TOKEN
+FAHAMU_AUTH_TOKEN = ""
 
 GN2_BASE_URL = "http://www.genenetwork.org/"
 
@@ -54,6 +55,8 @@ GENOTYPE_FILES = os.environ.get(
 XAPIAN_DB_PATH = "xapian"
 
 # CROSS-ORIGIN SETUP
+
+
 def parse_env_cors(default):
     """Parse comma-separated configuration into list of strings."""
     origins_str = os.environ.get("CORS_ORIGINS", None)
@@ -61,6 +64,7 @@ def parse_env_cors(default):
         return [
             origin.strip() for origin in origins_str.split(",") if origin != ""]
     return default
+
 
 CORS_ORIGINS = parse_env_cors("*")
 
@@ -75,9 +79,9 @@ TEXTDIR = f"{GNSHARE}/web/ProbeSetFreeze_DataMatrix"
 
 ROUND_TO = 10
 
-MULTIPROCESSOR_PROCS = 6 # Number of processes to spawn
+MULTIPROCESSOR_PROCS = 6  # Number of processes to spawn
 
-AUTH_SERVER_URL=""
+AUTH_SERVER_URL = ""
 AUTH_MIGRATIONS = "migrations/auth"
 AUTH_DB = os.environ.get(
     "AUTH_DB", f"{os.environ.get('HOME')}/genenetwork/gn3_files/db/auth.db")

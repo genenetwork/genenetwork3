@@ -2,7 +2,7 @@
 
 # pylint: skip-file
 
-from flask import jsonify, request, Blueprint
+from flask import jsonify, request, Blueprint, current_app
 
 from gn3.llms.process import getGNQA
 
@@ -16,7 +16,10 @@ def gnqa():
         return jsonify({"error": "querygnqa is missing in the request"}), 400
 
     try:
-        answer, refs = getGNQA(query)
+        auth_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
+        answer, refs = getGNQA(
+            query, auth_token)
+
         return jsonify({
             "query": query,
             "answer": answer,

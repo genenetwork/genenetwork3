@@ -5,7 +5,7 @@ import os
 import datetime
 import time
 import requests
-from flask import current_app
+
 from requests import Session
 from urllib.parse import urljoin
 from requests.packages.urllib3.util.retry import Retry
@@ -59,7 +59,8 @@ class GeneNetworkQAClient(Session):
 
     def __init__(self, account, api_key, version="v3", timeout=5, total_retries=5, backoff_factor=30):
         super().__init__()
-        self.headers.update({"Authorization": "Bearer " + current_app.config.get("FAHAMU_AUTH_TOKEN","")})
+        self.headers.update(
+            {"Authorization": "Bearer " + api_key})
         self.answer_url = f"{self.BASE_URL}/answers"
         self.feedback_url = f"{self.BASE_URL}/feedback"
 
@@ -75,8 +76,6 @@ class GeneNetworkQAClient(Session):
         self.mount("https://", adapter)
         self.mount("http://", adapter)
 
-
-
     @staticmethod
     def format_bibliography_info(bib_info):
 
@@ -86,9 +85,9 @@ class GeneNetworkQAClient(Session):
         elif isinstance(bib_info, dict):
             # Format string bibliography information
             bib_info = "{0}.{1}.{2}.{3} ".format(bib_info.get('author', ''),
-                                      bib_info.get('title', ''),
-                                      bib_info.get('year', ''),
-                                      bib_info.get('doi', ''))
+                                                 bib_info.get('title', ''),
+                                                 bib_info.get('year', ''),
+                                                 bib_info.get('doi', ''))
         return bib_info
 
     @staticmethod
@@ -133,7 +132,7 @@ class GeneNetworkQAClient(Session):
         return res, 1
 
     def custom_request(self, method, url, *args, **kwargs):
-        max_retries = 3
+        max_retries = 5
         retry_delay = 10
 
         response = super().request(method, url, *args, **kwargs)
@@ -151,7 +150,7 @@ class GeneNetworkQAClient(Session):
                     raise exc
             if response.ok:
                 # Give time to get all the data
-                time.sleep(retry_delay*3)
+                time.sleep(retry_delay*1.5)
                 return response
             else:
                 time.sleep(retry_delay)
