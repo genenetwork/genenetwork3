@@ -5,13 +5,13 @@ import os
 import datetime
 import time
 import requests
+from flask import current_app
 from requests import Session
 from urllib.parse import urljoin
 from requests.packages.urllib3.util.retry import Retry
 from requests import HTTPError
 from requests import Session
 from requests.adapters import HTTPAdapter
-from gn3.settings import FAHAMU_AUTH_TOKEN
 
 basedir = os.path.join(os.path.dirname(__file__))
 
@@ -59,7 +59,7 @@ class GeneNetworkQAClient(Session):
 
     def __init__(self, account, api_key, version="v3", timeout=5, total_retries=5, backoff_factor=30):
         super().__init__()
-        self.headers.update({"Authorization": "Bearer " + FAHAMU_AUTH_TOKEN})
+        self.headers.update({"Authorization": "Bearer " + current_app.config.get("FAHAMU_AUTH_TOKEN","")})
         self.answer_url = f"{self.BASE_URL}/answers"
         self.feedback_url = f"{self.BASE_URL}/feedback"
 
