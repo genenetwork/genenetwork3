@@ -896,7 +896,8 @@ CONSTRUCT {
 
 
 @metadata.route("/probesets/<name>", methods=["GET"])
-def probesets(name):
+@metadata.route("/probesets/<dataset>/<name>", methods=["GET"])
+def probesets(name, dataset=""):
     """Fetch a probeset's metadata given it's name"""
     try:
         _query = Template("""
@@ -905,8 +906,12 @@ $prefix
 CONSTRUCT {
         ?probeset ?predicate ?object ;
                   dct:references ?probesetResource ;
-                  dct:references ?resource .
-        ?resource rdfs:label ?resourceLabel ;
+                  dct:references ?resource ;
+                  gnt:belongsToSpecies ?speciesShortName ;
+                  gnt:belongsToGroup ?groupName ;
+                  gnt:hasTissue ?tissueName ;
+                  gnt:belongsToDataset ?datasetFullName .
+ ?resource rdfs:label ?resourceLabel ;
                   rdfs:comments ?resourceComments .
         ?probesetResource rdfs:label ?probesetResourceLabel ;
                           rdfs:comments ?probesetResourceComments .
@@ -936,6 +941,22 @@ CONSTRUCT {
             ?probesetResourceLink rdfs:label ?probesetResourceLabel ;
                                   rdfs:comments ?probesetResourceComments .
         } .
+        OPTIONAL {
+            ?dataset rdf:type dcat:Dataset ;
+                 (rdfs:label|dct:identifier|skos:prefLabel) "HC_M2_0606_P" ;
+                 (skos:altLabel|skos:prefLabel) ?datasetFullName .
+        } .
+        OPTIONAL {
+                ?dataset gnt:hasTissue ?tissue .
+                ?tissue rdfs:label ?tissueName .
+        } .
+        OPTIONAL {
+                ?inbredSet ^skos:member gnc:Set ;
+                           ^gnt:belongsToGroup ?dataset ;
+                	   rdfs:label ?groupName ;
+                           xkos:generalizes ?species .
+                ?species gnt:shortName ?speciesShortName .
+        } .
 }
 """).substitute(prefix=RDF_PREFIXES, name=name)
         _context = {
@@ -953,6 +974,9 @@ CONSTRUCT {
                 "dct": "http://purl.org/dc/terms/",
                 "description": "dct:description",
                 "geneID": "gnt:hasGeneId",
+                "group": "gnt:belongsToGroup",
+                "dataset": "gnt:belongsToDataset",
+                "tissue": "gnt:hasTissue",
                 "kgID": "gnt:hasKgID",
                 "location": "gnt:location",
                 "mb": "gnt:mb",
