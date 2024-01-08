@@ -57,7 +57,7 @@ class GeneNetworkQAClient(Session):
 
     BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
 
-    def __init__(self, account, api_key, version="v3", timeout=120, total_retries=5, backoff_factor=30):
+    def __init__(self, account, api_key, version="v3", timeout=5, total_retries=5, backoff_factor=30):
         super().__init__()
         self.headers.update(
             {"Authorization": "Bearer " + api_key})
@@ -132,8 +132,9 @@ class GeneNetworkQAClient(Session):
         return res, 1
 
     def custom_request(self, method, url, *args, **kwargs):
-        max_retries = 5
-        retry_delay = 10
+
+        max_retries = 1
+        retry_delay = 1
 
         response = super().request(method, url, *args, **kwargs)
 
