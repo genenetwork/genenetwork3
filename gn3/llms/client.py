@@ -12,6 +12,8 @@ from requests.packages.urllib3.util.retry import Retry
 from requests import HTTPError
 from requests import Session
 from requests.adapters import HTTPAdapter
+from urllib.request import urlretrieve
+from urllib.parse import quote
 
 basedir = os.path.join(os.path.dirname(__file__))
 
@@ -133,7 +135,7 @@ class GeneNetworkQAClient(Session):
 
     def custom_request(self, method, url, *args, **kwargs):
 
-        max_retries = 5
+        max_retries = 8
         retry_delay = 10
 
         response = super().request(method, url, *args, **kwargs)
@@ -195,7 +197,8 @@ class GeneNetworkQAClient(Session):
         return '?task_id=' + str(task_id['task_id'])
 
     def get_gnqa(self, query):
-        res, task_id = api_client.ask('?ask=' + query)
+        qstr = quote(query)
+        res, task_id = api_client.ask('?ask=' + qstr)
         res, success = api_client.get_answer(task_id)
 
         if success == 1:
@@ -205,3 +208,4 @@ class GeneNetworkQAClient(Session):
             return answer, context
         else:
             return res, "Unfortunately, I have nothing."
+

@@ -7,6 +7,9 @@ import time
 import string
 import json
 import os
+from urllib.request import urlretrieve
+from urllib.parse import quote
+
 from gn3.llms.client import GeneNetworkQAClient
 from gn3.llms.response import DocIDs
 
@@ -77,7 +80,7 @@ def filterResponseText(val):
 
 def getGNQA(query, auth_token):
     apiClient = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
-    res, task_id = apiClient.ask('?ask=' + query, auth_token)
+    res, task_id = apiClient.ask('?ask=' + quote(query), auth_token)
     res, success = apiClient.get_answer(task_id)
 
     if (success == 1):
