@@ -133,8 +133,8 @@ class GeneNetworkQAClient(Session):
 
     def custom_request(self, method, url, *args, **kwargs):
 
-        max_retries = 1
-        retry_delay = 1
+        max_retries = 5
+        retry_delay = 4
 
         response = super().request(method, url, *args, **kwargs)
 
