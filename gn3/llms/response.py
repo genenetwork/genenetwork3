@@ -13,7 +13,7 @@ class DocIDs():
         # open doc ids for GN refs
         self.doc_ids = self.loadFile("doc_ids.json")
         # open doc ids for Diabetes references
-        self.sugar_doc_ids = self.loadFile("sugar_doc_ids.json")
+        self.sugar_doc_ids = self.loadFile("all_files.json")
         # format is not what I prefer, it needs to be rebuilt
         self.formatDocIDs(self.sugar_doc_ids)
 
