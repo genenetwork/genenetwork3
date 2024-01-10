@@ -491,7 +491,8 @@ CONSTRUCT {
 
 
 @metadata.route("/genotypes/<name>", methods=["GET"])
-def genotypes(name):
+@metadata.route("/genotypes/<dataset>/<name>", methods=["GET"])
+def genotypes(name, dataset=""):
     """Fetch a genotype's metadata given it's name"""
     try:
         _query = Template("""
@@ -499,7 +500,11 @@ $prefix
 
 CONSTRUCT {
         ?genotype ?predicate ?object .
+        ?genotype dcat:dataset ?dataset .
         ?species gnt:shortName ?speciesShortName .
+        ?dataset rdfs:label ?datasetName ;
+                 skos:prefLabel ?datasetFullName ;
+                 gnt:belongsToGroup ?groupName .
 } WHERE {
         ?genotype rdf:type gnc:Genotype ;
                   rdfs:label "$name" ;
@@ -508,8 +513,17 @@ CONSTRUCT {
             ?species ^gnt:belongsToSpecies ?genotype ;
                       gnt:shortName ?speciesShortName .
         } .
+        OPTIONAL {
+            ?dataset rdf:type dcat:Dataset ;
+                     (rdfs:label|dct:identifier|skos:prefLabel) "$dataset" ;
+                     rdfs:label ?datasetName ;
+                     skos:prefLabel ?datasetFullName ;
+                     gnt:belongsToGroup ?inbredSet .
+            ?inbredSet rdfs:label ?groupName .
+        } .
 }
-""").substitute(prefix=RDF_PREFIXES, name=name)
+""").substitute(prefix=RDF_PREFIXES,
+                name=name, dataset=dataset)
         _context = {
             "@context": BASE_CONTEXT | {
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -519,6 +533,10 @@ CONSTRUCT {
                 "xsd": "http://www.w3.org/2001/XMLSchema#",
                 "name": "rdfs:label",
                 "chr": "gnt:chr",
+                "skos": "http://www.w3.org/2004/02/skos/core#",
+                "prefLabel": "skos:prefLabel",
+                "dcat": "http://www.w3.org/ns/dcat#",
+                "dataset": "dcat:dataset",
                 "mb": "gnt:mb",
                 "mbMm8": "gnt:mbMm8",
                 "mb2016": "gnt:mb2016",
@@ -528,6 +546,7 @@ CONSTRUCT {
                 "speciesName": "gnt:shortName",
                 "alternateSource": "gnt:hasAltSourceName",
                 "comments": "rdfs:comments",
+                "group": "gnt:belongsToGroup",
                 "chrNum": {
                     "@id": "gnt:chrNum",
                     "@type": "xsd:int",
@@ -959,8 +978,7 @@ CONSTRUCT {
                 ?species gnt:shortName ?speciesShortName .
         } .
 }
-""").substitute(prefix=RDF_PREFIXES,
-                name=name, dataset=dataset)
+""").substitute(prefix=RDF_PREFIXES, name=name, dataset=dataset)
         _context = {
             "@context": BASE_CONTEXT | {
                 "alias": "skos:altLabel",
