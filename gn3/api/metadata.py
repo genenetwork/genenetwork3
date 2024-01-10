@@ -943,7 +943,7 @@ CONSTRUCT {
         } .
         OPTIONAL {
             ?dataset rdf:type dcat:Dataset ;
-                 (rdfs:label|dct:identifier|skos:prefLabel) "HC_M2_0606_P" ;
+                 (rdfs:label|dct:identifier|skos:prefLabel) "$dataset" ;
                  (skos:altLabel|skos:prefLabel) ?datasetFullName .
         } .
         OPTIONAL {
@@ -958,7 +958,8 @@ CONSTRUCT {
                 ?species gnt:shortName ?speciesShortName .
         } .
 }
-""").substitute(prefix=RDF_PREFIXES, name=name)
+""").substitute(prefix=RDF_PREFIXES,
+                name=name, dataset=dataset)
         _context = {
             "@context": BASE_CONTEXT | {
                 "alias": "skos:altLabel",
