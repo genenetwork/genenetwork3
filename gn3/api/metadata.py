@@ -499,15 +499,15 @@ $prefix
 
 CONSTRUCT {
         ?genotype ?predicate ?object .
-        ?species rdfs:label ?speciesName .
+        ?species gnt:shortName ?speciesShortName .
 } WHERE {
         ?genotype rdf:type gnc:Genotype ;
                   rdfs:label "$name" ;
                   ?predicate ?object .
         OPTIONAL {
-            ?species ^xkos:classifiedUnder ?genotype ;
-                      rdfs:label ?speciesName .
-        }
+            ?species ^gnt:belongsToSpecies ?genotype ;
+                      gnt:shortName ?speciesShortName .
+        } .
 }
 """).substitute(prefix=RDF_PREFIXES, name=name)
         _context = {
@@ -524,7 +524,8 @@ CONSTRUCT {
                 "mb2016": "gnt:mb2016",
                 "sequence": "gnt:hasSequence",
                 "source": "gnt:hasSource",
-                "species": "xkos:classifiedUnder",
+                "species": "gnt:belongsToSpecies",
+                "speciesName": "gnt:shortName",
                 "alternateSource": "gnt:hasAltSourceName",
                 "comments": "rdfs:comments",
                 "chrNum": {
