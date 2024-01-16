@@ -10,6 +10,8 @@ import os
 from urllib.request import urlretrieve
 from urllib.parse import quote
 
+from urllib.parse import urljoin
+
 from gn3.llms.client import GeneNetworkQAClient
 from gn3.llms.response import DocIDs
 
@@ -90,9 +92,9 @@ def getGNQA(query, auth_token):
         answer = respText['data']['answer']
         context = respText['data']['context']
         references = parse_context(context)
-        return answer, references
+        return task_id, answer, references
     else:
-        return res, "Unfortunately I have nothing."
+        return task_id, res, "Unfortunately I have nothing."
 
 
 def parse_context(context):
@@ -112,3 +114,19 @@ def parse_context(context):
         result.append(
             {"doc_id": doc_ids, "bibInfo": bibInfo, "comboTxt": comboTxt})
     return result
+
+
+def rate_document(task_id, doc_id, rating, auth_token):
+    """This method is used to provide feedback for a document by making a rating."""
+    try:
+        resp = requests.post(
+            urljoin(baseUrl, f"/feedback?task_id={task_id}&document_id={doc_id}&feedback={rating}"),
+            headers={"Authorization": f"Bearer {auth_token}"}
+        )
+        resp.raise_for_status()
+        return {"status": "success", **resp.json()}
+    except requests.exceptions.HTTPError as http_error:
+        raise RuntimeError(f"HTTP Error Occurred: {http_error.response.text} -with status code- {http_error.response.status_code}")
+    except Exception as error:
+
+        raise RuntimeError(f"An error occurred: {str(error)}")
