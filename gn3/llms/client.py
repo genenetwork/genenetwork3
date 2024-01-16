@@ -153,7 +153,7 @@ class GeneNetworkQAClient(Session):
                     raise exc
             if response.ok:
                 # Give time to get all the data
-                time.sleep(retry_delay*1.5)
+                time.sleep(retry_delay*2)
                 return response
             else:
                 time.sleep(retry_delay)
