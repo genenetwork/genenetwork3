@@ -1,3 +1,4 @@
+# pylint: skip-file
 """Test cases for procedures defined in llms module"""
 import pytest
 from dataclasses import dataclass
