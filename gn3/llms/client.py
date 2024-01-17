@@ -135,29 +135,28 @@ class GeneNetworkQAClient(Session):
 
     def custom_request(self, method, url, *args, **kwargs):
 
-        max_retries = 20
-        retry_delay = 10
-
-        response = super().request(method, url, *args, **kwargs)
+        max_retries = 50
+        retry_delay = 3
 
         for i in range(max_retries):
             try:
-
+                response = super().request(method, url, *args, **kwargs)
                 response.raise_for_status()
             except requests.exceptions.RequestException as exc:
-                code = exc.response.status_code
-                if code == 422:
+                if exc.response.status_code == 422:
                     raise UnprocessableEntity(exc.request, exc.response)
                     # from exc
                 elif i == max_retries - 1:
                     raise exc
             if response.ok:
-                # Give time to get all the data
-                time.sleep(retry_delay*2)
-                return response
+                if method.lower() == "get" and response.json().get("data") is None:
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    return response
             else:
                 time.sleep(retry_delay)
-        return response
+            return response
 
     @staticmethod
     def get_task_id_from_result(response):
