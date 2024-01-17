@@ -30,7 +30,7 @@ def gnqa():
         })
 
     except Exception as error:
-        return jsonify({"query": query, "error": "Internal server error"}), 500
+        return jsonify({"query": query, "error": f"Request failed-{str(error)}"}), 500
 
 
 @GnQNA.route("/rating/<task_id>/<doc_id>/<int:rating>", methods=["POST"])
@@ -38,7 +38,6 @@ def rating(task_id, doc_id, rating):
     try:
         results = rate_document(task_id, doc_id, rating,
                                 current_app.config.get("FAHAMU_AUTH_TOKEN"))
-
 
         return jsonify({
             **results,
