@@ -4,7 +4,7 @@
 
 from flask import jsonify, request, Blueprint, current_app
 
-from gn3.llms.process import getGNQA
+from gn3.llms.process import get_gnqa
 
 from gn3.llms.process import rate_document
 
@@ -19,7 +19,7 @@ def gnqa():
 
     try:
         auth_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
-        task_id, answer, refs = getGNQA(
+        task_id, answer, refs = get_gnqa(
             query, auth_token)
 
         return jsonify({
@@ -38,6 +38,8 @@ def rating(task_id, doc_id, rating):
     try:
         results = rate_document(task_id, doc_id, rating,
                                 current_app.config.get("FAHAMU_AUTH_TOKEN"))
+
+
         return jsonify({
             **results,
             "doc_id": doc_id,
