@@ -76,11 +76,11 @@ def get_gnqa(query, auth_token):
     if success == 1:
         resp_text = filter_response_text(res.text)
         if resp_text.get("data") is None:
-            return "Unfortunately I have nothing on the query", []
+            return task_id, "Unfortunately I have nothing on the query", []
         answer = resp_text['data']['answer']
         context = resp_text['data']['context']
         references = parse_context(
             context, DocIDs().getInfo, format_bibliography_info)
         return task_id, answer, references
     else:
-        return task_id, res, "Unfortunately I have nothing."
+        return task_id, "Unfortunately, I have nothing on the query", []
