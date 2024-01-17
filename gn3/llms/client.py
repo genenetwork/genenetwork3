@@ -59,7 +59,7 @@ class GeneNetworkQAClient(Session):
 
     BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
 
-    def __init__(self, account, api_key, version="v3", timeout=5, total_retries=5, backoff_factor=30):
+    def __init__(self, account, api_key, version="v3", timeout=30, total_retries=5, backoff_factor=30):
         super().__init__()
         self.headers.update(
             {"Authorization": "Bearer " + api_key})
@@ -208,4 +208,3 @@ class GeneNetworkQAClient(Session):
             return answer, context
         else:
             return res, "Unfortunately, I have nothing."
-
