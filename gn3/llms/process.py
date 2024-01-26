@@ -8,9 +8,9 @@ from urllib.parse import urljoin
 from urllib.parse import quote
 import requests
 
-
 from gn3.llms.client import GeneNetworkQAClient
 from gn3.llms.response import DocIDs
+
 
 BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
 
@@ -84,3 +84,23 @@ def get_gnqa(query, auth_token):
         return task_id, answer, references
     else:
         return task_id, "Unfortunately, I have nothing on the query", []
+
+
+def fetch_query_results(query, user_id, redis_conn):
+    """this method fetches prev user query searches"""
+    result = redis_conn.get(f"LLM:{user_id}-{query}")
+    if result:
+        return json.loads(result)
+    return {
+        "query": query,
+        "answer": "Sorry No answer for you",
+        "references": [],
+        "task_id": None
+    }
+
+
+def get_user_queries(user_id, redis_conn):
+    """methos to fetch all queries for a specific user"""
+
+    results = redis_conn.keys(f"LLM:{user_id}*")
+    return [query for query in [result.partition("-")[2] for result in results] if query != ""]
