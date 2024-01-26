@@ -3,6 +3,8 @@
 # pylint: skip-file
 
 from flask import jsonify, request, Blueprint, current_app
+
+from functools import wraps
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 from gn3.llms.process import get_gnqa
@@ -15,6 +17,16 @@ import json
 from datetime import timedelta
 
 GnQNA = Blueprint("GnQNA", __name__)
+
+
+def handle_errors(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as error:
+            return jsonify({"error": str(error)}), 500
+    return decorated_function
 
 
 @GnQNA.route("/gnqna", methods=["POST"])
@@ -63,40 +75,32 @@ def rating(task_id, doc_id, rating):
 
 @GnQNA.route("/history/<query>", methods=["GET"])
 @require_oauth("profile user")
+@handle_errors
 def fetch_user_hist(query):
-    try:
 
-        with (require_oauth.acquire("profile user") as the_token, Redis.from_url(current_app.config["REDIS_URI"],
-                                                                                 decode_responses=True) as redis_conn):
-            return jsonify({
-                **fetch_query_results(query, the_token.user.id, redis_conn),
-                "prev_queries": get_user_queries("random_user", redis_conn)
-            })
-
-    except Exception as error:
-        return jsonify({"error": str(error)}), 500
+    with (require_oauth.acquire("profile user") as the_token, Redis.from_url(current_app.config["REDIS_URI"],
+                                                                             decode_responses=True) as redis_conn):
+        return jsonify({
+            **fetch_query_results(query, the_token.user.id, redis_conn),
+            "prev_queries": get_user_queries("random_user", redis_conn)
+        })
 
 
 @GnQNA.route("/historys/<query>", methods=["GET"])
+@handle_errors
 def fetch_users_hist_records(query):
     """method to fetch all users hist:note this is a test functionality to be replaced by fetch_user_hist"""
-    try:
 
-        with Redis.from_url(current_app.config["REDIS_URI"], decode_responses=True) as redis_conn:
-            return jsonify({
-                **fetch_query_results(query, "random_user", redis_conn),
-                "prev_queries": get_user_queries("random_user", redis_conn)
-            })
-
-    except Exception as error:
-        return jsonify({"error": str(error)}), 500
+    with Redis.from_url(current_app.config["REDIS_URI"], decode_responses=True) as redis_conn:
+        return jsonify({
+            **fetch_query_results(query, "random_user", redis_conn),
+            "prev_queries": get_user_queries("random_user", redis_conn)
+        })
 
 
 @GnQNA.route("/get_hist_names", methods=["GET"])
+@handle_errors
 def fetch_prev_hist_ids():
-    try:
-        with (Redis.from_url(current_app.config["REDIS_URI"], decode_responses=True)) as redis_conn:
-            return jsonify({"prev_queries": get_user_queries("random_user", redis_conn)})
 
-    except Exception as error:
-        return jsonify({"error": str(error)}), 500
+    with (Redis.from_url(current_app.config["REDIS_URI"], decode_responses=True)) as redis_conn:
+        return jsonify({"prev_queries": get_user_queries("random_user", redis_conn)})
