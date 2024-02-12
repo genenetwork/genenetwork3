@@ -2,11 +2,14 @@
 from string import Template
 from http.client import RemoteDisconnected
 from urllib.error import URLError
+from pathlib import Path
+
 from flask import Blueprint
 from flask import jsonify
 from flask import request
 from flask import current_app
 
+from gn3.db.datasets import retrieve_dataset_metadata
 from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact,
@@ -148,61 +151,59 @@ CONSTRUCT {
 	  ?dataset ?predicate ?term ;
                    gnt:usesNormalization ?normalization .
           ?inbredSet rdfs:label ?inbredSetName .
-          ?platform ?platformPred  ?platformObject ;
-                    gnt:hasPlatformInfo ?platformInfo .
+          ?platform ?platformPred  ?platformObject .
           ?normalization rdfs:label ?normalizationName .
-          ?tissue ?tissuePred ?tissueObj ;
-                  gnt:hasTissueInfo ?tissueInfo .
+          ?tissue ?tissuePred ?tissueObj .
           ?investigator foaf:name ?investigatorName ;
-                       foaf:homepage ?homepage .
+                        foaf:homepage ?homepage .
           ?type skos:prefLabel ?altName .
 } WHERE {
 	 ?dataset rdf:type dcat:Dataset ;
                   ?predicate ?term ;
                   (rdfs:label|dct:identifier|skos:prefLabel) "$name" .
-        FILTER (!regex(str(?predicate), '(hasTissueInfo)', 'i')) .
         FILTER (!regex(str(?predicate), '(usesNormalization)', 'i')) .
-        FILTER (!regex(str(?predicate), '(platformInfo)', 'i')) .
-        OPTIONAL { ?dataset gnt:hasPlatformInfo ?platformInfo . } .
-         OPTIONAL {
+        OPTIONAL {
             ?inbredSet ^skos:member gnc:Set ;
                        ^gnt:belongsToGroup ?dataset ;
                         rdfs:label ?inbredSetName .
-         } .
-         OPTIONAL {
-            ?type ^xkos:classifiedUnder ?dataset ;
-                  ^skos:member gnc:DatasetType ;
-                  skos:prefLabel ?altName .
-         } .
-         OPTIONAL {
-           ?investigator foaf:name ?investigatorName ;
-                         foaf:homepage ?homepage ;
-                         ^dcat:contactPoint ?dataset .
-         } .
-         OPTIONAL {
-           ?platform ^gnt:usesPlatform ?dataset ;
-                     ?platformPred  ?platformObject .
-         } .
-         OPTIONAL {
-           ?dataset gnt:usesNormalization ?normalization .
-           ?normalization rdf:type gnc:avgMethod ;
-                          rdfs:label ?normalizationName .
-         } .
-         OPTIONAL { ?dataset gnt:hasPlatformInfo ?platformInfo . } .
-         OPTIONAL { ?dataset gnt:hasTissueInfo ?tissueInfo . } .
-         OPTIONAL {
-           ?dataset gnt:hasTissue ?tissue .
-           ?tissue rdfs:label ?tissueName ;
-                   ?tissuePred ?tissueObj .
-         } .
+        } .
+        OPTIONAL {
+           ?type ^xkos:classifiedUnder ?dataset ;
+                 ^skos:member gnc:DatasetType ;
+                 skos:prefLabel ?altName .
+        } .
+        OPTIONAL {
+          ?investigator foaf:name ?investigatorName ;
+                        foaf:homepage ?homepage ;
+                        ^dcat:contactPoint ?dataset .
+        } .
+        OPTIONAL {
+          ?platform ^gnt:usesPlatform ?dataset ;
+                    ?platformPred  ?platformObject .
+        } .
+        OPTIONAL {
+          ?dataset gnt:usesNormalization ?normalization .
+          ?normalization rdf:type gnc:avgMethod ;
+                         rdfs:label ?normalizationName .
+        } .
+        OPTIONAL {
+          ?dataset gnt:hasTissue ?tissue .
+          ?tissue rdfs:label ?tissueName ;
+                  ?tissuePred ?tissueObj .
+        } .
 }""").substitute(prefix=RDF_PREFIXES, name=name)
         _context = {
             "@context": BASE_CONTEXT | DATASET_CONTEXT,
             "type": "dcat:Dataset",
         }
-        return query_frame_and_compact(
+        __result = query_frame_and_compact(
             _query, _context,
             current_app.config.get("SPARQL_ENDPOINT")
+        )
+        return __result | retrieve_dataset_metadata(
+            Path(
+                current_app.config.get("DATA_DIR")
+            ).joinpath(__result.get("id", "")).as_posix()
         )
     except (RemoteDisconnected, URLError):
         return jsonify({})
