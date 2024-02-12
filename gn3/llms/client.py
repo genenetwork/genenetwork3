@@ -122,7 +122,7 @@ class GeneNetworkQAClient(Session):
         askUrl = self.BASE_URL + exUrl
         res = self.custom_request('POST', askUrl, *args, **kwargs)
         if (res.status_code != 200):
-            return self.negativeStatusMsg(res), 0
+            return self.negative_status_msg(res), 0
         task_id = self.getTaskIDFromResult(res)
         return res, task_id
 
@@ -130,7 +130,7 @@ class GeneNetworkQAClient(Session):
         query = self.answer_url + self.extendTaskID(taskid)
         res = self.custom_request('GET', query, *args, **kwargs)
         if (res.status_code != 200):
-            return self.negativeStatusMsg(res), 0
+            return self.negative_status_msg(res), 0
         return res, 1
 
     def custom_request(self, method, url, *args, **kwargs):
