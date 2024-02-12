@@ -3,6 +3,7 @@ This module contains functions relating to specific trait dataset manipulation
 """
 import os
 from typing import Any
+from pathlib import Path
 
 from flask import current_app as app
 
@@ -330,3 +331,23 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
         **dataset_fns[trait_type](),
         **group
     }
+
+
+def retrieve_dataset_metadata(name: str) -> dict:
+    """Return the full data given a path, NAME"""
+    result = {}
+    __subject = {
+        "summary": "dct:description",
+        "tissue": "gnt:hasTissueInfo",
+        "specifics": "gnt:hasTissueInfo",
+        "cases": "gnt:hasCaseInfo",
+        "platform": "gnt:hasPlatformInfo",
+        "processing": "gnt:hasDataProcessingInfo",
+        "notes": "gnt:hasNotes",
+        "experiment-design": "gnt:hasExperimentDesignInfo",
+        "acknowledgment": "gnt:hasAcknowledgement",
+    }
+    for __file in Path(name).glob("*rtf"):
+        with __file.open() as _f:
+            result[__subject.get(__file.stem, f"gn:{__file.stem}")] = _f.read()
+    return result
