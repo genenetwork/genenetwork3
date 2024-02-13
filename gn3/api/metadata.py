@@ -201,9 +201,9 @@ CONSTRUCT {
             current_app.config.get("SPARQL_ENDPOINT")
         )
         return __result | retrieve_dataset_metadata(
-            Path(
+            (Path(
                 current_app.config.get("DATA_DIR")
-            ).joinpath(__result.get("id", "")).as_posix()
+            ) / "gn-docs/general/datasets" / __result.get("id", "")).as_posix()
         )
     except (RemoteDisconnected, URLError):
         return jsonify({})
