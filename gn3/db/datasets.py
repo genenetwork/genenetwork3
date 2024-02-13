@@ -346,6 +346,9 @@ def retrieve_dataset_metadata(name: str) -> dict:
         "notes": "gnt:hasNotes",
         "experiment-design": "gnt:hasExperimentDesignInfo",
         "acknowledgment": "gnt:hasAcknowledgement",
+        "citation": "dct:isReferencedBy",
+        "experiment-type": "gnt:hasExperimentType",
+        "contributors": "dct:creator",
     }
     for __file in Path(name).glob("*rtf"):
         with __file.open() as _f:
