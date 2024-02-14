@@ -8,7 +8,6 @@ from SPARQLWrapper.SPARQLExceptions import (
     EndPointInternalError,
     EndPointNotFound,
     QueryBadFormed,
-    SPARQLWrapperException,
     URITooLong,
     Unauthorized
 )
@@ -70,7 +69,7 @@ def handle_sqlite3_errors(exc: OperationalError):
     }), 500
 
 
-def handle_sparql_errors(exc: SPARQLWrapperException):
+def handle_sparql_errors(exc):
     """Handle sqlite3 errors if not handled anywhere else."""
     current_app.logger.error(exc)
     __code = {
