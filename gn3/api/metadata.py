@@ -203,7 +203,8 @@ CONSTRUCT {
         return __result | retrieve_dataset_metadata(
             (Path(
                 current_app.config.get("DATA_DIR")
-            ) / "gn-docs/general/datasets" / __result.get("id", "")).as_posix()
+            ) / "gn-docs/general/datasets" /
+             Path(__result.get("id", "")).stem).as_posix()
         )
     except (RemoteDisconnected, URLError):
         return jsonify({})
