@@ -18,6 +18,7 @@ from authlib.oauth2.rfc6749.errors import OAuth2Error
 
 from gn3.auth.authorisation.errors import AuthorisationError
 
+
 def add_trace(exc: Exception, jsonmsg: dict) -> dict:
     """Add the traceback to the error handling object."""
     return {
@@ -32,6 +33,7 @@ def page_not_found(pnf):
         "error": pnf.name,
         "error_description": pnf.description
     })), 404
+
 
 def internal_server_error(pnf):
     """Generic 404 handler."""
@@ -49,6 +51,7 @@ def handle_authorisation_error(exc: AuthorisationError):
         "error_description": " :: ".join(exc.args)
     })), exc.error_code
 
+
 def handle_oauth2_errors(exc: OAuth2Error):
     """Handle OAuth2Error if not handled anywhere else."""
     current_app.logger.error(exc)
@@ -57,6 +60,7 @@ def handle_oauth2_errors(exc: OAuth2Error):
         "error_description": exc.description,
     })), exc.status_code
 
+
 def handle_sqlite3_errors(exc: OperationalError):
     """Handle sqlite3 errors if not handled anywhere else."""
     current_app.logger.error(exc)
@@ -64,6 +68,7 @@ def handle_sqlite3_errors(exc: OperationalError):
         "error": "DatabaseError",
         "error_description": exc.args[0],
     }), 500
+
 
 def handle_sparql_errors(exc: SPARQLWrapperException):
     """Handle sqlite3 errors if not handled anywhere else."""
