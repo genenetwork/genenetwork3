@@ -337,18 +337,18 @@ def retrieve_dataset_metadata(name: str) -> dict:
     """Return the full data given a path, NAME"""
     result = {}
     __subject = {
-        "summary": "dct:description",
-        "tissue": "gnt:hasTissueInfo",
-        "specifics": "gnt:hasTissueInfo",
-        "cases": "gnt:hasCaseInfo",
-        "platform": "gnt:hasPlatformInfo",
-        "processing": "gnt:hasDataProcessingInfo",
-        "notes": "gnt:hasNotes",
-        "experiment-design": "gnt:hasExperimentDesignInfo",
-        "acknowledgment": "gnt:hasAcknowledgement",
-        "citation": "dct:isReferencedBy",
-        "experiment-type": "gnt:hasExperimentType",
-        "contributors": "dct:creator",
+        "summary": "description",
+        "tissue": "tissueInfo",
+        "specifics": "specifics",
+        "cases": "caseInfo",
+        "platform": "platformInfo",
+        "processing": "processingInfo",
+        "notes": "notes",
+        "experiment-design": "experimentDesignInfo",
+        "acknowledgment": "acknowledgement",
+        "citation": "citation",
+        "experiment-type": "experimentType",
+        "contributors": "contributors",
     }
     for __file in Path(name).glob("*rtf"):
         with __file.open() as _f:
