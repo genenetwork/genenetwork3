@@ -38,6 +38,7 @@ DATASET_CONTEXT = {
     "description": "dct:description",
     "ex": "http://example.org/stuff/1.0/",
     "experimentDesignInfo": "gnt:hasExperimentDesignInfo",
+    "experimentType": "gnt:hasExperimentType",
     "foaf": "http://xmlns.com/foaf/0.1/",
     "geoSeriesId": "gnt:hasGeoSeriesId",
     "gnt": "http://genenetwork.org/term/",
