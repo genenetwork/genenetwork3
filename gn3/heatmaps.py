@@ -6,6 +6,8 @@ from pathlib import Path
 from functools import reduce
 from typing import Any, Dict, Union, Sequence
 
+from flask import current_app as app
+
 import numpy as np
 import plotly.graph_objects as go # type: ignore
 import plotly.figure_factory as ff # type: ignore
@@ -140,7 +142,7 @@ def build_heatmap(
         traits_filename)
 
     main_output, _permutations_output = run_reaper(
-        genotype_filename, traits_filename, separate_nperm_output=True)
+        app.config['REAPER_COMMAND'], genotype_filename, traits_filename, separate_nperm_output=True)
 
     qtlresults = parse_reaper_main_results(main_output)
     organised = organise_reaper_main_results(qtlresults)

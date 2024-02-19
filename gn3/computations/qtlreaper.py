@@ -7,7 +7,7 @@ import subprocess
 from typing import Union
 
 from gn3.chancy import random_string
-from gn3.settings import TMPDIR, REAPER_COMMAND
+from gn3.settings import TMPDIR
 
 def generate_traits_file(samples, trait_values, traits_filename):
     """
@@ -39,6 +39,7 @@ def create_output_directory(path: str):
         pass
 
 def run_reaper(
+        reaper_cmd: str,
         genotype_filename: str, traits_filename: str,
         other_options: tuple = ("--n_permutations", "1000"),
         separate_nperm_output: bool = False,
@@ -81,7 +82,7 @@ def run_reaper(
         permu_output_filename = None
 
     command_list = [
-        REAPER_COMMAND, "--geno", genotype_filename,
+        reaper_cmd, "--geno", genotype_filename,
         *other_options, # this splices the `other_options` list here
         "--traits", traits_filename,
         *output_list # this splices the `output_list` list here
