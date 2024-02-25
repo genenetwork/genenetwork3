@@ -42,6 +42,14 @@ def internal_server_error(pnf):
     })), 500
 
 
+def url_server_error(pnf):
+    """Handler for an exception with a url connection."""
+    return jsonify(add_trace(pnf, {
+        "error": f"URLLib Error no: {pnf.reason.errno}",
+        "error_description": pnf.reason.strerror,
+    }))
+
+
 def handle_authorisation_error(exc: AuthorisationError):
     """Handle AuthorisationError if not handled anywhere else."""
     current_app.logger.error(exc)
@@ -92,7 +100,7 @@ def register_error_handlers(app: Flask):
     app.register_error_handler(OperationalError, handle_sqlite3_errors)
     app.register_error_handler(AuthorisationError, handle_authorisation_error)
     app.register_error_handler(RemoteDisconnected, internal_server_error)
-    app.register_error_handler(URLError, internal_server_error)
+    app.register_error_handler(URLError, url_server_error)
     for exc in (
             EndPointInternalError,
             EndPointNotFound,
