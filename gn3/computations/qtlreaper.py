@@ -38,6 +38,7 @@ def create_output_directory(path: str):
         # If the directory already exists, do nothing.
         pass
 
+# pylint: disable=too-many-arguments
 def run_reaper(
         reaper_cmd: str,
         genotype_filename: str, traits_filename: str,
