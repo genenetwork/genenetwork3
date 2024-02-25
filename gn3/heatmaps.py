@@ -142,7 +142,11 @@ def build_heatmap(
         traits_filename)
 
     main_output, _permutations_output = run_reaper(
-        app.config['REAPER_COMMAND'], genotype_filename, traits_filename, separate_nperm_output=True)
+        app.config['REAPER_COMMAND'],
+        genotype_filename,
+        traits_filename,
+        separate_nperm_output=True
+    )
 
     qtlresults = parse_reaper_main_results(main_output)
     organised = organise_reaper_main_results(qtlresults)
