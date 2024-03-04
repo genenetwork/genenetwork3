@@ -98,7 +98,9 @@ def handle_generic(exc: Exception) -> Response:
     current_app.logger.error(exc)
     resp = jsonify({
         "error": type(exc).__name__,
-        "error_description": exc.args[0],
+        "error_description": (
+            exc.args[0] if bool(exc.args) else "Generic Exception"),
+        "trace": traceback.format_exc()
     })
     resp.status_code = 500
     return resp
