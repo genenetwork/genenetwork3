@@ -12,8 +12,8 @@ from SPARQLWrapper.SPARQLExceptions import (
     Unauthorized
 )
 from werkzeug.exceptions import NotFound
-from flask import Flask, jsonify, current_app
 from authlib.oauth2.rfc6749.errors import OAuth2Error
+from flask import Flask, jsonify, Response, current_app
 
 from gn3.auth.authorisation.errors import AuthorisationError
 
@@ -93,9 +93,21 @@ def handle_sparql_errors(exc):
     }), __code.get(exc)
 
 
+def handle_generic(exc: Exception) -> Response:
+    """Handle generic exception."""
+    current_app.logger.error(exc)
+    resp = jsonify({
+        "error": type(exc).__name__,
+        "error_description": exc.args[0],
+    })
+    resp.status_code = 500
+    return resp
+
+
 def register_error_handlers(app: Flask):
     """Register application-level error handlers."""
     app.register_error_handler(NotFound, page_not_found)
+    app.register_error_handler(Exception, handle_generic)
     app.register_error_handler(OAuth2Error, handle_oauth2_errors)
     app.register_error_handler(OperationalError, handle_sqlite3_errors)
     app.register_error_handler(AuthorisationError, handle_authorisation_error)
