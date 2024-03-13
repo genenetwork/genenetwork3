@@ -1,9 +1,45 @@
 #!/usr/bin/env python3
 
 """
-This script is to be run only one time to update the schema for the
-case-attributes. The script should probably not be commited to be tracked with
-git.
+WARNING
+    This script is to be run only one time to update the schema for the
+    `CaseAttribute` and the `CaseAttributeXRefNew` tables.
+    Running the script more than once has no useful purpose, and will just
+    litter your database schema with `BACKUP_CaseAttribute*` tables.
+
+DESCRIPTION
+    The script makes the following schema updates
+
+    For the `CaseAttribute` table:
+    * Adds `InbredSetId` column: links each case attribute to a population
+    * Rename `Id` to `CaseAttributeId`: Makes it explicit what the ID is for,
+      and helps simplify queries with joins against this table
+
+    For the `CaseAttributeXRefNew` table:
+    * Reorganise order of columns.
+
+    For out of date databases (e.g. small db), the script will also:
+    * Ppdate the character set for the `InbredSet` and `Strain` tables to
+      utf8mb4.
+    * Change the database engine for the `InbredSet` and `Strain` tables to
+      InnoDB.
+
+TABLE BACKUPS
+    The script will backup the `CaseAttribute` and `CaseAttributeXRefNew` tables.
+    The backup table names take the form:
+
+      BACKUP_<tablename>_<timestr>
+
+    Where <tablename> is one of `CaseAttribute` or `CaseAttributeXRefNew` and
+    <timestr> is a string indicating the date and time the script was run (in
+    local timezone for system the script is run on).
+
+USAGE
+    python3 update-case-attribute-tables-20230818 SQL_URI
+
+    The `SQL_URI` argument is mandatory and is of the form:
+
+      mysql://<username>:<password>@<host>[:<port>]/<database>
 """
 import os
 import sys
