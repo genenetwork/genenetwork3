@@ -4,6 +4,7 @@ import json
 
 from requests import HTTPError
 
+
 class UnprocessableEntity(HTTPError):
     """An HTTP 422 Unprocessable Entity error occurred.
 
@@ -51,7 +52,11 @@ class UnprocessableEntity(HTTPError):
                 error = f"{rq_field} {error}"
 
         msg = json.dumps(errors)
-        super(HTTPError, self).__init__(msg, request=request, response=response)
+        super(HTTPError, self).__init__(
+            msg, request=request, response=response)
 
 
-        
+class LLMError(HTTPError):
+    def __init__(self, request, response, msg):
+        super(HTTPError, self).__init__(
+            msg, request=request, response=response)

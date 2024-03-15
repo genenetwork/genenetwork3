@@ -14,6 +14,8 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib.request import urlretrieve
 from urllib.parse import quote
+from gn3.llms.errors import UnprocessableEntity
+from gn3.llms.errors import LLMError
 
 basedir = os.path.join(os.path.dirname(__file__))
 
@@ -116,7 +118,8 @@ class GeneNetworkQAClient(Session):
 
     @staticmethod
     def negative_status_msg(response):
-        return f"Problems\n\tStatus code => {response.status_code}\n\tReason => {response.reason}"
+        return f"Error: Status code -{response.status_code}- Reason::{response.reason}"
+      #  return f"Problems\n\tStatus code => {response.status_code}\n\tReason => {response.reason}"
 
     def ask(self, exUrl, *args, **kwargs):
         askUrl = self.BASE_URL + exUrl
@@ -142,12 +145,20 @@ class GeneNetworkQAClient(Session):
             try:
                 response = super().request(method, url, *args, **kwargs)
                 response.raise_for_status()
-            except requests.exceptions.RequestException as exc:
-                if exc.response.status_code == 422:
-                    raise UnprocessableEntity(exc.request, exc.response)
-                    # from exc
-                elif i == max_retries - 1:
-                    raise exc
+
+            except requests.exceptions.HTTPError as error:
+                if error.response.status_code ==500:
+                    raise LLMError(error.request, error.response, f"Response Error,status_code:{error.response.status_code},Reason: Use of Invalid Token")
+                elif error.response.status_code ==404:
+                    raise LLMError(error.request,error.response,f"404 Client Error: Not Found for url: {self.BASE_URL}")
+                raise error
+
+            except requests.exceptions.RequestException as error:
+                raise error 
+
+
+
+
             if response.ok:
                 if method.lower() == "get" and response.json().get("data") is None:
                     time.sleep(retry_delay)
