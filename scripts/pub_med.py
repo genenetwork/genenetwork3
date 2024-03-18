@@ -34,6 +34,7 @@ def fetch_pub_details(id_list, db_name, retmode="xml", email="alexanderkabua@gma
 
     return []
 
+
 def extract_pub_metadata(papers):
     """
     Extract metadata from PubMed papers.
@@ -70,12 +71,12 @@ def extract_pub_metadata(papers):
     return metadata
 
 
-def fetch_pubmed_id(query, db_name, max_search_count, ret_mode="xml", email="alexanderkabua@gmail.com"):
+def fetch_pubmed_id(query, db_name, max_search_count, retmode="xml", email="alexanderkabua@gmail.com"):
     """method to fetch the id for a given search in pubmed"""
 
     Entrez.email = email
     handle = Entrez.esearch(db=db_name, sort="relevance",
-                            retmax=max_search_count, ret_mode=ret_mode, term=query)
+                            retmax=max_search_count, retmode=retmode, term=query)
     results = Entrez.read(handle)
     handle.close()
     if results.get("IdList"):
