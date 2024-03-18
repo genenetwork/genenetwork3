@@ -4,8 +4,12 @@ feature can be extended to others e.g pmc
 """
 
 
+# pylint: disable=C0301
+
 import functools
 import json
+import requests
+
 from Bio import Entrez
 
 
@@ -21,13 +25,14 @@ def fetch_pub_details(id_list, db_name, retmode="xml", email="alexanderkabua@gma
     """
     Entrez.email = email
     if db_name.lower() == "pubmed":
-        handle = Entrez.efetch(db=db_name, retmode="xml",
+        handle = Entrez.efetch(db=db_name, retmode=retmode,
                                id=",".join(id_list))
         results = Entrez.read(handle)
         handle.close()
 
         return extract_pub_metadata(results)
 
+    return []
 
 def extract_pub_metadata(papers):
     """
@@ -70,7 +75,7 @@ def fetch_pubmed_id(query, db_name, max_search_count, ret_mode="xml", email="ale
 
     Entrez.email = email
     handle = Entrez.esearch(db=db_name, sort="relevance",
-                            retmax=max_search_count, ret_mode="xml", term=query)
+                            retmax=max_search_count, ret_mode=ret_mode, term=query)
     results = Entrez.read(handle)
     handle.close()
     if results.get("IdList"):
@@ -78,6 +83,8 @@ def fetch_pubmed_id(query, db_name, max_search_count, ret_mode="xml", email="ale
             "query": query,
             "id_list": results.get("IdList")
         }
+
+    return None
 
 
 def fetch_all_queries(input_file, max_search_count=1, db_name="pubmed"):
@@ -96,7 +103,7 @@ def fetch_all_queries(input_file, max_search_count=1, db_name="pubmed"):
 
         pub_data = []
         doc_ids = {}
-        with open(input_file, "r") as file_handler:
+        with open(input_file, "r", encoding="utf-8") as file_handler:
             search_dict = json.load(file_handler)
 
             for (filename, file_obj) in search_dict.items():
@@ -129,7 +136,7 @@ def dump_all_to_file(response, doc_ids, output_file):
             data[doc_id] = [pub_meta]
 
     #
-    with open(output_file, "w+") as file_handler:
+    with open(output_file, "w+", encoding="utf-8") as file_handler:
         json.dump(data, file_handler, indent=4)
 
 
@@ -175,6 +182,6 @@ def search_pubmed_lossy(pubmed_id, db_name):
 
 
 if __name__ == '__main__':
-    (pub_data, doc_ids) = fetch_all_queries(
+    (pub_metadata, doc_ids_metadata) = fetch_all_queries(
         input_file="parsed_all_files.json", max_search_count=1)
-    dump_all_to_file(pub_data, doc_ids, "output_file.json")
+    dump_all_to_file(pub_metadata, doc_ids_metadata, "output_file.json")
