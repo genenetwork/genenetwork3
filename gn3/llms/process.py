@@ -1,6 +1,7 @@
 
 """this module contains code for processing response from fahamu client.py"""
 
+import os
 import string
 import json
 
@@ -10,6 +11,7 @@ import requests
 
 from gn3.llms.client import GeneNetworkQAClient
 from gn3.llms.response import DocIDs
+from gn3.settings import TMPDIR
 
 
 BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
@@ -67,13 +69,36 @@ def rate_document(task_id, doc_id, rating, auth_token):
         raise RuntimeError(f"An error occurred: {str(error)}") from error
 
 
+def load_file(filename):
+    """function to open and load json file"""
+    file_path = os.path.join(TMPDIR, filename)
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError(f"{filename} was not found or is a directory")
+    with open(file_path, "rb") as file_handler:
+        return json.load(file_handler)
+
+
+def fetch_pubmed(references, file_name):
+    """method to fetch and populate references with pubmed"""
+
+    try:
+        pubmed = load_file(file_name)
+        for reference in references:
+            if pubmed.get(reference["doc_id"]):
+                reference["pubmed"] = pubmed.get(reference["doc_id"])
+        return references
+
+    except FileNotFoundError:
+        return references
+
+
 def get_gnqa(query, auth_token):
     """entry function for the gn3 api endpoint()"""
 
     api_client = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
     res, task_id = api_client.ask('?ask=' + quote(query), auth_token)
-    if task_id == 0 :
-        raise  RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")
+    if task_id == 0:
+        raise RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")
     res, success = api_client.get_answer(task_id)
     if success == 1:
         resp_text = filter_response_text(res.text)
@@ -83,6 +108,8 @@ def get_gnqa(query, auth_token):
         context = resp_text['data']['context']
         references = parse_context(
             context, DocIDs().getInfo, format_bibliography_info)
+        references = fetch_pubmed(references, "pubmed.json")
+
         return task_id, answer, references
     else:
         return task_id, "Unfortunately, I have nothing on the query", []
