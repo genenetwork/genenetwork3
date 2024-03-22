@@ -91,7 +91,7 @@ OAUTH2_SCOPE = (
     "introspect")
 
 GNQA_DB = os.environ.get(
-    "GNQA_DB", f"{os.environ.get('HOME')}/genenetwork/gn3_files/db/gnqa.db")
+    "GNQA_DB", f"{os.environ.get('HOME')}/tmp/gnqa.db")
 
 try:
     # *** SECURITY CONCERN ***
