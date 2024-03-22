@@ -33,6 +33,7 @@ SQL_URI = os.environ.get(
 SECRET_KEY = "password"
 # gn2 results only used in fetching dataset info
 
+
 # FAHAMU API TOKEN
 FAHAMU_AUTH_TOKEN = ""
 
@@ -88,6 +89,9 @@ AUTH_DB = os.environ.get(
 OAUTH2_SCOPE = (
     "profile", "group", "role", "resource", "user", "masquerade",
     "introspect")
+
+GNQA_DB = os.environ.get(
+    "GNQA_DB", f"{os.environ.get('HOME')}/genenetwork/gn3_files/db/gnqa.db")
 
 try:
     # *** SECURITY CONCERN ***
