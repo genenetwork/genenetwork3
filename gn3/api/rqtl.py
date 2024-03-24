@@ -8,7 +8,7 @@ from flask import request
 
 from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_mapping, \
                                   process_rqtl_pairscan, process_perm_output
-from gn3.computations.gemma import assert_paths_exist
+from gn3.fs_helpers import assert_paths_exist
 
 rqtl = Blueprint("rqtl", __name__)
 
