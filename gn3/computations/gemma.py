@@ -8,7 +8,7 @@ from typing import Optional, Dict
 from typing import List
 from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
-from gn3.fs_helpers import get_hash_of_files
+from gn3.fs_helpers import get_hash_of_files, assert_paths_exist
 
 
 def generate_hash_of_string(unhashed_str: str) -> str:
@@ -39,17 +39,6 @@ def generate_pheno_txt_file(trait_filename: str,
             else:
                 _file.write(f"{value}\n")
     return f"{tmpdir}/gn2/{trait_filename}"
-
-
-def assert_paths_exist(paths: ValuesView) -> bool:
-    """Given a list of PATHS, throw error if any of them do not exist."""
-    for path in paths:
-        if not os.path.isfile(path):
-            if throw_error:
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
-            else:
-                return False
-    return True
 
 
 # pylint: disable=R0913
