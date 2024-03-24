@@ -60,7 +60,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_k_compute(self, mock_ipfs_cache,
@@ -103,7 +103,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_k_compute_loco(self, mock_ipfs_cache,
@@ -147,7 +147,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_gwa_compute(self, mock_ipfs_cache,
@@ -198,7 +198,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_gwa_compute_with_covars(self, mock_ipfs_cache,
@@ -252,7 +252,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_gwa_compute_with_loco_only(self, mock_ipfs_cache,
@@ -305,7 +305,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_gwa_compute_with_loco_covars(self, mock_ipfs_cache,
@@ -360,7 +360,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_k_gwa_compute_without_loco_covars(self, mock_ipfs_cache,
@@ -416,7 +416,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_k_gwa_compute_with_covars_only(self, mock_ipfs_cache,
@@ -481,7 +481,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_k_gwa_compute_with_loco_only(self, mock_ipfs_cache,
@@ -547,7 +547,7 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.queue_cmd")
     @mock.patch("gn3.computations.gemma.get_hash_of_files")
     @mock.patch("gn3.api.gemma.jsonfile_to_dict")
-    @mock.patch("gn3.api.gemma.do_paths_exist")
+    @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
     def test_k_gwa_compute_with_loco_and_covar(self, mock_ipfs_cache,
