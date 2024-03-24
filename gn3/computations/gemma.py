@@ -41,6 +41,17 @@ def generate_pheno_txt_file(trait_filename: str,
     return f"{tmpdir}/gn2/{trait_filename}"
 
 
+def assert_paths_exist(paths: ValuesView) -> bool:
+    """Given a list of PATHS, throw error if any of them do not exist."""
+    for path in paths:
+        if not os.path.isfile(path):
+            if throw_error:
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
+            else:
+                return False
+    return True
+
+
 # pylint: disable=R0913
 def generate_gemma_cmd(gemma_cmd: str,
                        output_dir: str,
