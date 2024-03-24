@@ -1,4 +1,5 @@
 """Procedures related gemma computations"""
+import errno
 import os
 
 from base64 import b64encode
@@ -40,11 +41,14 @@ def generate_pheno_txt_file(trait_filename: str,
     return f"{tmpdir}/gn2/{trait_filename}"
 
 
-def do_paths_exist(paths: ValuesView) -> bool:
-    """Given a list of PATHS, return False if any of them do not exist."""
+def assert_paths_exist(paths: ValuesView) -> bool:
+    """Given a list of PATHS, throw error if any of them do not exist."""
     for path in paths:
         if not os.path.isfile(path):
-            return False
+            if throw_error:
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
+            else:
+                return False
     return True
 
 
