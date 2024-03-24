@@ -8,7 +8,7 @@ from flask import request
 
 from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_mapping, \
                                   process_rqtl_pairscan, process_perm_output
-from gn3.computations.gemma import do_paths_exist
+from gn3.computations.gemma import assert_paths_exist
 
 rqtl = Blueprint("rqtl", __name__)
 
@@ -21,8 +21,7 @@ run the rqtl_wrapper script and return the results as JSON
     genofile = request.form['geno_file']
     phenofile = request.form['pheno_file']
 
-    if not do_paths_exist([genofile, phenofile]):
-        raise FileNotFoundError
+    assert_paths_exist([genofile, phenofile])
 
     # Split kwargs by those with values and boolean ones that just convert to True/False
     kwargs = ["covarstruct", "model", "method", "nperm", "scale", "control"]

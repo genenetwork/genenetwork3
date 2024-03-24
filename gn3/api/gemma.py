@@ -12,7 +12,7 @@ from gn3.commands import run_cmd
 from gn3.fs_helpers import cache_ipfs_file
 from gn3.fs_helpers import jsonfile_to_dict
 from gn3.computations.gemma import generate_gemma_cmd
-from gn3.computations.gemma import do_paths_exist
+from gn3.computations.gemma import assert_paths_exist
 
 
 gemma = Blueprint("gemma", __name__)
@@ -55,8 +55,7 @@ traitfile, and snpsfile are extracted from a metadata.json file.
         genofile = cache_ipfs_file(
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR'))
-        if not do_paths_exist([genofile, phenofile, snpsfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile])
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         results = generate_gemma_cmd(
             gemma_cmd=current_app.config.get("GEMMA_"
@@ -97,8 +96,7 @@ values.
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR')
         )
-        if not do_paths_exist([genofile, phenofile, snpsfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile])
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         results = generate_gemma_cmd(
             gemma_cmd=current_app.config.get("GEMMA_"
@@ -235,8 +233,7 @@ def compute_gwa_with_loco_maf(k_filename, maf, token):
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR')
         )
-        if not do_paths_exist([genofile, phenofile, snpsfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile])
         gemma_kwargs = {
             "g": genofile,
             "p": phenofile,
@@ -286,8 +283,7 @@ def compute_gwa_with_loco_covar(k_filename, maf, token):
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR')
         )
-        if not do_paths_exist([genofile, phenofile, snpsfile, covarfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile, covarfile])
         gemma_kwargs = {
             "g": genofile,
             "p": phenofile,
@@ -340,8 +336,7 @@ covars; lmm defaults to 9!
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR')
         )
-        if not do_paths_exist([genofile, phenofile, snpsfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile])
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         gemma_k_cmd = generate_gemma_cmd(
             gemma_cmd=current_app.config.get("GEMMA_"
@@ -396,8 +391,7 @@ covars; lmm defaults to 9!
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR')
         )
-        if not do_paths_exist([genofile, phenofile, snpsfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile])
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         gemma_k_cmd = generate_gemma_cmd(
             gemma_cmd=current_app.config.get("GEMMA_"
@@ -451,8 +445,7 @@ def compute_k_gwa_with_loco_only(chromosomes, maf, token):
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR')
         )
-        if not do_paths_exist([genofile, phenofile, snpsfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile])
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         gemma_k_cmd = generate_gemma_cmd(
             gemma_cmd=current_app.config.get("GEMMA_"
@@ -509,8 +502,7 @@ def compute_k_gwa_with_loco_and_cavar(chromosomes, maf, token):
             ipfs_file=_dict.get("geno"),
             cache_dir=current_app.config.get('CACHEDIR')
         )
-        if not do_paths_exist([genofile, phenofile, snpsfile]):
-            raise FileNotFoundError
+        assert_paths_exist([genofile, phenofile, snpsfile])
         gemma_kwargs = {"g": genofile, "p": phenofile, "a": snpsfile}
         gemma_k_cmd = generate_gemma_cmd(
             gemma_cmd=current_app.config.get("GEMMA_"
