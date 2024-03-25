@@ -7,11 +7,11 @@ import json
 
 from urllib.parse import urljoin
 from urllib.parse import quote
+import logging
 import requests
 
 from gn3.llms.client import GeneNetworkQAClient
 from gn3.llms.response import DocIDs
-from gn3.settings import TMPDIR
 
 
 BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
@@ -82,13 +82,15 @@ def fetch_pubmed(references, file_name, tmp_dir=""):
     """method to fetch and populate references with pubmed"""
 
     try:
-        pubmed = load_file(file_name)
+        pubmed = load_file(file_name, tmp_dir)
         for reference in references:
             if pubmed.get(reference["doc_id"]):
                 reference["pubmed"] = pubmed.get(reference["doc_id"])
         return references
 
     except FileNotFoundError:
+        logging.debug("failed to find pubmed_path for %s/%s",
+                      tmp_dir, file_name)
         return references
 
 
