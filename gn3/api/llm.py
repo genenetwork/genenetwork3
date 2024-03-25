@@ -16,11 +16,15 @@ from gn3.auth import db
 
 
 from redis import Redis
+import os
 import json
 import sqlite3
 from datetime import timedelta
 
 GnQNA = Blueprint("GnQNA", __name__)
+
+
+
 
 
 def handle_errors(func):
@@ -73,7 +77,8 @@ def rating(task_id):
                                               results.get("query"),
                                               results.get("answer"),
                                               results.get("weight", 0))
-            with db.connection(current_app.config["DATA_DIR"]) as conn:
+
+            with db.connection(os.path.join(current_app.config["DATA_DIR"],"/llm.db")) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(
                       user_id INTEGER NOT NULL,
