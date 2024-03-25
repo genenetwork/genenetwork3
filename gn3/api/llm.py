@@ -79,7 +79,7 @@ def rating(task_id):
             with db.connection(os.path.join(current_app.config["DATA_DIR"], "/llm.db")) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(
-                      user_id INTEGER NOT NULL,
+                      user_id TEXT NOT NULL,
                       query TEXT NOT NULL,
                       answer TEXT NOT NULL,
                       weight INTEGER NOT NULL DEFAULT 0,
