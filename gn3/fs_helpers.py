@@ -13,7 +13,7 @@ from typing import List
 from typing import ValuesView
 from werkzeug.utils import secure_filename
 
-def assert_paths_exist(paths: ValuesView) -> bool:
+def assert_paths_exist(paths: ValuesView, throw_error: bool = True) -> bool:
     """Given a list of PATHS, throw error if any of them do not exist."""
     for path in paths:
         if not os.path.isfile(path):
