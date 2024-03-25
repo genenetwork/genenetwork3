@@ -69,16 +69,16 @@ def rate_document(task_id, doc_id, rating, auth_token):
         raise RuntimeError(f"An error occurred: {str(error)}") from error
 
 
-def load_file(filename):
+def load_file(filename, dir_path):
     """function to open and load json file"""
-    file_path = os.path.join(TMPDIR, filename)
+    file_path = os.path.join(dir_path, f"/{filename}")
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"{filename} was not found or is a directory")
     with open(file_path, "rb") as file_handler:
         return json.load(file_handler)
 
 
-def fetch_pubmed(references, file_name):
+def fetch_pubmed(references, file_name, tmp_dir=""):
     """method to fetch and populate references with pubmed"""
 
     try:
@@ -92,7 +92,7 @@ def fetch_pubmed(references, file_name):
         return references
 
 
-def get_gnqa(query, auth_token):
+def get_gnqa(query, auth_token, tmp_dir=""):
     """entry function for the gn3 api endpoint()"""
 
     api_client = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
@@ -108,7 +108,7 @@ def get_gnqa(query, auth_token):
         context = resp_text['data']['context']
         references = parse_context(
             context, DocIDs().getInfo, format_bibliography_info)
-        references = fetch_pubmed(references, "pubmed.json")
+        references = fetch_pubmed(references, "pubmed.json", tmp_dir)
 
         return task_id, answer, references
     else:

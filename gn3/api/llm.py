@@ -24,9 +24,6 @@ from datetime import timedelta
 GnQNA = Blueprint("GnQNA", __name__)
 
 
-
-
-
 def handle_errors(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
@@ -39,6 +36,7 @@ def handle_errors(func):
 
 @GnQNA.route("/gnqna", methods=["POST"])
 def gnqa():
+    # todo  add auth
     query = request.json.get("querygnqa", "")
     if not query:
         return jsonify({"error": "querygnqa is missing in the request"}), 400
@@ -46,7 +44,7 @@ def gnqa():
     try:
         auth_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
         task_id, answer, refs = get_gnqa(
-            query, auth_token)
+            query, auth_token, current_app.config.get("TMPDIR", "/tmp"))
 
         response = {
             "task_id": task_id,
@@ -78,7 +76,7 @@ def rating(task_id):
                                               results.get("answer"),
                                               results.get("weight", 0))
 
-            with db.connection(os.path.join(current_app.config["DATA_DIR"],"/llm.db")) as conn:
+            with db.connection(os.path.join(current_app.config["DATA_DIR"], "/llm.db")) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(
                       user_id INTEGER NOT NULL,
