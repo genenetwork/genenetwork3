@@ -78,8 +78,9 @@ def rating(task_id):
                                               results.get("weight", 0))
 
             logging.debug("the user id %s", str(user_id))
-
-            with db.connection(os.path.join(current_app.config["DATA_DIR"], "/llm.db")) as conn:
+            # get base name for sqlite 
+            llm_path = os.path.join(os.path.dirname(os.current_app.config["AUTH_DB"]),"llm.db")
+            with db.connection(llm_path) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(
                       user_id TEXT NOT NULL,
