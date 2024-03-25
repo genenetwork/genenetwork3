@@ -73,7 +73,7 @@ def rating(task_id):
                                               results.get("query"),
                                               results.get("answer"),
                                               results.get("weight", 0))
-            with db.connection(current_app.config["GNQA_DB"]) as conn:
+            with db.connection(current_app.config["DATA_DIR"]) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(
                       user_id INTEGER NOT NULL,
