@@ -18,6 +18,7 @@ from gn3.auth import db
 from redis import Redis
 import os
 import json
+import logging
 import sqlite3
 from datetime import timedelta
 
@@ -76,6 +77,9 @@ def rating(task_id):
                                               results.get("answer"),
                                               results.get("weight", 0))
 
+
+            logging.debug("the user id is  %s",user_id)
+
             with db.connection(os.path.join(current_app.config["DATA_DIR"], "/llm.db")) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(
@@ -86,7 +90,7 @@ def rating(task_id):
                       task_id TEXT NOT NULL UNIQUE
                       )"""
                 cursor.execute(create_table)
-                cursor.execute("""INSERT INTO Rating(user_id,query,answer,weight,task_id)
+                cursor.execute("""INSERT INTO Rating("user_name",query,answer,weight,task_id)
                 VALUES(?,?,?,?,?)
                 ON CONFLICT(task_id) DO UPDATE SET
                 weight=excluded.weight
