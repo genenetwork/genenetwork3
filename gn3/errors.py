@@ -89,7 +89,7 @@ def handle_sparql_errors(exc):
         "EndPointNotFound": 404,
         "QueryBadFormed": 400,
         "Unauthorized": 401,
-        "URITooLong": 414,
+        "URITooLong": 414
     }
     return jsonify({
         "error": exc.msg,
