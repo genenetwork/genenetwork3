@@ -13,7 +13,7 @@ from gn3.llms.process import get_user_queries
 from gn3.llms.process import fetch_query_results
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
-
+from gn3.settings import SQLITE_DB_PATH
 
 from redis import Redis
 import os
@@ -77,11 +77,7 @@ def rating(task_id):
                                               results.get("answer"),
                                               results.get("weight", 0))
 
-            # get base name for sqlite
-            llm_path = os.path.join(os.path.dirname(
-                current_app.config["AUTH_DB"]), "llm.db")
-            logging.info("lmdb path is %s",llm_path)
-            with db.connection(llm_path) as conn:
+            with db.connection(os.path.join(SQLITE_DB_PATH, "llm.db")) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(
                       user_id TEXT NOT NULL,

@@ -55,6 +55,11 @@ GENOTYPE_FILES = os.environ.get(
 # Xapian index
 XAPIAN_DB_PATH = "xapian"
 
+# sqlite path
+
+SQLITE_DB_PATH = os.environ.get(
+    "SQLITE_DB_PATH", "/export/data/genenetwork-sqlite/")
+
 # CROSS-ORIGIN SETUP
 
 
