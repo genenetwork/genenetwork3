@@ -45,7 +45,7 @@ def gnqa():
     try:
         auth_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
         task_id, answer, refs = get_gnqa(
-            query, auth_token, current_app.config.get("TMPDIR", "/tmp"))
+            query, auth_token, current_app.config.get("DATA_DIR"))
 
         response = {
             "task_id": task_id,
@@ -77,10 +77,10 @@ def rating(task_id):
                                               results.get("answer"),
                                               results.get("weight", 0))
 
-            logging.debug("the user id %s", str(user_id))
             # get base name for sqlite
             llm_path = os.path.join(os.path.dirname(
                 current_app.config["AUTH_DB"]), "llm.db")
+            logging.info("lmdb path is %s",llm_path)
             with db.connection(llm_path) as conn:
                 cursor = conn.cursor()
                 create_table = """CREATE TABLE IF NOT EXISTS Rating(

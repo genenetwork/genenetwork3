@@ -71,26 +71,26 @@ def rate_document(task_id, doc_id, rating, auth_token):
 
 def load_file(filename, dir_path):
     """function to open and load json file"""
-    file_path = os.path.join(dir_path, f"/{filename}")
+    file_path = os.path.join(dir_path, f"{filename}")
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"{filename} was not found or is a directory")
     with open(file_path, "rb") as file_handler:
         return json.load(file_handler)
 
 
-def fetch_pubmed(references, file_name, tmp_dir=""):
+def fetch_pubmed(references, file_name, data_dir=""):
     """method to fetch and populate references with pubmed"""
 
     try:
-        pubmed = load_file(file_name, tmp_dir)
+        pubmed = load_file(file_name, os.path.join(data_dir, "gn-meta/lit"))
         for reference in references:
             if pubmed.get(reference["doc_id"]):
                 reference["pubmed"] = pubmed.get(reference["doc_id"])
         return references
 
     except FileNotFoundError:
-        logging.debug("failed to find pubmed_path for %s/%s",
-                      tmp_dir, file_name)
+        logging.error("failed to find pubmed_path for %s/%s",
+                      data_dir, file_name)
         return references
 
 
