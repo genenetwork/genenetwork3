@@ -6,6 +6,7 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
+from gn3.debug import __pk__
 from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_mapping, \
                                   process_rqtl_pairscan, process_perm_output
 from gn3.fs_helpers import assert_paths_exist
@@ -38,7 +39,7 @@ run the rqtl_wrapper script and return the results as JSON
                 rqtl_bool_kwargs.append(kwarg)
 
     rqtl_cmd = generate_rqtl_cmd(
-        rqtl_wrapper_cmd=current_app.config.get("RQTL_WRAPPER_CMD"),
+        rqtl_wrapper_cmd='scripts/rqtl_wrapper.R',
         rqtl_wrapper_kwargs=rqtl_kwargs,
         rqtl_wrapper_bool_kwargs=rqtl_bool_kwargs
     )
@@ -46,7 +47,7 @@ run the rqtl_wrapper script and return the results as JSON
     rqtl_output = {}
     if not os.path.isfile(os.path.join(current_app.config.get("TMPDIR"),
                                        "output", rqtl_cmd.get('output_file'))):
-        os.system(rqtl_cmd.get('rqtl_cmd'))
+        os.system(__pk__(rqtl_cmd.get('rqtl_cmd')))
 
     if "pairscan" in rqtl_bool_kwargs:
         rqtl_output['results'] = process_rqtl_pairscan(rqtl_cmd.get('output_file'), genofile)

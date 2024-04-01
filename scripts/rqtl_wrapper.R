@@ -3,6 +3,12 @@ library(qtl)
 library(stringi)
 library(stringr)
 
+
+tmp_dir = Sys.getenv("TMPDIR")
+if (!dir.exists(tmp_dir)) {
+  tmp_dir = "/tmp"
+}
+
 option_list = list(
   make_option(c("-g", "--geno"), type="character", help=".geno file containing a dataset's genotypes"),
   make_option(c("-p", "--pheno"), type="character", help="File containing two columns - sample names and values"),
@@ -56,7 +62,7 @@ geno_file = opt$geno
 pheno_file = opt$pheno
 
 # Generate randomized filename for cross object
-cross_file = file.path(opt$outdir, "cross", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
+cross_file = file.path(tmp_dir, "output", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
 
 trim <- function( x ) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
 
