@@ -43,8 +43,9 @@ There are at least three ways to start GeneNetwork3 with GNU Guix:
 1. Create an environment with `guix shell`
 2. Create a container with `guix shell -C`
 3. Use a profile and shell settings with `source ~/opt/genenetwork3/etc/profile`
+4. Use the guix system container with GN3 directory mounted in
 
-At this point we use all three for different purposes.
+At this point we use all three for different purposes. In all cases you'll most likely need the mysql database.
 
 #### Create an environment:
 
@@ -123,8 +124,9 @@ These configurations should be set in an external config file, pointed to with t
 - SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql")
 - RQTL_WRAPPER (ex: "~/genenetwork3/scripts/rqtl_wrapper.R")
 - XAPIAN_DB_PATH (ex: "/export/data/genenetwork/xapian")
+- TMPDIR
 
-TMPDIR also needs to be set correctly for the R script(s) (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp)
+TMPDIR also needs to be set correctly for the R script(s) because they pass results on as files on the local system (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp)
 
 ## Command-Line Utility Scripts
 
