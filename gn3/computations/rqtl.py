@@ -1,5 +1,7 @@
 """Procedures related to R/qtl computations"""
 import os
+import sys
+import logging
 from bisect import bisect
 from typing import Dict, List, Tuple, Union
 
@@ -9,8 +11,9 @@ from flask import current_app
 
 from gn3.commands import compose_rqtl_cmd
 from gn3.computations.gemma import generate_hash_of_string
-from gn3.fs_helpers import get_hash_of_files
+from gn3.fs_helpers import get_hash_of_files, assert_path_exists
 
+from gn3.debug import __pk__
 
 def generate_rqtl_cmd(
     rqtl_wrapper_cmd: str,
@@ -20,6 +23,8 @@ def generate_rqtl_cmd(
     """Given the base rqtl_wrapper command and
     dict of keyword arguments, return the full rqtl_wrapper command and an
     output filename generated from a hash of the genotype and phenotype files"""
+
+    assert_path_exists(rqtl_wrapper_cmd)
 
     # Generate a hash from contents of the genotype and phenotype files
     _hash = get_hash_of_files(
@@ -60,6 +65,7 @@ def process_rqtl_mapping(file_name: str) -> List:
     """Given an output file name, read in R/qtl results and return
     a List of marker objects"""
     marker_obs = []
+
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
     with open(

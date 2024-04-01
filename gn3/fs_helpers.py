@@ -13,14 +13,19 @@ from typing import List
 from typing import ValuesView
 from werkzeug.utils import secure_filename
 
+def assert_path_exists(path: str, throw_error: bool = True) -> bool:
+    """Throw error if any of them do not exist."""
+    if not os.path.isfile(path):
+        if throw_error:
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
+        else:
+            return False
+    return True
+
 def assert_paths_exist(paths: ValuesView, throw_error: bool = True) -> bool:
     """Given a list of PATHS, throw error if any of them do not exist."""
     for path in paths:
-        if not os.path.isfile(path):
-            if throw_error:
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
-            else:
-                return False
+        assert_path_exists(path,throw_error)
     return True
 
 def get_hash_of_files(files: List[str]) -> str:
