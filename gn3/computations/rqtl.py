@@ -11,7 +11,7 @@ from flask import current_app
 
 from gn3.commands import compose_rqtl_cmd
 from gn3.computations.gemma import generate_hash_of_string
-from gn3.fs_helpers import get_hash_of_files, assert_path_exists
+from gn3.fs_helpers import get_hash_of_files, assert_path_exists, get_tmpdir
 
 from gn3.debug import __pk__
 
@@ -68,13 +68,11 @@ def process_rqtl_mapping(file_name: str) -> List:
 
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
-    with open(
-        os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", file_name
-        ),
-        "r",
-        encoding="utf-8",
-    ) as the_file:
+    outdir = os.path.join(get_tmpdir(),"output")
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+
+    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         for line in the_file:
             line_items = line.split(",")
             if line_items[1][1:-1] == "chr" or not line_items:
@@ -115,13 +113,11 @@ def pairscan_for_figure(file_name: str) -> Dict:
     figure_data = {}
 
     # Open the file with the actual results, written as a list of lists
-    with open(
-        os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", file_name
-        ),
-        "r",
-        encoding="utf8",
-    ) as the_file:
+    outdir = os.path.join(get_tmpdir(),"output")
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+
+    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         lod_results = []
         for i, line in enumerate(the_file):
             if i == 0:  # Skip first line
@@ -322,15 +318,11 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
     suggestive and significant thresholds"""
 
     perm_results = []
-    with open(
-        os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"),
-            "output",
-            "PERM_" + file_name,
-        ),
-        "r",
-        encoding="utf-8",
-    ) as the_file:
+    outdir = os.path.join(get_tmpdir(),"output")
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+
+    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         for i, line in enumerate(the_file):
             if i == 0:
                 # Skip header line
