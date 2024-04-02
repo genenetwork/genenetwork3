@@ -16,7 +16,7 @@ class TestRqtl(unittest.TestCase):
         mock_generate_hash_string.return_value = "my-hash2"
 
         self.assertEqual(
-            generate_rqtl_cmd(rqtl_wrapper_cmd="rqtl-wrapper",
+            generate_rqtl_cmd(rqtl_wrapper_cmd="scripts/rqtl_wrapper.R",
                               rqtl_wrapper_kwargs={
                                   "g": "genofile",
                                   "p": "phenofile",
@@ -33,7 +33,7 @@ class TestRqtl(unittest.TestCase):
                                   "output_file":
                                   "my-hash1my-hash2my-hash2-output.csv",
                                   "rqtl_cmd": (
-                                      "Rscript rqtl-wrapper "
+                                      "Rscript scripts/rqtl_wrapper.R "
                                       "--g genofile --p phenofile "
                                       "--model normal --method hk "
                                       "--nperm 1000 --scale Mb "
