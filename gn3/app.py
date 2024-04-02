@@ -28,6 +28,7 @@ from gn3.api.sampledata import sampledata
 from gn3.api.llm import gnqa
 from gn3.auth import oauth2
 from gn3.case_attributes import caseattr
+from gn3.fs_helpers import get_tmpdir
 
 
 def create_app(config: Union[Dict, str, None] = None) -> Flask:
@@ -56,6 +57,9 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     # DO NOT log anything before this point
     logging.info("Guix Profile: '%s'.", os.environ.get("GUIX_PROFILE"))
     logging.info("Python Executable: '%s'.", sys.executable)
+
+    if "TMPDIR" in os.environ:
+        app.config.from_envvar('TMPDIR')
 
     CORS(
         app,
