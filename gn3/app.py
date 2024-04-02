@@ -58,9 +58,6 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     logging.info("Guix Profile: '%s'.", os.environ.get("GUIX_PROFILE"))
     logging.info("Python Executable: '%s'.", sys.executable)
 
-    if "TMPDIR" in os.environ:
-        app.config.from_envvar('TMPDIR')
-
     CORS(
         app,
         origins=app.config["CORS_ORIGINS"],
