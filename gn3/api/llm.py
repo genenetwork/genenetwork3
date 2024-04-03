@@ -14,7 +14,6 @@ from gn3.llms.process import fetch_query_results
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
 from gn3.settings import SQLITE_DB_PATH
-
 from redis import Redis
 import os
 import json
@@ -56,7 +55,8 @@ def gnqa():
         with (Redis.from_url(current_app.config["REDIS_URI"],
                              decode_responses=True) as redis_conn):
             # The key will be deleted after 60 seconds
-            redis_conn.setex(f"LLM:random_user-{query}", timedelta(days=10), json.dumps(response))
+            redis_conn.setex(
+                f"LLM:random_user-{query}", timedelta(days=10), json.dumps(response))
         return jsonify({
             **response,
             "prev_queries": get_user_queries("random_user", redis_conn)
@@ -70,7 +70,6 @@ def gnqa():
 def rating(task_id):
     try:
         with require_oauth.acquire("profile") as the_token:
-            user = the_token.user.user_id
             results = request.json
             user_id, query, answer, weight = (the_token.user.user_id,
                                               results.get("query"),
@@ -93,15 +92,14 @@ def rating(task_id):
                 weight=excluded.weight
                 """, (str(user_id), query, answer, weight, task_id))
                 return {
-                    "message": "success",
-                    "status": 0
+                    "message": "Thanks for the Feedback"
                 }, 200
     except sqlite3.Error as error:
         raise error
 
 
 @GnQNA.route("/history/<query>", methods=["GET"])
-@require_oauth("profile user")
+@require_oauth("profile")
 @handle_errors
 def fetch_user_hist(query):
 
@@ -117,7 +115,7 @@ def fetch_user_hist(query):
 @handle_errors
 def fetch_users_hist_records(query):
     """method to fetch all users hist:note this is a test functionality to be replaced by fetch_user_hist"""
-
+    
     with Redis.from_url(current_app.config["REDIS_URI"], decode_responses=True) as redis_conn:
         return jsonify({
             **fetch_query_results(query, "random_user", redis_conn),
