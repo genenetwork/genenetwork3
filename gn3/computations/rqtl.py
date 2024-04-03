@@ -69,8 +69,6 @@ def process_rqtl_mapping(file_name: str) -> List:
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
     outdir = os.path.join(get_tmpdir(),"gn3")
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
 
     with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         for line in the_file:
@@ -114,8 +112,6 @@ def pairscan_for_figure(file_name: str) -> Dict:
 
     # Open the file with the actual results, written as a list of lists
     outdir = os.path.join(get_tmpdir(),"gn3")
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
 
     with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         lod_results = []
@@ -319,8 +315,6 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
 
     perm_results = []
     outdir = os.path.join(get_tmpdir(),"gn3")
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
 
     with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         for i, line in enumerate(the_file):

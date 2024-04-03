@@ -22,23 +22,24 @@ def generate_pheno_txt_file(trait_filename: str,
                             values: List,
                             tmpdir: str = "/tmp") -> str:
     """Given VALUES, and TMPDIR, generate a valid traits file"""
-    if not os.path.isdir(f"{tmpdir}/gn2/"):
-        os.mkdir(f"{tmpdir}/gn2/")
+
+    if not os.path.isdir(f"{tmpdir}/gn3/"):
+        os.mkdir(f"{tmpdir}/gn3/")
     ext = trait_filename.partition(".")[-1]
     if ext:
         trait_filename = trait_filename.replace(f".{ext}", "")
         ext = f".{ext}"
     trait_filename += f"_{generate_hash_of_string(''.join(values))}{ext}"
     # Early return if this already exists!
-    if os.path.isfile(f"{tmpdir}/gn2/{trait_filename}"):
-        return f"{tmpdir}/gn2/{trait_filename}"
-    with open(f"{tmpdir}/gn2/{trait_filename}", "w", encoding="utf-8") as _file:
+    if os.path.isfile(f"{tmpdir}/gn3/{trait_filename}"):
+        return f"{tmpdir}/gn3/{trait_filename}"
+    with open(f"{tmpdir}/gn3/{trait_filename}", "w", encoding="utf-8") as _file:
         for value in values:
             if value == "x":
                 _file.write("NA\n")
             else:
                 _file.write(f"{value}\n")
-    return f"{tmpdir}/gn2/{trait_filename}"
+    return f"{tmpdir}/gn3/{trait_filename}"
 
 
 # pylint: disable=R0913
