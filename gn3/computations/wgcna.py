@@ -58,7 +58,7 @@ def process_image(image_loc: str) -> bytes:
 def compose_wgcna_cmd(rscript_path: str, temp_file_path: str):
     """function to componse wgcna cmd"""
     # (todo):issue relative paths to abs paths
-    cmd = f"Rscript ./scripts/{rscript_path}  {temp_file_path}"
+    cmd = f"Rscript scripts/{rscript_path} {temp_file_path}"
     return cmd
 
 
