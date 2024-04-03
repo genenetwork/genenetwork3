@@ -22,7 +22,7 @@ option_list = list(
   make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata (stored as final column/vector in phenotype input file)"),
   make_option(c("-s", "--scale"), type="character", default="mb", help="Mapping scale - Megabases (Mb) or Centimorgans (cM)"),
   make_option(c("--control"), type="character", default=NULL, help="Name of marker (contained in genotype file) to be used as a control"),
-  make_option(c("-o", "--outdir"), type="character", default=NULL, help="Directory in which to write result file"),
+  make_option(c("-o", "--outdir"), type="character", default=file.path(tmp_dir, "gn3"), help="Directory in which to write result file"),
   make_option(c("-f", "--filename"), type="character", default=NULL, help="Name to use for result file"),
   make_option(c("-v", "--verbose"), action="store_true", default=NULL, help="Show extra information")
 );
@@ -62,7 +62,7 @@ geno_file = opt$geno
 pheno_file = opt$pheno
 
 # Generate randomized filename for cross object
-cross_file = file.path(tmp_dir, "output", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
+cross_file = file.path(tmp_dir, "gn3", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
 
 trim <- function( x ) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
 

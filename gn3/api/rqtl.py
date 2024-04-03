@@ -38,6 +38,10 @@ run the rqtl_wrapper script and return the results as JSON
             if kwarg in boolean_kwargs:
                 rqtl_bool_kwargs.append(kwarg)
 
+    outdir = os.path.join(get_tmpdir(),"gn3")
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+
     rqtl_cmd = generate_rqtl_cmd(
         rqtl_wrapper_cmd='scripts/rqtl_wrapper.R',
         rqtl_wrapper_kwargs=rqtl_kwargs,
