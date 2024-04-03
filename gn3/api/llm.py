@@ -35,6 +35,7 @@ def handle_errors(func):
 
 
 @GnQNA.route("/gnqna", methods=["POST"])
+@require_oauth("profile")
 def gnqa():
     # todo  add auth
     query = request.json.get("querygnqa", "")
@@ -52,15 +53,15 @@ def gnqa():
             "answer": answer,
             "references": refs
         }
-        with (Redis.from_url(current_app.config["REDIS_URI"],
-                             decode_responses=True) as redis_conn):
-            # The key will be deleted after 60 seconds
+        with (require_oauth.acquire("profile") as token, Redis.from_url(current_app.config["REDIS_URI"],
+                                                                        decode_responses=True) as redis_conn):
             redis_conn.setex(
-                f"LLM:random_user-{query}", timedelta(days=10), json.dumps(response))
-        return jsonify({
+                f"LLM:{str(token.user.user_id)}-{query}", timedelta(days=10), json.dumps(response))
+        result = {
             **response,
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
+            "prev_queries": get_user_queries(str(token.user.user_id), redis_conn)
+        }
+        return jsonify(result)
     except Exception as error:
         return jsonify({"query": query, "error": f"Request failed-{str(error)}"}), 500
 
@@ -69,9 +70,9 @@ def gnqa():
 @require_oauth("profile")
 def rating(task_id):
     try:
-        with require_oauth.acquire("profile") as the_token:
+        with require_oauth.acquire("profile") as token:
             results = request.json
-            user_id, query, answer, weight = (the_token.user.user_id,
+            user_id, query, answer, weight = (str(token.user.user_id),
                                               results.get("query"),
                                               results.get("answer"),
                                               results.get("weight", 0))
@@ -100,32 +101,11 @@ def rating(task_id):
 
 @GnQNA.route("/history/<query>", methods=["GET"])
 @require_oauth("profile")
-@handle_errors
 def fetch_user_hist(query):
 
-    with (require_oauth.acquire("profile user") as the_token, Redis.from_url(current_app.config["REDIS_URI"],
-                                                                             decode_responses=True) as redis_conn):
+    with (require_oauth.acquire("profile") as token, Redis.from_url(current_app.config["REDIS_URI"],
+                                                                        decode_responses=True) as redis_conn):
         return jsonify({
-            **fetch_query_results(query, the_token.user.id, redis_conn),
-            "prev_queries": get_user_queries("random_user", redis_conn)
+            **fetch_query_results(query, str(token.user.user_id), redis_conn),
+            "prev_queries": get_user_queries(str(token.user.user_id), redis_conn)
         })
-
-
-@GnQNA.route("/historys/<query>", methods=["GET"])
-@handle_errors
-def fetch_users_hist_records(query):
-    """method to fetch all users hist:note this is a test functionality to be replaced by fetch_user_hist"""
-    
-    with Redis.from_url(current_app.config["REDIS_URI"], decode_responses=True) as redis_conn:
-        return jsonify({
-            **fetch_query_results(query, "random_user", redis_conn),
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
-
-
-@GnQNA.route("/get_hist_names", methods=["GET"])
-@handle_errors
-def fetch_prev_hist_ids():
-
-    with (Redis.from_url(current_app.config["REDIS_URI"], decode_responses=True)) as redis_conn:
-        return jsonify({"prev_queries": get_user_queries("random_user", redis_conn)})
