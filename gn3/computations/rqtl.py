@@ -68,7 +68,7 @@ def process_rqtl_mapping(file_name: str) -> List:
 
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
-    outdir = os.path.join(get_tmpdir(),"output")
+    outdir = os.path.join(get_tmpdir(),"gn3")
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
 
@@ -113,7 +113,7 @@ def pairscan_for_figure(file_name: str) -> Dict:
     figure_data = {}
 
     # Open the file with the actual results, written as a list of lists
-    outdir = os.path.join(get_tmpdir(),"output")
+    outdir = os.path.join(get_tmpdir(),"gn3")
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
 
@@ -132,7 +132,7 @@ def pairscan_for_figure(file_name: str) -> Dict:
     with open(
         os.path.join(
             current_app.config.get("TMPDIR", "/tmp"),
-            "output",
+            "gn3",
             "MAP_" + file_name,
         ),
         "r",
@@ -163,7 +163,7 @@ def get_marker_list(map_file: str) -> List:
     marker_list = []
     with open(
         os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", map_file
+            current_app.config.get("TMPDIR", "/tmp"), "gn3", map_file
         ),
         "r",
         encoding="utf8",
@@ -199,7 +199,7 @@ def generate_table_rows(
     table_data = []
     with open(
         os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", results_file
+            current_app.config.get("TMPDIR", "/tmp"), "gn3", results_file
         ),
         "r",
         encoding="utf8",
@@ -318,7 +318,7 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
     suggestive and significant thresholds"""
 
     perm_results = []
-    outdir = os.path.join(get_tmpdir(),"output")
+    outdir = os.path.join(get_tmpdir(),"gn3")
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
 
