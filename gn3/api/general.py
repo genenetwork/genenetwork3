@@ -64,7 +64,7 @@ def run_r_qtl(geno_filestr, pheno_filestr):
     """Run r_qtl command using the written rqtl_wrapper program
 
     """
-    rqtl_wrapper = 'scripts/rqtl_wrapper.R'
+    rqtl_wrapper = 'scripts/rqtl_wrapper.R' # This is a stub
     cmd = (f"Rscript {rqtl_wrapper} "
            f"{geno_filestr} {pheno_filestr}")
     return jsonify(run_cmd(cmd)), 201

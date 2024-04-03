@@ -122,11 +122,10 @@ See also instructions in [.guix.scm](.guix.scm).
 These configurations should be set in an external config file, pointed to with the environment variable GN3_CONF.
 
 - SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql")
-- RQTL_WRAPPER (ex: "~/genenetwork3/scripts/rqtl_wrapper.R")
 - XAPIAN_DB_PATH (ex: "/export/data/genenetwork/xapian")
 - TMPDIR
 
-TMPDIR also needs to be set correctly for the R script(s) because they pass results on as files on the local system (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp)
+TMPDIR also needs to be set correctly for the R script(s) because they pass results on as files on the local system (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp). Note that the Guix build system should take care of the paths.
 
 ## Command-Line Utility Scripts
 
