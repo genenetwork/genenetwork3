@@ -8,8 +8,6 @@ from functools import wraps
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 from gn3.llms.process import get_gnqa
-from gn3.llms.process import rate_document
-from gn3.llms.process import get_user_queries
 from gn3.llms.process import fetch_query_results
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
@@ -17,7 +15,6 @@ from gn3.settings import SQLITE_DB_PATH
 from redis import Redis
 import os
 import json
-import logging
 import sqlite3
 from datetime import timedelta
 
@@ -57,11 +54,7 @@ def gnqa():
                                                                         decode_responses=True) as redis_conn):
             redis_conn.setex(
                 f"LLM:{str(token.user.user_id)}-{query}", timedelta(days=10), json.dumps(response))
-        result = {
-            **response,
-            "prev_queries": get_user_queries(str(token.user.user_id), redis_conn)
-        }
-        return jsonify(result)
+        return jsonify(response)
     except Exception as error:
         return jsonify({"query": query, "error": f"Request failed-{str(error)}"}), 500
 
@@ -99,13 +92,22 @@ def rating(task_id):
         raise error
 
 
+@GnQNA.route("/hist/titles", methods=["GET"])
+@require_oauth("profile")
+def fetch_history():
+    with (require_oauth.acquire("profile") as token, Redis.from_url(current_app.config["REDIS_URI"],
+                                                                    decode_responses=True) as redis_conn):
+
+        records = [{result: result.rpartition(
+            '-')[-1]} for result in redis_conn.keys(f"LLM:{str(token.user.user_id)}*")]
+        return jsonify({
+            "prev_queries": records
+        })
+
+
 @GnQNA.route("/history/<query>", methods=["GET"])
 @require_oauth("profile")
 def fetch_user_hist(query):
-
     with (require_oauth.acquire("profile") as token, Redis.from_url(current_app.config["REDIS_URI"],
-                                                                        decode_responses=True) as redis_conn):
-        return jsonify({
-            **fetch_query_results(query, str(token.user.user_id), redis_conn),
-            "prev_queries": get_user_queries(str(token.user.user_id), redis_conn)
-        })
+                                                                    decode_responses=True) as redis_conn):
+        return jsonify(fetch_query_results(query, redis_conn))
