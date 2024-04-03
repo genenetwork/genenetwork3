@@ -46,8 +46,8 @@ run the rqtl_wrapper script and return the results as JSON
 
     rqtl_output = {}
     if not os.path.isfile(os.path.join(current_app.config.get("TMPDIR"),
-                                       "output", rqtl_cmd.get('output_file'))):
-        os.system(__pk__(rqtl_cmd.get('rqtl_cmd')))
+                                       "gn3", rqtl_cmd.get('output_file'))):
+        os.system(rqtl_cmd.get('rqtl_cmd'))
 
     if "pairscan" in rqtl_bool_kwargs:
         rqtl_output['results'] = process_rqtl_pairscan(rqtl_cmd.get('output_file'), genofile)

@@ -29,18 +29,18 @@ def stream_cmd_output(socketio, request_data, cmd: str):
     """function to stream in realtime"""
     # xtodo  syncing and closing /edge cases
 
-    socketio.emit("output", {"data": f"calling you script {cmd}"},
+    socketio.emit("gn3", {"data": f"calling you script {cmd}"},
                   namespace="/", room=request_data["socket_id"])
     with subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True) as results:
         if results.stdout is not None:
             for line in iter(results.stdout.readline, b""):
-                socketio.emit("output",
+                socketio.emit("gn3",
                               {"data": line.decode("utf-8").rstrip()},
                               namespace="/", room=request_data["socket_id"])
 
                 socketio.emit(
-                    "output", {"data":
+                    "gn3", {"data":
                                "parsing the output results"}, namespace="/",
                     room=request_data["socket_id"])
 
@@ -79,8 +79,8 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
                 return run_cmd_results
 
             output_file_data = json.load(outputfile)
-            output_file_data["output"]["image_data"] = process_image(
-                output_file_data["output"]["imageLoc"]).decode("ascii")
+            output_file_data["gn3"]["image_data"] = process_image(
+                output_file_data["gn3"]["imageLoc"]).decode("ascii")
             # json format only supports  unicode string// to get image data reconvert
 
             return {
