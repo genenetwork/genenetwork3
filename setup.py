@@ -37,7 +37,7 @@ setup(author='Bonface M. K.',
       name='gn3',
       packages=find_packages(),
       url='https://github.com/genenetwork/genenetwork3',
-      version='0.1',
+      version='3.12',
       tests_require=["pytest", "hypothesis"],
       cmdclass={
           "run_tests": RunTests ## testing
