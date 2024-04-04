@@ -1,6 +1,4 @@
-
 """this module contains code for processing response from fahamu client.py"""
-
 import os
 import string
 import json
@@ -105,7 +103,7 @@ def get_gnqa(query, auth_token, tmp_dir=""):
     if success == 1:
         resp_text = filter_response_text(res.text)
         if resp_text.get("data") is None:
-            return task_id, "Unfortunately I have nothing on the query", []
+            return task_id, "Please try to rephrase your question to receive feedback", []
         answer = resp_text['data']['answer']
         context = resp_text['data']['context']
         references = parse_context(
@@ -114,7 +112,7 @@ def get_gnqa(query, auth_token, tmp_dir=""):
 
         return task_id, answer, references
     else:
-        return task_id, "Unfortunately, I have nothing on the query", []
+        return task_id, "Please try to rephrase your question to receive feedback", []
 
 
 def fetch_query_results(query, user_id, redis_conn):
