@@ -69,7 +69,8 @@ def rate_document(task_id, doc_id, rating, auth_token):
 
 def load_file(filename, dir_path):
     """function to open and load json file"""
-    file_path = os.path.join(dir_path, f"{filename}")
+    # code goes here
+    file_path = os.path.join(os.path.dirname(__file__), "output_file.json")
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"{filename} was not found or is a directory")
     with open(file_path, "rb") as file_handler:
@@ -115,9 +116,9 @@ def get_gnqa(query, auth_token, tmp_dir=""):
         return task_id, "Please try to rephrase your question to receive feedback", []
 
 
-def fetch_query_results(query, user_id, redis_conn):
+def fetch_query_results(query, redis_conn):
     """this method fetches prev user query searches"""
-    result = redis_conn.get(f"LLM:{user_id}-{query}")
+    result = redis_conn.get(query)
     if result:
         return json.loads(result)
     return {
@@ -126,10 +127,3 @@ def fetch_query_results(query, user_id, redis_conn):
         "references": [],
         "task_id": None
     }
-
-
-def get_user_queries(user_id, redis_conn):
-    """methos to fetch all queries for a specific user"""
-
-    results = redis_conn.keys(f"LLM:{user_id}*")
-    return [query for query in [result.partition("-")[2] for result in results] if query != ""]
