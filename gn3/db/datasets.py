@@ -1,12 +1,14 @@
 """
 This module contains functions relating to specific trait dataset manipulation
 """
+import json
+
 from typing import Any
 from pathlib import Path
 
 from flask import current_app as app
 
-def retrieve_sample_list(group: str):
+def retrieve_sample_list(group: str, inc_par: bool = True, inc_f1: bool = True):
     """
     Get the sample list for a group (a category that datasets belong to)
 
@@ -15,6 +17,21 @@ def retrieve_sample_list(group: str):
     """
 
     samplelist = []
+    if inc_par or inc_f1:
+        par_f1_path = Path(
+            app.config.get(
+                "GENENETWORK_FILES",
+                "/home/gn2/production/genotype_files/"
+            ), f'parents_and_f1s.json'
+        )
+        if par_f1_path.is_file():
+            with open(par_f1_path, encoding="utf-8") as par_f1_file:
+                par_f1s = json.load(par_f1_file)[group]
+                if inc_par:
+                    samplelist += [par_f1s['paternal']['strain'], par_f1s['maternal']['strain']]
+                if inc_f1:
+                    samplelist += [f1['strain'] for f1 in par_f1s['f1s']]
+
     genofile_path = Path(
         app.config.get(
             "GENENETWORK_FILES",
@@ -35,9 +52,9 @@ def retrieve_sample_list(group: str):
             headers = line.split("\t")
 
             if headers[3] == "Mb":
-                samplelist = headers[4:]
+                samplelist += headers[4:]
             else:
-                samplelist = headers[3:]
+                samplelist += headers[3:]
     return samplelist
 
 def retrieve_mrna_group_name(connection: Any, probeset_id: int, dataset_name: str):
