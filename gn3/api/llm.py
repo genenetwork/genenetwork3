@@ -8,7 +8,6 @@ from functools import wraps
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 from gn3.llms.process import get_gnqa
-from gn3.llms.process import rate_document
 from gn3.llms.process import get_user_queries
 from gn3.llms.process import fetch_query_results
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
@@ -18,7 +17,6 @@ from gn3.settings import SQLITE_DB_PATH
 from redis import Redis
 import os
 import json
-import logging
 import sqlite3
 from datetime import timedelta
 
