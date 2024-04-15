@@ -4,8 +4,8 @@
      (show-trailing-whitespace . 1)
      (python-shell-interpreter . "$HOME/.guix-extra-profiles/genenetwork3/bin/python3")
      (eval .
-	   (when
-	       (require 'flycheck nil t')
+	   ;; Enable Flycheck
+	   (when (require 'flycheck nil t)
 	     (setq elpy-modules
 		   (delq 'elpy-module-flymake elpy-modules))
 	     (add-hook 'elpy-mode-hook 'flycheck-mode))))))
