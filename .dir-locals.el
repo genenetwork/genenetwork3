@@ -3,7 +3,6 @@
      (python-indent . 4)
      (show-trailing-whitespace . 1)
      (python-shell-interpreter . "$HOME/.guix-extra-profiles/genenetwork3/bin/python3")
-     ()
      (eval .
 	   (when
 	       (require 'flycheck nil t')
