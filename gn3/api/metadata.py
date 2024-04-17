@@ -6,7 +6,8 @@ from flask import Blueprint
 from flask import request
 from flask import current_app
 
-from gn3.db.datasets import retrieve_dataset_metadata
+from gn3.db.datasets import (retrieve_metadata,
+                             save_dataset_metadata)
 from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact,
@@ -197,7 +198,7 @@ CONSTRUCT {
         _query, _context,
         current_app.config.get("SPARQL_ENDPOINT")
     )
-    return __result | retrieve_dataset_metadata(
+    return __result | retrieve_metadata(
         (Path(
             current_app.config.get("DATA_DIR")
         ) / "gn-docs/general/datasets" /

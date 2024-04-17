@@ -351,7 +351,7 @@ def retrieve_trait_dataset(trait_type, trait, threshold, conn):
     }
 
 
-def retrieve_dataset_metadata(name: str) -> dict:
+def retrieve_metadata(name: str) -> dict:
     """Return the full data given a path, NAME"""
     result = {}
     __subject = {
