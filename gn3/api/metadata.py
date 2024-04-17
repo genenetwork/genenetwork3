@@ -7,7 +7,8 @@ from flask import request
 from flask import current_app
 
 from gn3.db.datasets import (retrieve_metadata,
-                             save_dataset_metadata)
+                             save_metadata,
+                             get_history)
 from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact,
@@ -261,6 +262,26 @@ CONSTRUCT {
         _query, _context,
         current_app.config.get("SPARQL_ENDPOINT")
     )
+
+
+@metadata.route("/datasets/<id_>/history")
+def view_history(id_):
+    history = get_history(
+        git_dir=Path(current_app.config.get("DATA_DIR"),
+                     "gn-docs"),
+        name=id_,
+    ).either(
+        lambda error: {
+            "error": "Unable to fetch history",
+            "error_description": error,
+        },
+        lambda history: {
+            "id": id_,
+            "history": history,
+        })
+    if history.get("error"):
+        raise Exception(history.get("error_description"))
+    return history
 
 
 @metadata.route("/datasets/search/<term>", methods=["GET"])

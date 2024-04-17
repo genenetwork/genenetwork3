@@ -408,3 +408,34 @@ def save_metadata(
             ]))
         .then(lambda _: monadic_run_cmd(f"git -C {git_dir} \
 push origin master --dry-run".split(" "))))
+
+
+def get_history(git_dir: str, name: str) -> Either:
+    """Get the git history for a given dataset.  This history is
+    returned as a HTML formatted text. Example of the formatted
+    output:
+
+    ```
+    <tr>
+      <td><i>3 Weeks Ago</i></td>
+      <td>
+          <a style='color:green;' href='..id=some-id' target='_blank'>
+             some-id
+          </a>
+      </td>
+      <td>commit header</td>
+      <td>Author Name</td>
+    </tr>
+    ```
+
+    """
+    pretty_format_str = "<tr><td><i>%cr</i></td>\
+<td>\
+<a style='color:green;' href='https://git.genenetwork.org/gn-docs/commit/general?id=%H' \
+target='_blank'>%h</a></td>\
+<td>%s</td><td>%an</td></tr>"
+    return monadic_run_cmd([
+        "git", "-C",
+        str(Path(git_dir) / "general/datasets/" / name),
+        "log", f"--pretty=format:{pretty_format_str}",
+    ])
