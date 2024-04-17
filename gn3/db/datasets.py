@@ -5,8 +5,11 @@ import json
 
 from typing import Any
 from pathlib import Path
+from pymonad.either import Either, Left, Right
 
 from flask import current_app as app
+
+from gn3.commands import monadic_run_cmd
 
 def retrieve_sample_list(group: str, inc_par: bool = True, inc_f1: bool = True):
     """
@@ -372,3 +375,36 @@ def retrieve_metadata(name: str) -> dict:
         with __file.open() as _f:
             result[__subject.get(__file.stem, f"gn:{__file.stem}")] = _f.read()
     return result
+
+
+def save_metadata(
+        git_dir: str, output: str,
+        author: str, content: str, msg: str
+) -> Either:
+    """Save dataset metadata to git"""
+    def __write__():
+        try:
+            with Path(output).open(mode="w", encoding="utf8") as file_:
+                file_.write(content)
+                return Right(0)
+        except PermissionError as excpt:
+            return Left({
+                "command": "Permission required to write to this file!",
+                "error": str(excpt)
+            })
+        except IOError as excpt:
+            return Left({
+                "command": "IOError when writing to this file!",
+                "error": str(excpt)
+            })
+    return (
+        monadic_run_cmd(f"git -C {git_dir} reset --hard origin".split(" "))
+        .then(lambda _: monadic_run_cmd(f"git -C {git_dir} pull".split(" ")))
+        .then(lambda _: __write__())
+        .then(lambda _: monadic_run_cmd(f"git -C {git_dir} add .".split(" ")))
+        .then(lambda _: monadic_run_cmd(
+            f"git -C {git_dir} commit -m".split(" ") + [
+                f'{msg}', f"--author='{author}'", "--no-gpg-sign"
+            ]))
+        .then(lambda _: monadic_run_cmd(f"git -C {git_dir} \
+push origin master --dry-run".split(" "))))
