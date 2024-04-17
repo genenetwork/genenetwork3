@@ -18,6 +18,8 @@ from uuid import uuid4
 from flask import current_app
 from redis.client import Redis  # Used only in type hinting
 
+from pymonad.either import Either, Left, Right
+
 from gn3.chancy import random_string
 from gn3.exceptions import RedisConnectionError
 
@@ -168,3 +170,24 @@ def run_async_cmd(
     cmd_id = queue_cmd(conn, job_queue, cmd, email, env)
     subprocess.Popen([f"{sys.executable}", "-m", "sheepdog.worker"]) # pylint: disable=[consider-using-with]
     return cmd_id
+
+
+def monadic_run_cmd(cmd) -> Either:
+    """Run a given command and return it's results as an Either monad"""
+    result = ""
+    try:
+        result = subprocess.run(cmd,
+                                capture_output=True,
+                                check=True).stdout.decode()
+    # This command does not exist
+    except FileNotFoundError as excpt:
+        return Left({
+            "command": cmd,
+            "error": str(excpt),
+        })
+    except subprocess.CalledProcessError as excpt:
+        return Left({
+            "command": cmd,
+            "error": str(excpt),
+        })
+    return Right(result)
