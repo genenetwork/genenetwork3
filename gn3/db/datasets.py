@@ -22,7 +22,7 @@ def retrieve_sample_list(group: str, inc_par: bool = True, inc_f1: bool = True):
             app.config.get(
                 "GENENETWORK_FILES",
                 "/home/gn2/production/genotype_files/"
-            ), f'parents_and_f1s.json'
+            ), 'parents_and_f1s.json'
         )
         if par_f1_path.is_file():
             with open(par_f1_path, encoding="utf-8") as par_f1_file:
