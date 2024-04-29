@@ -26,10 +26,10 @@ def retrieve_sample_list(group: str, inc_par: bool = True, inc_f1: bool = True):
         )
         if par_f1_path.is_file():
             with open(par_f1_path, encoding="utf-8") as par_f1_file:
-                par_f1s = json.load(par_f1_file)[group]
-                if inc_par:
+                par_f1s = json.load(par_f1_file).get(group, {})
+                if inc_par and par_f1s:
                     samplelist += [par_f1s['paternal']['strain'], par_f1s['maternal']['strain']]
-                if inc_f1:
+                if inc_f1 and par_f1s:
                     samplelist += [f1['strain'] for f1 in par_f1s['f1s']]
 
     genofile_path = Path(
