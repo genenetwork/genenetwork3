@@ -63,7 +63,7 @@ def gnqa():
 def rating(task_id):
     try:
         with (require_oauth.acquire("profile") as token,
-              db.connection(LLM_DB_PATH) as conn):
+              db.connection(current_app.config.get(LLM_DB_PATH)) as conn):
 
             results = request.json
             user_id, query, answer, weight = (token.user.user_id,
