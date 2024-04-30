@@ -89,7 +89,8 @@ def rating(task_id):
                 "status": 0
             }, 200
     except sqlite3.Error as error:
-        raise error
+        return jsonify({"error": str(error), "user": token.user.user_id,
+                        "llm_db_path": LLM_DB_PATH}), 500
     except Exception as error:
         raise error
 
