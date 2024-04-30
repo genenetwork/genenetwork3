@@ -1,11 +1,16 @@
 """API for fetching metadata using an API"""
+import time
+
 from string import Template
 from pathlib import Path
+
+from authlib.jose import jwt
 
 from flask import Blueprint
 from flask import request
 from flask import current_app
 
+from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.db.datasets import (retrieve_metadata,
                              save_metadata,
                              get_history)
@@ -283,6 +288,64 @@ def view_history(id_):
         raise Exception(history.get("error_description"))
     return history
 
+
+@metadata.route("/datasets/edit", methods=["POST"])
+def edit_dataset():
+    """Edit a given dataset"""
+    # Fetch the public key
+    key = ""
+    with open(
+            current_app.config.get("AUTH_SERVER_SSL_PUBLIC_KEY"), "rb"
+    ) as _f:
+        key = _f.read()
+
+    # Decode the token
+    payload = jwt.decode(
+        request.headers.get("Authorization").split()[-1],  # the jwt token
+        key  # the auth-server public key
+    )
+
+    # Validation:
+    if payload.get("exp") - int(time.time()) > 300:
+        raise AuthorisationError("Expired Token")
+    if "group:resource:edit-resource" not in payload.get("roles", []):
+        raise AuthorisationError("Insufficient Edit Privileges")
+    gn_docs = Path(current_app.config["DATA_DIR"], "gn-docs")
+    # This maps the form elements to the actual path in the git
+    # repository
+    map_ = {
+        "description": "summary.rtf",
+        "tissueInfo": "tissue.rtf",
+        "specifics": "specifics.rtf",
+        "caseInfo": "cases.rtf",
+        "platformInfo": "platform.rtf",
+        "processingInfo": "processing.rtf",
+        "notes": "notes.rtf",
+        "experimentDesignInfo": "experiment-design.rtf",
+        "acknowledgement": "acknowledgement.rtf",
+        "citation": "citation.rtf",
+        "experimentType": "experiment-type.rtf",
+        "contributors": "contributors.rtf"
+    }
+    output = Path(
+        gn_docs,
+        "general/datasets/",
+        request.form.get("id").split("/")[-1],
+        f"{map_.get(request.form.get('section'))}"
+    )
+    match request.form.get("type"):
+        case "dcat:Dataset":
+            author = f"{payload.get('account-name')} <{payload.get('email')}>"
+            return save_metadata(
+                git_dir=gn_docs,
+                output=output,
+                author=author,
+                content=request.form.get("editor"),
+                msg=request.form.get("edit-summary")
+            ).either(
+                lambda error: ({"error": error}, 500),
+                lambda x: ("Edit successfull", 201)
+            )
 
 @metadata.route("/datasets/search/<term>", methods=["GET"])
 def search_datasets(term):
