@@ -86,7 +86,8 @@ def rating(task_id):
             """, (str(user_id), query, answer, weight, task_id))
             return {
                 "message": "success",
-                "status": 0
+                "status": 0,
+                "llm_db_path": LLM_DB_PATH
             }, 200
     except sqlite3.Error as error:
         return jsonify({"error": str(error), "user": token.user.user_id,
