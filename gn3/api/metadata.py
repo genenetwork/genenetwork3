@@ -271,6 +271,7 @@ CONSTRUCT {
 
 @metadata.route("/datasets/<id_>/history")
 def view_history(id_):
+    """View a given dataset's history."""
     history = get_history(
         git_dir=Path(current_app.config.get("DATA_DIR"),
                      "gn-docs"),
