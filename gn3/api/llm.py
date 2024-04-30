@@ -10,7 +10,6 @@ from gn3.llms.process import get_user_queries
 from gn3.llms.process import fetch_query_results
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
-from gn3.settings import LLM_DB_PATH
 from redis import Redis
 import json
 import sqlite3
@@ -63,7 +62,7 @@ def gnqa():
 def rating(task_id):
     try:
         with (require_oauth.acquire("profile") as token,
-              db.connection(current_app.config.get(LLM_DB_PATH)) as conn):
+              db.connection(current_app.config.get("LLM_DB_PATH")) as conn):
 
             results = request.json
             user_id, query, answer, weight = (token.user.user_id,
@@ -89,8 +88,7 @@ def rating(task_id):
                 "status": 0
             }, 200
     except sqlite3.Error as error:
-        return jsonify({"error": str(error),
-                        "llm_db_path": LLM_DB_PATH}), 500
+        return jsonify({"error": str(error)}), 500
     except Exception as error:
         raise error
 
