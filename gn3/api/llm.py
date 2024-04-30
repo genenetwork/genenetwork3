@@ -5,17 +5,13 @@
 from flask import jsonify, request, Blueprint, current_app
 
 from functools import wraps
-from gn3.auth.authorisation.oauth2.resource_server import require_oauth
-
 from gn3.llms.process import get_gnqa
 from gn3.llms.process import get_user_queries
 from gn3.llms.process import fetch_query_results
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
-from gn3.settings import SQLITE_DB_PATH
-
+from gn3.settings import LLM_DB_PATH
 from redis import Redis
-import os
 import json
 import sqlite3
 from datetime import timedelta
@@ -44,7 +40,6 @@ def gnqa():
         auth_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
         task_id, answer, refs = get_gnqa(
             query, auth_token, current_app.config.get("DATA_DIR"))
-
         response = {
             "task_id": task_id,
             "query": query,
@@ -67,33 +62,32 @@ def gnqa():
 @require_oauth("profile")
 def rating(task_id):
     try:
-        with require_oauth.acquire("profile") as the_token:
-            user = the_token.user.user_id
+        with (require_oauth.acquire("profile") as token,
+              db.connection(LLM_DB_PATH) as conn):
+
             results = request.json
-            user_id, query, answer, weight = (the_token.user.user_id,
+            user_id, query, answer, weight = (token.user.user_id,
                                               results.get("query"),
                                               results.get("answer"),
                                               results.get("weight", 0))
-
-            with db.connection(os.path.join(SQLITE_DB_PATH, "llm.db")) as conn:
-                cursor = conn.cursor()
-                create_table = """CREATE TABLE IF NOT EXISTS Rating(
-                      user_id TEXT NOT NULL,
-                      query TEXT NOT NULL,
-                      answer TEXT NOT NULL,
-                      weight INTEGER NOT NULL DEFAULT 0,
-                      task_id TEXT NOT NULL UNIQUE
-                      )"""
-                cursor.execute(create_table)
-                cursor.execute("""INSERT INTO Rating(user_id,query,answer,weight,task_id)
-                VALUES(?,?,?,?,?)
-                ON CONFLICT(task_id) DO UPDATE SET
-                weight=excluded.weight
-                """, (str(user_id), query, answer, weight, task_id))
-                return {
-                    "message": "success",
-                    "status": 0
-                }, 200
+            cursor = conn.cursor()
+            create_table = """CREATE TABLE IF NOT EXISTS Rating(
+                  user_id TEXT NOT NULL,
+                  query TEXT NOT NULL,
+                  answer TEXT NOT NULL,
+                  weight INTEGER NOT NULL DEFAULT 0,
+                  task_id TEXT NOT NULL UNIQUE
+                  )"""
+            cursor.execute(create_table)
+            cursor.execute("""INSERT INTO Rating(user_id,query,answer,weight,task_id)
+            VALUES(?,?,?,?,?)
+            ON CONFLICT(task_id) DO UPDATE SET
+            weight=excluded.weight
+            """, (str(user_id), query, answer, weight, task_id))
+            return {
+                "message": "success",
+                "status": 0
+            }, 200
     except sqlite3.Error as error:
         raise error
 
