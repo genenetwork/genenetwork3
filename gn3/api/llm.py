@@ -90,6 +90,8 @@ def rating(task_id):
             }, 200
     except sqlite3.Error as error:
         raise error
+    except Exception as error:
+        raise error
 
 
 @GnQNA.route("/history/<query>", methods=["GET"])
