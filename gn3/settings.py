@@ -57,8 +57,8 @@ XAPIAN_DB_PATH = "xapian"
 
 # sqlite path
 
-SQLITE_DB_PATH = os.environ.get(
-    "SQLITE_DB_PATH", "/export/data/genenetwork-sqlite/")
+LLM_DB_PATH = os.environ.get(
+    "LLM_DB_PATH", f"{os.environ.get('HOME')}/sqlite_test/llm.db")
 
 # CROSS-ORIGIN SETUP
 
