@@ -84,14 +84,12 @@ def rating(task_id):
             ON CONFLICT(task_id) DO UPDATE SET
             weight=excluded.weight
             """, (str(user_id), query, answer, weight, task_id))
-            return {
-                "message": "You have successfully rated this query:Thank you!!",
-                "status": 0,
-                "db_path": llm_db_path
-
+        
+        return {
+                "message": "You have successfully rated this query:Thank you!!"
             }, 200
     except sqlite3.Error as error:
-        return jsonify({"db_path": llm_db_path, "error": str(error)}), 500
+        return jsonify({"error": str(error)}), 500
     except Exception as error:
         raise error
 
