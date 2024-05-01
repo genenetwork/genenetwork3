@@ -61,8 +61,9 @@ def gnqa():
 @require_oauth("profile")
 def rating(task_id):
     try:
+        llm_db_path = current_app.config["LLM_DB_PATH"]
         with (require_oauth.acquire("profile") as token,
-              db.connection(current_app.config.get("LLM_DB_PATH")) as conn):
+              db.connection(llm_db_path) as conn):
 
             results = request.json
             user_id, query, answer, weight = (token.user.user_id,
@@ -85,10 +86,12 @@ def rating(task_id):
             """, (str(user_id), query, answer, weight, task_id))
             return {
                 "message": "You have successfully rated this query:Thank you!!",
-                "status": 0
+                "status": 0,
+                "db_path": llm_db_path
+
             }, 200
     except sqlite3.Error as error:
-        return jsonify({"error": str(error)}), 500
+        return jsonify({"db_path": llm_db_path, "error": str(error)}), 500
     except Exception as error:
         raise error
 
