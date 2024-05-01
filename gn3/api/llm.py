@@ -84,7 +84,6 @@ def rating(task_id):
             ON CONFLICT(task_id) DO UPDATE SET
             weight=excluded.weight
             """, (str(user_id), query, answer, weight, task_id))
-        
         return {
                 "message": "You have successfully rated this query:Thank you!!"
             }, 200
