@@ -36,9 +36,11 @@ def gnqa():
         return jsonify({"error": "querygnqa is missing in the request"}), 400
 
     try:
-        auth_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
+        fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
+        if fahamu_token is None:
+            return jsonify({"query": query, "error": "Use of invalid fahamu auth token"}), 500
         task_id, answer, refs = get_gnqa(
-            query, auth_token, current_app.config.get("DATA_DIR"))
+            query, fahamu_token, current_app.config.get("DATA_DIR"))
         response = {
             "task_id": task_id,
             "query": query,
