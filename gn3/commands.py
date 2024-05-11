@@ -154,12 +154,14 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) ->
     """Run CMD and return the CMD's status code and output as a dict"""
     parsed_cmd = json.loads(cmd)
     parsed_env = (json.loads(env) if env is not None else None)
+
     results = subprocess.run(
         parsed_cmd, capture_output=True, shell=isinstance(parsed_cmd, str),
         check=False, env=parsed_env)
     out = str(results.stdout, 'utf-8')
     if results.returncode not in success_codes:  # Error!
         out = str(results.stderr, 'utf-8')
+        current_app.logger.debug(out)
     return {"code": results.returncode, "output": out}
 
 def run_async_cmd(

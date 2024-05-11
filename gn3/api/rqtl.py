@@ -6,9 +6,10 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
+from gn3.debug import __pk__
 from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_mapping, \
                                   process_rqtl_pairscan, process_perm_output
-from gn3.computations.gemma import do_paths_exist
+from gn3.fs_helpers import assert_paths_exist, get_tmpdir
 
 rqtl = Blueprint("rqtl", __name__)
 
@@ -21,8 +22,7 @@ run the rqtl_wrapper script and return the results as JSON
     genofile = request.form['geno_file']
     phenofile = request.form['pheno_file']
 
-    if not do_paths_exist([genofile, phenofile]):
-        raise FileNotFoundError
+    assert_paths_exist([genofile, phenofile])
 
     # Split kwargs by those with values and boolean ones that just convert to True/False
     kwargs = ["covarstruct", "model", "method", "nperm", "scale", "control_marker"]
@@ -38,15 +38,19 @@ run the rqtl_wrapper script and return the results as JSON
             if kwarg in boolean_kwargs:
                 rqtl_bool_kwargs.append(kwarg)
 
+    outdir = os.path.join(get_tmpdir(),"gn3")
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+
     rqtl_cmd = generate_rqtl_cmd(
-        rqtl_wrapper_cmd=current_app.config.get("RQTL_WRAPPER_CMD"),
+        rqtl_wrapper_cmd='scripts/rqtl_wrapper.R',
         rqtl_wrapper_kwargs=rqtl_kwargs,
         rqtl_wrapper_bool_kwargs=rqtl_bool_kwargs
     )
 
     rqtl_output = {}
     if not os.path.isfile(os.path.join(current_app.config.get("TMPDIR"),
-                                       "output", rqtl_cmd.get('output_file'))):
+                                       "gn3", rqtl_cmd.get('output_file'))):
         os.system(rqtl_cmd.get('rqtl_cmd'))
 
     if "pairscan" in rqtl_bool_kwargs:

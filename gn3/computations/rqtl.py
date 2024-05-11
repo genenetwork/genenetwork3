@@ -1,5 +1,7 @@
 """Procedures related to R/qtl computations"""
 import os
+import sys
+import logging
 from bisect import bisect
 from typing import Dict, List, Tuple, Union
 
@@ -9,8 +11,9 @@ from flask import current_app
 
 from gn3.commands import compose_rqtl_cmd
 from gn3.computations.gemma import generate_hash_of_string
-from gn3.fs_helpers import get_hash_of_files
+from gn3.fs_helpers import get_hash_of_files, assert_path_exists, get_tmpdir
 
+from gn3.debug import __pk__
 
 def generate_rqtl_cmd(
     rqtl_wrapper_cmd: str,
@@ -20,6 +23,8 @@ def generate_rqtl_cmd(
     """Given the base rqtl_wrapper command and
     dict of keyword arguments, return the full rqtl_wrapper command and an
     output filename generated from a hash of the genotype and phenotype files"""
+
+    assert_path_exists(rqtl_wrapper_cmd)
 
     # Generate a hash from contents of the genotype and phenotype files
     _hash = get_hash_of_files(
@@ -60,15 +65,12 @@ def process_rqtl_mapping(file_name: str) -> List:
     """Given an output file name, read in R/qtl results and return
     a List of marker objects"""
     marker_obs = []
+
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
-    with open(
-        os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", file_name
-        ),
-        "r",
-        encoding="utf-8",
-    ) as the_file:
+    outdir = os.path.join(get_tmpdir(),"gn3")
+
+    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         for line in the_file:
             line_items = line.split(",")
             if line_items[1][1:-1] == "chr" or not line_items:
@@ -109,13 +111,9 @@ def pairscan_for_figure(file_name: str) -> Dict:
     figure_data = {}
 
     # Open the file with the actual results, written as a list of lists
-    with open(
-        os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", file_name
-        ),
-        "r",
-        encoding="utf8",
-    ) as the_file:
+    outdir = os.path.join(get_tmpdir(),"gn3")
+
+    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         lod_results = []
         for i, line in enumerate(the_file):
             if i == 0:  # Skip first line
@@ -130,7 +128,7 @@ def pairscan_for_figure(file_name: str) -> Dict:
     with open(
         os.path.join(
             current_app.config.get("TMPDIR", "/tmp"),
-            "output",
+            "gn3",
             "MAP_" + file_name,
         ),
         "r",
@@ -161,7 +159,7 @@ def get_marker_list(map_file: str) -> List:
     marker_list = []
     with open(
         os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", map_file
+            current_app.config.get("TMPDIR", "/tmp"), "gn3", map_file
         ),
         "r",
         encoding="utf8",
@@ -197,7 +195,7 @@ def generate_table_rows(
     table_data = []
     with open(
         os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"), "output", results_file
+            current_app.config.get("TMPDIR", "/tmp"), "gn3", results_file
         ),
         "r",
         encoding="utf8",
@@ -316,15 +314,9 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
     suggestive and significant thresholds"""
 
     perm_results = []
-    with open(
-        os.path.join(
-            current_app.config.get("TMPDIR", "/tmp"),
-            "output",
-            "PERM_" + file_name,
-        ),
-        "r",
-        encoding="utf-8",
-    ) as the_file:
+    outdir = os.path.join(get_tmpdir(),"gn3")
+
+    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         for i, line in enumerate(the_file):
             if i == 0:
                 # Skip header line

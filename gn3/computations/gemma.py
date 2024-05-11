@@ -1,4 +1,5 @@
 """Procedures related gemma computations"""
+import errno
 import os
 
 from base64 import b64encode
@@ -7,7 +8,7 @@ from typing import Optional, Dict
 from typing import List
 from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
-from gn3.fs_helpers import get_hash_of_files
+from gn3.fs_helpers import get_hash_of_files, assert_paths_exist
 
 
 def generate_hash_of_string(unhashed_str: str) -> str:
@@ -21,31 +22,24 @@ def generate_pheno_txt_file(trait_filename: str,
                             values: List,
                             tmpdir: str = "/tmp") -> str:
     """Given VALUES, and TMPDIR, generate a valid traits file"""
-    if not os.path.isdir(f"{tmpdir}/gn2/"):
-        os.mkdir(f"{tmpdir}/gn2/")
+
+    if not os.path.isdir(f"{tmpdir}/gn3/"):
+        os.mkdir(f"{tmpdir}/gn3/")
     ext = trait_filename.partition(".")[-1]
     if ext:
         trait_filename = trait_filename.replace(f".{ext}", "")
         ext = f".{ext}"
     trait_filename += f"_{generate_hash_of_string(''.join(values))}{ext}"
     # Early return if this already exists!
-    if os.path.isfile(f"{tmpdir}/gn2/{trait_filename}"):
-        return f"{tmpdir}/gn2/{trait_filename}"
-    with open(f"{tmpdir}/gn2/{trait_filename}", "w", encoding="utf-8") as _file:
+    if os.path.isfile(f"{tmpdir}/gn3/{trait_filename}"):
+        return f"{tmpdir}/gn3/{trait_filename}"
+    with open(f"{tmpdir}/gn3/{trait_filename}", "w", encoding="utf-8") as _file:
         for value in values:
             if value == "x":
                 _file.write("NA\n")
             else:
                 _file.write(f"{value}\n")
-    return f"{tmpdir}/gn2/{trait_filename}"
-
-
-def do_paths_exist(paths: ValuesView) -> bool:
-    """Given a list of PATHS, return False if any of them do not exist."""
-    for path in paths:
-        if not os.path.isfile(path):
-            return False
-    return True
+    return f"{tmpdir}/gn3/{trait_filename}"
 
 
 # pylint: disable=R0913

@@ -1,5 +1,6 @@
 """Handle application level errors."""
 import traceback
+import sys
 
 from http.client import RemoteDisconnected
 from urllib.error import URLError
@@ -52,7 +53,7 @@ def url_server_error(pnf):
 
 def handle_authorisation_error(exc: AuthorisationError):
     """Handle AuthorisationError if not handled anywhere else."""
-    current_app.logger.error(exc)
+    current_app.logger.error(traceback.format_exc())
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
         "error_description": " :: ".join(exc.args)
@@ -61,7 +62,7 @@ def handle_authorisation_error(exc: AuthorisationError):
 
 def handle_oauth2_errors(exc: OAuth2Error):
     """Handle OAuth2Error if not handled anywhere else."""
-    current_app.logger.error(exc)
+    current_app.logger.error(traceback.format_exc())
     return jsonify(add_trace(exc, {
         "error": exc.error,
         "error_description": exc.description,
@@ -70,7 +71,7 @@ def handle_oauth2_errors(exc: OAuth2Error):
 
 def handle_sqlite3_errors(exc: OperationalError):
     """Handle sqlite3 errors if not handled anywhere else."""
-    current_app.logger.error(exc)
+    current_app.logger.error(traceback.format_exc())
     return jsonify({
         "error": "DatabaseError",
         "error_description": exc.args[0],
@@ -79,7 +80,7 @@ def handle_sqlite3_errors(exc: OperationalError):
 
 def handle_sparql_errors(exc):
     """Handle sqlite3 errors if not handled anywhere else."""
-    current_app.logger.error(exc)
+    current_app.logger.error(traceback.format_exc())
     __code = {
         EndPointInternalError: 500,
         EndPointNotFound: 400,
@@ -95,7 +96,7 @@ def handle_sparql_errors(exc):
 
 def handle_generic(exc: Exception) -> Response:
     """Handle generic exception."""
-    current_app.logger.error(exc)
+    current_app.logger.error(traceback.format_exc())
     resp = jsonify({
         "error": type(exc).__name__,
         "error_description": (

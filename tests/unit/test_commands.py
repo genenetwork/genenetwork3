@@ -61,7 +61,7 @@ class TestCommands(unittest.TestCase):
     def test_compose_rqtl_cmd(self):
         """Test that the R/qtl cmd is composed correctly"""
         self.assertEqual(
-            compose_rqtl_cmd(rqtl_wrapper_cmd="rqtl-wrapper",
+            compose_rqtl_cmd(rqtl_wrapper_cmd="scripts/rqtl-wrapper",
                              rqtl_wrapper_kwargs={
                                  "g": "the_genofile",
                                  "p": "the_phenofile",
@@ -74,7 +74,7 @@ class TestCommands(unittest.TestCase):
                              rqtl_wrapper_bool_kwargs=[
                                  "addcovar"
                              ]),
-            ("Rscript rqtl-wrapper "
+            ("Rscript scripts/rqtl-wrapper "
              "--g the_genofile --p the_phenofile "
              "--model np --method ehk "
              "--nperm 2000 --scale Mb "
