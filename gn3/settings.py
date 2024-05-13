@@ -93,8 +93,6 @@ OAUTH2_SCOPE = (
     "profile", "group", "role", "resource", "user", "masquerade",
     "introspect")
 
-GNQA_DB = os.environ.get(
-    "GNQA_DB", f"{os.environ.get('HOME')}/tmp/gnqa.db")
 
 try:
     # *** SECURITY CONCERN ***
