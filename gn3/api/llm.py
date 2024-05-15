@@ -12,14 +12,15 @@ from flask import request
 from gn3.llms.process import get_gnqa
 from gn3.llms.process import get_user_queries
 from gn3.llms.process import fetch_query_results
+from gn3.llms.errors import LLMError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
 
-GnQNA = Blueprint("GnQNA", __name__)
+gnqa = Blueprint("gnqa", __name__)
 
 
-@GnQNA.route("/gnqna", methods=["POST"])
-def gnqa():
+@gnqa.route("/gnqna", methods=["POST"])
+def gnqna():
     """Main gnqa endpoint"""
     query = request.json.get("querygnqa", "")
     if not query:
@@ -47,12 +48,12 @@ def gnqa():
             **response,
             "prev_queries": get_user_queries("random_user", redis_conn)
         })
-    except Exception as error:
+    except LLMError as error:
         return jsonify({"query": query,
                         "error": f"Request failed-{str(error)}"}), 500
 
 
-@GnQNA.route("/rating/<task_id>", methods=["POST"])
+@gnqa.route("/rating/<task_id>", methods=["POST"])
 @require_oauth("profile")
 def rating(task_id):
     """Endpoint for rating qnqa query and answer"""
@@ -87,11 +88,9 @@ def rating(task_id):
         }, 200
     except sqlite3.Error as error:
         return jsonify({"error": str(error)}), 500
-    except Exception as error:
-        raise error
 
 
-@GnQNA.route("/history/<query>", methods=["GET"])
+@gnqa.route("/history/<query>", methods=["GET"])
 @require_oauth("profile user")
 def fetch_user_hist(query):
     """"Endpoint to fetch previos searches for User"""
@@ -104,12 +103,11 @@ def fetch_user_hist(query):
         })
 
 
-@GnQNA.route("/historys/<query>", methods=["GET"])
+@gnqa.route("/historys/<query>", methods=["GET"])
 def fetch_users_hist_records(query):
     """method to fetch all users hist:note this is a test functionality
     to be replaced by fetch_user_hist
     """
-
     with Redis.from_url(current_app.config["REDIS_URI"],
                         decode_responses=True) as redis_conn:
         return jsonify({
@@ -118,7 +116,7 @@ def fetch_users_hist_records(query):
         })
 
 
-@GnQNA.route("/get_hist_names", methods=["GET"])
+@gnqa.route("/get_hist_names", methods=["GET"])
 def fetch_prev_hist_ids():
     """Test method for fetching history for Anony Users"""
     with (Redis.from_url(current_app.config["REDIS_URI"],
