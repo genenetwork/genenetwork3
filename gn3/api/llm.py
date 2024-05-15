@@ -1,6 +1,5 @@
 """Api endpoints for gnqa"""
 from datetime import timedelta
-from functools import wraps
 import json
 import sqlite3
 from redis import Redis
@@ -17,17 +16,6 @@ from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
 
 GnQNA = Blueprint("GnQNA", __name__)
-
-
-def handle_errors(func):
-    """general error handling decorator function"""
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as error:
-            return jsonify({"error": str(error)}), 500
-    return decorated_function
 
 
 @GnQNA.route("/gnqna", methods=["POST"])
@@ -105,7 +93,6 @@ def rating(task_id):
 
 @GnQNA.route("/history/<query>", methods=["GET"])
 @require_oauth("profile user")
-@handle_errors
 def fetch_user_hist(query):
     """"Endpoint to fetch previos searches for User"""
     with (require_oauth.acquire("profile user") as the_token,
@@ -118,7 +105,6 @@ def fetch_user_hist(query):
 
 
 @GnQNA.route("/historys/<query>", methods=["GET"])
-@handle_errors
 def fetch_users_hist_records(query):
     """method to fetch all users hist:note this is a test functionality
     to be replaced by fetch_user_hist
@@ -133,7 +119,6 @@ def fetch_users_hist_records(query):
 
 
 @GnQNA.route("/get_hist_names", methods=["GET"])
-@handle_errors
 def fetch_prev_hist_ids():
     """Test method for fetching history for Anony Users"""
     with (Redis.from_url(current_app.config["REDIS_URI"],
