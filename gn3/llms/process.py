@@ -1,21 +1,56 @@
 """this module contains code for processing response from fahamu client.py"""
+# pylint: disable=C0301
 import os
 import string
 import json
-
-from urllib.parse import urljoin
-from urllib.parse import quote
 import logging
 import requests
 
+from urllib.parse import urljoin
+from urllib.parse import quote
+
 from gn3.llms.client import GeneNetworkQAClient
-from gn3.llms.response import DocIDs
 
 
 BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
-# pylint: disable=C0301
+class DocIDs():
+    """ Class Method to Parse document id and names from files"""
+    def __init__(self):
+        """
+        init method for Docids
+        * doc_ids.json: opens doc)ids for gn references
+        * sugar_doc_ids:  open doci_ids for diabetes references
+        """
+        self.doc_ids = self.load_file("doc_ids.json")
+        self.sugar_doc_ids = self.load_file("all_files.json")
+        self.format_doc_ids(self.sugar_doc_ids)
+
+    def load_file(self, file_name):
+        """Method to load and read doc_id files"""
+        file_path = os.path.join(BASEDIR, file_name)
+        if os.path.isfile(file_path):
+            with open(file_path, "rb") as file_handler:
+                return json.load(file_handler)
+        else:
+            raise FileNotFoundError(f"{file_path}-- FIle does not exist\n")
+
+    def format_doc_ids(self, docs):
+        """method to format doc_ids for list items"""
+        for _key, val in docs.items():
+            if isinstance(val, list):
+                for doc_obj in val:
+                    doc_name = doc_obj["filename"].removesuffix(".pdf").removesuffix(".txt").replace("_", "")
+                    self.doc_ids.update({doc_obj["id"]:  doc_name})
+
+    def get_info(self, doc_id):
+        """ interface to make read from doc_ids"""
+        if doc_id in self.doc_ids.keys():
+            return self.doc_ids[doc_id]
+        else:
+            return doc_id
 
 
 def format_bibliography_info(bib_info):
@@ -131,6 +166,6 @@ def fetch_query_results(query, user_id, redis_conn):
 
 def get_user_queries(user_id, redis_conn):
     """methos to fetch all queries for a specific user"""
-
     results = redis_conn.keys(f"LLM:{user_id}*")
-    return [query for query in [result.partition("-")[2] for result in results] if query != ""]
+    return [query for query in
+            [result.partition("-")[2] for result in results] if query != ""]
