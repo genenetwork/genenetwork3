@@ -1,13 +1,13 @@
 """Module  Contains code for making request to fahamu Api"""
-# pylint: skip-file
+# pylint: disable=C0301
 import json
-import string
 import time
+
 import requests
 from requests import Session
-from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
-from urllib.parse import quote
+
+from urllib3.util import Retry
 from gn3.llms.errors import LLMError
 
 
@@ -56,15 +56,14 @@ class GeneNetworkQAClient(Session):
     api_key="XXXXXXXXXXXXXXXXXXX...")
     """
 
-    BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
-
     def __init__(self, account, api_key, version="v3", timeout=30,
                  total_retries=5, backoff_factor=30):
         super().__init__()
         self.headers.update(
             {"Authorization": "Bearer " + api_key})
-        self.answer_url = f"{self.BASE_URL}/answers"
-        self.feedback_url = f"{self.BASE_URL}/feedback"
+        self.base_url = "https://genenetwork.fahamuai.com/api/tasks"
+        self.answer_url = f"{self.base_url}/answers"
+        self.feedback_url = f"{self.base_url}/feedback"
 
         adapter = TimeoutHTTPAdapter(
             timeout=timeout,
@@ -83,8 +82,8 @@ class GeneNetworkQAClient(Session):
             response = requests.post(
                 self.base_url + extend_url, data={}, headers=my_auth)
             response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            raise RuntimeError(f"Error making the request: {e}")
+        except requests.exceptions.RequestException as error:
+            raise RuntimeError(f"Error making the request: {error}") from error
         if response.status_code != 200:
             return GeneNetworkQAClient.negative_status_msg(response), 0
         task_id = GeneNetworkQAClient.get_task_id_from_result(response)
@@ -99,48 +98,20 @@ class GeneNetworkQAClient(Session):
         """ handler for non 200 response from fahamu api"""
         return f"Error: Status code -{response.status_code}- Reason::{response.reason}"
 
-    def ask(self, exUrl, *args, **kwargs):
+    def ask(self, ex_url, *args, **kwargs):
         """fahamu ask api interface"""
-        askUrl = self.BASE_URL + exUrl
-        res = self.custom_request('POST', askUrl, *args, **kwargs)
-        if (res.status_code != 200):
+        res = self.custom_request('POST', f"{self.base_url}{ex_url}", *args, **kwargs)
+        if res.status_code != 200:
             return self.negative_status_msg(res), 0
-        task_id = self.getTaskIDFromResult(res)
-        return res, task_id
+        return res, json.loads(res.text)
 
     def get_answer(self, taskid, *args, **kwargs):
         """Fahamu get answer interface"""
-        query = self.answer_url + self.extendTaskID(taskid)
+        query = f"{self.answer_url}?task_id={taskid['task_id']}"
         res = self.custom_request('GET', query, *args, **kwargs)
-        if (res.status_code != 200):
+        if res.status_code != 200:
             return self.negative_status_msg(res), 0
         return res, 1
-
-    def custom_request(self, method, url, *args, **kwargs):
-        """ make custom request to fahamu api ask and get response"""
-        max_retries = 50
-        retry_delay = 3
-        for i in range(max_retries):
-            try:
-                response = super().request(method, url, *args, **kwargs)
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as error:
-                if error.response.status_code == 500:
-                    raise LLMError(error.request, error.response, f"Response Error with:status_code:{error.response.status_code},Reason for error: Use of Invalid Fahamu Token")
-                elif error.response.status_code == 404:
-                    raise LLMError(error.request, error.response, f"404 Client Error: Not Found for url: {self.BASE_URL}")
-                raise error
-            except requests.exceptions.RequestException as error:
-                raise error
-            if response.ok:
-                if method.lower() == "get" and response.json().get("data") is None:
-                    time.sleep(retry_delay)
-                    continue
-                else:
-                    return response
-            else:
-                time.sleep(retry_delay)
-            return response
 
     @staticmethod
     def get_task_id_from_result(response):
@@ -158,14 +129,28 @@ class GeneNetworkQAClient(Session):
         except requests.exceptions.RequestException as error:
             raise error
 
-    @staticmethod
-    def filter_response_text(val):
-        """method to filter out non-printable chacracters"""
-        return json.loads(''.join([str(char) for char in val if char
-                                   in string.printable]))
-
-    def getTaskIDFromResult(self, res):
-        return json.loads(res.text)
-
-    def extendTaskID(self, task_id):
-        return '?task_id=' + str(task_id['task_id'])
+    def custom_request(self, method, url, *args, **kwargs):
+        """ make custom request to fahamu api ask and get response"""
+        max_retries = 50
+        retry_delay = 3
+        for _i in range(max_retries):
+            try:
+                response = super().request(method, url, *args, **kwargs)
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as error:
+                if error.response.status_code == 500:
+                    raise LLMError(error.request, error.response, f"Response Error with:status_code:{error.response.status_code},Reason for error: Use of Invalid Fahamu Token") from error
+                elif error.response.status_code == 404:
+                    raise LLMError(error.request, error.response, f"404 Client Error: Not Found for url: {self.base_url}") from error
+                raise error
+            except requests.exceptions.RequestException as error:
+                raise error
+            if response.ok:
+                if method.lower() == "get" and response.json().get("data") is None:
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    return response
+            else:
+                time.sleep(retry_delay)
+            return response
