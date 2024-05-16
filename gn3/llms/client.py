@@ -1,20 +1,19 @@
+"""Module  Contains code for making request to fahamu Api"""
 # pylint: skip-file
 import json
 import string
-import os
 import time
 import requests
-
 from requests import Session
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from urllib.parse import quote
 from gn3.llms.errors import LLMError
 
-basedir = os.path.join(os.path.dirname(__file__))
-
 
 class TimeoutHTTPAdapter(HTTPAdapter):
+    """HTTP TimeoutAdapter """
+    # todo rework on this
     def __init__(self, timeout, *args, **kwargs):
         """TimeoutHTTPAdapter constructor.
         Args:
@@ -79,48 +78,29 @@ class GeneNetworkQAClient(Session):
         self.mount("https://", adapter)
         self.mount("http://", adapter)
 
-    @staticmethod
-    def format_bibliography_info(bib_info):
-
-        if isinstance(bib_info, str):
-            # Remove '.txt'
-            bib_info = bib_info.removesuffix('.txt')
-        elif isinstance(bib_info, dict):
-            # Format string bibliography information
-            bib_info = "{0}.{1}.{2}.{3} ".format(bib_info.get('author', ''),
-                                                 bib_info.get('title', ''),
-                                                 bib_info.get('year', ''),
-                                                 bib_info.get('doi', ''))
-        return bib_info
-
-    @staticmethod
     def ask_the_documents(self, extend_url, my_auth):
         try:
             response = requests.post(
                 self.base_url + extend_url, data={}, headers=my_auth)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            # Handle the exception appropriately, e.g., log the error
             raise RuntimeError(f"Error making the request: {e}")
-
         if response.status_code != 200:
             return GeneNetworkQAClient.negative_status_msg(response), 0
-
         task_id = GeneNetworkQAClient.get_task_id_from_result(response)
         response = GeneNetworkQAClient.get_answer_using_task_id(task_id,
                                                                 my_auth)
-
         if response.status_code != 200:
-
             return GeneNetworkQAClient.negative_status_msg(response), 0
-
         return response, 1
 
     @staticmethod
     def negative_status_msg(response):
+        """ handler for non 200 response from fahamu api"""
         return f"Error: Status code -{response.status_code}- Reason::{response.reason}"
 
     def ask(self, exUrl, *args, **kwargs):
+        """fahamu ask api interface"""
         askUrl = self.BASE_URL + exUrl
         res = self.custom_request('POST', askUrl, *args, **kwargs)
         if (res.status_code != 200):
@@ -129,6 +109,7 @@ class GeneNetworkQAClient(Session):
         return res, task_id
 
     def get_answer(self, taskid, *args, **kwargs):
+        """Fahamu get answer interface"""
         query = self.answer_url + self.extendTaskID(taskid)
         res = self.custom_request('GET', query, *args, **kwargs)
         if (res.status_code != 200):
@@ -136,15 +117,13 @@ class GeneNetworkQAClient(Session):
         return res, 1
 
     def custom_request(self, method, url, *args, **kwargs):
-
+        """ make custom request to fahamu api ask and get response"""
         max_retries = 50
         retry_delay = 3
-
         for i in range(max_retries):
             try:
                 response = super().request(method, url, *args, **kwargs)
                 response.raise_for_status()
-
             except requests.exceptions.HTTPError as error:
                 if error.response.status_code == 500:
                     raise LLMError(error.request, error.response, f"Response Error with:status_code:{error.response.status_code},Reason for error: Use of Invalid Fahamu Token")
@@ -165,33 +144,23 @@ class GeneNetworkQAClient(Session):
 
     @staticmethod
     def get_task_id_from_result(response):
+        """method to get task_id from response"""
         task_id = json.loads(response.text)
-        result = f"?task_id={task_id.get('task_id', '')}"
-        return result
+        return f"?task_id={task_id.get('task_id', '')}"
 
     def get_answer_using_task_id(self, extend_url, my_auth):
+        """call this method with task id to fetch response"""
         try:
             response = requests.get(
                self.answer_url + extend_url, data={}, headers=my_auth)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as error:
-            # Handle the exception appropriately, e.g., log the error
             raise error
 
     @staticmethod
     def filter_response_text(val):
-        """
-        Filters out non-printable characters from
-        the input string and parses it as JSON.
-
-        Args:
-            val (str): Input string to be filtered and parsed.
-
-        Returns:
-            dict: Parsed JSON object.
-        # remove  this
-        """
+        """method to filter out non-printable chacracters"""
         return json.loads(''.join([str(char) for char in val if char
                                    in string.printable]))
 
@@ -200,16 +169,3 @@ class GeneNetworkQAClient(Session):
 
     def extendTaskID(self, task_id):
         return '?task_id=' + str(task_id['task_id'])
-
-    def get_gnqa(self, query):
-        qstr = quote(query)
-        res, task_id = GeneNetworkQAClient.ask('?ask=' + qstr)
-        res, success = GeneNetworkQAClient.get_answer(task_id)
-
-        if success == 1:
-            resp_text = GeneNetworkQAClient.filter_response_text(res.text)
-            answer = resp_text.get('data', {}).get('answer', '')
-            context = resp_text.get('data', {}).get('context', '')
-            return answer, context
-        else:
-            return res, "Unfortunately, I have nothing."
