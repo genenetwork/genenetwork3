@@ -118,7 +118,7 @@ def get_gnqa(query, auth_token, data_dir=""):
          references: contains doc_name,reference,pub_med_info
     """
 
-    api_client = GeneNetworkQAClient(requests.Session(), auth_token)
+    api_client = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
     res, task_id = api_client.ask('?ask=' + quote(query), auth_token)
     if task_id == 0:
         raise RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")

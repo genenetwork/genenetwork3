@@ -1,5 +1,6 @@
 """Module  Contains code for making request to fahamu Api"""
 # pylint: disable=C0301
+# pylint: disable=R0913
 import json
 import time
 
@@ -24,13 +25,13 @@ class TimeoutHTTPAdapter(HTTPAdapter):
         self.timeout = timeout
         super().__init__(*args, **kwargs)
 
-    def send(self, request, **kwargs):
+    def send(self, *args, **kwargs):
         """Override :obj:`HTTPAdapter` send method to add a default timeout."""
         timeout = kwargs.get("timeout")
         if timeout is None:
             kwargs["timeout"] = self.timeout
 
-        return super().send(request, **kwargs)
+        return super().send(*args, **kwargs)
 
 
 class GeneNetworkQAClient(Session):
@@ -77,21 +78,15 @@ class GeneNetworkQAClient(Session):
         self.mount("https://", adapter)
         self.mount("http://", adapter)
 
-    def ask_the_documents(self, extend_url, my_auth):
+    def get_answer_using_task_id(self, extend_url, my_auth):
+        """call this method with task id to fetch response"""
         try:
-            response = requests.post(
-                self.base_url + extend_url, data={}, headers=my_auth)
+            response = requests.get(
+               self.answer_url + extend_url, data={}, headers=my_auth)
             response.raise_for_status()
+            return response
         except requests.exceptions.RequestException as error:
-            raise RuntimeError(f"Error making the request: {error}") from error
-        if response.status_code != 200:
-            return GeneNetworkQAClient.negative_status_msg(response), 0
-        task_id = GeneNetworkQAClient.get_task_id_from_result(response)
-        response = GeneNetworkQAClient.get_answer_using_task_id(task_id,
-                                                                my_auth)
-        if response.status_code != 200:
-            return GeneNetworkQAClient.negative_status_msg(response), 0
-        return response, 1
+            raise error
 
     @staticmethod
     def negative_status_msg(response):
@@ -102,7 +97,7 @@ class GeneNetworkQAClient(Session):
         """fahamu ask api interface"""
         res = self.custom_request('POST', f"{self.base_url}{ex_url}", *args, **kwargs)
         if res.status_code != 200:
-            return self.negative_status_msg(res), 0
+            return f"Error: Status code -{res.status_code}- Reason::{res.reason}", 0
         return res, json.loads(res.text)
 
     def get_answer(self, taskid, *args, **kwargs):
@@ -110,24 +105,8 @@ class GeneNetworkQAClient(Session):
         query = f"{self.answer_url}?task_id={taskid['task_id']}"
         res = self.custom_request('GET', query, *args, **kwargs)
         if res.status_code != 200:
-            return self.negative_status_msg(res), 0
+            return f"Error: Status code -{res.status_code}- Reason::{res.reason}", 0
         return res, 1
-
-    @staticmethod
-    def get_task_id_from_result(response):
-        """method to get task_id from response"""
-        task_id = json.loads(response.text)
-        return f"?task_id={task_id.get('task_id', '')}"
-
-    def get_answer_using_task_id(self, extend_url, my_auth):
-        """call this method with task id to fetch response"""
-        try:
-            response = requests.get(
-               self.answer_url + extend_url, data={}, headers=my_auth)
-            response.raise_for_status()
-            return response
-        except requests.exceptions.RequestException as error:
-            raise error
 
     def custom_request(self, method, url, *args, **kwargs):
         """ make custom request to fahamu api ask and get response"""
