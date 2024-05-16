@@ -6,9 +6,7 @@ import json
 import logging
 import requests
 
-from urllib.parse import urljoin
 from urllib.parse import quote
-
 from gn3.llms.client import GeneNetworkQAClient
 
 
