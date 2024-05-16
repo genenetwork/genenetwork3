@@ -45,29 +45,3 @@ class DocIDs():
             return self.doc_ids[doc_id]
         else:
             return doc_id
-
-
-class RespContext():
-    def __init__(self, context):
-        self.cntxt = context
-        self.theObj = {}
-
-    def parseIntoObject(self, info):
-        # check for obj, arr, or val
-        for key, val in info.items():
-            if isinstance(val, list):
-                self.parseIntoObject(val)
-            elif isinstance(val, str) or isinstance(val, int):
-                self.theObj[key] = val
-            self.theObj[key] = self.val
-
-
-def createAccordionFromJson(theContext):
-    result = ''
-    # loop thru json array
-    for docID, summaryLst in theContext.items():
-        # item is a key with a list
-        comboTxt = ''
-        for entry in summaryLst:
-            comboTxt += '\t' + entry['text']
-    return result
