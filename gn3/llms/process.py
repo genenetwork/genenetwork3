@@ -4,9 +4,9 @@ import os
 import string
 import json
 import logging
+from urllib.parse import quote
 import requests
 
-from urllib.parse import quote
 from gn3.llms.client import GeneNetworkQAClient
 
 
@@ -106,15 +106,24 @@ def fetch_pubmed(references, file_name, data_dir=""):
         return references
 
 
-def get_gnqa(query, auth_token, tmp_dir=""):
-    """entry function for the gn3 api endpoint()"""
+def get_gnqa(query, auth_token, data_dir=""):
+    """entry function for the gn3 api endpoint()
+    ARGS:
+         query: what is  a gene
+         auth_token: token to connect to api_client
+         data_dir:  base datirectory for gn3 data
+    Returns:
+         task_id: fahamu unique identifier for task
+         answer
+         references: contains doc_name,reference,pub_med_info
+    """
 
-    api_client = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
+    api_client = GeneNetworkQAClient(requests.Session(), auth_token)
     res, task_id = api_client.ask('?ask=' + quote(query), auth_token)
     if task_id == 0:
         raise RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")
-    res, success = api_client.get_answer(task_id)
-    if success == 1:
+    res, status = api_client.get_answer(task_id)
+    if status == 1:
         resp_text = filter_response_text(res.text)
         if resp_text.get("data") is None:
             return task_id, "Please try to rephrase your question to receive feedback", []
@@ -122,7 +131,7 @@ def get_gnqa(query, auth_token, tmp_dir=""):
         context = resp_text['data']['context']
         references = parse_context(
             context, DocIDs().get_info, format_bibliography_info)
-        references = fetch_pubmed(references, "pubmed.json", tmp_dir)
+        references = fetch_pubmed(references, "pubmed.json", data_dir)
 
         return task_id, answer, references
     else:
