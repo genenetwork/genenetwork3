@@ -49,8 +49,9 @@ def parse_context(context, get_info_func, format_bib_func):
 
 
 def rate_document(task_id, doc_id, rating, auth_token):
-    """This method is used to provide feedback for a document by making a rating."""
-    # todo move this to clients
+    """This method is used to provide
+    feedback for a document by making a rating
+    """
     try:
         url = urljoin(BASE_URL,
                       f"""/feedback?task_id={task_id}&document_id={doc_id}&feedback={rating}""")
@@ -107,7 +108,7 @@ def get_gnqa(query, auth_token, tmp_dir=""):
         answer = resp_text['data']['answer']
         context = resp_text['data']['context']
         references = parse_context(
-            context, DocIDs().getInfo, format_bibliography_info)
+            context, DocIDs().get_info, format_bibliography_info)
         references = fetch_pubmed(references, "pubmed.json", tmp_dir)
 
         return task_id, answer, references
