@@ -83,26 +83,6 @@ def parse_context(context, get_info_func, format_bib_func):
     return results
 
 
-def rate_document(task_id, doc_id, rating, auth_token):
-    """This method is used to provide
-    feedback for a document by making a rating
-    """
-    try:
-        url = urljoin(BASE_URL,
-                      f"""/feedback?task_id={task_id}&document_id={doc_id}&feedback={rating}""")
-        headers = {"Authorization": f"Bearer {auth_token}"}
-
-        resp = requests.post(url, headers=headers)
-        resp.raise_for_status()
-
-        return {"status": "success", **resp.json()}
-    except requests.exceptions.HTTPError as http_error:
-        raise RuntimeError(f"HTTP Error Occurred:\
-            {http_error.response.text} -with status code- {http_error.response.status_code}") from http_error
-    except Exception as error:
-        raise RuntimeError(f"An error occurred: {str(error)}") from error
-
-
 def load_file(filename, dir_path):
     """function to open and load json file"""
     file_path = os.path.join(dir_path, f"{filename}")
