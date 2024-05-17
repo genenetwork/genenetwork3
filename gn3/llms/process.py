@@ -5,7 +5,6 @@ import string
 import json
 import logging
 from urllib.parse import quote
-import requests
 
 from gn3.llms.client import GeneNetworkQAClient
 
@@ -118,7 +117,7 @@ def get_gnqa(query, auth_token, data_dir=""):
          references: contains doc_name,reference,pub_med_info
     """
 
-    api_client = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
+    api_client = GeneNetworkQAClient(api_key=auth_token)
     res, task_id = api_client.ask('?ask=' + quote(query), auth_token)
     if task_id == 0:
         raise RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")
@@ -135,7 +134,7 @@ def get_gnqa(query, auth_token, data_dir=""):
 
         return task_id, answer, references
     else:
-        return task_id, "Please try to rephrase your question to receive feedback", []
+        return task_id, "We couldn't provide a response,Please try to rephrase your question to receive feedback", []
 
 
 def fetch_query_results(query, user_id, redis_conn):
