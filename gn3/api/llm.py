@@ -90,6 +90,18 @@ def rating(task_id):
         return jsonify({"error": str(error)}), 500
 
 
+
+@gnqa.route("/searches/", methods=["GET"])
+@require_oauth("profile user")
+def fetch_prev_searches():
+    with (require_oauth.acquire("profile user") as __the_token,
+          Redis.from_url(current_app.config["REDIS_URI"],
+                         decode_responses=True) as redis_conn):
+        return jsonify({
+            "prev_queries": get_user_queries("random_user", redis_conn)
+        })
+
+
 @gnqa.route("/history/<query>", methods=["GET"])
 @require_oauth("profile user")
 def fetch_user_hist(query):
@@ -101,6 +113,7 @@ def fetch_user_hist(query):
             **fetch_query_results(query, the_token.user.id, redis_conn),
             "prev_queries": get_user_queries("random_user", redis_conn)
         })
+
 
 
 @gnqa.route("/historys/<query>", methods=["GET"])
