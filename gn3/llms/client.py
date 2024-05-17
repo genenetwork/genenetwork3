@@ -7,30 +7,23 @@ import time
 import requests
 from requests import Session
 from requests.adapters import HTTPAdapter
+from requests.adapters import Retry
 
-from urllib3.util import Retry
 from gn3.llms.errors import LLMError
 
 
 class TimeoutHTTPAdapter(HTTPAdapter):
-    """HTTP TimeoutAdapter """
-    # todo rework on this
+    """Set a default timeout for HTTP calls """
     def __init__(self, timeout, *args, **kwargs):
-        """TimeoutHTTPAdapter constructor.
-        Args:
-            timeout (int): How many seconds to wait for the server to
-        send data before
-                giving up.
-        """
+        """TimeoutHTTPAdapter constructor."""
         self.timeout = timeout
         super().__init__(*args, **kwargs)
 
     def send(self, *args, **kwargs):
         """Override :obj:`HTTPAdapter` send method to add a default timeout."""
-        timeout = kwargs.get("timeout")
-        if timeout is None:
-            kwargs["timeout"] = self.timeout
-
+        kwargs["timeout"] = (
+            kwargs["timeout"] if kwargs.get("timeout") else self.timeout
+        )
         return super().send(*args, **kwargs)
 
 
