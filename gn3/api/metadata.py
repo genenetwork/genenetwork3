@@ -16,8 +16,7 @@ from gn3.db.datasets import (retrieve_metadata,
                              get_history)
 from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
-                        query_and_compact,
-                        query_and_frame)
+                        query_and_compact)
 
 
 BASE_CONTEXT = {
@@ -348,69 +347,6 @@ def edit_dataset():
                 lambda x: ("Edit successfull", 201)
             )
 
-@metadata.route("/datasets/search/<term>", methods=["GET"])
-def search_datasets(term):
-    """Search datasets"""
-    args = request.args
-    page = args.get("page", 0)
-    page_size = args.get("per-page", 10)
-    _query = Template("""
-$prefix
-
-CONSTRUCT {
-        ex:result rdf:type ex:resultType ;
-                  ex:pages ?pages ;
-                  ex:hits ?hits ;
-                  ex:currentPage $offset ;
-                  ex:items [
-                    rdfs:label ?label ;
-                    dct:title ?title ;
-                    ex:belongsToInbredSet ?inbredSetName ;
-                    xkos:classifiedUnder ?datasetType ;
-          ]
-} WHERE {
-{
-        SELECT DISTINCT ?dataset ?label ?inbredSetName ?datasetType ?title
-           WHERE {
-        ?dataset rdf:type dcat:Dataset ;
-                 rdfs:label ?label ;
-                 ?datasetPredicate ?datasetObject ;
-                 xkos:classifiedUnder ?inbredSet .
-        ?inbredSet ^skos:member gnc:Set ;
-                   rdfs:label ?inbredSetName .
-        ?datasetObject bif:contains "'$term'" .
-        OPTIONAL {
-          ?dataset dct:title ?title .
-        } .
-        OPTIONAL {
-          ?classification ^xkos:classifiedUnder ?dataset ;
-                          ^skos:member gnc:DatasetType ;
-                          ?typePredicate ?typeName ;
-                          skos:prefLabel ?datasetType .
-        }
-    } ORDER BY ?dataset LIMIT $limit OFFSET $offset
-}
-
-{
-        SELECT (COUNT(DISTINCT ?dataset)/$limit+1 AS ?pages)
-            (COUNT(DISTINCT ?dataset) AS ?hits) WHERE {
-        ?dataset rdf:type dcat:Dataset ;
-                 ?p ?o .
-        ?o bif:contains "'$term'" .
-        }
-}
-
-}
-""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page)
-    _context = {
-        "@context": BASE_CONTEXT | DATASET_SEARCH_CONTEXT,
-        "type": "resultItem",
-    }
-    return query_frame_and_compact(
-        _query, _context,
-        current_app.config.get("SPARQL_ENDPOINT")
-    )
-
 
 @metadata.route("/publications/<name>", methods=["GET"])
 def publications(name):
@@ -432,65 +368,6 @@ CONSTRUCT {
 """).substitute(name=name, prefix=RDF_PREFIXES)
     return query_and_compact(
         _query, {"@context": BASE_CONTEXT | PUBLICATION_CONTEXT},
-        current_app.config.get("SPARQL_ENDPOINT")
-    )
-
-
-@metadata.route("/publications/search/<term>", methods=["GET"])
-def search_publications(term):
-    """Search publications"""
-    args = request.args
-    page = args.get("page", 0)
-    page_size = args.get("per-page", 10)
-    _query = Template("""
-$prefix
-
-CONSTRUCT {
-        ex:result rdf:type ex:resultType ;
-                  ex:totalCount ?totalCount ;
-                  ex:currentPage $offset ;
-                  ex:items [
-                     rdfs:label ?publication ;
-                     dct:title ?title ;
-        ]
-} WHERE {
-{
-        SELECT ?publication ?title ?pmid WHERE {
-        ?pub rdf:type fabio:ResearchPaper ;
-             ?predicate ?object ;
-             dct:title ?title .
-        ?object bif:contains "'$term'" .
-        BIND( STR(?pub) AS ?publication ) .
-        }  ORDER BY ?title LIMIT $limit OFFSET $offset
-    }
-{
-        SELECT (COUNT(*)/$limit+1 AS ?totalCount) WHERE {
-        ?publication rdf:type fabio:ResearchPaper ;
-                     ?predicate ?object .
-        ?object bif:contains "'$term'" .
-        }
-}
-}
-""").substitute(prefix=RDF_PREFIXES, term=term, limit=page_size, offset=page)
-    _context = {
-        "@context": BASE_CONTEXT | SEARCH_CONTEXT | {
-            "dct": "http://purl.org/dc/terms/",
-            "ex": "http://example.org/stuff/1.0/",
-            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-            "fabio": "http://purl.org/spar/fabio/",
-            "title": "dct:title",
-            "pubmed": "fabio:hasPubMedId",
-            "currentPage": "ex:currentPage",
-            "url": "rdfs:label",
-        },
-        "type": "resultItem",
-        "paper": {
-            "@type": "fabio:ResearchPaper",
-            "@container": "@index"
-        }
-    }
-    return query_and_frame(
-        _query, _context,
         current_app.config.get("SPARQL_ENDPOINT")
     )
 
