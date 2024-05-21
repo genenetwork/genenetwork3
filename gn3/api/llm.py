@@ -1,5 +1,4 @@
 """Api endpoints for gnqa"""
-from datetime import timedelta
 import json
 import sqlite3
 from redis import Redis
@@ -14,6 +13,7 @@ from gn3.llms.process import get_user_queries
 from gn3.llms.process import fetch_query_results
 from gn3.llms.errors import LLMError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
+
 from gn3.auth import db
 
 gnqa = Blueprint("gnqa", __name__)
@@ -39,15 +39,17 @@ def gnqna():
             "answer": answer,
             "references": refs
         }
-        with (Redis.from_url(current_app.config["REDIS_URI"],
-                             decode_responses=True) as redis_conn):
-            redis_conn.setex(
-                f"LLM:random_user-{query}",
-                timedelta(days=10), json.dumps(response))
-        return jsonify({
-            **response,
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
+        try:
+            with (Redis.from_url(current_app.config["REDIS_URI"],
+                                 decode_responses=True) as redis_conn,
+                  require_oauth.acquire("profile user") as token):
+                redis_conn.set(
+                    f"LLM:{str(token.user.user_id)}-{str(task_id['task_id'])}",
+                    json.dumps(response)
+                      )
+                return response
+        except Exception:    # handle specific error
+            return response
     except LLMError as error:
         return jsonify({"query": query,
                         "error": f"Request failed-{str(error)}"}), 500
@@ -90,16 +92,19 @@ def rating(task_id):
         return jsonify({"error": str(error)}), 500
 
 
-
-@gnqa.route("/searches/", methods=["GET"])
+@gnqa.route("/searches", methods=["GET"])
 @require_oauth("profile user")
 def fetch_prev_searches():
-    with (require_oauth.acquire("profile user") as __the_token,
+    """ api method to fetch search query records"""
+    with (require_oauth.acquire("profile user") as the_token,
           Redis.from_url(current_app.config["REDIS_URI"],
                          decode_responses=True) as redis_conn):
-        return jsonify({
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
+        if request.args.get("search_term"):
+            return jsonify(json.loads(redis_conn.get(request.args.get("search_term"))))
+        query_result = {}
+        for key in redis_conn.scan_iter(f"LLM:{str(the_token.user.user_id)}*"):
+            query_result[key] = json.loads(redis_conn.get(key))
+        return jsonify(query_result)
 
 
 @gnqa.route("/history/<query>", methods=["GET"])
@@ -110,10 +115,9 @@ def fetch_user_hist(query):
           Redis.from_url(current_app.config["REDIS_URI"],
           decode_responses=True) as redis_conn):
         return jsonify({
-            **fetch_query_results(query, the_token.user.id, redis_conn),
+            **fetch_query_results(query, the_token.user.user_id, redis_conn),
             "prev_queries": get_user_queries("random_user", redis_conn)
         })
-
 
 
 @gnqa.route("/historys/<query>", methods=["GET"])
