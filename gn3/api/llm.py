@@ -9,8 +9,6 @@ from flask import jsonify
 from flask import request
 
 from gn3.llms.process import get_gnqa
-from gn3.llms.process import get_user_queries
-from gn3.llms.process import fetch_query_results
 from gn3.llms.errors import LLMError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
@@ -46,7 +44,7 @@ def gnqna():
                 redis_conn.set(
                     f"LLM:{str(token.user.user_id)}-{str(task_id['task_id'])}",
                     json.dumps(response)
-                      )
+                )
                 return response
         except Exception:    # handle specific error
             return response
@@ -105,38 +103,3 @@ def fetch_prev_searches():
         for key in redis_conn.scan_iter(f"LLM:{str(the_token.user.user_id)}*"):
             query_result[key] = json.loads(redis_conn.get(key))
         return jsonify(query_result)
-
-
-@gnqa.route("/history/<query>", methods=["GET"])
-@require_oauth("profile user")
-def fetch_user_hist(query):
-    """"Endpoint to fetch previos searches for User"""
-    with (require_oauth.acquire("profile user") as the_token,
-          Redis.from_url(current_app.config["REDIS_URI"],
-          decode_responses=True) as redis_conn):
-        return jsonify({
-            **fetch_query_results(query, the_token.user.user_id, redis_conn),
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
-
-
-@gnqa.route("/historys/<query>", methods=["GET"])
-def fetch_users_hist_records(query):
-    """method to fetch all users hist:note this is a test functionality
-    to be replaced by fetch_user_hist
-    """
-    with Redis.from_url(current_app.config["REDIS_URI"],
-                        decode_responses=True) as redis_conn:
-        return jsonify({
-            **fetch_query_results(query, "random_user", redis_conn),
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
-
-
-@gnqa.route("/get_hist_names", methods=["GET"])
-def fetch_prev_hist_ids():
-    """Test method for fetching history for Anony Users"""
-    with (Redis.from_url(current_app.config["REDIS_URI"],
-                         decode_responses=True)) as redis_conn:
-        return jsonify({"prev_queries": get_user_queries("random_user",
-                                                         redis_conn)})

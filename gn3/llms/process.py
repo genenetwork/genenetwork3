@@ -135,23 +135,3 @@ def get_gnqa(query, auth_token, data_dir=""):
         return task_id, answer, references
     else:
         return task_id, "We couldn't provide a response,Please try to rephrase your question to receive feedback", []
-
-
-def fetch_query_results(query, user_id, redis_conn):
-    """this method fetches prev user query searches"""
-    result = redis_conn.get(f"LLM:{user_id}-{query}")
-    if result:
-        return json.loads(result)
-    return {
-        "query": query,
-        "answer": "Sorry No answer for you",
-        "references": [],
-        "task_id": None
-    }
-
-
-def get_user_queries(user_id, redis_conn):
-    """methos to fetch all queries for a specific user"""
-    results = redis_conn.keys(f"LLM:{user_id}*")
-    return [query for query in
-            [result.partition("-")[2] for result in results] if query != ""]
