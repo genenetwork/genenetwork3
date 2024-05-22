@@ -1,17 +1,20 @@
 """Api endpoints for gnqa"""
 import json
 import sqlite3
+import redis
 from redis import Redis
+from authlib.integrations.flask_oauth2.errors import _HTTPException
 
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
 from flask import request
 
+
 from gn3.llms.process import get_gnqa
 from gn3.llms.errors import LLMError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
-
+from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth import db
 
 gnqa = Blueprint("gnqa", __name__)
@@ -23,12 +26,10 @@ def gnqna():
     query = request.json.get("querygnqa", "")
     if not query:
         return jsonify({"error": "querygnqa is missing in the request"}), 400
-
     try:
         fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
         if fahamu_token is None:
-            return jsonify({"query": query,
-                            "error": "Use of invalid fahamu auth token"}), 500
+            raise LLMError("Request failed:an LLM authorisation token  is required ", query=query)
         task_id, answer, refs = get_gnqa(
             query, fahamu_token, current_app.config.get("DATA_DIR"))
         response = {
@@ -46,16 +47,16 @@ def gnqna():
                     json.dumps(response)
                 )
                 return response
-        except Exception:    # handle specific error
-            return response
+        except _HTTPException as httpe:
+            raise AuthorisationError("Authentication is required.") from httpe
     except LLMError as error:
-        return jsonify({"query": query,
-                        "error": f"Request failed-{str(error)}"}), 500
+        raise LLMError(f"request failed for query {str(error.args[-1])}",
+                       query=query) from error
 
 
 @gnqa.route("/rating/<task_id>", methods=["POST"])
 @require_oauth("profile")
-def rating(task_id):
+def rate_queries(task_id):
     """Endpoint for rating qnqa query and answer"""
     try:
         llm_db_path = current_app.config["LLM_DB_PATH"]
@@ -87,19 +88,25 @@ def rating(task_id):
             "You have successfully rated this query:Thank you!!"
         }, 200
     except sqlite3.Error as error:
-        return jsonify({"error": str(error)}), 500
+        raise sqlite3.OperationalError from error
+    except _HTTPException as httpe:
+        raise AuthorisationError("Authentication is required") from httpe
 
 
-@gnqa.route("/searches", methods=["GET"])
+@gnqa.route("/history", methods=["GET"])
 @require_oauth("profile user")
-def fetch_prev_searches():
+def fetch_prev_history():
     """ api method to fetch search query records"""
-    with (require_oauth.acquire("profile user") as the_token,
-          Redis.from_url(current_app.config["REDIS_URI"],
-                         decode_responses=True) as redis_conn):
-        if request.args.get("search_term"):
-            return jsonify(json.loads(redis_conn.get(request.args.get("search_term"))))
-        query_result = {}
-        for key in redis_conn.scan_iter(f"LLM:{str(the_token.user.user_id)}*"):
-            query_result[key] = json.loads(redis_conn.get(key))
-        return jsonify(query_result)
+    try:
+
+        with (require_oauth.acquire("profile user") as the_token,
+              Redis.from_url(current_app.config["REDIS_URI"],
+                             decode_responses=True) as redis_conn):
+            if request.args.get("search_term"):
+                return jsonify(json.loads(redis_conn.get(request.args.get("search_term"))))
+            query_result = {}
+            for key in redis_conn.scan_iter(f"LLM:{str(the_token.user.user_id)}*"):
+                query_result[key] = json.loads(redis_conn.get(key))
+            return jsonify(query_result)
+    except redis.exceptions.RedisError as error:
+        raise error
