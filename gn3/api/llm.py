@@ -1,8 +1,6 @@
 """Api endpoints for gnqa"""
 import json
 import sqlite3
-import redis
-from redis import Redis
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 
 from flask import Blueprint
@@ -39,16 +37,26 @@ def gnqna():
             "references": refs
         }
         try:
-            with (Redis.from_url(current_app.config["REDIS_URI"],
-                                 decode_responses=True) as redis_conn,
+            with (db.connection(current_app.config["LLM_DB_PATH"]) as conn,
                   require_oauth.acquire("profile user") as token):
-                redis_conn.set(
-                    f"LLM:{str(token.user.user_id)}-{str(task_id['task_id'])}",
-                    json.dumps(response)
+                schema = """CREATE TABLE IF NOT EXISTS
+                history(user_id TEXT NOT NULL,
+                task_id TEXT NOT NULL,
+                query  TEXT NOT NULL,
+                results  TEXT,
+                PRIMARY KEY(task_id)) WITHOUT ROWID"""
+                cursor = conn.cursor()
+                cursor.execute(schema)
+                cursor.execute("""INSERT INTO history(user_id,task_id,query,results)
+                    VALUES(?,?,?,?)
+                    """,(str(token.user.user_id),str(task_id["task_id"]),query,
+                         json.dumps(response))
                 )
-                return response
+            return response
         except _HTTPException as httpe:
             raise AuthorisationError("Authentication is required.") from httpe
+        except sqlite3.Error as error:
+            raise error
     except LLMError as error:
         raise LLMError(f"request failed for query {str(error.args[-1])}",
                        query=query) from error
@@ -92,21 +100,25 @@ def rate_queries(task_id):
     except _HTTPException as httpe:
         raise AuthorisationError("Authentication is required") from httpe
 
-
 @gnqa.route("/history", methods=["GET"])
 @require_oauth("profile user")
 def fetch_prev_history():
     """ api method to fetch search query records"""
     try:
-
-        with (require_oauth.acquire("profile user") as the_token,
-              Redis.from_url(current_app.config["REDIS_URI"],
-                             decode_responses=True) as redis_conn):
+        llm_db_path = current_app.config["LLM_DB_PATH"]
+        with (require_oauth.acquire("profile user") as token,
+              db.connection(llm_db_path) as conn):
+            cursor = conn.cursor()
             if request.args.get("search_term"):
-                return jsonify(json.loads(redis_conn.get(request.args.get("search_term"))))
-            query_result = {}
-            for key in redis_conn.scan_iter(f"LLM:{str(the_token.user.user_id)}*"):
-                query_result[key] = json.loads(redis_conn.get(key))
-            return jsonify(query_result)
-    except redis.exceptions.RedisError as error:
-        raise error
+                query = """SELECT results from history Where task_id=? and user_id=?"""
+                cursor.execute(query, (request.args.get("search_term")
+                                   ,str(token.user.user_id),))
+                return dict(cursor.fetchone())
+            query = """SELECT task_id,query from history WHERE user_id=?"""
+            cursor.execute(query, (str(token.user.user_id),))
+            return [dict(item) for item in cursor.fetchall()]
+
+    except sqlite3.Error as error: #please handle me corrrectly 
+        return jsonify({"error":error}), 500
+    except _HTTPException as httpe:
+        raise AuthorisationError("Authorization is required") from httpe
