@@ -17,17 +17,18 @@ from gn3.auth import db
 gnqa = Blueprint("gnqa", __name__)
 
 
-@gnqa.route("/gnqna", methods=["POST"])
-def gnqna():
+@gnqa.route("/search", methods=["POST"])
+def search():
     """Main gnqa endpoint"""
     query = request.json.get("querygnqa", "")
     if not query:
         return jsonify({"error": "querygnqa is missing in the request"}), 400
     try:
         fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
-        if fahamu_token is None:
+        if not fahamu_token:
             raise LLMError(
-                "Request failed:an LLM authorisation token  is required ", query=query)
+                "Request failed:an LLM authorisation token  is required ",
+                query=query)
         task_id, answer, refs = get_gnqa(
             query, fahamu_token, current_app.config.get("DATA_DIR"))
         response = {
@@ -39,17 +40,18 @@ def gnqna():
         try:
             with (db.connection(current_app.config["LLM_DB_PATH"]) as conn,
                   require_oauth.acquire("profile user") as token):
-                schema = """CREATE TABLE IF NOT EXISTS
+                cursor = conn.cursor()
+                cursor.execute("""CREATE TABLE IF NOT EXISTS
                 history(user_id TEXT NOT NULL,
                 task_id TEXT NOT NULL,
                 query  TEXT NOT NULL,
                 results  TEXT,
-                PRIMARY KEY(task_id)) WITHOUT ROWID"""
-                cursor = conn.cursor()
-                cursor.execute(schema)
-                cursor.execute("""INSERT INTO history(user_id,task_id,query,results)
+                PRIMARY KEY(task_id)) WITHOUT ROWID""")
+                cursor.execute(
+                    """INSERT INTO history(user_id,task_id,query,results)
                     VALUES(?,?,?,?)
-                    """, (str(token.user.user_id), str(task_id["task_id"]), query,
+                    """, (str(token.user.user_id), str(task_id["task_id"]),
+                          query,
                           json.dumps(response))
                 )
             return response
@@ -104,7 +106,7 @@ def rate_queries(task_id):
 @gnqa.route("/history", methods=["GET"])
 @require_oauth("profile user")
 def fetch_prev_history():
-    """ api method to fetch search query records""" # ro only
+    """ api method to fetch search query records"""
     try:
         llm_db_path = current_app.config["LLM_DB_PATH"]
         with (require_oauth.acquire("profile user") as token,
