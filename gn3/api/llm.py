@@ -69,9 +69,8 @@ def search():
 def rate_queries(task_id):
     """Endpoint for rating qnqa query and answer"""
     try:
-        llm_db_path = current_app.config["LLM_DB_PATH"]
         with (require_oauth.acquire("profile") as token,
-              db.connection(llm_db_path) as conn):
+              db.connection(current_app.config["LLM_DB_PATH"]) as conn):
 
             results = request.json
             user_id, query, answer, weight = (token.user.user_id,
@@ -108,17 +107,18 @@ def rate_queries(task_id):
 def fetch_prev_history():
     """ api method to fetch search query records"""
     try:
-        llm_db_path = current_app.config["LLM_DB_PATH"]
         with (require_oauth.acquire("profile user") as token,
-              db.connection(llm_db_path) as conn):
+              db.connection(current_app.config["LLM_DB_PATH"]) as conn):
             cursor = conn.cursor()
             if request.args.get("search_term"):
-                query = """SELECT results from history Where task_id=? and user_id=?"""
-                cursor.execute(query, (request.args.get(
-                    "search_term"), str(token.user.user_id),))
+                cursor.execute(
+                    """SELECT results from history Where task_id=? and user_id=?""",
+                    (request.args.get("search_term"),
+                     str(token.user.user_id),))
                 return dict(cursor.fetchone())
-            query = """SELECT task_id,query from history WHERE user_id=?"""
-            cursor.execute(query, (str(token.user.user_id),))
+            cursor.execute(
+                """SELECT task_id,query from history WHERE user_id=?""",
+                (str(token.user.user_id),))
             return jsonify([dict(item) for item in cursor.fetchall()])
     except sqlite3.Error as error:
         raise sqlite3.OperationalError(*error.args) from error
