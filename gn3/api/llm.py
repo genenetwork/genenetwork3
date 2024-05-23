@@ -8,7 +8,6 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-
 from gn3.llms.process import get_gnqa
 from gn3.llms.errors import LLMError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
@@ -27,7 +26,8 @@ def gnqna():
     try:
         fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
         if fahamu_token is None:
-            raise LLMError("Request failed:an LLM authorisation token  is required ", query=query)
+            raise LLMError(
+                "Request failed:an LLM authorisation token  is required ", query=query)
         task_id, answer, refs = get_gnqa(
             query, fahamu_token, current_app.config.get("DATA_DIR"))
         response = {
@@ -49,14 +49,14 @@ def gnqna():
                 cursor.execute(schema)
                 cursor.execute("""INSERT INTO history(user_id,task_id,query,results)
                     VALUES(?,?,?,?)
-                    """,(str(token.user.user_id),str(task_id["task_id"]),query,
-                         json.dumps(response))
+                    """, (str(token.user.user_id), str(task_id["task_id"]), query,
+                          json.dumps(response))
                 )
             return response
         except _HTTPException as httpe:
             raise AuthorisationError("Authentication is required.") from httpe
         except sqlite3.Error as error:
-            raise error
+            raise sqlite3.OperationalError(*error.args) from error
     except LLMError as error:
         raise LLMError(f"request failed for query {str(error.args[-1])}",
                        query=query) from error
@@ -96,14 +96,15 @@ def rate_queries(task_id):
             "You have successfully rated this query:Thank you!!"
         }, 200
     except sqlite3.Error as error:
-        raise sqlite3.OperationalError from error
+        raise sqlite3.OperationalError(*error.args) from error
     except _HTTPException as httpe:
         raise AuthorisationError("Authentication is required") from httpe
+
 
 @gnqa.route("/history", methods=["GET"])
 @require_oauth("profile user")
 def fetch_prev_history():
-    """ api method to fetch search query records"""
+    """ api method to fetch search query records""" # ro only
     try:
         llm_db_path = current_app.config["LLM_DB_PATH"]
         with (require_oauth.acquire("profile user") as token,
@@ -111,14 +112,13 @@ def fetch_prev_history():
             cursor = conn.cursor()
             if request.args.get("search_term"):
                 query = """SELECT results from history Where task_id=? and user_id=?"""
-                cursor.execute(query, (request.args.get("search_term")
-                                   ,str(token.user.user_id),))
+                cursor.execute(query, (request.args.get(
+                    "search_term"), str(token.user.user_id),))
                 return dict(cursor.fetchone())
             query = """SELECT task_id,query from history WHERE user_id=?"""
             cursor.execute(query, (str(token.user.user_id),))
-            return [dict(item) for item in cursor.fetchall()]
-
-    except sqlite3.Error as error: #please handle me corrrectly 
-        return jsonify({"error":error}), 500
+            return jsonify([dict(item) for item in cursor.fetchall()])
+    except sqlite3.Error as error:
+        raise sqlite3.OperationalError(*error.args) from error
     except _HTTPException as httpe:
         raise AuthorisationError("Authorization is required") from httpe
