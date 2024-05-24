@@ -117,11 +117,11 @@ class GeneNetworkQAClient(Session):
                     continue
                 return response
             else:
-                raise LLMError( f"Request error with code:\
+                raise LLMError(f"Request error with code:\
                 {response.status_code} occurred with reason:\
                 {response_msg.get(response.status_code,response.reason)}",
-                                query=self.query)
+                               self.query)
                 #time.sleep(retry_delay)
         raise LLMError("Time error: We couldn't provide a response,Please try\
         to rephrase your question to receive feedback",
-                       query=self.query)
+                       self.query)

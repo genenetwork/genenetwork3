@@ -1,7 +1,5 @@
 """Api endpoints for gnqa"""
 import json
-import sqlite3
-from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
@@ -10,7 +8,6 @@ from flask import request
 from gn3.llms.process import get_gnqa
 from gn3.llms.errors import LLMError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
-from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.auth import db
 
 
@@ -26,8 +23,7 @@ def search():
     fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
     if not fahamu_token:
         raise LLMError(
-            "Request failed:an LLM authorisation token  is required ",
-            query=query)
+            "Request failed:an LLM authorisation token  is required ", query)
     task_id, answer, refs = get_gnqa(
         query, fahamu_token, current_app.config.get("DATA_DIR"))
     response = {
@@ -61,7 +57,6 @@ def rate_queries(task_id):
     """Endpoint for rating qnqa query and answer"""
     with (require_oauth.acquire("profile") as token,
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
-
         results = request.json
         user_id, query, answer, weight = (token.user.user_id,
                                           results.get("query"),
