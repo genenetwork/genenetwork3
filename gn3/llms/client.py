@@ -105,22 +105,25 @@ class GeneNetworkQAClient(Session):
         """ make custom request to fahamu api ask and get response"""
         max_retries = 50
         retry_delay = 3
+        response_msg = {
+            404: "Api endpoint Does not exist",
+            500: "Use of Invalid Token/or the Fahamu Api is currently  down",
+            400: "You sent a bad Fahamu request",
+            401: "You do not have authorization to perform the request",
+        }
         for _i in range(max_retries):
-            try:
-                response = super().request(method, url, *args, **kwargs)
-                response.raise_for_status()
-                if response.ok:
-                    if method.lower() == "get" and response.json().get("data") is None:
-                        time.sleep(retry_delay)
-                        continue
-                    return response
-                else:
+            response = super().request(method, url, *args, **kwargs)
+            if response.ok:
+                if method.lower() == "get" and response.json().get("data") is None:
+                    # note this is a dirty trick to check if fahamu has returned the results
+                    # the issue is that the api only returns 500 or 200 satus code
+                    # TODO: fix this on their end
                     time.sleep(retry_delay)
-            except requests.exceptions.HTTPError as error:
-                if error.response.status_code == 500:
-                    raise LLMError(error.request, error.response, f"Response Error with:status_code:{error.response.status_code},Reason for error: Use of Invalid Fahamu Token") from error
-                raise LLMError(error.request, error.response,
-            f"HTTP error occurred  with error status:{error.response.status_code}") from error
-            except requests.exceptions.RequestException as error:
-                raise error
-        raise TimeoutError
+                    continue
+                return response
+            else:
+                raise LLMError( f"Request error with code:\
+                {response.status_code} occurred with reason:\
+                {response_msg.get(response.status_code,response.reason)}")
+                #time.sleep(retry_delay)
+        raise LLMError("Time error occurred when querying the  fahamu Api,Please a try the search  again")
