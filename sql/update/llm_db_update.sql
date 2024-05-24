@@ -1,6 +1,6 @@
 -- llm_db_update.sql ---
 
--- Copyright (C) 2022  Alexander kabui <alexanderkbua@gmail.com>
+-- Copyright (C) 2024  Alexander kabui <alexanderkabua@gmail.com>
 
 -- Author:  Alexander Kabui <alexanderkabua@gmail.com>
 
