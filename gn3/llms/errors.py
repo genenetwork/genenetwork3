@@ -35,11 +35,7 @@ class UnprocessableEntity(HTTPError):
             msg, request=request, response=response)
 
 
-class LLMErrorMIxins(Exception):
-    """base class for llm errors"""
-
-
-class LLMError(LLMErrorMIxins):
+class LLMError(Exception):
     """custom exception for LLMErrorMIxins"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
