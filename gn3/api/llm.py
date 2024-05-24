@@ -40,6 +40,7 @@ def search():
         task_id TEXT NOT NULL,
         query  TEXT NOT NULL,
         results  TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY(task_id)) WITHOUT ROWID""")
         cursor.execute(
             """INSERT INTO history(user_id, task_id, query, results)
