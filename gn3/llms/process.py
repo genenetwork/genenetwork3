@@ -116,22 +116,11 @@ def get_gnqa(query, auth_token, data_dir=""):
          answer
          references: contains doc_name,reference,pub_med_info
     """
-
     api_client = GeneNetworkQAClient(api_key=auth_token)
     res, task_id = api_client.ask('?ask=' + quote(query), query=query)
-    if task_id == 0:
-        raise RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")
-    res, status = api_client.get_answer(task_id)
-    if status == 1:
-        resp_text = filter_response_text(res.text)
-        if resp_text.get("data") is None:
-            return task_id, "Please try to rephrase your question to receive feedback", []
-        answer = resp_text['data']['answer']
-        context = resp_text['data']['context']
-        references = parse_context(
-            context, DocIDs().get_info, format_bibliography_info)
-        references = fetch_pubmed(references, "pubmed.json", data_dir)
-
-        return task_id, answer, references
-    else:
-        return task_id, "We couldn't provide a response,Please try to rephrase your question to receive feedback", []
+    res, _status = api_client.get_answer(task_id)
+    resp_text = filter_response_text(res.text)
+    answer = resp_text['data']['answer']
+    context = resp_text['data']['context']
+    return task_id, answer, fetch_pubmed(parse_context(
+        context, DocIDs().get_info, format_bibliography_info), "pubmed.json", data_dir)
