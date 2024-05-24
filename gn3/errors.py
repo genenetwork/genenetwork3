@@ -109,7 +109,7 @@ def handle_generic(exc: Exception) -> Response:
 def handle_llm_error(exc: Exception) -> Response:
     """ Handle llm erros if not handled  anywhere else. """
     resp = jsonify({
-        "query": exc.query if exc.query else "",
+        "query": exc.args[1],
         "error_type": type(exc).__name__,
         "error": (
             exc.args[0] if bool(exc.args) else "Fahamu gnqa error occurred"
