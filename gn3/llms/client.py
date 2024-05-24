@@ -109,7 +109,7 @@ class GeneNetworkQAClient(Session):
         for _i in range(max_retries):
             response = super().request(method, url, *args, **kwargs)
             if response.ok:
-                if method.lower() == "get" and not (response.json().get("data")):
+                if method.lower() == "get" and not response.json().get("data"):
                     # note this is a dirty trick to check if fahamu has returned the results
                     # the issue is that the api only returns 500 or 200 satus code
                     # TODO: fix this on their end
@@ -122,6 +122,6 @@ class GeneNetworkQAClient(Session):
                 {response_msg.get(response.status_code,response.reason)}",
                                self.query)
                 #time.sleep(retry_delay)
-        raise LLMError("Time error: We couldn't provide a response,Please try\
+        raise LLMError("Timeout error: We couldn't provide a response,Please try\
         to rephrase your question to receive feedback",
                        self.query)
