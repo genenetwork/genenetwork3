@@ -112,7 +112,7 @@ def handle_llm_error(exc: Exception) -> Response:
         "query": exc.query if exc.query else "",
         "error_type": type(exc).__name__,
         "error": (
-            exc.args if bool(exc.args) else "Fahamu gnqa error occurred"
+            exc.args[0] if bool(exc.args) else "Fahamu gnqa error occurred"
         ),
         "trace": traceback.format_exc()
     })
