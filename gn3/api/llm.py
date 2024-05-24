@@ -1,5 +1,6 @@
 """Api endpoints for gnqa"""
 import json
+from datetime import datetime, timezone
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
@@ -69,15 +70,17 @@ def rate_queries(task_id):
               query TEXT NOT NULL,
               answer TEXT NOT NULL,
               weight INTEGER NOT NULL DEFAULT 0,
-              task_id TEXT NOT NULL UNIQUE
+              task_id TEXT NOT NULL UNIQUE,
+              created_at TIMESTAMP
               )"""
         cursor.execute(create_table)
         cursor.execute("""INSERT INTO Rating(user_id, query,
-        answer, weight, task_id)
-        VALUES(?,?,?,?,?)
+        answer, weight, task_id, created_at)
+        VALUES(?, ?, ?, ?, ?, ?)
         ON CONFLICT(task_id) DO UPDATE SET
         weight=excluded.weight
-        """, (str(user_id), query, answer, weight, task_id))
+        """, (str(user_id), query, answer, weight, task_id,
+              datetime.now(timezone.utc)))
         return {
            "message": "You have successfully rated this query.Thank you!"
         }, 200
