@@ -55,6 +55,7 @@ class GeneNetworkQAClient(Session):
         self.base_url = "https://genenetwork.fahamuai.com/api/tasks"
         self.answer_url = f"{self.base_url}/answers"
         self.feedback_url = f"{self.base_url}/feedback"
+        self.query = ""
 
         adapter = TimeoutHTTPAdapter(
             timeout=timeout,
@@ -83,8 +84,9 @@ class GeneNetworkQAClient(Session):
         """ handler for non 200 response from fahamu api"""
         return f"Error: Status code -{response.status_code}- Reason::{response.reason}"
 
-    def ask(self, ex_url, *args, **kwargs):
+    def ask(self, ex_url, query,  *args, **kwargs):
         """fahamu ask api interface"""
+        self.query = query
         res = self.custom_request('POST', f"{self.base_url}{ex_url}", *args, **kwargs)
         return res, json.loads(res.text)
 
@@ -117,6 +119,8 @@ class GeneNetworkQAClient(Session):
             else:
                 raise LLMError( f"Request error with code:\
                 {response.status_code} occurred with reason:\
-                {response_msg.get(response.status_code,response.reason)}")
+                {response_msg.get(response.status_code,response.reason)}",
+                                query=self.query)
                 #time.sleep(retry_delay)
-        raise LLMError("Time error: Please try to rephrase of query to get an answer")
+        raise LLMError("Time error: Please try to rephrase of query to get an answer",
+                       query=self.query)
