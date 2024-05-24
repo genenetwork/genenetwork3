@@ -86,20 +86,13 @@ class GeneNetworkQAClient(Session):
     def ask(self, ex_url, *args, **kwargs):
         """fahamu ask api interface"""
         res = self.custom_request('POST', f"{self.base_url}{ex_url}", *args, **kwargs)
-        if res.status_code != 200:
-            return f"Error: Status code -{res.status_code}- Reason::{res.reason}", 0
         return res, json.loads(res.text)
 
     def get_answer(self, taskid, *args, **kwargs):
         """Fahamu get answer interface"""
-        try:
-            query = f"{self.answer_url}?task_id={taskid['task_id']}"
-            res = self.custom_request('GET', query, *args, **kwargs)
-            if res.status_code != 200:
-                return f"Error: Status code -{res.status_code}- Reason::{res.reason}", 0
-            return res, 1
-        except TimeoutError:
-            return "Timeout error occured:try to rephrase your query", 0
+        query = f"{self.answer_url}?task_id={taskid['task_id']}"
+        res = self.custom_request('GET', query, *args, **kwargs)
+        return res, 1
 
     def custom_request(self, method, url, *args, **kwargs):
         """ make custom request to fahamu api ask and get response"""
@@ -126,4 +119,4 @@ class GeneNetworkQAClient(Session):
                 {response.status_code} occurred with reason:\
                 {response_msg.get(response.status_code,response.reason)}")
                 #time.sleep(retry_delay)
-        raise LLMError("Time error occurred when querying the  fahamu Api,Please a try the search  again")
+        raise LLMError("Time error: Please try to rephrase of query to get an answer")
