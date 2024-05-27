@@ -1,6 +1,7 @@
 """this module contains code for processing response from fahamu client.py"""
 # pylint: disable=C0301
 import os
+import re
 import string
 import json
 import logging
@@ -76,8 +77,13 @@ def parse_context(context, get_info_func, format_bib_func):
         doc_info = get_info_func(doc_ids)
         bib_info = doc_ids if doc_ids == doc_info else format_bib_func(
             doc_info)
+        pattern = r'(https?://|www\.)[\w.-]+(\.[a-zA-Z]{2,})([/\w.-]*)*'
+        combo_text = re.sub(pattern,
+                            lambda x: f"<a href='{x[0]}' target=_blank> {x[0]} </a>",
+                            combo_txt)
         results.append(
-            {"doc_id": doc_ids, "bibInfo": bib_info, "comboTxt": combo_txt})
+            {"doc_id": doc_ids, "bibInfo": bib_info,
+             "comboTxt": combo_text})
     return results
 
 
@@ -137,8 +143,10 @@ def get_gnqa(query, auth_token, data_dir=""):
     res, task_id = api_client.ask('?ask=' + quote(query), query=query)
     res, _status = api_client.get_answer(task_id)
     resp_text = json.loads(''.join([str(char)
-                                   for char in res.text if char in string.printable]))
-    answer = resp_text['data']['answer']
+                           for char in res.text if char in string.printable]))
+    answer = re.sub(r'(https?://|www\.)[\w.-]+(\.[a-zA-Z]{2,})([/\w.-]*)*',
+                    lambda x: f"<a href='{x[0]}' target=_blank> {x[0]} </a>",
+                    resp_text["data"]["answer"])
     context = resp_text['data']['context']
     return task_id, answer, fetch_pubmed(parse_context(
                             context, DocIDs().get_info,
