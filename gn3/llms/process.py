@@ -67,12 +67,6 @@ def format_bibliography_info(bib_info):
     return bib_info
 
 
-def filter_response_text(val):
-    """helper function for filtering non-printable chars"""
-    return json.loads(''.join([str(char)
-                               for char in val if char in string.printable]))
-
-
 def parse_context(context, get_info_func, format_bib_func):
     """Function to parse doc_ids content
      Args:
@@ -151,7 +145,8 @@ def get_gnqa(query, auth_token, data_dir=""):
     api_client = GeneNetworkQAClient(api_key=auth_token)
     res, task_id = api_client.ask('?ask=' + quote(query), query=query)
     res, _status = api_client.get_answer(task_id)
-    resp_text = filter_response_text(res.text)
+    resp_text = json.loads(''.join([str(char)
+                                   for char in res.text if char in string.printable]))
     answer = resp_text['data']['answer']
     context = resp_text['data']['context']
     return task_id, answer, fetch_pubmed(parse_context(
