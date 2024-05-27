@@ -1,8 +1,5 @@
-# pylint: disable=unused-argument
-"""Test cases for procedures defined in llms module"""
-from dataclasses import dataclass
+"""Test cases for procedures defined in llms """
 import pytest
-from gn3.llms.process import get_gnqa
 from gn3.llms.process import parse_context
 
 
