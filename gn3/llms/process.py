@@ -21,18 +21,9 @@ class DocIDs():
         * doc_ids.json: opens doc)ids for gn references
         * sugar_doc_ids:  open doci_ids for diabetes references
         """
-        self.doc_ids = self.load_file("doc_ids.json")
-        self.sugar_doc_ids = self.load_file("all_files.json")
+        self.doc_ids = load_file("doc_ids.json", BASEDIR)
+        self.sugar_doc_ids = load_file("all_files.json", BASEDIR)
         self.format_doc_ids(self.sugar_doc_ids)
-
-    def load_file(self, file_name):
-        """Method to load and read doc_id files"""
-        file_path = os.path.join(BASEDIR, file_name)
-        if os.path.isfile(file_path):
-            with open(file_path, "rb") as file_handler:
-                return json.load(file_handler)
-        else:
-            raise FileNotFoundError(f"{file_path}-- FIle does not exist\n")
 
     def format_doc_ids(self, docs):
         """method to format doc_ids for list items doc_id and doc_name"""
