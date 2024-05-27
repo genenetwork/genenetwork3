@@ -35,7 +35,7 @@ class DocIDs():
             raise FileNotFoundError(f"{file_path}-- FIle does not exist\n")
 
     def format_doc_ids(self, docs):
-        """method to format doc_ids for list items"""
+        """method to format doc_ids for list items doc_id and doc_name"""
         for _key, val in docs.items():
             if isinstance(val, list):
                 for doc_obj in val:
@@ -43,7 +43,14 @@ class DocIDs():
                     self.doc_ids.update({doc_obj["id"]:  doc_name})
 
     def get_info(self, doc_id):
-        """ interface to make read from doc_ids"""
+        """ interface to make read from doc_ids
+           and extract info data  else returns
+           doc_id
+        Args:
+            doc_id: str: a search key for doc_ids
+        Returns:
+              an object with doc_info if doc_id in doc_ids
+        """
         if doc_id in self.doc_ids.keys():
             return self.doc_ids[doc_id]
         else:
@@ -51,7 +58,8 @@ class DocIDs():
 
 
 def format_bibliography_info(bib_info):
-    """Function for formatting bibliography info"""
+    """Utility function for formatting bibliography info
+    """
     if isinstance(bib_info, str):
         return bib_info.removesuffix('.txt')
     elif isinstance(bib_info, dict):
@@ -66,7 +74,15 @@ def filter_response_text(val):
 
 
 def parse_context(context, get_info_func, format_bib_func):
-    """function to parse doc_ids content"""
+    """Function to parse doc_ids content
+     Args:
+         context: raw references from  fahamu api
+         get_info_func: function to get doc_ids info
+         format_bib_func:  function to foramt bibliography info
+    Returns:
+          an list with each item having (doc_id,bib_info,
+          combined reference text)
+    """
     results = []
     for doc_ids, summary in context.items():
         combo_txt = ""
@@ -81,7 +97,12 @@ def parse_context(context, get_info_func, format_bib_func):
 
 
 def load_file(filename, dir_path):
-    """function to open and load json file"""
+    """Utility function to read json file
+    Args:
+        filename:  file name to read
+        dir_path:  base directory for the file
+    Returns: json data read to a dict
+    """
     file_path = os.path.join(dir_path, f"{filename}")
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"{filename} was not found or is a directory")
@@ -90,8 +111,19 @@ def load_file(filename, dir_path):
 
 
 def fetch_pubmed(references, file_name, data_dir=""):
-    """method to fetch and populate references with pubmed"""
+    """
+    Fetches PubMed data from a JSON file and populates the\
+    references dictionary.
 
+    Args:
+        references (dict): Dictionary with document IDs as keys\
+    and reference data as values.
+        filename (str): Name of the JSON file containing PubMed data.
+        data_dir (str): Base directory where the data files are located.
+
+    Returns:
+        dict: Updated references dictionary populated with the PubMed data.
+    """
     try:
         pubmed = load_file(file_name, os.path.join(data_dir, "gn-meta/lit"))
         for reference in references:
@@ -123,4 +155,6 @@ def get_gnqa(query, auth_token, data_dir=""):
     answer = resp_text['data']['answer']
     context = resp_text['data']['context']
     return task_id, answer, fetch_pubmed(parse_context(
-        context, DocIDs().get_info, format_bibliography_info), "pubmed.json", data_dir)
+                            context, DocIDs().get_info,
+                            format_bibliography_info),
+                            "pubmed.json", data_dir)

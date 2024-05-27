@@ -17,7 +17,7 @@ gnqa = Blueprint("gnqa", __name__)
 
 @gnqa.route("/search", methods=["POST"])
 def search():
-    """Main gnqa endpoint"""
+    """Api  endpoint for searching queries in fahamu Api"""
     query = request.json.get("querygnqa", "")
     if not query:
         return jsonify({"error": "querygnqa is missing in the request"}), 400
@@ -56,7 +56,7 @@ def search():
 @gnqa.route("/rating/<task_id>", methods=["POST"])
 @require_oauth("profile")
 def rate_queries(task_id):
-    """Endpoint for rating qnqa query and answer"""
+    """Api endpoint for rating GNQA query and answer"""
     with (require_oauth.acquire("profile") as token,
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         results = request.json
@@ -89,7 +89,7 @@ def rate_queries(task_id):
 @gnqa.route("/history", methods=["GET"])
 @require_oauth("profile user")
 def fetch_prev_history():
-    """ api method to fetch search query records"""
+    """Api endpoint to fetch GNQA previous search."""
     with (require_oauth.acquire("profile user") as token,
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         cursor = conn.cursor()
