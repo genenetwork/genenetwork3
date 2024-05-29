@@ -8,14 +8,15 @@ xapian index. This xapian index is later used in providing search
 through the web interface.
 
 """
-
+from string import Template
 from collections import deque, namedtuple
 import contextlib
-from functools import partial
+from functools import partial, lru_cache
 import itertools
 import json
 import logging
 from multiprocessing import Lock, Process
+from string import Template
 import os
 import pathlib
 import resource
@@ -23,6 +24,7 @@ import shutil
 import sys
 import tempfile
 from typing import Callable, Generator, Iterable, List
+from SPARQLWrapper import SPARQLWrapper, JSON
 
 import MySQLdb
 import click
@@ -168,6 +170,38 @@ def locked_xapian_writable_database(path: pathlib.Path) -> xapian.WritableDataba
         db.close()
 
 
+@curry(2)
+@lru_cache(maxsize=1_000)
+def get_rif_metadata(symbol, species):
+    sparql = SPARQLWrapper(
+        "http://localhost:8982/sparql"
+    )
+    sparql.setReturnFormat(JSON)
+    query = Template("""
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX gnt: <http://genenetwork.org/term/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX gnc: <http://genenetwork.org/category/>
+PREFIX gn: <http://genenetwork.org/id/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX xkos: <http://rdf-vocabulary.ddialliance.org/xkos#>
+
+SELECT DISTINCT ?comment WHERE {
+    ?symbol rdfs:comment _:node ;
+            rdfs:label '$symbol' .
+_:node rdf:type gnc:GNWikiEntry ;
+       gnt:belongsToSpecies ?species ;
+       rdfs:comment ?comment .
+?species gnt:shortName '$species' .
+}
+""")
+    sparql.setQuery(query.substitute(symbol=symbol,
+                                     species=species))
+    results = sparql.queryAndConvert()["results"]["bindings"]
+    return results
+
+
 # pylint: disable=invalid-name
 def write_document(db: xapian.WritableDatabase, identifier: str,
                    doctype: str, doc: xapian.Document) -> None:
@@ -189,6 +223,9 @@ def index_text(text: str) -> None:
 
 # pylint: disable=unnecessary-lambda
 index_text_without_positions = lambda text: termgenerator.index_text_without_positions(text)
+def index_rif_comments(entries):
+    for entry in entries:
+        termgenerator.index_text(entry["comment"]["value"], 0, "XRF")
 
 index_authors = lambda authors: termgenerator.index_text(authors, 0, "A")
 index_species = lambda species: termgenerator.index_text_without_positions(species, 0, "XS")
@@ -246,6 +283,9 @@ def index_genes(xapian_build_directory: pathlib.Path, chunk_index: int) -> None:
             trait["symbol"].bind(index_symbol)
             trait["chr"].bind(index_chr)
             trait["geno_chr"].bind(index_peakchr)
+
+            # Index generif entries
+            Maybe.apply(get_rif_metadata).to_arguments(trait["symbol"], trait["species"]).bind(index_rif_comments)
 
             doc.set_data(json.dumps(trait.data))
             (Maybe.apply(curry(2, lambda name, dataset: f"{name}:{dataset}"))
