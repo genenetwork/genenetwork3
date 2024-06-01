@@ -8,15 +8,13 @@ xapian index. This xapian index is later used in providing search
 through the web interface.
 
 """
-from string import Template
 from collections import deque, namedtuple
 import contextlib
-from functools import partial, lru_cache
+from functools import partial
 import itertools
 import json
 import logging
 from multiprocessing import Lock, Process
-from string import Template
 import os
 import pathlib
 import resource
@@ -170,36 +168,34 @@ def locked_xapian_writable_database(path: pathlib.Path) -> xapian.WritableDataba
         db.close()
 
 
-@curry(2)
-@lru_cache(maxsize=1_000)
-def get_rif_metadata(symbol, species):
+
+def build_rif_cache():
+    cache = {}
     sparql = SPARQLWrapper(
         "http://localhost:8982/sparql"
     )
     sparql.setReturnFormat(JSON)
-    query = Template("""
+    query = """
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX gnt: <http://genenetwork.org/term/>
-PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX gnc: <http://genenetwork.org/category/>
-PREFIX gn: <http://genenetwork.org/id/>
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX xkos: <http://rdf-vocabulary.ddialliance.org/xkos#>
 
-SELECT DISTINCT ?comment WHERE {
+SELECT ?symbolName ?speciesName GROUP_CONCAT(?comment ; separator=\"\\n\") AS ?comment WHERE {
     ?symbol rdfs:comment _:node ;
-            rdfs:label '$symbol' .
+            rdfs:label ?symbolName .
 _:node rdf:type gnc:GNWikiEntry ;
        gnt:belongsToSpecies ?species ;
        rdfs:comment ?comment .
-?species gnt:shortName '$species' .
-}
-""")
-    sparql.setQuery(query.substitute(symbol=symbol,
-                                     species=species))
+?species gnt:shortName ?speciesName .
+} GROUP BY ?speciesName ?symbolName
+"""
+    sparql.setQuery(query)
     results = sparql.queryAndConvert()["results"]["bindings"]
-    return results
+    for entry in results:
+        x = (entry["speciesName"]["value"], entry["symbolName"]["value"],)
+        cache[x] = entry["comment"]["value"]
+    return cache
 
 
 # pylint: disable=invalid-name
@@ -221,12 +217,16 @@ def index_text(text: str) -> None:
     termgenerator.index_text(text)
     termgenerator.increase_termpos()
 
-# pylint: disable=unnecessary-lambda
-index_text_without_positions = lambda text: termgenerator.index_text_without_positions(text)
-def index_rif_comments(entries):
-    for entry in entries:
-        termgenerator.index_text(entry["comment"]["value"], 0, "XRF")
 
+@curry(2)
+def index_rif_comments(species, symbol):
+    key = (species, symbol,)
+    entry = rdfcache.get(key)
+    if entry:
+        termgenerator.index_text(entry, 0, "XRF")
+
+
+index_text_without_positions = lambda text: termgenerator.index_text_without_positions(text)
 index_authors = lambda authors: termgenerator.index_text(authors, 0, "A")
 index_species = lambda species: termgenerator.index_text_without_positions(species, 0, "XS")
 index_group = lambda group: termgenerator.index_text_without_positions(group, 0, "XG")
@@ -247,6 +247,7 @@ add_year = lambda doc, year: doc.add_value(5, xapian.sortable_serialise(float(ye
 # its parent. We use this to pass data retrieved from SQL from parent
 # to child. Specifically, we use this global variable.
 data: Iterable
+rdfcache: Iterable
 # We use this lock to ensure that only one process writes its Xapian
 # index to disk at a time.
 xapian_lock = Lock()
@@ -284,8 +285,11 @@ def index_genes(xapian_build_directory: pathlib.Path, chunk_index: int) -> None:
             trait["chr"].bind(index_chr)
             trait["geno_chr"].bind(index_peakchr)
 
-            # Index generif entries
-            Maybe.apply(get_rif_metadata).to_arguments(trait["symbol"], trait["species"]).bind(index_rif_comments)
+            Maybe.apply(
+                index_rif_comments
+            ).to_arguments(
+                trait["species"], trait["symbol"]
+            )
 
             doc.set_data(json.dumps(trait.data))
             (Maybe.apply(curry(2, lambda name, dataset: f"{name}:{dataset}"))
@@ -366,6 +370,8 @@ def index_query(index_function: Callable, query: SQLQuery,
     i = start
     try:
         with worker_queue() as spawn_worker:
+            global rdfcache
+            rdfcache = build_rif_cache()
             with database_connection(sql_uri) as conn:
                 for chunk in group(query_sql(conn, serialize_sql(
                         # KLUDGE: MariaDB does not allow an offset
