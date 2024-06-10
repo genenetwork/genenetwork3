@@ -198,6 +198,36 @@ _:node rdf:type gnc:GNWikiEntry ;
     return cache
 
 
+def hash_generif_graph():
+    sparql = SPARQLWrapper(
+        "http://localhost:8982/sparql"
+    )
+    sparql.setReturnFormat(JSON)
+    query = """
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX gnt: <http://genenetwork.org/term/>
+PREFIX gnc: <http://genenetwork.org/category/>
+
+SELECT SHA256(GROUP_CONCAT(?entries ; separator=\"\\n\")) AS ?hash WHERE {
+   {{
+     SELECT ?type CONCAT(?symbolName, ",", ?speciesName, \"\\n\",GROUP_CONCAT(?comment ; separator=\"\\n\")) AS ?entries WHERE {
+    ?symbol rdfs:comment _:node ;
+            rdfs:label ?symbolName .
+_:node rdf:type gnc:GNWikiEntry ;
+       rdf:type ?type ;
+       gnt:belongsToSpecies ?species ;
+       rdfs:comment ?comment .
+?species gnt:shortName ?speciesName .
+} GROUP BY ?speciesName ?symbolName ?type
+   }}
+   } GROUP BY ?type
+"""
+    sparql.setQuery(query)
+    results = sparql.queryAndConvert()["results"]["bindings"]
+    return results[0]["hash"]["value"]
+
+
 # pylint: disable=invalid-name
 def write_document(db: xapian.WritableDatabase, identifier: str,
                    doctype: str, doc: xapian.Document) -> None:
