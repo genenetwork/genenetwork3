@@ -448,6 +448,20 @@ def xapian_compact(combined_index: pathlib.Path, indices: List[pathlib.Path]) ->
         db.close()
 
 
+def verify_checksums(xapian_directory: str,
+                     sql_uri: str) -> bool:
+    dir_ = pathlib.Path(xapian_directory)
+    with locked_xapian_writable_database(dir_) as db, database_connection(sql_uri) as conn:
+        checksums = " ".join([
+            result["Checksum"].bind(str)
+            for result in query_sql(
+                    conn,
+                    f"CHECKSUM TABLE {', '.join(db.get_metadata('tables').decode().split())}")
+        ])
+        return (db.get_metadata("generif-checksum").decode() == hash_generif_graph() and
+                db.get_metadata("checksums").decode() == checksums)
+
+
 @click.command(help="Index GeneNetwork data and build Xapian search index in XAPIAN_DIRECTORY.")
 @click.argument("xapian_directory")
 @click.argument("sql_uri")
