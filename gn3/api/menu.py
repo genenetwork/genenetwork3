@@ -10,5 +10,5 @@ menu = Blueprint("menu", __name__)
 @menu.route("/generate/json")
 def generate_json():
     """Get the menu in the JSON format"""
-    with database_connection(current_app.config["SQL_URI"]) as conn:
+    with database_connection(current_app.config["SQL_URI"], logger=current_app.logger) as conn:
         return jsonify(gen_dropdown_json(conn))
