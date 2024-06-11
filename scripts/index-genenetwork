@@ -448,8 +448,11 @@ def xapian_compact(combined_index: pathlib.Path, indices: List[pathlib.Path]) ->
         db.close()
 
 
-def verify_checksums(xapian_directory: str,
-                     sql_uri: str) -> bool:
+@click.command(help="Verify checksums and return True when the data has been changed.")
+@click.argument("xapian_directory")
+@click.argument("sql_uri")
+def is_data_modified(xapian_directory: str,
+                     sql_uri: str) -> None:
     dir_ = pathlib.Path(xapian_directory)
     with locked_xapian_writable_database(dir_) as db, database_connection(sql_uri) as conn:
         checksums = " ".join([
@@ -458,28 +461,32 @@ def verify_checksums(xapian_directory: str,
                     conn,
                     f"CHECKSUM TABLE {', '.join(db.get_metadata('tables').decode().split())}")
         ])
-        return (db.get_metadata("generif-checksum").decode() == hash_generif_graph() and
-                db.get_metadata("checksums").decode() == checksums)
+        click.echo(db.get_metadata("generif-checksum").decode() == hash_generif_graph() and
+                   db.get_metadata("checksums").decode() == checksums)
 
 
 @click.command(help="Index GeneNetwork data and build Xapian search index in XAPIAN_DIRECTORY.")
 @click.argument("xapian_directory")
 @click.argument("sql_uri")
 # pylint: disable=missing-function-docstring
-def main(xapian_directory: str, sql_uri: str) -> None:
+def create_xapian_index(xapian_directory: str, sql_uri: str) -> None:
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"),
                         format='%(relativeCreated)s: %(levelname)s: %(message)s')
 
+    logging.info("Verifying the checksums")
+
+    build_directory = pathlib.Path(xapian_directory) / "build"
+
     # Ensure no other build process is running.
-    if pathlib.Path(xapian_directory).exists():
+    if build_directory.exists():
         logging.error("Build directory %s already exists; "
                       "perhaps another build process is running.",
-                      xapian_directory)
+                      build_directory)
         sys.exit(1)
 
-    pathlib.Path(xapian_directory).mkdir()
-    with temporary_directory("combined", xapian_directory) as combined_index:
-        with temporary_directory("build", xapian_directory) as xapian_build_directory:
+    build_directory.mkdir()
+    with temporary_directory("combined", build_directory) as combined_index:
+        with temporary_directory("build", build_directory) as xapian_build_directory:
             logging.info("Indexing genes")
             index_query(index_genes, genes_query, xapian_build_directory, sql_uri)
             logging.info("Indexing phenotypes")
@@ -499,11 +506,23 @@ def main(xapian_directory: str, sql_uri: str) -> None:
                     ]
                 db.set_metadata("tables", " ".join(tables))
                 db.set_metadata("checksums", " ".join(checksums))
+                logging.info("Writing generif checksums into index")
+                db.set_metadata("generif-checksum", hash_generif_graph().encode())
         for child in combined_index.iterdir():
-            shutil.move(child, xapian_directory)
+            shutil.move(child, pathlib.Path(xapian_directory) / child.name)
+    build_directory.rmdir()
     logging.info("Index built")
+
+
+@click.group()
+def cli():
+    pass
+
+
+cli.add_command(is_data_modified)
+cli.add_command(create_xapian_index)
 
 
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter
-    main()
+    cli()
