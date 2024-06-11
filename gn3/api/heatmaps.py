@@ -24,7 +24,7 @@ def clustered_heatmaps():
         return jsonify({
             "message": "You need to provide at least two trait names."
         }), 400
-    with database_connection(current_app.config["SQL_URI"]) as conn:
+    with database_connection(current_app.config["SQL_URI"], logger=current_app.logger) as conn:
         def parse_trait_fullname(trait):
             name_parts = trait.split(":")
             return f"{name_parts[1]}::{name_parts[0]}"

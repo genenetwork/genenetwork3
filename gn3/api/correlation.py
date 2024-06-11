@@ -64,7 +64,7 @@ def compute_lit_corr(species=None, gene_id=None):
     might be needed for actual computing of the correlation results
     """
 
-    with database_connection(current_app.config["SQL_URI"]) as conn:
+    with database_connection(current_app.config["SQL_URI"], logger=current_app.logger) as conn:
         target_traits_gene_ids = request.get_json()
         target_trait_gene_list = list(target_traits_gene_ids.items())
 
