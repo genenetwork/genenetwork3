@@ -1,6 +1,7 @@
 """module contains all db related stuff"""
 import contextlib
-from typing import Any, Iterator, Protocol, Tuple
+import logging
+from typing import Any, Iterator, Optional, Protocol, Tuple
 from urllib.parse import urlparse
 import MySQLdb as mdb
 import xapian
@@ -24,8 +25,10 @@ class Connection(Protocol):
 
 
 @contextlib.contextmanager
-def database_connection(sql_uri) -> Iterator[Connection]:
+def database_connection(sql_uri: str, logger: Optional[logging.Logger] = None) -> Iterator[Connection]:
     """Connect to MySQL database."""
+    if logger is None:
+        logger = logging.getLogger(__file__)
     host, user, passwd, db_name, port = parse_db_url(sql_uri)
     connection = mdb.connect(db=db_name,
                              user=user,
@@ -35,6 +38,7 @@ def database_connection(sql_uri) -> Iterator[Connection]:
     try:
         yield connection
     except mdb.Error as _mbde:
+        logger.error("DB error encountered", exc_info=1)
         connection.rollback()
     finally:
         connection.commit()
