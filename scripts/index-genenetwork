@@ -479,18 +479,18 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
 
     logging.info("Verifying the checksums")
 
-    build_directory = pathlib.Path(xapian_directory) / "build"
+    if not pathlib.Path(xapian_directory).exists():
+        pathlib.Path(xapian_directory).mkdir()
 
     # Ensure no other build process is running.
-    if build_directory.exists():
-        logging.error("Build directory %s already exists; "
+    if any(pathlib.Path(xapian_directory).iterdir()):
+        logging.error("Build directory %s has build files; "
                       "perhaps another build process is running.",
-                      build_directory)
+                      xapian_directory)
         sys.exit(1)
 
-    build_directory.mkdir()
-    with temporary_directory("combined", build_directory) as combined_index:
-        with temporary_directory("build", build_directory) as xapian_build_directory:
+    with temporary_directory("combined", xapian_directory) as combined_index:
+        with temporary_directory("build", xapian_directory) as xapian_build_directory:
             logging.info("Indexing genes")
             index_query(index_genes, genes_query, xapian_build_directory, sql_uri, sparql_uri)
             logging.info("Indexing phenotypes")
@@ -514,7 +514,6 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
                 db.set_metadata("generif-checksum", hash_generif_graph(sparql_uri).encode())
         for child in combined_index.iterdir():
             shutil.move(child, pathlib.Path(xapian_directory) / child.name)
-    build_directory.rmdir()
     logging.info("Index built")
 
 
