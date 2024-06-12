@@ -1,11 +1,10 @@
 
 # pylint: skip-file
-import string
 import json
 import os
 
 
-basedir           = os.path.abspath(os.path.dirname(__file__))
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class DocIDs():
@@ -26,27 +25,27 @@ class DocIDs():
             return result
         else:
             raise Exception("\n{0} -- File does not exist\n".format(file_path))
-    
+
     def formatDocIDs(self, values):
         for _key, _val in values.items():
             if isinstance(_val, list):
                 for theObject in _val:
                     docName = self.formatDocumentName(theObject['filename'])
-                    docID   = theObject['id']
+                    docID = theObject['id']
                     self.doc_ids.update({docID: docName})
-                    
-    def formatDocumentName(self, val):
-       result = val.removesuffix('.pdf') 
-       result = result.removesuffix('.txt') 
-       result = result.replace('_', ' ')
-       return result
 
+    def formatDocumentName(self, val):
+        result = val.removesuffix('.pdf')
+        result = result.removesuffix('.txt')
+        result = result.replace('_', ' ')
+        return result
 
     def getInfo(self, doc_id):
         if doc_id in self.doc_ids.keys():
             return self.doc_ids[doc_id]
         else:
             return doc_id
+
 
 class RespContext():
     def __init__(self, context):
@@ -66,7 +65,6 @@ class RespContext():
 def createAccordionFromJson(theContext):
     result = ''
     # loop thru json array
-    ndx = 0
     for docID, summaryLst in theContext.items():
         # item is a key with a list
         comboTxt = ''
