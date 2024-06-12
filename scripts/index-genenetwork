@@ -459,9 +459,12 @@ def is_data_modified(xapian_directory: str,
                     conn,
                     f"CHECKSUM TABLE {', '.join(db.get_metadata('tables').decode().split())}")
         ])
-        click.echo(
-            db.get_metadata("generif-checksum").decode() == hash_generif_graph(sparql_uri) and
-            db.get_metadata("checksums").decode() == checksums)
+        # Return a zero exit status code when the data has changed;
+        # otherwise exit with a 1 exit status code.
+        if (db.get_metadata("generif-checksum").decode() == hash_generif_graph(sparql_uri) and
+            db.get_metadata("checksums").decode() == checksums):
+            sys.exit(1)
+        sys.exit(0)
 
 
 @click.command(help="Index GeneNetwork data and build Xapian search index in XAPIAN_DIRECTORY.")
