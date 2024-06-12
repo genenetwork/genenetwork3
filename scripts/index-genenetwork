@@ -10,6 +10,8 @@ through the web interface.
 """
 from collections import deque, namedtuple
 import contextlib
+import time
+import datetime
 from functools import partial
 import itertools
 import json
@@ -489,6 +491,7 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
                       xapian_directory)
         sys.exit(1)
 
+    start_time = time.perf_counter()
     with temporary_directory("combined", xapian_directory) as combined_index:
         with temporary_directory("build", xapian_directory) as xapian_build_directory:
             logging.info("Indexing genes")
@@ -515,6 +518,9 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
         for child in combined_index.iterdir():
             shutil.move(child, pathlib.Path(xapian_directory) / child.name)
     logging.info("Index built")
+    end_time = time.perf_counter()
+    index_time = datetime.timedelta(seconds=end_time - start_time)
+    logging.info(f"Time to Index: {index_time}")
 
 
 @click.group()
