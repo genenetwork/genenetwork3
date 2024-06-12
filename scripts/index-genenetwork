@@ -477,6 +477,8 @@ def is_data_modified(xapian_directory: str,
 def create_xapian_index(xapian_directory: str, sql_uri: str,
                         sparql_uri: str) -> None:
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"),
+                        filename=os.environ.get("INDEX_LOG_FILE"),
+                        filemode="a",
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S %Z')
 
