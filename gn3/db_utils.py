@@ -39,7 +39,7 @@ def database_connection(sql_uri: str, logger: logging.Logger = LOGGER) -> Iterat
     try:
         yield connection
     except mdb.Error as _mbde:
-        logger.error("DB error encountered", exc_info=1)
+        logger.error("DB error encountered", exc_info=True)
         connection.rollback()
     finally:
         connection.commit()

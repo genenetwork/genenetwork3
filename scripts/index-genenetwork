@@ -190,8 +190,11 @@ _:node rdf:type gnc:GNWikiEntry ;
 } GROUP BY ?speciesName ?symbolName
 """
     sparql.setQuery(query)
-    results = sparql.queryAndConvert()["results"]["bindings"]
-    for entry in results:
+    results = sparql.queryAndConvert()
+    if not isinstance(results, dict):
+        raise TypeError(f"Expected results to be a dict but found {type(results)}")
+    bindings = results["results"]["bindings"]
+    for entry in bindings :
         x = (entry["speciesName"]["value"], entry["symbolName"]["value"],)
         cache[x] = entry["comment"]["value"]
     return cache
@@ -221,8 +224,11 @@ _:node rdf:type gnc:GNWikiEntry ;
    } GROUP BY ?type
 """
     sparql.setQuery(query)
-    results = sparql.queryAndConvert()["results"]["bindings"]
-    return results[0]["hash"]["value"]
+    results = sparql.queryAndConvert()
+    if not isinstance(results, dict):
+        raise TypeError(f"Expected results to be a dict but found {type(results)}")
+    bindings = results["results"]["bindings"]
+    return bindings[0]["hash"]["value"]
 
 
 # pylint: disable=invalid-name
@@ -456,7 +462,7 @@ def is_data_modified(xapian_directory: str,
     dir_ = pathlib.Path(xapian_directory)
     with locked_xapian_writable_database(dir_) as db, database_connection(sql_uri) as conn:
         checksums = " ".join([
-            result["Checksum"].bind(str)
+            str(result["Checksum"].value)
             for result in query_sql(
                     conn,
                     f"CHECKSUM TABLE {', '.join(db.get_metadata('tables').decode().split())}")
