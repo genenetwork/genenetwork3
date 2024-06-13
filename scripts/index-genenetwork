@@ -421,7 +421,7 @@ def index_query(index_function: Callable, query: SQLQuery,
     except MySQLdb._exceptions.OperationalError:
         logging.warning("Reopening connection to recovering from SQL operational error",
                         exc_info=True)
-        index_query(index_function, query, xapian_build_directory, sql_uri, i)
+        index_query(index_function, query, xapian_build_directory, sql_uri, sparql_uri, i)
 
 
 @contextlib.contextmanager
