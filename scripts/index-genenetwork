@@ -364,6 +364,12 @@ def index_genes(xapian_build_directory: pathlib.Path, chunk_index: int, namespac
                 trait["species"], trait["symbol"], Just(share.rif_cache)
             )
 
+            Maybe.apply(
+                index_wiki_comments
+            ).to_arguments(
+                trait["species"], trait["symbol"]
+            )
+
             doc.set_data(json.dumps(trait.data))
             (Maybe.apply(curry(2, lambda name, dataset: f"{name}:{dataset}"))
              .to_arguments(trait["name"], trait["dataset"])
@@ -447,6 +453,7 @@ def index_query(index_function: Callable[[pathlib.Path, int, managers.Namespace]
     try:
         with Manager() as manager, worker_queue() as spawn_worker:
             rdfcache = build_rif_cache(sparql_uri)
+            wikicache = build_wiki_cache(sparql_uri)
             with database_connection(sql_uri) as conn:
                 for chunk in group(query_sql(conn, serialize_sql(
                         # KLUDGE: MariaDB does not allow an offset
