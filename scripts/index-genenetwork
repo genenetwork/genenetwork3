@@ -201,6 +201,36 @@ _:node rdf:type gnc:GNWikiEntry ;
     return cache
 
 
+def build_wiki_cache(sparql_uri: str):
+    cache = {}
+    sparql = SPARQLWrapper(sparql_uri)
+    sparql.setReturnFormat(JSON)
+    query = """
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX gnt: <http://genenetwork.org/term/>
+PREFIX gnc: <http://genenetwork.org/category/>
+
+SELECT * WHERE {
+    ?symbol rdfs:comment _:node ;
+            rdfs:label ?symbolName .
+_:node rdf:type gnc:NCBIWikiEntry ;
+       gnt:belongsToSpecies ?species ;
+       rdfs:comment ?comment .
+?species gnt:shortName ?speciesName .
+}
+"""
+    sparql.setQuery(query)
+    results = sparql.queryAndConvert()
+    if not isinstance(results, dict):
+        raise TypeError(f"Expected results to be a dict but found {type(results)}")
+    bindings = results["results"]["bindings"]
+    for entry in bindings :
+        x = (entry["speciesName"]["value"], entry["symbolName"]["value"],)
+        cache[x] = entry["comment"]["value"]
+    return cache
+
+
 def hash_generif_graph(sparql_uri: str):
     sparql = SPARQLWrapper(sparql_uri)
     sparql.setReturnFormat(JSON)
@@ -259,6 +289,13 @@ def index_rif_comments(species: str, symbol: str, rdfcache: dict):
     if entry:
         termgenerator.index_text(entry, 0, "XRF")
 
+
+@curry(2)
+def index_wiki_comments(species, symbol):
+    key = (species, symbol,)
+    entry = wikicache.get(key)
+    if entry:
+        termgenerator.index_text(entry, 0, "XRF")
 
 index_text_without_positions = lambda text: termgenerator.index_text_without_positions(text)
 index_authors = lambda authors: termgenerator.index_text(authors, 0, "A")
