@@ -461,12 +461,14 @@ def is_data_modified(xapian_directory: str,
                      sparql_uri: str) -> None:
     dir_ = pathlib.Path(xapian_directory)
     with locked_xapian_writable_database(dir_) as db, database_connection(sql_uri) as conn:
-        checksums = " ".join([
-            str(result["Checksum"].value)
-            for result in query_sql(
-                    conn,
-                    f"CHECKSUM TABLE {', '.join(db.get_metadata('tables').decode().split())}")
-        ])
+        checksums = -1
+        if db.get_metadata('tables'):
+            checksums = " ".join([
+                str(result["Checksum"].value)
+                for result in query_sql(
+                        conn,
+                        f"CHECKSUM TABLE {', '.join(db.get_metadata('tables').decode().split())}")
+            ])
         # Return a zero exit status code when the data has changed;
         # otherwise exit with a 1 exit status code.
         if (db.get_metadata("generif-checksum").decode() == hash_generif_graph(sparql_uri) and
