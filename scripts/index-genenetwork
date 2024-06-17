@@ -180,7 +180,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX gnt: <http://genenetwork.org/term/>
 PREFIX gnc: <http://genenetwork.org/category/>
 
-SELECT ?symbolName ?speciesName GROUP_CONCAT(?comment ; separator=\"\\n\") AS ?comment WHERE {
+SELECT ?symbolName ?speciesName GROUP_CONCAT(DISTINCT ?comment ; separator=\"\\n\") AS ?comment WHERE {
     ?symbol rdfs:comment _:node ;
             rdfs:label ?symbolName .
 _:node rdf:type gnc:GNWikiEntry ;
