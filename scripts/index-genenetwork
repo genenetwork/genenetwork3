@@ -147,14 +147,14 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX gnt: <http://genenetwork.org/term/>
 PREFIX gnc: <http://genenetwork.org/category/>
 
-SELECT * WHERE {
+SELECT ?symbolName ?speciesName GROUP_CONCAT(DISTINCT ?comment ; separator=\"\\n\") AS ?comment WHERE {
     ?symbol rdfs:comment _:node ;
             rdfs:label ?symbolName .
 _:node rdf:type gnc:NCBIWikiEntry ;
        gnt:belongsToSpecies ?species ;
        rdfs:comment ?comment .
 ?species gnt:shortName ?speciesName .
-}
+} GROUP BY ?speciesName ?symbolName
 """
 
 
@@ -346,7 +346,7 @@ def index_genes(xapian_build_directory: pathlib.Path, chunk_index: int, namespac
 
             Maybe.apply(index_from_dictionary).to_arguments(
                     Just((trait["species"].value, trait["symbol"].value)),
-                    Just("XRWD"),
+                    Just("XWK"),
                     Just(share.wiki_cache)
                     )
 
@@ -488,7 +488,7 @@ def is_data_modified(xapian_directory: str,
                      sparql_uri: str) -> None:
     dir_ = pathlib.Path(xapian_directory)
     with locked_xapian_writable_database(dir_) as db, database_connection(sql_uri) as conn:
-        checksums = ""
+        checksums = "-1"
         if db.get_metadata('tables'):
             checksums = " ".join([
                 str(result["Checksum"].value)
