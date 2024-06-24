@@ -304,7 +304,7 @@ def index_genes(xapian_build_directory: pathlib.Path, chunk_index: int, namespac
             trait["additive"].bind(partial(add_additive, doc))
 
             # Index free text.
-            for key in ["description", "tissue", "dataset_fullname"]:
+            for key in ["description", "tissue", "dataset"]:
                 trait[key].bind(index_text)
             trait.pop("probe_target_description").bind(index_text)
             for key in ["name", "symbol", "species", "group"]:
@@ -316,7 +316,7 @@ def index_genes(xapian_build_directory: pathlib.Path, chunk_index: int, namespac
             trait["species"].bind(index_species)
             trait["group"].bind(index_group)
             trait["tissue"].bind(index_tissue)
-            trait["dataset_fullname"].bind(index_dataset)
+            trait["dataset"].bind(index_dataset)
             trait["symbol"].bind(index_symbol)
             trait["chr"].bind(index_chr)
             trait["geno_chr"].bind(index_peakchr)
@@ -352,7 +352,7 @@ def index_phenotypes(xapian_build_directory: pathlib.Path, chunk_index: int, nam
             trait["year"].bind(partial(add_year, doc))
 
             # Index free text.
-            for key in ["description", "authors", "dataset_fullname"]:
+            for key in ["description", "authors", "dataset"]:
                 trait[key].bind(index_text)
             for key in ["Abstract", "Title"]:
                 trait.pop(key).bind(index_text)
@@ -366,7 +366,7 @@ def index_phenotypes(xapian_build_directory: pathlib.Path, chunk_index: int, nam
             trait["group"].bind(index_group)
             trait["authors"].bind(index_authors)
             trait["geno_chr"].bind(index_peakchr)
-            trait["dataset_fullname"].bind(index_dataset)
+            trait["dataset"].bind(index_dataset)
 
             # Convert name from integer to string.
             trait["name"] = trait["name"].map(str)
