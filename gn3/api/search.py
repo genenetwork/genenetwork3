@@ -264,7 +264,7 @@ def search_results():
     if page < 1:
         abort(404, description="Requested page does not exist")
     results_per_page = args.get("per_page", default=100, type=int)
-    maximum_results_per_page = 10000
+    maximum_results_per_page = 50000
     if results_per_page > maximum_results_per_page:
         abort(400, description="Requested too many search results")
 
