@@ -37,6 +37,9 @@ from gn3.db_utils import database_connection
 from gn3.monads import query_sql
 
 DOCUMENTS_PER_CHUNK = 100000
+# Running the script in prod consumers ~1GB per process.
+# To prevent running out of RAM, we set this as the upper bound for total concurrent processes
+PROCESS_COUNT_LIMIT = 67
 
 SQLQuery = namedtuple("SQLQuery",
                       ["fields", "tables", "where", "offset", "limit"],
@@ -432,9 +435,11 @@ def index_query(index_function: Callable[[pathlib.Path, int, managers.Namespace]
                 sparql_uri: str, start: int = 0) -> None:
     """Run SQL query, and index its results for Xapian."""
     i = start
+    default_no_of_workers = os.cpu_count() or 1
+    no_of_workers = min(default_no_of_workers, PROCESS_COUNT_LIMIT)
 
     try:
-        with worker_queue() as spawn_worker:
+        with worker_queue(no_of_workers) as spawn_worker:
             with database_connection(sql_uri) as conn:
                 for chunk in group(query_sql(conn, serialize_sql(
                         # KLUDGE: MariaDB does not allow an offset
