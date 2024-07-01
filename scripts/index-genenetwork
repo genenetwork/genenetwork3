@@ -9,7 +9,7 @@ through the web interface.
 
 """
 from dataclasses import dataclass
-from collections import deque, namedtuple
+from collections import deque, namedtuple, Counter
 import contextlib
 import time
 import datetime
@@ -21,10 +21,11 @@ from multiprocessing import Lock, Manager, Process, managers
 import os
 import pathlib
 import resource
+import re
 import shutil
 import sys
 import tempfile
-from typing import Callable, Generator, Hashable, Iterable, List
+from typing import Callable, Dict, Generator, Hashable, Iterable, List
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 import MySQLdb
@@ -36,7 +37,7 @@ import xapian
 from gn3.db_utils import database_connection
 from gn3.monads import query_sql
 
-DOCUMENTS_PER_CHUNK = 100000
+DOCUMENTS_PER_CHUNK = 100_000
 # Running the script in prod consumers ~1GB per process.
 # To prevent running out of RAM, we set this as the upper bound for total concurrent processes
 PROCESS_COUNT_LIMIT = 67
@@ -206,7 +207,7 @@ def locked_xapian_writable_database(path: pathlib.Path) -> xapian.WritableDataba
         db.close()
 
 
-def build_rdf_cache(sparql_uri: str, query: str):
+def build_rdf_cache(sparql_uri: str, query: str, remove_common_words: bool = False):
     cache = {}
     sparql = SPARQLWrapper(sparql_uri)
     sparql.setReturnFormat(JSON)
@@ -215,10 +216,31 @@ def build_rdf_cache(sparql_uri: str, query: str):
     if not isinstance(results, dict):
         raise TypeError(f"Expected results to be a dict but found {type(results)}")
     bindings = results["results"]["bindings"]
+    count = Counter()
+    words_regex = re.compile(r"\w+")
     for entry in bindings :
         x = (entry["speciesName"]["value"], entry["symbolName"]["value"],)
-        cache[x] = entry["comment"]["value"]
-    return cache
+        value = entry["comment"]["value"]
+        value = " ".join(words_regex.findall(value)) # remove punctuation
+        cache[x] = value
+        count.update(Counter(value.lower().strip().split()))
+
+    if not remove_common_words:
+        return cache
+
+    words_to_drop = set()
+    for word, cnt in count.most_common(1000):
+        if len(word) < 4 or cnt > 3000:
+            words_to_drop.add(word)
+    smaller_cache = {}
+    for entry, value in cache.items():
+        new_value = set()
+        for word in value.lower().split():
+            if word in words_to_drop:
+                continue
+            new_value.add(word)
+        smaller_cache[entry] = " ".join(new_value)
+    return smaller_cache
 
 
 def hash_generif_graph(sparql_uri: str):
@@ -265,6 +287,8 @@ def write_document(db: xapian.WritableDatabase, identifier: str,
 
 termgenerator = xapian.TermGenerator()
 termgenerator.set_stemmer(xapian.Stem("en"))
+termgenerator.set_stopper_strategy(xapian.TermGenerator.STOP_ALL)
+termgenerator.set_stopper(xapian.SimpleStopper())
 
 def index_text(text: str) -> None:
     """Index text and increase term position."""
@@ -520,9 +544,6 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"),
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S %Z')
-
-    logging.info("Verifying the checksums")
-
     if not pathlib.Path(xapian_directory).exists():
         pathlib.Path(xapian_directory).mkdir()
 
@@ -538,8 +559,10 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
         with temporary_directory("build", xapian_directory) as xapian_build_directory:
             global rif_cache
             global wiki_cache
-            rif_cache = build_rdf_cache(sparql_uri, RIF_CACHE_QUERY)
-            wiki_cache = build_rdf_cache(sparql_uri, WIKI_CACHE_QUERY)
+            logging.info("Building wiki cache")
+            wiki_cache = build_rdf_cache(sparql_uri, WIKI_CACHE_QUERY, remove_common_words=True)
+            logging.info("Building rif cache")
+            rif_cache = build_rdf_cache(sparql_uri, RIF_CACHE_QUERY, remove_common_words=True)
             logging.info("Indexing genes")
             index_query(index_genes, genes_query, xapian_build_directory, sql_uri, sparql_uri)
             logging.info("Indexing phenotypes")
