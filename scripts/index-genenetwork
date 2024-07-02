@@ -300,7 +300,7 @@ def index_from_dictionary(keys: Hashable, prefix: str, dictionary: dict):
     entry = dictionary.get(keys)
     if not entry:
         return
-    termgenerator.index_text(entry, 0, prefix)
+    termgenerator.index_text_without_positions(entry, 0, prefix)
 
 
 index_text_without_positions = lambda text: termgenerator.index_text_without_positions(text)
