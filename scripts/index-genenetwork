@@ -129,7 +129,7 @@ phenotypes_query = SQLQuery(
      SQLTableClause("LEFT JOIN", "Geno",
                     "PublishXRef.Locus = Geno.Name AND Geno.SpeciesId = Species.Id")])
 
-RIF_CACHE_QUERY = """
+WIKI_CACHE_QUERY = """
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX gnt: <http://genenetwork.org/term/>
@@ -145,7 +145,7 @@ _:node rdf:type gnc:GNWikiEntry ;
 } GROUP BY ?speciesName ?symbolName
 """
 
-WIKI_CACHE_QUERY = """
+RIF_CACHE_QUERY = """
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX gnt: <http://genenetwork.org/term/>
