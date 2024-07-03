@@ -240,7 +240,7 @@ def build_rdf_cache(sparql_uri: str, query: str, remove_common_words: bool = Fal
     return smaller_cache
 
 
-def hash_generif_graph(generif_file: str):
+def hash_generif_graph(generif_file: pathlib.Path) -> str:
     with open(generif_file, encoding="utf-8") as f_:
         data = f_.read()
         return hashlib.md5(data.encode()).hexdigest()
