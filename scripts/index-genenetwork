@@ -241,6 +241,8 @@ def build_rdf_cache(sparql_uri: str, query: str, remove_common_words: bool = Fal
 
 
 def hash_rdf_graph(ttl_dir: pathlib.Path) -> str:
+    if not ttl_dir.exists():
+        return "-1"
     ttl_hash = hashlib.new("md5")
     for ttl_file in ttl_dir.glob("*.ttl"):
         with open(ttl_file, encoding="utf-8") as f_:
@@ -528,10 +530,7 @@ def is_data_modified(xapian_directory: str,
         # Return a zero exit status code when the data has changed;
         # otherwise exit with a 1 exit status code.
         generif = pathlib.Path("/var/lib/data/generif-metadata.ttl")
-        generif_checksum = "-1"
-        if generif.exists():
-            generif_checksum = hash_rdf_graph(generif)
-        if (db.get_metadata("generif-checksum").decode() == generif_checksum and
+        if (db.get_metadata("generif-checksum").decode() == hash_rdf_graph(generif) and
             db.get_metadata("checksums").decode() == checksums):
             sys.exit(1)
         sys.exit(0)
@@ -586,9 +585,9 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
                 db.set_metadata("tables", " ".join(tables))
                 db.set_metadata("checksums", " ".join(checksums))
                 logging.info("Writing generif checksums into index")
-                generif = pathlib.Path("/var/lib/data/generif-metadata.ttl")
-                if generif.exists():
-                    db.set_metadata("generif-checksum", hash_rdf_graph(generif).encode())
+                db.set_metadata(
+                    "generif-checksum",
+                    hash_rdf_graph(pathlib.Path("/var/lib/data/generif-metadata.ttl")).encode())
         for child in combined_index.iterdir():
             shutil.move(child, xapian_directory)
     logging.info("Index built")
