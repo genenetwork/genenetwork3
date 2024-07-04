@@ -268,8 +268,10 @@ def search_results():
     maximum_results_per_page = 50000
     if results_per_page > maximum_results_per_page:
         abort(400, description="Requested too many search results")
-
-    query = parse_query(Path(current_app.config["DATA_DIR"]) / "synteny", querystring)
+    try:
+        query = parse_query(Path(current_app.config["DATA_DIR"]) / "synteny", querystring)
+    except xapian.QueryParserError as err:
+        return jsonify({"error_type": str(err.get_type()), "error": err.get_msg()}), 400
     traits = []
     # pylint: disable=invalid-name
     with xapian_database(current_app.config["XAPIAN_DB_PATH"]) as db:
