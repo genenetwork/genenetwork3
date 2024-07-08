@@ -25,11 +25,11 @@ run the rqtl_wrapper script and return the results as JSON
         raise FileNotFoundError
 
     # Split kwargs by those with values and boolean ones that just convert to True/False
-    kwargs = ["covarstruct", "model", "method", "nperm", "scale", "control_marker"]
+    kwargs = ["covarstruct", "model", "method", "nperm", "scale", "control"]
     boolean_kwargs = ["addcovar", "interval", "pstrata", "pairscan"]
     all_kwargs = kwargs + boolean_kwargs
 
-    rqtl_kwargs = {"geno": genofile, "pheno": phenofile}
+    rqtl_kwargs = {"geno": genofile, "pheno": phenofile, "outdir": current_app.config.get("TMPDIR")}
     rqtl_bool_kwargs = []
     for kwarg in all_kwargs:
         if kwarg in request.form:

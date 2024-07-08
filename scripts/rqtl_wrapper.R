@@ -3,8 +3,6 @@ library(qtl)
 library(stringi)
 library(stringr)
 
-tmp_dir = Sys.getenv("TMPDIR")
-
 option_list = list(
   make_option(c("-g", "--geno"), type="character", help=".geno file containing a dataset's genotypes"),
   make_option(c("-p", "--pheno"), type="character", help="File containing two columns - sample names and values"),
@@ -18,7 +16,7 @@ option_list = list(
   make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata (stored as final column/vector in phenotype input file)"),
   make_option(c("-s", "--scale"), type="character", default="mb", help="Mapping scale - Megabases (Mb) or Centimorgans (cM)"),
   make_option(c("--control"), type="character", default=NULL, help="Name of marker (contained in genotype file) to be used as a control"),
-  make_option(c("-o", "--outdir"), type="character", default=file.path(tmp_dir, "output"), help="Directory in which to write result file"),
+  make_option(c("-o", "--outdir"), type="character", default=NULL, help="Directory in which to write result file"),
   make_option(c("-f", "--filename"), type="character", default=NULL, help="Name to use for result file"),
   make_option(c("-v", "--verbose"), action="store_true", default=NULL, help="Show extra information")
 );
@@ -58,7 +56,7 @@ geno_file = opt$geno
 pheno_file = opt$pheno
 
 # Generate randomized filename for cross object
-cross_file = file.path(tmp_dir, "cross", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
+cross_file = file.path(opt$outdir, "cross", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
 
 trim <- function( x ) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
 
@@ -258,9 +256,9 @@ if (!is.null(opt$pairscan)) {
 # Calculate permutations
 if (opt$nperm > 0) {
   if (!is.null(opt$filename)){
-    perm_out_file = file.path(opt$outdir, paste("PERM_", opt$filename, sep = "" ))
+    perm_out_file = file.path(opt$outdir, "output", paste("PERM_", opt$filename, sep = "" ))
   } else {
-    perm_out_file = file.path(opt$outdir, paste(pheno_name, "_PERM_", stri_rand_strings(1, 8), sep = ""))
+    perm_out_file = file.path(opt$outdir, "output", paste(pheno_name, "_PERM_", stri_rand_strings(1, 8), sep = ""))
   }
 
   if (!is.null(opt$addcovar) || !is.null(opt$control)){
@@ -284,9 +282,9 @@ if (opt$nperm > 0) {
 }
 
 if (!is.null(opt$filename)){
-  out_file = file.path(opt$outdir, opt$filename)
+  out_file = file.path(opt$outdir, "output", opt$filename)
 } else {
-  out_file = file.path(opt$outdir, paste(pheno_name, "_", stri_rand_strings(1, 8), sep = ""))
+  out_file = file.path(opt$outdir, "output", paste(pheno_name, "_", stri_rand_strings(1, 8), sep = ""))
 }
 
 if (!is.null(opt$addcovar) || !is.null(opt$control)){
@@ -299,7 +297,7 @@ if (!is.null(opt$addcovar) || !is.null(opt$control)){
 
 verbose_print('Writing results to CSV file\n')
 if (!is.null(opt$pairscan)) {
-  map_out_file = file.path(opt$outdir, paste("MAP_", opt$filename, sep = "" ))
+  map_out_file = file.path(opt$outdir, "output", paste("MAP_", opt$filename, sep = "" ))
   write.csv(qtl_results[1], out_file)
   write.csv(qtl_results[2], map_out_file)
 } else {
