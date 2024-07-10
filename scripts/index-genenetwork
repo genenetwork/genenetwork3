@@ -322,11 +322,9 @@ def index_text(text: str) -> None:
     termgenerator.increase_termpos()
 
 @curry(3)
-def index_from_dictionary(keys: Hashable, prefix: str, dictionary: dict):
-    entry = dictionary.get(keys)
-    if not entry:
-        return
-    termgenerator.index_text_without_positions(entry, 0, prefix)
+def index_from_dictionary(keys: Hashable, prefix: str, dictionary: MonadicDict):
+    entry = dictionary[keys]
+    entry.bind(lambda x: termgenerator.index_text_without_positions(x, 0, prefix))
 
 
 index_text_without_positions = lambda text: termgenerator.index_text_without_positions(text)
