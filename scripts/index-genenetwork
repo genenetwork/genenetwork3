@@ -243,12 +243,10 @@ def get_count_and_cache_from_rdf_bindings(
         species_name = entry.bind(lambda x: x["speciesName"]).bind(lambda x: x["value"])
         symbol_name = entry.bind(lambda x: x["symbolName"]).bind(lambda x: x["value"])
         value = entry.bind(lambda x: x["comment"]).bind(lambda x: x["value"])
-        if species_name.is_nothing() or symbol_name.is_nothing() or value.is_nothing():
-            continue
-        entry_key = (species_name.value, symbol_name.value)
-        cache[entry_key] = value
-        stripped_words = (" ".join(words_regex.findall(value.value))).lower().strip()
-        count.update(Counter(stripped_words.split()))
+        entry_key = Maybe.apply(curry(2, lambda a, b: (a, b))).to_arguments(species_name, symbol_name)
+        Maybe.apply(curry(1, lambda k: cache.update({k: value}))).to_arguments(entry_key)
+        stripped_words = value.map(lambda x: " ".join(words_regex.findall(x)).lower().strip())
+        Maybe.apply(curry(1, lambda x: count.update(Counter(x.split())))).to_arguments(stripped_words)
     return count, cache
 
 
