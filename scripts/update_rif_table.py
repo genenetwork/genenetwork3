@@ -21,9 +21,7 @@
 # This module is used by GeneNetwork project (www.genenetwork.org)
 #
 # Created by GeneNetwork Core Team 2010/08/10
-#
-# Last updated by Lei Yan 2011/02/08
-
+# Updated on Lei Yan 2011/02/08
 # created by Lei Yan 02/08/2011
 
 import os
