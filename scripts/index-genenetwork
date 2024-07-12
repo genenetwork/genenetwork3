@@ -529,7 +529,7 @@ def is_data_modified(xapian_directory: str,
             ])
         # Return a zero exit status code when the data has changed;
         # otherwise exit with a 1 exit status code.
-        generif = pathlib.Path("/var/lib/data/generif-metadata.ttl")
+        generif = pathlib.Path("/var/lib/data/")
         if (db.get_metadata("generif-checksum").decode() == hash_rdf_graph(generif) and
             db.get_metadata("checksums").decode() == checksums):
             sys.exit(1)
@@ -587,7 +587,7 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
                 logging.info("Writing generif checksums into index")
                 db.set_metadata(
                     "generif-checksum",
-                    hash_rdf_graph(pathlib.Path("/var/lib/data/generif-metadata.ttl")).encode())
+                    hash_rdf_graph(pathlib.Path("/var/lib/data/")).encode())
         for child in combined_index.iterdir():
             shutil.move(child, xapian_directory)
     logging.info("Index built")
