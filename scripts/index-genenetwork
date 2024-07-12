@@ -240,7 +240,7 @@ def build_rdf_cache(sparql_uri: str, query: str, remove_common_words: bool = Fal
     return smaller_cache
 
 
-def hash_rdf_graph(ttl_dir: pathlib.Path) -> str:
+def md5hash_ttl_dir(ttl_dir: pathlib.Path) -> str:
     if not ttl_dir.exists():
         return "-1"
     ttl_hash = hashlib.new("md5")
@@ -530,7 +530,7 @@ def is_data_modified(xapian_directory: str,
         # Return a zero exit status code when the data has changed;
         # otherwise exit with a 1 exit status code.
         generif = pathlib.Path("/var/lib/data/")
-        if (db.get_metadata("generif-checksum").decode() == hash_rdf_graph(generif) and
+        if (db.get_metadata("generif-checksum").decode() == md5hash_ttl_dir(generif) and
             db.get_metadata("checksums").decode() == checksums):
             sys.exit(1)
         sys.exit(0)
@@ -587,7 +587,7 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
                 logging.info("Writing generif checksums into index")
                 db.set_metadata(
                     "generif-checksum",
-                    hash_rdf_graph(pathlib.Path("/var/lib/data/")).encode())
+                    md5hash_ttl_dir(pathlib.Path("/var/lib/data/")).encode())
         for child in combined_index.iterdir():
             shutil.move(child, xapian_directory)
     logging.info("Index built")
