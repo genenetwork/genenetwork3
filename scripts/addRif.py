@@ -26,70 +26,69 @@
 
 # created by Lei Yan 02/08/2011
 
-import string
-import MySQLdb
-import time
 import os
 import sys
+import MySQLdb
 
 path1 = os.path.abspath(os.path.dirname(__file__))
 path2 = path1 + "/.."
 path3 = path1 + "/../../tmp"
 sys.path.insert(0, path2)
 
+
 def fetchrif():
-	try:
-		con = MySQLdb.Connect(db="gn3", host="localhost", user="gn2", passwd="password")
-		cursor = con.cursor()
-		print("You have successfully connected to mysql.\n")
-	except:
-		print("You entered incorrect password.\n")
-		sys.exit(0)
+    try:
+        con = MySQLdb.Connect(db="gn3", host="localhost", user="gn2", passwd="password")
+        cursor = con.cursor()
+        print("You have successfully connected to mysql.\n")
+    except:
+        print("You entered incorrect password.\n")
+        sys.exit(0)
 
-	taxIds = {'10090':1, '9606':4, '10116':2, '3702':3}
-	taxIdKeys = taxIds.keys()
+    taxIds = {"10090": 1, "9606": 4, "10116": 2, "3702": 3}
+    taxIdKeys = taxIds.keys()
 
-	os.chdir(path3)
-	print("path3: %s" % (path3))
-	genedict = {}
+    os.chdir(path3)
+    print("path3: %s" % (path3))
+    genedict = {}
 
-	os.system("rm -vf gene_info")
-	os.system("wget ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz")
-	os.system("gunzip gene_info.gz")
+    os.system("rm -vf gene_info")
+    os.system("wget ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz")
+    os.system("gunzip gene_info.gz")
 
-	file = open("gene_info", 'r')
-	i = 0
-	for line1 in file:
-		line1 = line1.strip()
-		if line1.startswith('#'):
-			continue
-		line2 = line1.strip().split("\t")
-		if line2[0] in taxIdKeys:
-			genedict[line2[1]] = line2[2]
-		i += 1
-		if i%1000000 == 0:
-			print("finished: %d" % (i))
-	print("finished all: %d" % (i))
-	file.close()
+    file = open("gene_info", "r")
+    i = 0
+    for line1 in file:
+        line1 = line1.strip()
+        if line1.startswith("#"):
+            continue
+        line2 = line1.strip().split("\t")
+        if line2[0] in taxIdKeys:
+            genedict[line2[1]] = line2[2]
+        i += 1
+        if i % 1000000 == 0:
+            print("finished: %d" % (i))
+    print("finished all: %d" % (i))
+    file.close()
 
-	os.system("rm -vf generifs_basic")
-	os.system("wget ftp://ftp.ncbi.nlm.nih.gov/gene/GeneRIF/generifs_basic.gz")
-	os.system("gunzip generifs_basic.gz")
+    os.system("rm -vf generifs_basic")
+    os.system("wget ftp://ftp.ncbi.nlm.nih.gov/gene/GeneRIF/generifs_basic.gz")
+    os.system("gunzip generifs_basic.gz")
 
-	file = open("generifs_basic", 'r')
-	i = 0
-	for line1 in file:
-		line1 = line1.strip()
-		if line1.startswith('#'):
-			continue
-		line2 = line1.strip().split("\t")
-		if line2[0] in taxIdKeys and len(line2) >= 5:
-			line2[0] = taxIds[line2[0]]
-			try:
-				symbol = genedict[line2[1]]
-			except:
-				symbol = ""
-			sql = """
+    file = open("generifs_basic", "r")
+    i = 0
+    for line1 in file:
+        line1 = line1.strip()
+        if line1.startswith("#"):
+            continue
+        line2 = line1.strip().split("\t")
+        if line2[0] in taxIdKeys and len(line2) >= 5:
+            line2[0] = taxIds[line2[0]]
+            try:
+                symbol = genedict[line2[1]]
+            except:
+                symbol = ""
+            sql = """
 				SELECT COUNT(*)
 				FROM GeneRIF_BASIC
 				WHERE GeneRIF_BASIC.`SpeciesId`=%s
@@ -98,11 +97,11 @@ def fetchrif():
 				AND GeneRIF_BASIC.`createtime`=%s
 				AND GeneRIF_BASIC.`comment`=%s
 				"""
-			cursor.execute(sql, (line2[0], line2[1], line2[2], line2[3], line2[4]))
-			c = cursor.fetchone()[0]
-			if c == 0:
-				print("to insert...")
-				sql = """
+            cursor.execute(sql, (line2[0], line2[1], line2[2], line2[3], line2[4]))
+            c = cursor.fetchone()[0]
+            if c == 0:
+                print("to insert...")
+                sql = """
 					INSERT INTO GeneRIF_BASIC
 					SET GeneRIF_BASIC.`SpeciesId`=%s,
 						GeneRIF_BASIC.`GeneId`=%s,
@@ -111,16 +110,20 @@ def fetchrif():
 						GeneRIF_BASIC.`createtime`=%s,
 						GeneRIF_BASIC.`comment`=%s
 					"""
-				cursor.execute(sql, (line2[0], line2[1], symbol, line2[2], line2[3], line2[4]))
-		i += 1
-		if i%100000 == 0:
-			print("finished: %d" % (i))
-	print("finished all: %d" % (i))
-	file.close()
-	cursor.close()
+                cursor.execute(
+                    sql, (line2[0], line2[1], symbol, line2[2], line2[3], line2[4])
+                )
+        i += 1
+        if i % 100000 == 0:
+            print("finished: %d" % (i))
+    print("finished all: %d" % (i))
+    file.close()
+    cursor.close()
+
+
 # /usr/bin/python addRif.py
 
 if __name__ == "__main__":
-	print("command line arguments:\n\t%s" % sys.argv)
-	fetchrif()
-	print("exit successfully")
+    print("command line arguments:\n\t%s" % sys.argv)
+    fetchrif()
+    print("exit successfully")
