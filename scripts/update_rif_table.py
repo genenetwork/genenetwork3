@@ -28,103 +28,110 @@
 Script responsible for updating the GenerRIF_BASIC table
 """
 
+import argparse
+import csv
 import os
+import gzip
+import pathlib
 import sys
+from tempfile import TemporaryDirectory
+from typing import Generator, List
+import requests
+
 import MySQLdb
 
-path1 = os.path.abspath(os.path.dirname(__file__))
-path2 = path1 + "/.."
-path3 = path1 + "/../../tmp"
-sys.path.insert(0, path2)
+from gn3.db_utils import database_connection
+
+TAX_IDS = {"10090": 1, "9606": 4, "10116": 2, "3702": 3}
+
+# os.chdir(path3)
 
 
-def fetchrif():
-    """ TODO: break this down into modules """
-    try:
-        con = MySQLdb.Connect(db="gn3", host="localhost", user="gn2", passwd="password")
-        cursor = con.cursor()
-        print("You have successfully connected to mysql.\n")
-    except:
-        print("You entered incorrect password.\n")
-        sys.exit(0)
+def download_file(url: str, dest: pathlib.Path):
+    """Saves the contents of url in dest"""
+    with requests.get(url, stream=True) as resp:
+        resp.raise_for_status()
+        with open(dest, "wb") as f_:
+            for chunk in resp.iter_content(chunk_size=8192):
+                f_.write(chunk)
 
-    tax_ids = {"10090": 1, "9606": 4, "10116": 2, "3702": 3}
-    tax_id_keys = tax_ids.keys()
 
-    os.chdir(path3)
-    print(f"path3: {path3}")
+def read_tsv_file(fname: pathlib.Path) -> Generator[dict]:
+    with gzip.open(fname, mode="rt") as gz_file:
+        reader = csv.DictReader(gz_file, delimiter="\t", quoting=csv.QUOTE_NOTE)
+        yield from reader
+
+
+def parse_gene_info_from_ncbi(fname: pathlib.Path):
     genedict = {}
+    for row in read_tsv_file(fname):
+        if row["#task_id"] not in TAX_IDS:
+            continue
+        genedict[row["GeneID"]] = genedict[row["Symbol"]]
+    return genedict
 
-    os.system("rm -vf gene_info")
-    os.system("wget ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz")
-    os.system("gunzip gene_info.gz")
 
-    with open("gene_info", "r") as file:
-        i = 0
-        for line1 in file:
-            line1 = line1.strip()
-            if line1.startswith("#"):
-                continue
-            line2 = line1.strip().split("\t")
-            if line2[0] in tax_id_keys:
-                genedict[line2[1]] = line2[2]
-            i += 1
-            if i % 1000000 == 0:
-                print(f"finished: {i}")
-        print(f"finished all: {i}")
+def update_rif(sqluri: str):
+    """TODO: break this down into modules"""
+    with TemporaryDirectory() as tmpdir:
+        gene_info_path = tmpdir / "gene_info.gz"
+        download_file(
+            "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz", gene_info_path
+        )
 
-    os.system("rm -vf generifs_basic")
-    os.system("wget ftp://ftp.ncbi.nlm.nih.gov/gene/GeneRIF/generifs_basic.gz")
-    os.system("gunzip generifs_basic.gz")
+        generif_basics_path = pathlib.Path("/tmp/generif_basics.gz")
+        download_file(
+            "https://ftp.ncbi.nih.gov/gene/GeneRIF/generifs_basic.gz",
+            generif_basics_path,
+        )
 
-    with open("generifs_basic", "r") as file:
-        i = 0
-        for line1 in file:
-            line1 = line1.strip()
-            if line1.startswith("#"):
-                continue
-            line2 = line1.strip().split("\t")
-            if line2[0] in tax_id_keys and len(line2) >= 5:
-                line2[0] = tax_ids[line2[0]]
-                try:
-                    symbol = genedict[line2[1]]
-                except:
-                    symbol = ""
-                sql = """
-                                    SELECT COUNT(*)
-                                    FROM GeneRIF_BASIC
-                                    WHERE GeneRIF_BASIC.`SpeciesId`=%s
-                                    AND GeneRIF_BASIC.`GeneId`=%s
-                                    AND GeneRIF_BASIC.`PubMed_ID`=%s
-                                    AND GeneRIF_BASIC.`createtime`=%s
-                                    AND GeneRIF_BASIC.`comment`=%s
-                                    """
-                cursor.execute(sql, (line2[0], line2[1], line2[2], line2[3], line2[4]))
-                count = cursor.fetchone()[0]
-                if count == 0:
-                    print("to insert...")
-                    sql = """
-                                            INSERT INTO GeneRIF_BASIC
-                                            SET GeneRIF_BASIC.`SpeciesId`=%s,
-                                                    GeneRIF_BASIC.`GeneId`=%s,
-                                                    GeneRIF_BASIC.`symbol`=%s,
-                                                    GeneRIF_BASIC.`PubMed_ID`=%s,
-                                                    GeneRIF_BASIC.`createtime`=%s,
-                                                    GeneRIF_BASIC.`comment`=%s
-                                            """
-                    cursor.execute(
-                        sql, (line2[0], line2[1], symbol, line2[2], line2[3], line2[4])
+        genedict = parse_gene_info_from_ncbi(gene_info_path)
+        count_check_query = """
+                            SELECT COUNT(*)
+                            FROM GeneRIF_BASIC
+                            WHERE GeneRIF_BASIC.`SpeciesId`=%s
+                            AND GeneRIF_BASIC.`GeneId`=%s
+                            AND GeneRIF_BASIC.`PubMed_ID`=%s
+                            AND GeneRIF_BASIC.`createtime`=%s
+                            AND GeneRIF_BASIC.`comment`=%s
+                            """
+        insert_query = """
+                                INSERT INTO GeneRIF_BASIC
+                                SET GeneRIF_BASIC.`SpeciesId`=%s,
+                                        GeneRIF_BASIC.`GeneId`=%s,
+                                        GeneRIF_BASIC.`symbol`=%s,
+                                        GeneRIF_BASIC.`PubMed_ID`=%s,
+                                        GeneRIF_BASIC.`createtime`=%s,
+                                        GeneRIF_BASIC.`comment`=%s
+                                """
+
+        with database_connection(sql_uri=sqluri) as con:
+            with con.cursor() as cursor:
+                for row in read_tsv_file(generif_basics_path):
+                    if row["#Tax ID"] not in TAX_IDS:
+                        continue
+                    row["#Tax ID"] = TAX_IDS[row["#Tax ID"]]
+                    symbol = genedict.get(row["Gene ID"], "")
+                    insert_values = (
+                        row["#Tax ID"],
+                        symbol,
+                        row["PubMed ID (PMID) list"],
+                        row["last update timestamp"],
+                        row["GeneRIF text"],
                     )
-            i += 1
-            if i % 100000 == 0:
-                print(f"finished: {i}")
-        print(f"finished all: {i}")
-        cursor.close()
+                    cursor.execute(count_check_query, insert_values)
+                    count = cursor.fetchone()[0]
+                    if count != 0:
+                        continue
+                    cursor.execute(insert_query, insert_values)
 
-
-# /usr/bin/python addRif.py
 
 if __name__ == "__main__":
-    print(f"command line arguments:\n\t{sys.argv}")
-    fetchrif()
-    print("exit successfully")
+    parser = argparse.ArgumentParser("Update Generif_BASIC table")
+    parser.add_argument(
+        "--sql-uri",
+        required=True,
+        help="MYSQL uri path in the form mysql://user:password@localhost/gn2",
+    )
+    args = parser.parse_args()
+    update_rif(args.sql_uri)
