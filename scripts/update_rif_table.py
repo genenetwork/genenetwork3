@@ -30,79 +30,73 @@ Script responsible for updating the GenerRIF_BASIC table
 
 import argparse
 import csv
-import os
 import gzip
 import pathlib
-import sys
 from tempfile import TemporaryDirectory
-from typing import Generator, List
+from typing import Dict, Generator
 import requests
-
-import MySQLdb
 
 from gn3.db_utils import database_connection
 
 TAX_IDS = {"10090": 1, "9606": 4, "10116": 2, "3702": 3}
 
-# os.chdir(path3)
+GENE_INFO_URL = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz"
+GENERIFS_BASIC_URL = "https://ftp.ncbi.nih.gov/gene/GeneRIF/generifs_basic.gz"
+
+# TODO: Set this to a version that isn't already in use in the RIF database
+VERSION_ID = 4
 
 
 def download_file(url: str, dest: pathlib.Path):
     """Saves the contents of url in dest"""
     with requests.get(url, stream=True) as resp:
         resp.raise_for_status()
-        with open(dest, "wb") as f_:
+        with open(dest, "wb") as downloaded_file:
             for chunk in resp.iter_content(chunk_size=8192):
-                f_.write(chunk)
+                downloaded_file.write(chunk)
 
 
-def read_tsv_file(fname: pathlib.Path) -> Generator[dict]:
+def read_tsv_file(fname: pathlib.Path) -> Generator:
+    """Load tsv file from NCBI"""
     with gzip.open(fname, mode="rt") as gz_file:
-        reader = csv.DictReader(gz_file, delimiter="\t", quoting=csv.QUOTE_NOTE)
+        reader = csv.DictReader(gz_file, delimiter="\t", quoting=csv.QUOTE_NONE)
         yield from reader
 
 
-def parse_gene_info_from_ncbi(fname: pathlib.Path):
-    genedict = {}
+def parse_gene_info_from_ncbi(fname: pathlib.Path) -> Dict[str, str]:
+    """Parse gene_info into geneid: symbol pairs"""
+    genedict: Dict[str, str] = {}
     for row in read_tsv_file(fname):
-        if row["#task_id"] not in TAX_IDS:
+        if row["#tax_id"] not in TAX_IDS:
             continue
-        genedict[row["GeneID"]] = genedict[row["Symbol"]]
+        gene_id, symbol = row["GeneID"], row["Symbol"]
+        genedict[gene_id] = symbol
     return genedict
 
 
 def update_rif(sqluri: str):
-    """TODO: break this down into modules"""
-    with TemporaryDirectory() as tmpdir:
+    """Update GeneRIF_BASIC table"""
+    with TemporaryDirectory() as _tmpdir:
+        tmpdir = pathlib.Path(_tmpdir)
         gene_info_path = tmpdir / "gene_info.gz"
-        download_file(
-            "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz", gene_info_path
-        )
+        download_file(GENE_INFO_URL, gene_info_path)
 
-        generif_basics_path = pathlib.Path("/tmp/generif_basics.gz")
+        generif_basics_path = tmpdir / "generif_basics.gz"
         download_file(
-            "https://ftp.ncbi.nih.gov/gene/GeneRIF/generifs_basic.gz",
+            GENERIFS_BASIC_URL,
             generif_basics_path,
         )
-
         genedict = parse_gene_info_from_ncbi(gene_info_path)
-        count_check_query = """
-                            SELECT COUNT(*)
-                            FROM GeneRIF_BASIC
-                            WHERE GeneRIF_BASIC.`SpeciesId`=%s
-                            AND GeneRIF_BASIC.`GeneId`=%s
-                            AND GeneRIF_BASIC.`PubMed_ID`=%s
-                            AND GeneRIF_BASIC.`createtime`=%s
-                            AND GeneRIF_BASIC.`comment`=%s
-                            """
         insert_query = """
-                                INSERT INTO GeneRIF_BASIC
+                                INSERT IGNORE INTO GeneRIF_BASIC
                                 SET GeneRIF_BASIC.`SpeciesId`=%s,
                                         GeneRIF_BASIC.`GeneId`=%s,
                                         GeneRIF_BASIC.`symbol`=%s,
                                         GeneRIF_BASIC.`PubMed_ID`=%s,
                                         GeneRIF_BASIC.`createtime`=%s,
-                                        GeneRIF_BASIC.`comment`=%s
+                                        GeneRIF_BASIC.`comment`=%s,
+                                        GeneRIF_BASIC.`TaxID`=%s,
+                                        VersionId=%s
                                 """
 
         with database_connection(sql_uri=sqluri) as con:
@@ -110,20 +104,22 @@ def update_rif(sqluri: str):
                 for row in read_tsv_file(generif_basics_path):
                     if row["#Tax ID"] not in TAX_IDS:
                         continue
-                    row["#Tax ID"] = TAX_IDS[row["#Tax ID"]]
+                    species_id = TAX_IDS[row["#Tax ID"]]
                     symbol = genedict.get(row["Gene ID"], "")
                     insert_values = (
-                        row["#Tax ID"],
-                        symbol,
-                        row["PubMed ID (PMID) list"],
-                        row["last update timestamp"],
-                        row["GeneRIF text"],
+                        species_id,  # SpeciesId
+                        row["Gene ID"],  # GeneId
+                        symbol,  # symbol
+                        row["PubMed ID (PMID) list"],  # PubMed_ID
+                        row["last update timestamp"],  # createtime
+                        row["GeneRIF text"],  # comment
+                        row["#Tax ID"],  # TaxID
+                        VERSION_ID,  # VersionId
                     )
-                    cursor.execute(count_check_query, insert_values)
-                    count = cursor.fetchone()[0]
-                    if count != 0:
-                        continue
                     cursor.execute(insert_query, insert_values)
+        print(
+            f"Generif_BASIC table updated. In case of error, you can do use VersionID={VERSION_ID} to find rows inserted with this script"
+        )
 
 
 if __name__ == "__main__":
