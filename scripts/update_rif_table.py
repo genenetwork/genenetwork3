@@ -87,36 +87,29 @@ def update_rif(sqluri: str):
             generif_basics_path,
         )
         genedict = parse_gene_info_from_ncbi(gene_info_path)
-        insert_query = """
-                                INSERT IGNORE INTO GeneRIF_BASIC
-                                SET GeneRIF_BASIC.`SpeciesId`=%s,
-                                        GeneRIF_BASIC.`GeneId`=%s,
-                                        GeneRIF_BASIC.`symbol`=%s,
-                                        GeneRIF_BASIC.`PubMed_ID`=%s,
-                                        GeneRIF_BASIC.`createtime`=%s,
-                                        GeneRIF_BASIC.`comment`=%s,
-                                        GeneRIF_BASIC.`TaxID`=%s,
-                                        VersionId=%s
-                                """
+        insert_query = """ INSERT IGNORE INTO GeneRIF_BASIC
+        (SpeciesId, GeneId, symbol, PubMed_Id, createtime, comment, TaxID, VersionId)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
 
         with database_connection(sql_uri=sqluri) as con:
-            with con.cursor() as cursor:
-                for row in read_tsv_file(generif_basics_path):
-                    if row["#Tax ID"] not in TAX_IDS:
-                        continue
-                    species_id = TAX_IDS[row["#Tax ID"]]
-                    symbol = genedict.get(row["Gene ID"], "")
-                    insert_values = (
-                        species_id,  # SpeciesId
-                        row["Gene ID"],  # GeneId
-                        symbol,  # symbol
-                        row["PubMed ID (PMID) list"],  # PubMed_ID
-                        row["last update timestamp"],  # createtime
-                        row["GeneRIF text"],  # comment
-                        row["#Tax ID"],  # TaxID
-                        VERSION_ID,  # VersionId
-                    )
-                    cursor.execute(insert_query, insert_values)
+            cursor = con.cursor()
+            for row in read_tsv_file(generif_basics_path):
+                if row["#Tax ID"] not in TAX_IDS:
+                    continue
+                species_id = TAX_IDS[row["#Tax ID"]]
+                symbol = genedict.get(row["Gene ID"], "")
+                insert_values = (
+                    species_id,  # SpeciesId
+                    row["Gene ID"],  # GeneId
+                    symbol,  # symbol
+                    row["PubMed ID (PMID) list"],  # PubMed_ID
+                    row["last update timestamp"],  # createtime
+                    row["GeneRIF text"],  # comment
+                    row["#Tax ID"],  # TaxID
+                    VERSION_ID,  # VersionId
+                )
+                cursor.execute(insert_query, insert_values)
         print(
             f"Generif_BASIC table updated. In case of error, you can do use VersionID={VERSION_ID} to find rows inserted with this script"
         )
