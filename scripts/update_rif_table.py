@@ -1,16 +1,18 @@
+#!/usr/bin/env python3
+
 """
 Script responsible for updating the GeneRIF_BASIC table
 """
 
 import argparse
 import csv
+import datetime
 import gzip
 import pathlib
 from tempfile import TemporaryDirectory
 from typing import Dict, Generator
-import requests
-import datetime
 
+import requests
 from MySQLdb.cursors import DictCursor
 
 from gn3.db_utils import database_connection
@@ -21,6 +23,12 @@ GENE_INFO_URL = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz"
 GENERIFS_BASIC_URL = "https://ftp.ncbi.nih.gov/gene/GeneRIF/generifs_basic.gz"
 
 VERSION_ID = 5
+
+
+INSERT_QUERY = """ INSERT INTO GeneRIF_BASIC
+(SpeciesId, GeneId, symbol, PubMed_Id, createtime, comment, TaxID, VersionId)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+"""
 
 
 def download_file(url: str, dest: pathlib.Path):
@@ -51,8 +59,15 @@ def parse_gene_info_from_ncbi(fname: pathlib.Path) -> Dict[str, str]:
 
 
 def build_already_exists_cache(conn) -> dict:
+    """
+    Build cache for all GeneId, SpeciesID, createtime, PubMed_ID combinations.
+    Helps prevent duplicate inserts.
+    """
     cache = {}
-    query = "SELECT COUNT(*) as cnt, GeneId, SpeciesId, createtime, PubMed_ID from GeneRIF_BASIC GROUP BY GeneId, SpeciesId, createtime, PubMed_Id"
+    query = """SELECT
+        COUNT(*) as cnt, GeneId, SpeciesId, createtime, PubMed_ID
+        from GeneRIF_BASIC
+        GROUP BY GeneId, SpeciesId, createtime, PubMed_Id """
 
     with conn.cursor(DictCursor) as cursor:
         cursor.execute(query)
@@ -65,6 +80,22 @@ def build_already_exists_cache(conn) -> dict:
             )
             cache[key] = row["cnt"]
     return cache
+
+
+def should_add_rif_row(row: dict, exists_cache: dict) -> bool:
+    """Checks if we can add a rif_row, prevent duplicate errors from Mysql"""
+    species_id = str(TAX_IDS[row["#Tax ID"]])
+    insert_date = datetime.datetime.fromisoformat(row["last update timestamp"])
+    search_key = (
+        row["Gene ID"],
+        species_id,
+        insert_date,
+        row["PubMed ID (PMID) list"],
+    )
+    if search_key not in exists_cache:
+        exists_cache[search_key] = 1
+        return True
+    return False
 
 
 def update_rif(sqluri: str):
@@ -81,10 +112,6 @@ def update_rif(sqluri: str):
         )
 
         genedict = parse_gene_info_from_ncbi(gene_info_path)
-        insert_query = """ INSERT INTO GeneRIF_BASIC
-        (SpeciesId, GeneId, symbol, PubMed_Id, createtime, comment, TaxID, VersionId)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """
         with database_connection(sql_uri=sqluri) as con:
             exists_cache = build_already_exists_cache(con)
             cursor = con.cursor()
@@ -92,16 +119,10 @@ def update_rif(sqluri: str):
             for row in read_tsv_file(generif_basics_path):
                 if row["#Tax ID"] not in TAX_IDS:
                     continue
+                if not should_add_rif_row(row, exists_cache):
+                    skipped_if_exists += 1
+                    continue
                 species_id = TAX_IDS[row["#Tax ID"]]
-                insert_date = datetime.datetime.fromisoformat(
-                    row["last update timestamp"]
-                )
-                search_key = (
-                    row["Gene ID"],
-                    str(species_id),
-                    insert_date,
-                    row["PubMed ID (PMID) list"],
-                )
                 symbol = genedict.get(row["Gene ID"], "")
                 insert_values = (
                     species_id,  # SpeciesId
@@ -113,16 +134,13 @@ def update_rif(sqluri: str):
                     row["#Tax ID"],  # TaxID
                     VERSION_ID,  # VersionId
                 )
-                if search_key in exists_cache:
-                    skipped_if_exists += 1
-                    continue
-                exists_cache[search_key] = 1
-                cursor.execute(insert_query, insert_values)
+                cursor.execute(INSERT_QUERY, insert_values)
                 added += 1
         print(
             f"Generif_BASIC table updated. Added {added}. "
             f"Skipped {skipped_if_exists} because they already exists. "
-            f"In case of error, you can use VersionID={VERSION_ID} to find rows inserted with this script"
+            f"In case of error, you can use VersionID={VERSION_ID} to find "
+            "rows inserted with this script"
         )
 
 
