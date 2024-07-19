@@ -1,31 +1,5 @@
-# Copyright (C) University of Tennessee Health Science Center, Memphis, TN.
-#
-# This program is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Affero General Public License
-# as published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU Affero General Public License for more details.
-#
-# This program is available from Source Forge: at GeneNetwork Project
-# (sourceforge.net/projects/genenetwork/).
-#
-# Contact Drs. Robert W. Williams and Xiaodong Zhou (2010)
-# at rwilliams@uthsc.edu and xzhou15@uthsc.edu
-#
-#
-#
-# This module is used by GeneNetwork project (www.genenetwork.org)
-#
-# Created by GeneNetwork Core Team 2010/08/10
-# Updated on Lei Yan 2011/02/08
-# created by Lei Yan 02/08/2011
-
 """
-Script responsible for updating the GenerRIF_BASIC table
+Script responsible for updating the GeneRIF_BASIC table
 """
 
 import argparse
@@ -35,6 +9,9 @@ import pathlib
 from tempfile import TemporaryDirectory
 from typing import Dict, Generator
 import requests
+import datetime
+
+from MySQLdb.cursors import DictCursor
 
 from gn3.db_utils import database_connection
 
@@ -43,8 +20,7 @@ TAX_IDS = {"10090": 1, "9606": 4, "10116": 2, "3702": 3}
 GENE_INFO_URL = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz"
 GENERIFS_BASIC_URL = "https://ftp.ncbi.nih.gov/gene/GeneRIF/generifs_basic.gz"
 
-# TODO: Set this to a version that isn't already in use in the RIF database
-VERSION_ID = 4
+VERSION_ID = 5
 
 
 def download_file(url: str, dest: pathlib.Path):
@@ -74,6 +50,23 @@ def parse_gene_info_from_ncbi(fname: pathlib.Path) -> Dict[str, str]:
     return genedict
 
 
+def build_already_exists_cache(conn) -> dict:
+    cache = {}
+    query = "SELECT COUNT(*) as cnt, GeneId, SpeciesId, createtime, PubMed_ID from GeneRIF_BASIC GROUP BY GeneId, SpeciesId, createtime, PubMed_Id"
+
+    with conn.cursor(DictCursor) as cursor:
+        cursor.execute(query)
+        while row := cursor.fetchone():
+            key = (
+                str(row["GeneId"]),
+                str(row["SpeciesId"]),
+                row["createtime"],
+                str(row["PubMed_ID"]),
+            )
+            cache[key] = row["cnt"]
+    return cache
+
+
 def update_rif(sqluri: str):
     """Update GeneRIF_BASIC table"""
     with TemporaryDirectory() as _tmpdir:
@@ -86,18 +79,29 @@ def update_rif(sqluri: str):
             GENERIFS_BASIC_URL,
             generif_basics_path,
         )
+
         genedict = parse_gene_info_from_ncbi(gene_info_path)
-        insert_query = """ INSERT IGNORE INTO GeneRIF_BASIC
+        insert_query = """ INSERT INTO GeneRIF_BASIC
         (SpeciesId, GeneId, symbol, PubMed_Id, createtime, comment, TaxID, VersionId)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-
         with database_connection(sql_uri=sqluri) as con:
+            exists_cache = build_already_exists_cache(con)
             cursor = con.cursor()
+            skipped_if_exists, added = 0, 0
             for row in read_tsv_file(generif_basics_path):
                 if row["#Tax ID"] not in TAX_IDS:
                     continue
                 species_id = TAX_IDS[row["#Tax ID"]]
+                insert_date = datetime.datetime.fromisoformat(
+                    row["last update timestamp"]
+                )
+                search_key = (
+                    row["Gene ID"],
+                    str(species_id),
+                    insert_date,
+                    row["PubMed ID (PMID) list"],
+                )
                 symbol = genedict.get(row["Gene ID"], "")
                 insert_values = (
                     species_id,  # SpeciesId
@@ -109,9 +113,16 @@ def update_rif(sqluri: str):
                     row["#Tax ID"],  # TaxID
                     VERSION_ID,  # VersionId
                 )
+                if search_key in exists_cache:
+                    skipped_if_exists += 1
+                    continue
+                exists_cache[search_key] = 1
                 cursor.execute(insert_query, insert_values)
+                added += 1
         print(
-            f"Generif_BASIC table updated. In case of error, you can do use VersionID={VERSION_ID} to find rows inserted with this script"
+            f"Generif_BASIC table updated. Added {added}. "
+            f"Skipped {skipped_if_exists} because they already exists. "
+            f"In case of error, you can use VersionID={VERSION_ID} to find rows inserted with this script"
         )
 
 
