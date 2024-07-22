@@ -8,7 +8,9 @@ import argparse
 import csv
 import datetime
 import gzip
+import logging
 import pathlib
+import os
 from tempfile import TemporaryDirectory
 from typing import Dict, Generator
 
@@ -103,14 +105,17 @@ def update_rif(sqluri: str):
     with TemporaryDirectory() as _tmpdir:
         tmpdir = pathlib.Path(_tmpdir)
         gene_info_path = tmpdir / "gene_info.gz"
+        logging.debug("Fetching gene_info data from: %s", GENE_INFO_URL)
         download_file(GENE_INFO_URL, gene_info_path)
 
+        logging.debug("Fetching gene_rif_basics data from: %s", GENERIFS_BASIC_URL)
         generif_basics_path = tmpdir / "generif_basics.gz"
         download_file(
             GENERIFS_BASIC_URL,
             generif_basics_path,
         )
 
+        logging.debug("Parsing gene_info data")
         genedict = parse_gene_info_from_ncbi(gene_info_path)
         with database_connection(sql_uri=sqluri) as con:
             exists_cache = build_already_exists_cache(con)
@@ -136,15 +141,22 @@ def update_rif(sqluri: str):
                 )
                 cursor.execute(INSERT_QUERY, insert_values)
                 added += 1
-        print(
-            f"Generif_BASIC table updated. Added {added}. "
-            f"Skipped {skipped_if_exists} because they already exists. "
-            f"In case of error, you can use VersionID={VERSION_ID} to find "
-            "rows inserted with this script"
+                if added % 40_000 == 0:
+                    logging.debug("Added 40,000 rows to database")
+        logging.info(
+            "Generif_BASIC table updated. Added %s. Skipped %s because they "
+            "already exists. In case of error, you can use VersionID=%s to find "
+            "rows inserted with this script", added, skipped_if_exists,
+            VERSION_ID
         )
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=os.environ.get("LOGLEVEL", "DEBUG"),
+        format="%(asctime)s %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S %Z",
+    )
     parser = argparse.ArgumentParser("Update Generif_BASIC table")
     parser.add_argument(
         "--sql-uri",
