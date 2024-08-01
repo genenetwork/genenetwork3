@@ -26,8 +26,8 @@ from gn3.commands import run_cmd
 
 from gn3.db_utils import Connection, database_connection
 
+from gn3.oauth2.authorisation import require_token
 from gn3.auth.authorisation.errors import AuthorisationError
-from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 
 caseattr = Blueprint("case-attribute", __name__)
 
@@ -61,8 +61,10 @@ class CAJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 def required_access(
-        inbredset_id: int, access_levels: tuple[str, ...]) -> Union[
-            bool, tuple[str, ...]]:
+        token: dict,
+        inbredset_id: int,
+        access_levels: tuple[str, ...]
+) -> Union[bool, tuple[str, ...]]:
     """Check whether the user has the appropriate access"""
     def __species_id__(conn):
         with conn.cursor() as cursor:
@@ -71,19 +73,21 @@ def required_access(
                 (inbredset_id,))
             return cursor.fetchone()[0]
     try:
-        with (require_oauth.acquire("profile resource") as the_token,
-              database_connection(current_app.config["SQL_URI"]) as conn):
+        with database_connection(current_app.config["SQL_URI"]) as conn:
             result = requests.get(
+                # this section fetches the resource ID from the auth server
                 urljoin(current_app.config["AUTH_SERVER_URL"],
                         "auth/resource/inbredset/resource-id"
                         f"/{__species_id__(conn)}/{inbredset_id}"))
             if result.status_code == 200:
                 resource_id = result.json()["resource-id"]
                 auth = requests.post(
+                    # this section fetches the authorisations/privileges that
+                    # the current user has on the resource we got above
                     urljoin(current_app.config["AUTH_SERVER_URL"],
                             "auth/resource/authorisation"),
                     json={"resource-ids": [resource_id]},
-                    headers={"Authorization": f"Bearer {the_token.access_token}"})
+                    headers={"Authorization": f"Bearer {token['access_token']}"})
                 if auth.status_code == 200:
                     privs = tuple(priv["privilege_id"]
                                   for role in auth.json()[resource_id]["roles"]
@@ -398,14 +402,15 @@ def __apply_deletions__(
         params)
 
 def __apply_diff__(
-        conn: Connection, inbredset_id: int, diff_filename, the_diff) -> None:
+        conn: Connection, auth_token, inbredset_id: int, diff_filename, the_diff) -> None:
     """
     Apply the changes in the diff at `diff_filename` to the data in the database
     if the user has appropriate privileges.
     """
-    required_access(
-        inbredset_id, ("system:inbredset:edit-case-attribute",
-                       "system:inbredset:apply-case-attribute-edit"))
+    required_access(auth_token,
+                    inbredset_id,
+                    ("system:inbredset:edit-case-attribute",
+                     "system:inbredset:apply-case-attribute-edit"))
     diffs = the_diff["diff"]
     with conn.cursor(cursorclass=DictCursor) as cursor:
         # __apply_additions__(cursor, inbredset_id, diffs["Additions"])
@@ -419,6 +424,7 @@ def __apply_diff__(
         os.rename(diff_filename, new_path)
 
 def __reject_diff__(conn: Connection,
+                    auth_token: dict,
                     inbredset_id: int,
                     diff_filename: Path,
                     diff: dict) -> Path:
@@ -426,38 +432,45 @@ def __reject_diff__(conn: Connection,
     Reject the changes in the diff at `diff_filename` to the data in the
     database if the user has appropriate privileges.
     """
-    required_access(
-        inbredset_id, ("system:inbredset:edit-case-attribute",
-                       "system:inbredset:apply-case-attribute-edit"))
+    required_access(auth_token,
+                    inbredset_id,
+                    ("system:inbredset:edit-case-attribute",
+                     "system:inbredset:apply-case-attribute-edit"))
     __save_diff__(conn, diff, EditStatus.rejected)
     new_path = Path(diff_filename.parent, f"{diff_filename.stem}-rejected{diff_filename.suffix}")
     os.rename(diff_filename, new_path)
     return diff_filename
 
 @caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
-def add_case_attributes(inbredset_id: int) -> Response:
+@require_token
+def add_case_attributes(inbredset_id: int, auth_token=None) -> Response:
     """Add a new case attribute for `InbredSetId`."""
-    required_access(inbredset_id, ("system:inbredset:create-case-attribute",))
-    with (require_oauth.acquire("profile resource") as the_token,      # pylint: disable=[unused-variable]
-          database_connection(current_app.config["SQL_URI"]) as conn): # pylint: disable=[unused-variable]
+    required_access(
+        auth_token, inbredset_id, ("system:inbredset:create-case-attribute",))
+    with database_connection(current_app.config["SQL_URI"]) as conn: # pylint: disable=[unused-variable]
         raise NotImplementedError
 
 @caseattr.route("/<int:inbredset_id>/delete", methods=["POST"])
-def delete_case_attributes(inbredset_id: int) -> Response:
+@require_token
+def delete_case_attributes(inbredset_id: int, auth_token=None) -> Response:
     """Delete a case attribute from `InbredSetId`."""
-    required_access(inbredset_id, ("system:inbredset:delete-case-attribute",))
-    with (require_oauth.acquire("profile resource") as the_token,      # pylint: disable=[unused-variable]
-          database_connection(current_app.config["SQL_URI"]) as conn): # pylint: disable=[unused-variable]
+    required_access(
+        auth_token, inbredset_id, ("system:inbredset:delete-case-attribute",))
+    with database_connection(current_app.config["SQL_URI"]) as conn: # pylint: disable=[unused-variable]
         raise NotImplementedError
 
 @caseattr.route("/<int:inbredset_id>/edit", methods=["POST"])
-def edit_case_attributes(inbredset_id: int) -> Response:
-    """Edit the case attributes for `InbredSetId` based on data received."""
-    with (require_oauth.acquire("profile resource") as the_token,
-          database_connection(current_app.config["SQL_URI"]) as conn):
-        required_access(inbredset_id,
+@require_token
+def edit_case_attributes(inbredset_id: int, auth_token = None) -> Response:
+    """Edit the case attributes for `InbredSetId` based on data received.
+
+    :inbredset_id: Identifier for the population that the case attribute belongs
+    :auth_token: A validated JWT from the auth server
+    """
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        required_access(auth_token,
+                        inbredset_id,
                         ("system:inbredset:edit-case-attribute",))
-        user = the_token.user
         fieldnames = tuple(["Strain"] + sorted(
             attr["Name"] for attr in
             __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
@@ -465,7 +478,7 @@ def edit_case_attributes(inbredset_id: int) -> Response:
             diff_filename = __queue_diff__(
                 conn, {
                     "inbredset_id": inbredset_id,
-                    "user_id": str(user.user_id),
+                    "user_id": auth_token["jwt"]["sub"],
                     "fieldnames": fieldnames,
                     "diff": __compute_diff__(
                         fieldnames,
@@ -488,8 +501,11 @@ def edit_case_attributes(inbredset_id: int) -> Response:
             return response
 
         try:
-            __apply_diff__(
-                conn, inbredset_id, diff_filename, __load_diff__(diff_filename))
+            __apply_diff__(conn,
+                           auth_token,
+                           inbredset_id,
+                           diff_filename,
+                           __load_diff__(diff_filename))
             return jsonify({
                 "diff-status": "applied",
                 "message": ("The changes to the case-attributes have been "
@@ -555,37 +571,45 @@ def list_diffs(inbredset_id: int) -> Response:
     return resp
 
 @caseattr.route("/approve/<path:filename>", methods=["POST"])
-def approve_case_attributes_diff(filename: str) -> Response:
+@require_token
+def approve_case_attributes_diff(filename: str, auth_token = None) -> Response:
     """Approve the changes to the case attributes in the diff."""
     diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
     diff_filename = Path(diff_dir, filename)
     the_diff = __load_diff__(diff_filename)
     with database_connection(current_app.config["SQL_URI"]) as conn:
-        __apply_diff__(conn, the_diff["inbredset_id"], diff_filename, the_diff)
+        __apply_diff__(conn, auth_token, the_diff["inbredset_id"], diff_filename, the_diff)
         return jsonify({
             "message": "Applied the diff successfully.",
             "diff_filename": diff_filename.name
         })
 
 @caseattr.route("/reject/<path:filename>", methods=["POST"])
-def reject_case_attributes_diff(filename: str) -> Response:
+@require_token
+def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
     """Reject the changes to the case attributes in the diff."""
     diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
     diff_filename = Path(diff_dir, filename)
     the_diff = __load_diff__(diff_filename)
     with database_connection(current_app.config["SQL_URI"]) as conn:
-        __reject_diff__(conn, the_diff["inbredset_id"], diff_filename, the_diff)
+        __reject_diff__(conn,
+                        auth_token,
+                        the_diff["inbredset_id"],
+                        diff_filename,
+                        the_diff)
         return jsonify({
             "message": "Rejected diff successfully",
             "diff_filename": diff_filename.name
         })
 
 @caseattr.route("/<int:inbredset_id>/diff/<int:diff_id>/view", methods=["GET"])
-def view_diff(inbredset_id: int, diff_id: int) -> Response:
+@require_token
+def view_diff(inbredset_id: int, diff_id: int, auth_token=None) -> Response:
     """View a diff."""
     with (database_connection(current_app.config["SQL_URI"]) as conn,
           conn.cursor(cursorclass=DictCursor) as cursor):
-        required_access(inbredset_id, ("system:inbredset:view-case-attribute",))
+        required_access(
+            auth_token, inbredset_id, ("system:inbredset:view-case-attribute",))
         cursor.execute(
             "SELECT * FROM caseattributes_audit WHERE id=%s",
             (diff_id,))
