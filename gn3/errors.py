@@ -29,6 +29,7 @@ def add_trace(exc: Exception, jsonmsg: dict) -> dict:
 
 def page_not_found(pnf):
     """Generic 404 handler."""
+    current_app.logger.error("Handling 404 errors", exc_info=True)
     return jsonify(add_trace(pnf, {
         "error": pnf.name,
         "error_description": pnf.description
@@ -37,6 +38,7 @@ def page_not_found(pnf):
 
 def internal_server_error(pnf):
     """Generic 404 handler."""
+    current_app.logger.error("Handling internal server errors", exc_info=True)
     return jsonify(add_trace(pnf, {
         "error": pnf.name,
         "error_description": pnf.description
@@ -45,6 +47,7 @@ def internal_server_error(pnf):
 
 def url_server_error(pnf):
     """Handler for an exception with a url connection."""
+    current_app.logger.error("Handling url server errors", exc_info=True)
     return jsonify(add_trace(pnf, {
         "error": f"URLLib Error no: {pnf.reason.errno}",
         "error_description": pnf.reason.strerror,
@@ -53,7 +56,7 @@ def url_server_error(pnf):
 
 def handle_authorisation_error(exc: AuthorisationError):
     """Handle AuthorisationError if not handled anywhere else."""
-    current_app.logger.error(exc)
+    current_app.logger.error("Handling external auth errors", exc_info=True)
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
         "error_description": " :: ".join(exc.args)
@@ -62,7 +65,7 @@ def handle_authorisation_error(exc: AuthorisationError):
 
 def handle_oauth2_errors(exc: OAuth2Error):
     """Handle OAuth2Error if not handled anywhere else."""
-    current_app.logger.error(exc)
+    current_app.logger.error("Handling external oauth2 errors", exc_info=True)
     return jsonify(add_trace(exc, {
         "error": exc.error,
         "error_description": exc.description,
@@ -71,7 +74,7 @@ def handle_oauth2_errors(exc: OAuth2Error):
 
 def handle_sqlite3_errors(exc: OperationalError):
     """Handle sqlite3 errors if not handled anywhere else."""
-    current_app.logger.error(exc)
+    current_app.logger.error("Handling sqlite3 errors", exc_info=True)
     return jsonify({
         "error": "DatabaseError",
         "error_description": exc.args[0],
@@ -80,6 +83,7 @@ def handle_sqlite3_errors(exc: OperationalError):
 
 def handle_sparql_errors(exc):
     """Handle sqlite3 errors if not handled anywhere else."""
+    current_app.logger.error("Handling sparql errors", exc_info=True)
     current_app.logger.error(exc)
     __code = {
         EndPointInternalError: 500,
@@ -96,7 +100,7 @@ def handle_sparql_errors(exc):
 
 def handle_generic(exc: Exception) -> Response:
     """Handle generic exception."""
-    current_app.logger.error(exc)
+    current_app.logger.error("Handling generic errors", exc_info=True)
     resp = jsonify({
         "error": type(exc).__name__,
         "error_description": (
