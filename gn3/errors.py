@@ -15,6 +15,7 @@ from werkzeug.exceptions import NotFound
 from authlib.oauth2.rfc6749.errors import OAuth2Error
 from flask import Flask, jsonify, Response, current_app
 
+from gn3.oauth2 import errors as oautherrors
 from gn3.auth.authorisation.errors import AuthorisationError
 
 
@@ -104,6 +105,15 @@ def handle_generic(exc: Exception) -> Response:
     })
     resp.status_code = 500
     return resp
+
+
+def handle_local_authorisation_errors(exc: oautherrors.AuthorisationError):
+    """Handle errors relating to authorisation that are raised locally."""
+    current_app.logger.error("Handling local auth errors", exc_info=True)
+    return jsonify(add_trace(exc, {
+        "error": type(exc).__name__,
+        "error_description": " ".join(exc.args)
+    })), 400
 
 
 def register_error_handlers(app: Flask):
