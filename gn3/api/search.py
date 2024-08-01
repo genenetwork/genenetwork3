@@ -194,6 +194,14 @@ def parse_location_field(species_query: xapian.Query,
             .maybe(xapian.Query.MatchNothing, make_query))
 
 
+def parse_boolean_prefixed_field(prefix: str, query: bytes) -> xapian.Query:
+    """Parse boolean prefixed field and return a xapian query."""
+    # For some reason, xapian does not stem boolean prefixed fields
+    # when the query starts with a capital letter. We need it to stem
+    # always. Hence this function.
+    return xapian.Query(prefix + query.decode("utf-8").lower())
+
+
 # pylint: disable=too-many-locals
 def parse_query(synteny_files_directory: Path, query: str):
     """Parse search query using GeneNetwork specific field processors."""
@@ -204,7 +212,8 @@ def parse_query(synteny_files_directory: Path, query: str):
     chromosome_prefix = "XC"
     queryparser.add_boolean_prefix("author", "A")
     queryparser.add_boolean_prefix("species", species_prefix)
-    queryparser.add_boolean_prefix("group", "XG")
+    queryparser.add_boolean_prefix("group",
+                                   FieldProcessor(partial(parse_boolean_prefixed_field, "XG")))
     queryparser.add_boolean_prefix("tissue", "XI")
     queryparser.add_boolean_prefix("dataset", "XDS")
     queryparser.add_boolean_prefix("symbol", "XY")
