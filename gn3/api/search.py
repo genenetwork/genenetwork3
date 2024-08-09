@@ -207,7 +207,7 @@ def parse_query(synteny_files_directory: Path, query: str):
     """Parse search query using GeneNetwork specific field processors."""
     queryparser = xapian.QueryParser()
     queryparser.set_stemmer(xapian.Stem("en"))
-    queryparser.set_stemming_strategy(queryparser.STEM_ALL)
+    queryparser.set_stemming_strategy(queryparser.STEM_ALL_Z)
     species_prefix = "XS"
     chromosome_prefix = "XC"
     queryparser.add_boolean_prefix("author", "A")
