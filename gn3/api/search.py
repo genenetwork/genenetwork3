@@ -222,6 +222,8 @@ def parse_query(synteny_files_directory: Path, query: str):
     queryparser.add_prefix("description", "XD")
     queryparser.add_prefix("rif", "XRF")
     queryparser.add_prefix("wiki", "XWK")
+    queryparser.add_prefix("RIF", "XRF")
+    queryparser.add_prefix("WIKI", "XWK")
     range_prefixes = ["mean", "peak", "position", "peakmb", "additive", "year"]
     for i, prefix in enumerate(range_prefixes):
         # Treat position specially since it needs its own field processor.
