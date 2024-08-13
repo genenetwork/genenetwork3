@@ -1,11 +1,11 @@
 """Handle authorisation with auth server."""
 from functools import wraps
 
-from authlib.jose import jwt
 from flask import request, jsonify, current_app as app
 
 from gn3.oauth2 import jwks
 from gn3.oauth2.errors import TokenValidationError
+
 
 def require_token(func):
     """Check for and verify bearer token."""
