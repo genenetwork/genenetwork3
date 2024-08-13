@@ -16,6 +16,8 @@ def fetch_jwks(authserveruri: str, path: str = "auth/public-jwks") -> KeySet:
         if response.status_code == 200:
             return KeySet([
                 JsonWebKey.import_key(key) for key in response.json()["jwks"]])
+    # XXXX: TODO: Catch specific exception we need.
+    # pylint: disable=W0703
     except Exception as _exc:
         app.logger.debug("There was an error fetching the JSON Web Keys.",
                          exc_info=True)
@@ -26,7 +28,6 @@ def fetch_jwks(authserveruri: str, path: str = "auth/public-jwks") -> KeySet:
 def validate_token(token: str, keys: KeySet) -> dict:
     """Validate the token against the given keys."""
     for key in keys.keys:
-        kd = key.as_dict()
         try:
             return JsonWebToken(["RS256"]).decode(token, key=key)
         except BadSignatureError as _bse:
