@@ -40,7 +40,7 @@ DATASET_CONTEXT = {
     "classifiedUnder": "xkos:classifiedUnder",
     "contributors": "dct:creator",
     "contactPoint": "dcat:contactPoint",
-    "created":  "dct:created",
+    "created": "dct:created",
     "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",
     "description": "dct:description",
@@ -83,7 +83,7 @@ SEARCH_CONTEXT = {
 
 DATASET_SEARCH_CONTEXT = SEARCH_CONTEXT | {
     "classifiedUnder": "xkos:classifiedUnder",
-    "created":  "dct:created",
+    "created": "dct:created",
     "dct": "http://purl.org/dc/terms/",
     "ex": "http://example.org/stuff/1.0/",
     "inbredSet": "ex:belongsToInbredSet",
@@ -210,7 +210,7 @@ CONSTRUCT {
         (Path(
             current_app.config.get("DATA_DIR")
         ) / "gn-docs/general/datasets" /
-         Path(__result.get("id", "")).stem).as_posix()
+            Path(__result.get("id", "")).stem).as_posix()
     )
 
 
