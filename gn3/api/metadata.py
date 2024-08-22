@@ -16,7 +16,8 @@ from gn3.db.datasets import (retrieve_metadata,
                              get_history)
 from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
-                        query_and_compact)
+                        query_and_compact,
+                        get_wiki_entries_by_symbol)
 from gn3.db.constants import (
     RDF_PREFIXES, BASE_CONTEXT,
     DATASET_CONTEXT, SEARCH_CONTEXT,
@@ -394,95 +395,12 @@ CONSTRUCT {
     )
 
 
-@metadata.route("/genewikis/gn/<symbol>", methods=["GET"])
-def get_gn_genewiki_entries(symbol):
-    """Fetch the GN and NCBI GeneRIF entries"""
-    args = request.args
-    page = args.get("page", 0)
-    page_size = args.get("per-page", 10)
-    _query = Template("""
-$prefix
-
-CONSTRUCT {
-         ?symbol ex:entries [
-              rdfs:comment ?comment ;
-              ex:species ?species_ ;
-              dct:created ?createTime ;
-              dct:references ?pmids ;
-              dct:creator ?creator ;
-              gnt:belongsToCategory ?categories ;
-         ] .
-         ?symbol rdf:type gnc:GNWikiEntry ;
-                 ex:totalCount ?totalCount ;
-                 ex:currentPage $offset .
-} WHERE {
-{
-    SELECT ?symbol ?comment
-        (GROUP_CONCAT(DISTINCT ?speciesName; SEPARATOR='; ') AS ?species_)
-        ?createTime ?creator
-        (GROUP_CONCAT(DISTINCT ?pubmed; SEPARATOR='; ') AS ?pmids)
-        (GROUP_CONCAT(DISTINCT ?category; SEPARATOR='; ') AS ?categories)
-        WHERE {
-        ?symbol rdfs:label ?label ;
-                rdfs:comment _:entry .
-        ?label bif:contains "'$symbol'" .
-        _:entry rdf:type gnc:GNWikiEntry ;
-                rdfs:comment ?comment .
-        OPTIONAL {
-        ?species ^xkos:classifiedUnder _:entry ;
-                 ^skos:member gnc:Species ;
-                 skos:prefLabel ?speciesName .
-        } .
-        OPTIONAL { _:entry dct:created ?createTime . } .
-        OPTIONAL { _:entry dct:references ?pubmed . } .
-        OPTIONAL {
-        ?investigator foaf:name ?creator ;
-                      ^dct:creator _:entry .
-        } .
-        OPTIONAL { _:entry gnt:belongsToCategory ?category . } .
-    } GROUP BY ?comment ?symbol ?createTime
-      ?creator ORDER BY ?createTime LIMIT $limit OFFSET $offset
-}
-
-{
-        SELECT (COUNT(DISTINCT ?comment)/$limit+1 AS ?totalCount) WHERE {
-        ?symbol rdfs:comment _:entry ;
-                rdfs:label ?label .
-        _:entry rdfs:comment ?comment ;
-                rdf:type gnc:GNWikiEntry .
-        ?label bif:contains "'$symbol'" .
-        }
-}
-}
-""").substitute(prefix=RDF_PREFIXES, symbol=symbol,
-                limit=page_size, offset=page)
-    _context = {
-        "@context": BASE_CONTEXT | {
-            "ex": "http://example.org/stuff/1.0/",
-            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-            "gnt": "http://genenetwork.org/term/",
-            "gnc": "http://genenetwork.org/category/",
-            "dct": "http://purl.org/dc/terms/",
-            "xsd": "http://www.w3.org/2001/XMLSchema#",
-            "entries": "ex:entries",
-            "comment": "rdfs:comment",
-            "species": "ex:species",
-            "category": 'gnt:belongsToCategory',
-            "author": "dct:creator",
-            "pubmed": "dct:references",
-            "currentPage": "ex:currentPage",
-            "pages": "ex:totalCount",
-            "created": {
-                "@id": "dct:created",
-                "@type": "xsd:datetime"
-            },
-        },
-        "type": "gnc:GNWikiEntry"
-    }
-    return query_frame_and_compact(
-        _query, _context,
-        current_app.config.get("SPARQL_ENDPOINT")
-    )
+@metadata.route("/wiki/<symbol>", methods=["GET"])
+def get_wiki_entries(symbol):
+    """Fetch wiki entries"""
+    return get_wiki_entries_by_symbol(
+        symbol=symbol,
+        sparql_uri=current_app.config.get("SPARQL_ENDPOINT"))
 
 
 @metadata.route("/genewikis/ncbi/<symbol>", methods=["GET"])
