@@ -17,131 +17,15 @@ from gn3.db.datasets import (retrieve_metadata,
 from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact)
+from gn3.db.constants import (
+    RDF_PREFIXES, BASE_CONTEXT,
+    DATASET_CONTEXT, SEARCH_CONTEXT,
+    DATASET_SEARCH_CONTEXT, PUBLICATION_CONTEXT,
+    PHENOTYPE_CONTEXT
+)
 
 from gn3.api.metadata_api import wiki
 
-
-BASE_CONTEXT = {
-    "data": "@graph",
-    "id": "@id",
-    "type": "@type",
-    "gnc": "http://genenetwork.org/category/",
-    "gnt": "http://genenetwork.org/term/",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
-}
-
-DATASET_CONTEXT = {
-    "accessRights": "dct:accessRights",
-    "accessionId": "dct:identifier",
-    "acknowledgement": "gnt:hasAcknowledgement",
-    "altLabel": "skos:altLabel",
-    "caseInfo": "gnt:hasCaseInfo",
-    "classifiedUnder": "xkos:classifiedUnder",
-    "contributors": "dct:creator",
-    "contactPoint": "dcat:contactPoint",
-    "created": "dct:created",
-    "dcat": "http://www.w3.org/ns/dcat#",
-    "dct": "http://purl.org/dc/terms/",
-    "description": "dct:description",
-    "ex": "http://example.org/stuff/1.0/",
-    "experimentDesignInfo": "gnt:hasExperimentDesignInfo",
-    "experimentType": "gnt:hasExperimentType",
-    "foaf": "http://xmlns.com/foaf/0.1/",
-    "geoSeriesId": "gnt:hasGeoSeriesId",
-    "gnt": "http://genenetwork.org/term/",
-    "inbredSet": "gnt:belongsToGroup",
-    "label": "rdfs:label",
-    "normalization": "gnt:usesNormalization",
-    "platformInfo": "gnt:hasPlatformInfo",
-    "notes": "gnt:hasNotes",
-    "organization": "foaf:Organization",
-    "prefLabel": "skos:prefLabel",
-    "citation": "dct:isReferencedBy",
-    "GoTree": "gnt:hasGOTreeValue",
-    "platform": "gnt:usesPlatform",
-    "processingInfo": "gnt:hasDataProcessingInfo",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "skos": "http://www.w3.org/2004/02/skos/core#",
-    "specifics": "gnt:hasContentInfo",
-    "title": "dct:title",
-    "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
-    "tissueInfo": "gnt:hasTissueInfo",
-    "tissue": "gnt:hasTissue",
-    "contactWebUrl": "foaf:homepage",
-    "contactName": "foaf:name",
-}
-
-SEARCH_CONTEXT = {
-    "pages": "ex:pages",
-    "hits": "ex:hits",
-    "result": "ex:result",
-    "results": "ex:items",
-    "resultItem": "ex:resultType",
-    "currentPage": "ex:currentPage",
-}
-
-DATASET_SEARCH_CONTEXT = SEARCH_CONTEXT | {
-    "classifiedUnder": "xkos:classifiedUnder",
-    "created": "dct:created",
-    "dct": "http://purl.org/dc/terms/",
-    "ex": "http://example.org/stuff/1.0/",
-    "inbredSet": "ex:belongsToInbredSet",
-    "title": "dct:title",
-    "name": "rdfs:label",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "type": "@type",
-    "xkos": "http://rdf-vocabulary.ddialliance.org/xkos#",
-}
-
-PUBLICATION_CONTEXT = {
-    "dct": "http://purl.org/dc/terms/",
-    "fabio": "http://purl.org/spar/fabio/",
-    "prism": "http://prismstandard.org/namespaces/basic/2.0/",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "title": "dct:title",
-    "journal": "fabio:Journal",
-    "volume": "prism:volume",
-    "page": "fabio:page",
-    "creator": "dct:creator",
-    "abstract": "dct:abstract",
-    "year": {
-        "@id": "fabio:hasPublicationYear",
-        "@type": "xsd:gYear",
-    },
-    "month": {
-        "@id": "prism:publicationDate",
-        "@type": "xsd:gMonth"
-    },
-}
-
-PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
-    "skos": "http://www.w3.org/2004/02/skos/core#",
-    "dcat": "http://www.w3.org/ns/dcat#",
-    "prism": "http://prismstandard.org/namespaces/basic/2.0/",
-    "traitName": "skos:altLabel",
-    "trait": "rdfs:label",
-    "altName": "rdfs:altLabel",
-    "description": "dct:description",
-    "abbreviation": "gnt:abbreviation",
-    "labCode": "gnt:labCode",
-    "submitter": "gnt:submitter",
-    "dataset": "dcat:Distribution",
-    "contributor": "dct:contributor",
-    "mean": "gnt:mean",
-    "locus": "gnt:locus",
-    "lodScore": "gnt:lodScore",
-    "references": "dct:isReferencedBy",
-    "additive": "gnt:additive",
-    "sequence": "gnt:sequence",
-    "prefLabel": "skos:prefLabel",
-    "identifier": "dct:identifier",
-    "chromosome": "gnt:chr",
-    "mb": "gnt:mb",
-    "peakLocation": "gnt:locus",
-    "species": "gnt:belongsToSpecies",
-    "group": "gnt:belongsToGroup",
-}
 
 metadata = Blueprint("metadata", __name__)
 metadata.register_blueprint(wiki.wiki_blueprint)
