@@ -75,13 +75,13 @@ def get_wiki_entries(symbol: str):
     status_code = 200
     response = get_wiki_entries_by_symbol(
         symbol=symbol,
-        sparql_uri=current_app.config.get("SPARQL_ENDPOINT"))
+        sparql_uri=current_app.config["SPARQL_ENDPOINT"])
     data = response.get("data")
     if not data:
         data = {}
         status_code = 404
     if content_type == "application/ld+json":
-        response = make_response(response)
-        response.headers["Content-Type"] = "application/ld+json"
-        return response, status_code
+        payload = make_response(response)
+        payload.headers["Content-Type"] = "application/ld+json"
+        return payload, status_code
     return jsonify(data), status_code
