@@ -16,13 +16,12 @@ from gn3.auth.authorisation.errors import AuthorisationError
 from gn3.db.datasets import (retrieve_metadata,
                              save_metadata,
                              get_history)
-from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact,
                         get_wiki_entries_by_symbol)
 from gn3.db.constants import (
     RDF_PREFIXES, BASE_CONTEXT,
-    DATASET_CONTEXT, SEARCH_CONTEXT,
+    DATASET_CONTEXT,
     DATASET_SEARCH_CONTEXT, PUBLICATION_CONTEXT,
     PHENOTYPE_CONTEXT
 )

@@ -1,3 +1,6 @@
+"""
+This module contains some constants used in other modules.
+"""
 PREFIXES = {
     "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",

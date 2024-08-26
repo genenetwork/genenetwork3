@@ -87,7 +87,6 @@ CONSTRUCT {
         "reason": "gnt:reason",
         "species": "gnt:species",
         "pubmed_id": "dct:references",
-        "web_url": "foaf:homepage",
         "email": "foaf:mbox",
         "initial": "gnt:initial",
         "comment": "rdfs:comment"
