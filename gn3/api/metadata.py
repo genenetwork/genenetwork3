@@ -5,10 +5,7 @@ from string import Template
 from pathlib import Path
 
 from authlib.jose import jwt
-
 from flask import Blueprint
-from flask import jsonify
-from flask import make_response
 from flask import request
 from flask import current_app
 
@@ -17,8 +14,7 @@ from gn3.db.datasets import (retrieve_metadata,
                              save_metadata,
                              get_history)
 from gn3.db.rdf import (query_frame_and_compact,
-                        query_and_compact,
-                        get_wiki_entries_by_symbol)
+                        query_and_compact)
 from gn3.db.constants import (
     RDF_PREFIXES, BASE_CONTEXT,
     DATASET_CONTEXT,
@@ -394,25 +390,6 @@ CONSTRUCT {
         _query, _context,
         current_app.config.get("SPARQL_ENDPOINT")
     )
-
-
-@metadata.route("/wiki/<symbol>", methods=["GET"])
-def get_wiki_entries(symbol):
-    """Fetch wiki entries"""
-    content_type = request.headers.get("Content-Type")
-    status_code = 200
-    response = get_wiki_entries_by_symbol(
-        symbol=symbol,
-        sparql_uri=current_app.config.get("SPARQL_ENDPOINT"))
-    data = response.get("data")
-    if not data:
-        data = {}
-        status_code = 404
-    if content_type == "application/ld+json":
-        response = make_response(response)
-        response.headers["Content-Type"] = "application/ld+json"
-        return response, status_code
-    return jsonify(data), status_code
 
 
 @metadata.route("/genewikis/ncbi/<symbol>", methods=["GET"])
