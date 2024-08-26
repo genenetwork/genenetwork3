@@ -14,7 +14,7 @@ wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
 def edit_wiki(comment_id: int):
     """Edit wiki comment. This is achieved by adding another entry with a new VersionId"""
     # FIXME: attempt to check and fix for types here with relevant errors
-    payload: Dict[str, Any] = request.json
+    payload: Dict[str, Any] = request.json  # type: ignore
     pubmed_ids = [str(x) for x in payload.get("pubmed_ids", [])]
 
     insert_dict = {
@@ -40,7 +40,8 @@ def edit_wiki(comment_id: int):
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
         cursor = conn.cursor()
         try:
-            category_ids = wiki.get_categories_ids(cursor, payload["categories"])
+            category_ids = wiki.get_categories_ids(
+                cursor, payload["categories"])
             species_id = wiki.get_species_id(cursor, payload["species"])
             next_version = wiki.get_next_comment_version(cursor, comment_id)
         except wiki.MissingDBDataException as missing_exc:
@@ -55,9 +56,11 @@ def edit_wiki(comment_id: int):
             """
 
         for cat_id in category_ids:
-            current_app.logger.debug(f"Running query: {category_addition_query}")
+            current_app.logger.debug(
+                f"Running query: {category_addition_query}")
             cursor.execute(
-                category_addition_query, (comment_id, insert_dict["versionId"], cat_id)
+                category_addition_query, (comment_id,
+                                          insert_dict["versionId"], cat_id)
             )
         return jsonify({"success": "ok"})
     return jsonify(error="Error editting wiki entry, most likely due to DB error!"), 500
