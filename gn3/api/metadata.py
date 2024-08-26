@@ -7,6 +7,8 @@ from pathlib import Path
 from authlib.jose import jwt
 
 from flask import Blueprint
+from flask import jsonify
+from flask import make_response
 from flask import request
 from flask import current_app
 
@@ -398,9 +400,18 @@ CONSTRUCT {
 @metadata.route("/wiki/<symbol>", methods=["GET"])
 def get_wiki_entries(symbol):
     """Fetch wiki entries"""
-    return get_wiki_entries_by_symbol(
+    content_type = request.headers.get("Content-Type")
+    status_code = 200
+    response = get_wiki_entries_by_symbol(
         symbol=symbol,
         sparql_uri=current_app.config.get("SPARQL_ENDPOINT"))
+    if not response.get("data"):
+        status_code = 404
+    if content_type == "application/ld+json":
+        response = make_response(response)
+        response.headers["Content-Type"] = "application/ld+json"
+        return response, status_code
+    return jsonify(response.get("data")), status_code
 
 
 @metadata.route("/genewikis/ncbi/<symbol>", methods=["GET"])
