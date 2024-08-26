@@ -24,24 +24,18 @@ def sparql_construct_query(query: str, endpoint: str) -> dict:
 def query_frame_and_compact(query: str, context: dict, endpoint: str) -> dict:
     """Frame and then compact the results given a context"""
     results = sparql_construct_query(query, endpoint)
-    if not results:
-        return {}
     return jsonld.compact(jsonld.frame(results, context), context)
 
 
 def query_and_compact(query: str, context: dict, endpoint: str) -> dict:
     """Compact the results given a context"""
     results = sparql_construct_query(query, endpoint)
-    if not results:
-        return {}
     return jsonld.compact(results, context)
 
 
 def query_and_frame(query: str, context: dict, endpoint: str) -> dict:
     """Frame the results given a context"""
     results = sparql_construct_query(query, endpoint)
-    if not results:
-        return {}
     return jsonld.frame(results, context)
 
 
