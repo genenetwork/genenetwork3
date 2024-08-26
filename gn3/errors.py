@@ -84,18 +84,16 @@ def handle_sqlite3_errors(exc: OperationalError):
 def handle_sparql_errors(exc):
     """Handle sqlite3 errors if not handled anywhere else."""
     current_app.logger.error("Handling sparql errors", exc_info=True)
-    current_app.logger.error(exc)
-    __code = {
-        EndPointInternalError: 500,
-        EndPointNotFound: 400,
-        QueryBadFormed: 400,
-        Unauthorized: 401,
-        URITooLong: 414,
+    code = {
+        "EndPointInternalError": 500,
+        "EndPointNotFound": 404,
+        "QueryBadFormed": 400,
+        "Unauthorized": 401,
+        "URITooLong": 414,
     }
     return jsonify({
         "error": exc.msg,
-        "error_description": str(exc),
-    }), __code.get(exc)
+    }), code.get(exc.__class__.__name__)
 
 
 def handle_generic(exc: Exception) -> Response:
