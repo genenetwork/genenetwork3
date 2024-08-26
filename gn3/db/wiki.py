@@ -1,10 +1,36 @@
 """Helper functions to access wiki entries"""
 
-from typing import List
+from typing import Dict, List
+
+from MySQLdb.cursors import DictCursor
 
 
 class MissingDBDataException(Exception):
     """Error due to DB missing some data"""
+
+
+def get_latest_comment(connection, comment_id: str) -> int:
+    cursor = connection.cursor(DictCursor)
+    query = """ SELECT versionId AS version, symbol, PubMed_ID AS pubmed_ids, sp.Name AS species,
+        comment, email, weburl, initial, reason
+        FROM `GeneRIF` gr
+		INNER JOIN Species sp USING(SpeciesId)
+		WHERE gr.Id = %s
+		ORDER BY versionId DESC LIMIT 1;
+    """
+    cursor.execute(query, (comment_id,))
+    result = cursor.fetchone()
+    result["pubmed_ids"] = [x.strip() for x in result["pubmed_ids"].split()]
+    categories_query = """
+        SELECT grx.GeneRIFId, grx.versionId, gc.Name FROM GeneRIFXRef grx
+                INNER JOIN GeneCategory gc ON grx.GeneCategoryId=gc.Id
+                WHERE GeneRIFId = %s AND versionId=%s;
+    """
+
+    cursor.execute(categories_query, (comment_id, result["version"]))
+    categories = cursor.fetchall()
+    result["categories"] = [x["Name"] for x in categories]
+    return result
 
 
 def get_species_id(cursor, species_name: str) -> int:
@@ -31,9 +57,7 @@ def get_next_comment_version(cursor, comment_id: int) -> int:
 
 def get_categories_ids(cursor, categories: List[str]) -> List[int]:
     """Get the categories_ids from a list of category strings"""
-    cursor.execute("SELECT Name, Id from GeneCategory")
-    raw_categories = cursor.fetchall()
-    dict_cats = dict(raw_categories)
+    dict_cats = get_categories(cursor)
     category_ids = []
     for category in set(categories):
         cat_id = dict_cats.get(category.strip())
@@ -41,3 +65,15 @@ def get_categories_ids(cursor, categories: List[str]) -> List[int]:
             raise MissingDBDataException(f"Category with Name={category} not found")
         category_ids.append(cat_id)
     return category_ids
+
+def get_categories(cursor) -> Dict[str, int]:
+    cursor.execute("SELECT Name, Id from GeneCategory")
+    raw_categories = cursor.fetchall()
+    dict_cats = dict(raw_categories)
+    return dict_cats
+
+def get_species(cursor) -> Dict[str, str]:
+    cursor.execute("SELECT Name, SpeciesName from Species")
+    raw_species = cursor.fetchall()
+    dict_cats = dict(raw_species)
+    return dict_cats
