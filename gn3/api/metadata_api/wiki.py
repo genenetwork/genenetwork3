@@ -1,5 +1,7 @@
+"""API for accessing/editting wiki metadata"""
+
 import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 from flask import Blueprint, request, jsonify, current_app
 from gn3 import db_utils
 from gn3.db import wiki
@@ -8,12 +10,9 @@ from gn3.db import wiki
 wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
 
 
-class MissingDBDataException(Exception):
-    pass
-
-
 @wiki_blueprint.route("/<int:comment_id>/edit", methods=["POST"])
 def edit_wiki(comment_id: int):
+    """Edit wiki comment. This is achieved by adding another entry with a new VersionId"""
     # FIXME: attempt to check and fix for types here with relevant errors
     payload: Dict[str, Any] = request.json
     pubmed_ids = [str(x) for x in payload.get("pubmed_ids", [])]
@@ -44,13 +43,16 @@ def edit_wiki(comment_id: int):
             category_ids = wiki.get_categories_ids(cursor, payload["categories"])
             species_id = wiki.get_species_id(cursor, payload["species"])
             next_version = wiki.get_next_comment_version(cursor, comment_id)
-        except MissingDBDataException as missing_exc:
+        except wiki.MissingDBDataException as missing_exc:
             return jsonify(error=f"Error editting wiki entry, {missing_exc}"), 500
         insert_dict["SpeciesID"] = species_id
         insert_dict["versionId"] = next_version
         current_app.logger.debug(f"Running query: {insert_query}")
         cursor.execute(insert_query, insert_dict)
-        category_addition_query = "INSERT INTO GeneRIFXRef (GeneRIFId, versionId, GeneCategoryId) VALUES (%s, %s, %s)"
+        category_addition_query = """
+            INSERT INTO GeneRIFXRef (GeneRIFId, versionId, GeneCategoryId)
+                VALUES (%s, %s, %s)
+            """
 
         for cat_id in category_ids:
             current_app.logger.debug(f"Running query: {category_addition_query}")
