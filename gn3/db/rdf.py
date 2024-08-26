@@ -102,9 +102,11 @@ CONSTRUCT {
         query, context,
         sparql_uri
     )
-    if data := results.get("data"):
-        for result in data:
-            if result.get("categories"):
-                result["categories"] = list(map(str.strip,
-                                                result.get("categories").split(";")))
+    data = results.get("data")
+    if not data:
+        return results
+    for result in data:
+        if result.get("categories"):
+            result["categories"] = [
+                x.strip() for x in result.get("categories").split(";")]
     return results
