@@ -2,9 +2,11 @@
 
 import datetime
 from typing import Any, Dict
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, make_response
 from gn3 import db_utils
 from gn3.db import wiki
+from gn3.db.rdf import (query_frame_and_compact,
+                        get_wiki_entries_by_symbol)
 
 
 wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
@@ -64,3 +66,22 @@ def edit_wiki(comment_id: int):
             )
         return jsonify({"success": "ok"})
     return jsonify(error="Error editting wiki entry, most likely due to DB error!"), 500
+
+
+@wiki_blueprint.route("/<string:symbol>", methods=["GET"])
+def get_wiki_entries(symbol: str):
+    """Fetch wiki entries"""
+    content_type = request.headers.get("Content-Type")
+    status_code = 200
+    response = get_wiki_entries_by_symbol(
+        symbol=symbol,
+        sparql_uri=current_app.config.get("SPARQL_ENDPOINT"))
+    data = response.get("data")
+    if not data:
+        data = {}
+        status_code = 404
+    if content_type == "application/ld+json":
+        response = make_response(response)
+        response.headers["Content-Type"] = "application/ld+json"
+        return response, status_code
+    return jsonify(data), status_code
