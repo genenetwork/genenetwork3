@@ -18,6 +18,8 @@ from gn3.db.rdf import RDF_PREFIXES
 from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact)
 
+from gn3.api.metadata_api import wiki
+
 
 BASE_CONTEXT = {
     "data": "@graph",
@@ -142,6 +144,7 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
 }
 
 metadata = Blueprint("metadata", __name__)
+metadata.register_blueprint(wiki.wiki_blueprint)
 
 
 @metadata.route("/datasets/<name>", methods=["GET"])
