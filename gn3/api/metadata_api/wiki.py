@@ -2,16 +2,17 @@ import datetime
 from typing import Any, Dict, List
 from flask import Blueprint, request, jsonify, current_app
 from gn3 import db_utils
+from gn3.db import wiki
 
 
-wiki = Blueprint("wiki", __name__)
+wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
 
 
 class MissingDBDataException(Exception):
     pass
 
 
-@wiki.route("/<int:comment_id>/edit", methods=["POST"])
+@wiki_blueprint.route("/<int:comment_id>/edit", methods=["POST"])
 def edit_wiki(comment_id: int):
     # FIXME: attempt to check and fix for types here with relevant errors
     payload: Dict[str, Any] = request.json
@@ -40,9 +41,9 @@ def edit_wiki(comment_id: int):
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
         cursor = conn.cursor()
         try:
-            category_ids = get_categories_ids(cursor, payload["categories"])
-            species_id = get_species_id(cursor, payload["species"])
-            next_version = get_next_comment_version(cursor, comment_id)
+            category_ids = wiki.get_categories_ids(cursor, payload["categories"])
+            species_id = wiki.get_species_id(cursor, payload["species"])
+            next_version = wiki.get_next_comment_version(cursor, comment_id)
         except MissingDBDataException as missing_exc:
             return jsonify(error=f"Error editting wiki entry, {missing_exc}"), 500
         insert_dict["SpeciesID"] = species_id
@@ -58,36 +59,3 @@ def edit_wiki(comment_id: int):
             )
         return jsonify({"success": "ok"})
     return jsonify(error="Error editting wiki entry, most likely due to DB error!"), 500
-
-
-def get_species_id(cursor, species_name: str) -> int:
-    cursor.execute("SELECT SpeciesID from Species  WHERE Name = %s", (species_name,))
-    species_ids = cursor.fetchall()
-    if len(species_ids) != 1:
-        raise MissingDBDataException(
-            f"expected 1 species with Name={species_name} but found {len(species_ids)}!"
-        )
-    return species_ids[0][0]
-
-
-def get_next_comment_version(cursor, comment_id: int) -> int:
-    cursor.execute(
-        "SELECT MAX(versionId) as version_id from GeneRIF WHERE Id = %s", (comment_id,)
-    )
-    latest_version = cursor.fetchone()[0]
-    if latest_version is None:
-        raise MissingDBDataException(f"No comment found with comment_id={comment_id}")
-    return latest_version + 1
-
-
-def get_categories_ids(cursor, categories: List[str]) -> List[int]:
-    cursor.execute("SELECT Name, Id from GeneCategory")
-    raw_categories = cursor.fetchall()
-    dict_cats = dict(raw_categories)
-    category_ids = []
-    for category in set(categories):
-        cat_id = dict_cats.get(category.strip())
-        if cat_id is None:
-            raise MissingDBDataException(f"Category with Name={category} not found")
-        category_ids.append(cat_id)
-    return category_ids
