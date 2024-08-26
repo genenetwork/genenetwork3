@@ -405,13 +405,15 @@ def get_wiki_entries(symbol):
     response = get_wiki_entries_by_symbol(
         symbol=symbol,
         sparql_uri=current_app.config.get("SPARQL_ENDPOINT"))
-    if not response.get("data"):
+    data = response.get("data")
+    if not data:
+        data = {}
         status_code = 404
     if content_type == "application/ld+json":
         response = make_response(response)
         response.headers["Content-Type"] = "application/ld+json"
         return response, status_code
-    return jsonify(response.get("data")), status_code
+    return jsonify(data), status_code
 
 
 @metadata.route("/genewikis/ncbi/<symbol>", methods=["GET"])
