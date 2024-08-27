@@ -82,7 +82,7 @@ def handle_sqlite3_errors(exc: OperationalError):
 
 
 def handle_sparql_errors(exc):
-    """Handle sqlite3 errors if not handled anywhere else."""
+    """Handle sparql/virtuoso errors if not handled anywhere else."""
     current_app.logger.error("Handling sparql errors", exc_info=True)
     code = {
         "EndPointInternalError": 500,
