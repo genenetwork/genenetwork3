@@ -59,7 +59,8 @@ CONSTRUCT {
            dct:created ?created
 } WHERE {
     ?symbolId rdfs:comment _:node ;
-              rdfs:label '$symbol' .
+              rdfs:label ?symbolName .
+    FILTER ( LCASE(?symbolName) = LCASE('$symbol') ) .
     _:node rdf:type gnc:GNWikiEntry ;
            dct:hasVersion "0"^^xsd:int ;
            dct:hasVersion ?version ;
