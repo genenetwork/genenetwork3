@@ -51,7 +51,7 @@ def url_server_error(pnf):
     return jsonify(add_trace(pnf, {
         "error": f"URLLib Error no: {pnf.reason.errno}",
         "error_description": pnf.reason.strerror,
-    }))
+    })), 500
 
 
 def handle_authorisation_error(exc: AuthorisationError):
