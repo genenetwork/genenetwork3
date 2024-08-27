@@ -55,13 +55,15 @@ CONSTRUCT {
            foaf:mbox ?email ;
            gnt:initial ?usercode ;
            gnt:belongsToCategory ?category ;
-           gnt:hasVersion ?versionId
+           gnt:hasVersion ?versionId ;
+           dct:created ?created
 } WHERE {
     ?symbolId rdfs:comment _:node ;
               rdfs:label '$symbol' .
     _:node rdf:type gnc:GNWikiEntry ;
            dct:hasVersion "0"^^xsd:int ;
            dct:hasVersion ?version ;
+           dct:created ?createTime ;
            rdfs:comment ?wikientry .
     OPTIONAL { _:node gnt:reason ?reason } .
     OPTIONAL {
@@ -74,6 +76,7 @@ CONSTRUCT {
     OPTIONAL { _:node gnt:mbox ?email . } .
     OPTIONAL { _:node gnt:belongsToCategory ?category . }
     BIND (str(?version) AS ?versionId) .
+    BIND (str(?createTime) AS ?created) .
     BIND (str(?pubmedId) AS ?pmid)
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,)
@@ -89,7 +92,8 @@ CONSTRUCT {
         "pubmed_id": "dct:references",
         "email": "foaf:mbox",
         "initial": "gnt:initial",
-        "comment": "rdfs:comment"
+        "comment": "rdfs:comment",
+        "created": "dct:created",
     }
     results = query_frame_and_compact(
         query, context,
