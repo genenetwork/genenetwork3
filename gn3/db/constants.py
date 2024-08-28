@@ -31,7 +31,6 @@ RDF_PREFIXES = "\n".join([f"PREFIX {key}: <{value}>"
 
 BASE_CONTEXT = {
     "data": "@graph",
-    "id": "@id",
     "type": "@type",
     "gn": "http://genenetwork.org/id/",
     "gnc": "http://genenetwork.org/category/",
