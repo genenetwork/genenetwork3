@@ -41,44 +41,57 @@ def query_and_frame(query: str, context: dict, endpoint: str) -> dict:
 
 def get_wiki_entries_by_symbol(symbol: str, sparql_uri: str) -> dict:
     """Fetch all the Wiki entries using the symbol"""
-    # FIXME: Get the latest VersionId of a comment.
+    # This query uses a sub-query to fetch the latest comment by the
+    # version id.
     query = Template("""
 $prefix
 
 CONSTRUCT {
-    _:node rdfs:label '$symbol';
-           gnt:reason ?reason ;
-           gnt:species ?species ;
-           dct:references ?pmid ;
-           foaf:homepage ?weburl ;
-           rdfs:comment ?wikientry ;
-           foaf:mbox ?email ;
-           gnt:initial ?usercode ;
-           gnt:belongsToCategory ?category ;
-           gnt:hasVersion ?versionId ;
-           dct:created ?created
+    ?uid rdfs:label ?symbolName;
+         gnt:reason ?reason ;
+         gnt:species ?species ;
+         dct:references ?pmid ;
+         foaf:homepage ?weburl ;
+         rdfs:comment ?comment ;
+         foaf:mbox ?email ;
+         gnt:initial ?usercode ;
+         gnt:belongsToCategory ?category ;
+         gnt:hasVersion ?versionId ;
+         dct:created ?created ;
+         dct:identifier ?identifier .
 } WHERE {
-    ?symbolId rdfs:comment _:node ;
-              rdfs:label ?symbolName .
+    ?symbolId rdfs:label ?symbolName .
+    ?uid rdfs:comment ?comment ;
+         gnt:symbol ?symbolId ;
+         rdf:type gnc:GNWikiEntry ;
+         dct:created ?createTime .
     FILTER ( LCASE(?symbolName) = LCASE('$symbol') ) .
-    _:node rdf:type gnc:GNWikiEntry ;
-           dct:hasVersion "0"^^xsd:int ;
-           dct:hasVersion ?version ;
-           dct:created ?createTime ;
-           rdfs:comment ?wikientry .
-    OPTIONAL { _:node gnt:reason ?reason } .
+    {
+        SELECT (MAX(?vers) AS ?max) ?id_ WHERE {
+            ?symbolId rdfs:label ?symbolName .
+            ?uid dct:identifier ?id_ ;
+                 dct:hasVersion ?vers ;
+                 dct:identifier ?id_ ;
+                 gnt:symbol ?symbolId .
+            FILTER ( LCASE(?symbolName) = LCASE('$symbol') ) .
+        }
+    }
+    ?uid dct:hasVersion ?max ;
+         dct:identifier ?id_ .
+    OPTIONAL { ?uid gnt:reason ?reason } .
     OPTIONAL {
-        _:node gnt:belongsToSpecies ?speciesId .
+        ?uid gnt:belongsToSpecies ?speciesId .
         ?speciesId gnt:shortName ?species .
     } .
-    OPTIONAL { _:node dct:references ?pubmedId . } .
-    OPTIONAL { _:node foaf:homepage ?weburl . } .
-    OPTIONAL { _:node gnt:initial ?usercode . } .
-    OPTIONAL { _:node gnt:mbox ?email . } .
-    OPTIONAL { _:node gnt:belongsToCategory ?category . }
+    OPTIONAL { ?uid dct:references ?pubmedId . } .
+    OPTIONAL { ?uid foaf:homepage ?weburl . } .
+    OPTIONAL { ?uid gnt:initial ?usercode . } .
+    OPTIONAL { ?uid gnt:mbox ?email . } .
+    OPTIONAL { ?uid gnt:belongsToCategory ?category . } .
     BIND (str(?version) AS ?versionId) .
+    BIND (str(?id_) AS ?identifier) .
+    BIND (str(?pubmedId) AS ?pmid) .
     BIND (str(?createTime) AS ?created) .
-    BIND (str(?pubmedId) AS ?pmid)
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,)
     context = BASE_CONTEXT | {
@@ -95,6 +108,11 @@ CONSTRUCT {
         "initial": "gnt:initial",
         "comment": "rdfs:comment",
         "created": "dct:created",
+        "id": "dct:identifier",
+        # This points to the RDF Node which is the unique identifier
+        # for this triplet.  It's constructed using the comment-id and
+        # the comment-versionId
+        "wiki_identifier": "@id",
     }
     results = query_frame_and_compact(
         query, context,
@@ -103,8 +121,4 @@ CONSTRUCT {
     data = results.get("data")
     if not data:
         return results
-    for result in data:
-        if result.get("categories"):
-            result["categories"] = [
-                x.strip() for x in result.get("categories").split(";")]
     return results
