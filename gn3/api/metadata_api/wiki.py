@@ -65,7 +65,7 @@ def edit_wiki(comment_id: int):
                                           insert_dict["versionId"], cat_id)
             )
         return jsonify({"success": "ok"})
-    return jsonify(error="Error editting wiki entry, most likely due to DB error!"), 500
+    return jsonify(error="Error editing wiki entry, most likely due to DB error!"), 500
 
 
 @wiki_blueprint.route("/<string:symbol>", methods=["GET"])
