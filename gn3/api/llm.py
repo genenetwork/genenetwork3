@@ -15,7 +15,7 @@ from gn3.auth import db
 gnqa = Blueprint("gnqa", __name__)
 
 
-@gnqa.route("/search", methods=["POST"])
+@gnqa.route("/search", methods=["PUT"])
 def search():
     """Api  endpoint for searching queries in fahamu Api"""
     query = request.json.get("querygnqa", "")
