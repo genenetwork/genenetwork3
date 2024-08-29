@@ -89,24 +89,31 @@ def get_wiki_entries(symbol: str):
 
 @wiki_blueprint.route("/<int:comment_id>", methods=["GET"])
 def get_wiki(comment_id: int):
+    """
+    Gets latest wiki comments.
+
+    TODO: fetch this from RIF
+    """
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
         return jsonify(wiki.get_latest_comment(conn, comment_id))
-    return jsonify(error="Error editting wiki entry, most likely due to DB error!"), 500
+    return jsonify(error="Error fetching wiki entry, most likely due to DB error!"), 500
 
 
 @wiki_blueprint.route("/categories", methods=["GET"])
 def get_categories():
+    """ Gets list of supported categories for RIF """
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
         cursor = conn.cursor()
         categories_dict = wiki.get_categories(cursor)
         return jsonify(categories_dict)
-    return jsonify(error="Error editting wiki entry, most likely due to DB error!"), 500
+    return jsonify(error="Error getting categories, most likely due to DB error!"), 500
 
 
 @wiki_blueprint.route("/species", methods=["GET"])
 def get_species():
+    """ Gets list of all species, contains name and SpeciesName """
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
         cursor = conn.cursor()
         species_dict = wiki.get_species(cursor)
         return jsonify(species_dict)
-    return jsonify(error="Error editting wiki entry, most likely due to DB error!"), 500
+    return jsonify(error="Error getting species, most likely due to DB error!"), 500
