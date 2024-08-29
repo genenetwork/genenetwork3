@@ -107,7 +107,10 @@ def fetch_prev_history():
                 Where task_id=? and user_id=?""",
                 (request.args.get("search_term"),
                  str(token.user.user_id),))
-            return dict(cursor.fetchone())["results"]
+            record = cursor.fetchone()
+            if record:
+                return dict(record).get("results")
+            return {}
         cursor.execute(
             """SELECT task_id,query from history WHERE user_id=?""",
             (str(token.user.user_id),))
