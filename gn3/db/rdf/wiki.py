@@ -6,6 +6,28 @@ from gn3.db.rdf import (BASE_CONTEXT, RDF_PREFIXES,
                         query_frame_and_compact)
 
 
+WIKI_CONTEXT = BASE_CONTEXT | {
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "dct": "http://purl.org/dc/terms/",
+    "categories": "gnt:belongsToCategory",
+    "web_url": "foaf:homepage",
+    "version": "gnt:hasVersion",
+    "symbol": "rdfs:label",
+    "reason": "gnt:reason",
+    "species": "gnt:species",
+    "pubmed_id": "dct:references",
+    "email": "foaf:mbox",
+    "initial": "gnt:initial",
+    "comment": "rdfs:comment",
+    "created": "dct:created",
+    "id": "dct:identifier",
+    # This points to the RDF Node which is the unique identifier
+    # for this triplet.  It's constructed using the comment-id and
+    # the comment-versionId
+    "wiki_identifier": "@id",
+}
+
+
 def get_wiki_entries_by_symbol(symbol: str, sparql_uri: str) -> dict:
     """Fetch all the Wiki entries using the symbol"""
     # This query uses a sub-query to fetch the latest comment by the
@@ -61,28 +83,8 @@ CONSTRUCT {
     BIND (str(?createTime) AS ?created) .
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,)
-    context = BASE_CONTEXT | {
-        "foaf": "http://xmlns.com/foaf/0.1/",
-        "dct": "http://purl.org/dc/terms/",
-        "categories": "gnt:belongsToCategory",
-        "web_url": "foaf:homepage",
-        "version": "gnt:hasVersion",
-        "symbol": "rdfs:label",
-        "reason": "gnt:reason",
-        "species": "gnt:species",
-        "pubmed_id": "dct:references",
-        "email": "foaf:mbox",
-        "initial": "gnt:initial",
-        "comment": "rdfs:comment",
-        "created": "dct:created",
-        "id": "dct:identifier",
-        # This points to the RDF Node which is the unique identifier
-        # for this triplet.  It's constructed using the comment-id and
-        # the comment-versionId
-        "wiki_identifier": "@id",
-    }
     results = query_frame_and_compact(
-        query, context,
+        query, WIKI_CONTEXT,
         sparql_uri
     )
     data = results.get("data")
