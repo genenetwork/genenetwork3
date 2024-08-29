@@ -71,8 +71,8 @@ def rate_queries(task_id):
               answer TEXT NOT NULL,
               weight INTEGER NOT NULL DEFAULT 0,
               task_id TEXT NOT NULL UNIQUE,
-              created_at TIMESTAMP
-              )"""
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY(task_id))"""
         cursor.execute(create_table)
         cursor.execute("""INSERT INTO Rating(user_id, query,
         answer, weight, task_id, created_at)

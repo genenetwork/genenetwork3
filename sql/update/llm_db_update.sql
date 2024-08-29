@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS history (
 CREATE INDEX IF NOT EXISTS idx_tbl_history_cols_task_id_user_id
 ON history (task_id, user_id);
 
-ALTER TABLE Rating ADD COLUMN created_at TIMESTAMP;
+ALTER TABLE Rating ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
