@@ -95,6 +95,9 @@ def get_wiki(comment_id: int):
     TODO: fetch this from RIF
     """
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
+        # FIXME: error: Argument 2 to "get_latest_comment" has
+        # incompatible type "int"; expected "str" [arg-type]
+        # type: ignore
         return jsonify(wiki.get_latest_comment(conn, comment_id))
     return jsonify(error="Error fetching wiki entry, most likely due to DB error!"), 500
 
