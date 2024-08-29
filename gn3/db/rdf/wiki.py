@@ -75,7 +75,7 @@ CONSTRUCT {
     OPTIONAL { ?uid dct:references ?pubmedId . } .
     OPTIONAL { ?uid foaf:homepage ?weburl . } .
     OPTIONAL { ?uid gnt:initial ?usercode . } .
-    OPTIONAL { ?uid gnt:mbox ?email . } .
+    OPTIONAL { ?uid foaf:mbox ?email . } .
     OPTIONAL { ?uid gnt:belongsToCategory ?category . } .
     BIND (str(?version) AS ?versionId) .
     BIND (str(?id_) AS ?identifier) .
