@@ -108,6 +108,7 @@ def handle_generic(exc: Exception) -> Response:
 
 def handle_llm_error(exc: Exception) -> Response:
     """ Handle llm erros if not handled  anywhere else. """
+    current_app.logger.error(exc)
     resp = jsonify({
         "query": exc.args[1],
         "error_type": type(exc).__name__,
