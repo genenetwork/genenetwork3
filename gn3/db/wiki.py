@@ -10,6 +10,7 @@ class MissingDBDataException(Exception):
 
 
 def get_latest_comment(connection, comment_id: str) -> int:
+    """ Latest comment is one with the highest versionId """
     cursor = connection.cursor(DictCursor)
     query = """ SELECT versionId AS version, symbol, PubMed_ID AS pubmed_ids, sp.Name AS species,
         comment, email, weburl, initial, reason
