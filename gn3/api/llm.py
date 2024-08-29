@@ -86,21 +86,22 @@ def rate_queries(task_id):
         }, 200
 
 
-@gnqa.route("/history", methods=["GET", "POST"])
+@gnqa.route("/history", methods=["GET", "DELETE"])
 @require_oauth("profile user")
 def fetch_prev_history():
     """Api endpoint to fetch GNQA previous search."""
     with (require_oauth.acquire("profile user") as token,
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         cursor = conn.cursor()
-        if request.method == "POST":
+        if request.method == "DELETE":
             task_ids = list(request.json.values())
             query = """DELETE FROM history
             WHERE task_id IN ({})
             and user_id=?""".format(",".join("?" * len(task_ids)))
             cursor.execute(query, (*task_ids, str(token.user.user_id),))
             return jsonify({})
-        if request.args.get("search_term"):
+        elif (request.method == "GET" and
+              request.args.get("search_term")):
             cursor.execute(
                 """SELECT results from history
                 Where task_id=? and user_id=?""",
