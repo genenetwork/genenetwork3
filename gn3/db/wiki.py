@@ -36,7 +36,8 @@ def get_latest_comment(connection, comment_id: str) -> int:
 
 def get_species_id(cursor, species_name: str) -> int:
     """Find species id given species `Name`"""
-    cursor.execute("SELECT SpeciesID from Species  WHERE Name = %s", (species_name,))
+    cursor.execute(
+        "SELECT SpeciesID from Species  WHERE Name = %s", (species_name,))
     species_ids = cursor.fetchall()
     if len(species_ids) != 1:
         raise MissingDBDataException(
@@ -52,7 +53,8 @@ def get_next_comment_version(cursor, comment_id: int) -> int:
     )
     latest_version = cursor.fetchone()[0]
     if latest_version is None:
-        raise MissingDBDataException(f"No comment found with comment_id={comment_id}")
+        raise MissingDBDataException(
+            f"No comment found with comment_id={comment_id}")
     return latest_version + 1
 
 
@@ -63,17 +65,22 @@ def get_categories_ids(cursor, categories: List[str]) -> List[int]:
     for category in set(categories):
         cat_id = dict_cats.get(category.strip())
         if cat_id is None:
-            raise MissingDBDataException(f"Category with Name={category} not found")
+            raise MissingDBDataException(
+                f"Category with Name={category} not found")
         category_ids.append(cat_id)
     return category_ids
 
+
 def get_categories(cursor) -> Dict[str, int]:
+    """Get all categories"""
     cursor.execute("SELECT Name, Id from GeneCategory")
     raw_categories = cursor.fetchall()
     dict_cats = dict(raw_categories)
     return dict_cats
 
+
 def get_species(cursor) -> Dict[str, str]:
+    """Get all species"""
     cursor.execute("SELECT Name, SpeciesName from Species")
     raw_species = cursor.fetchall()
     dict_cats = dict(raw_species)
