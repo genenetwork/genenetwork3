@@ -5,8 +5,8 @@ from typing import Any, Dict
 from flask import Blueprint, request, jsonify, current_app, make_response
 from gn3 import db_utils
 from gn3.db import wiki
-from gn3.db.rdf import (query_frame_and_compact,
-                        get_wiki_entries_by_symbol)
+from gn3.db.rdf import query_frame_and_compact
+from gn3.db.rdf.wiki import get_wiki_entries_by_symbol
 
 
 wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")

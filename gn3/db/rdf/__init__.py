@@ -1,6 +1,15 @@
+"""RDF
+
+Constants for prefixes and contexts; and wrapper functions around
+creating contexts to be used by jsonld when framing and/or compacting.
+
 """
-This module contains some constants used in other modules.
-"""
+import json
+
+from SPARQLWrapper import SPARQLWrapper
+from pyld import jsonld  # type: ignore
+
+
 PREFIXES = {
     "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",
@@ -150,3 +159,30 @@ PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
     "species": "gnt:belongsToSpecies",
     "group": "gnt:belongsToGroup",
 }
+
+
+def sparql_construct_query(query: str, endpoint: str) -> dict:
+    """Query virtuoso using a CONSTRUCT query and return a json-ld
+    dictionary"""
+    sparql = SPARQLWrapper(endpoint)
+    sparql.setQuery(query)
+    results = sparql.queryAndConvert()
+    return json.loads(results.serialize(format="json-ld"))  # type: ignore
+
+
+def query_frame_and_compact(query: str, context: dict, endpoint: str) -> dict:
+    """Frame and then compact the results given a context"""
+    results = sparql_construct_query(query, endpoint)
+    return jsonld.compact(jsonld.frame(results, context), context)
+
+
+def query_and_compact(query: str, context: dict, endpoint: str) -> dict:
+    """Compact the results given a context"""
+    results = sparql_construct_query(query, endpoint)
+    return jsonld.compact(results, context)
+
+
+def query_and_frame(query: str, context: dict, endpoint: str) -> dict:
+    """Frame the results given a context"""
+    results = sparql_construct_query(query, endpoint)
+    return jsonld.frame(results, context)

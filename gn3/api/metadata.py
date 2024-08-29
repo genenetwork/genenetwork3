@@ -15,7 +15,7 @@ from gn3.db.datasets import (retrieve_metadata,
                              get_history)
 from gn3.db.rdf import (query_frame_and_compact,
                         query_and_compact)
-from gn3.db.constants import (
+from gn3.db.rdf import (
     RDF_PREFIXES, BASE_CONTEXT,
     DATASET_CONTEXT,
     DATASET_SEARCH_CONTEXT, PUBLICATION_CONTEXT,
