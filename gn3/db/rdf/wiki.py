@@ -91,3 +91,52 @@ CONSTRUCT {
     if not data:
         return results
     return results
+
+
+def get_comment_history(comment_id: int, sparql_uri: str) -> dict:
+    """Get all the historical data for a given id"""
+    query = Template("""
+$prefix
+
+CONSTRUCT {
+    ?uid rdfs:label ?symbolName ;
+         gnt:reason ?reason ;
+         gnt:species ?species ;
+         dct:references ?pmid ;
+         foaf:homepage ?weburl ;
+         rdfs:comment ?comment ;
+         foaf:mbox ?email ;
+         gnt:initial ?usercode ;
+         gnt:belongsToCategory ?category ;
+         gnt:hasVersion ?versionId ;
+         rdf:type gnc:GNWikiEntry ;
+         dct:created ?created .
+} WHERE {
+    ?symbolId rdfs:label ?symbolName .
+    ?uid rdf:type gnc:GNWikiEntry ;
+         rdfs:comment ?comment ;
+         gnt:symbol ?symbolId ;
+         dct:created ?createTime ;
+         dct:hasVersion ?version ;
+         dct:identifier $comment_id ;
+         dct:identifier ?id_ .
+    OPTIONAL { ?uid gnt:reason ?reason } .
+    OPTIONAL {
+        ?uid gnt:belongsToSpecies ?speciesId .
+        ?speciesId gnt:shortName ?species .
+    } .
+    OPTIONAL { ?uid dct:references ?pubmedId . } .
+    OPTIONAL { ?uid foaf:homepage ?weburl . } .
+    OPTIONAL { ?uid gnt:initial ?usercode . } .
+    OPTIONAL { ?uid foaf:mbox ?email . } .
+    OPTIONAL { ?uid gnt:belongsToCategory ?category . } .
+    BIND (str(?version) AS ?versionId) .
+    BIND (str(?pubmedId) AS ?pmid) .
+    BIND (str(?createTime) AS ?created) .
+} ORDER BY DESC(?version) DESC(?createTime)
+""").substitute(prefix=RDF_PREFIXES, comment_id=comment_id)
+    results = query_frame_and_compact(
+        query, WIKI_CONTEXT,
+        sparql_uri
+    )
+    return results
