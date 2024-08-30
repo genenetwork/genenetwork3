@@ -6,7 +6,8 @@ from flask import Blueprint, request, jsonify, current_app, make_response
 from gn3 import db_utils
 from gn3.db import wiki
 from gn3.db.rdf import query_frame_and_compact
-from gn3.db.rdf.wiki import get_wiki_entries_by_symbol
+from gn3.db.rdf.wiki import (get_wiki_entries_by_symbol,
+                             get_comment_history)
 
 
 wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
@@ -120,3 +121,19 @@ def get_species():
         species_dict = wiki.get_species(cursor)
         return jsonify(species_dict)
     return jsonify(error="Error getting species, most likely due to DB error!"), 500
+
+
+@wiki_blueprint.route("/<int:comment_id>/history", methods=["GET"])
+def get_history(comment_id):
+    status_code = 200
+    response = get_comment_history(comment_id=comment_id,
+                                   sparql_uri=current_app.config["SPARQL_ENDPOINT"])
+    data = response.get("data")
+    if not data:
+        data = {}
+        status_code = 404
+    if request.headers.get("Accept") == "application/ld+json":
+        payload = make_response(response)
+        payload.headers["Content-Type"] = "application/ld+json"
+        return payload, status_code
+    return jsonify(data), status_code
