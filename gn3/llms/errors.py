@@ -1,32 +1,11 @@
-
-# pylint: skip-file
+""" Error handlers for Fahamu Api"""
 import json
-
 from requests import HTTPError
 
 
 class UnprocessableEntity(HTTPError):
-    """An HTTP 422 Unprocessable Entity error occurred.
-
+    """Error for  HTTP 422 Unprocessable Entity
     https://help.helpjuice.com/en_US/api-v3/api-v3#errors
-
-    The request could not be processed, usually due to a missing or invalid parameter.
-
-    The response will also include an error object with an explanation of fields that
-    are missing or invalid. Here is an example:
-
-    .. code-block::
-
-        HTTP/1.1 422 Unprocessable Entity
-
-
-        {
-          "errors": [
-            {
-              "email": "is not valid."
-            }
-          ]
-        }
     """
 
     def __init__(self, request, response):
@@ -56,7 +35,5 @@ class UnprocessableEntity(HTTPError):
             msg, request=request, response=response)
 
 
-class LLMError(HTTPError):
-    def __init__(self, request, response, msg):
-        super(HTTPError, self).__init__(
-            msg, request=request, response=response)
+class LLMError(Exception):
+    """custom exception for LLMErrorMIxins"""

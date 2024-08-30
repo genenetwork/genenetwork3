@@ -1,72 +1,61 @@
-# pylint: skip-file
+"""Module  Contains code for making request to fahamu Api"""
+# pylint: disable=C0301
 import json
-import string
-import os
-import datetime
 import time
-import requests
 
-from requests import Session
-from urllib.parse import urljoin
-from requests.packages.urllib3.util.retry import Retry
-from requests import HTTPError
+import requests
 from requests import Session
 from requests.adapters import HTTPAdapter
-from urllib.request import urlretrieve
-from urllib.parse import quote
-from gn3.llms.errors import UnprocessableEntity
-from gn3.llms.errors import LLMError
+from requests.adapters import Retry
 
-basedir = os.path.join(os.path.dirname(__file__))
+from gn3.llms.errors import LLMError
 
 
 class TimeoutHTTPAdapter(HTTPAdapter):
+    """Set a default timeout for HTTP calls """
     def __init__(self, timeout, *args, **kwargs):
-        """TimeoutHTTPAdapter constructor.
-        Args:
-            timeout (int): How many seconds to wait for the server to send data before
-                giving up.
-        """
+        """TimeoutHTTPAdapter constructor."""
         self.timeout = timeout
         super().__init__(*args, **kwargs)
 
-    def send(self, request, **kwargs):
+    def send(self, *args, **kwargs):
         """Override :obj:`HTTPAdapter` send method to add a default timeout."""
-        timeout = kwargs.get("timeout")
-        if timeout is None:
-            kwargs["timeout"] = self.timeout
-
-        return super().send(request, **kwargs)
+        kwargs["timeout"] = (
+            kwargs["timeout"] if kwargs.get("timeout") else self.timeout
+        )
+        return super().send(*args, **kwargs)
 
 
 class GeneNetworkQAClient(Session):
     """GeneNetworkQA Client
 
     This class provides a client object interface to the GeneNetworkQA API.
-    It extends the `requests.Session` class and includes authorization, base URL,
+    It extends the `requests.Session` class and includes authorization,
+    base URL,
     request timeouts, and request retries.
 
     Args:
-        account (str): Base address subdomain.
         api_key (str): API key.
-        version (str, optional): API version, defaults to "v3".
         timeout (int, optional): Timeout value, defaults to 5.
         total_retries (int, optional): Total retries value, defaults to 5.
-        backoff_factor (int, optional): Retry backoff factor value, defaults to 30.
+        backoff_factor (int, optional): Retry backoff factor value,
+    defaults to 30.
 
     Usage:
         from genenetworkqa import GeneNetworkQAClient
-        gnqa = GeneNetworkQAClient(account="account-name", api_key="XXXXXXXXXXXXXXXXXXX...")
+        gnqa = GeneNetworkQAClient(account="account-name",
+    api_key="XXXXXXXXXXXXXXXXXXX...")
     """
 
-    BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
-
-    def __init__(self, account, api_key, version="v3", timeout=30, total_retries=5, backoff_factor=30):
+    def __init__(self, api_key, timeout=30,
+                 total_retries=5, backoff_factor=30):
         super().__init__()
         self.headers.update(
             {"Authorization": "Bearer " + api_key})
-        self.answer_url = f"{self.BASE_URL}/answers"
-        self.feedback_url = f"{self.BASE_URL}/feedback"
+        self.base_url = "https://genenetwork.fahamuai.com/api/tasks"
+        self.answer_url = f"{self.base_url}/answers"
+        self.feedback_url = f"{self.base_url}/feedback"
+        self.query = ""
 
         adapter = TimeoutHTTPAdapter(
             timeout=timeout,
@@ -80,141 +69,59 @@ class GeneNetworkQAClient(Session):
         self.mount("https://", adapter)
         self.mount("http://", adapter)
 
-    @staticmethod
-    def format_bibliography_info(bib_info):
-
-        if isinstance(bib_info, str):
-            # Remove '.txt'
-            bib_info = bib_info.removesuffix('.txt')
-        elif isinstance(bib_info, dict):
-            # Format string bibliography information
-            bib_info = "{0}.{1}.{2}.{3} ".format(bib_info.get('author', ''),
-                                                 bib_info.get('title', ''),
-                                                 bib_info.get('year', ''),
-                                                 bib_info.get('doi', ''))
-        return bib_info
-
-    @staticmethod
-    def ask_the_documents(extend_url, my_auth):
-        try:
-            response = requests.post(
-                base_url + extend_url, data={}, headers=my_auth)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            # Handle the exception appropriately, e.g., log the error
-            raise RuntimeError(f"Error making the request: {e}")
-
-        if response.status_code != 200:
-            return negative_status_msg(response), 0
-
-        task_id = get_task_id_from_result(response)
-        response = get_answer_using_task_id(task_id, my_auth)
-
-        if response.status_code != 200:
-
-            return negative_status_msg(response), 0
-
-        return response, 1
-
-    @staticmethod
-    def negative_status_msg(response):
-        return f"Error: Status code -{response.status_code}- Reason::{response.reason}"
-      #  return f"Problems\n\tStatus code => {response.status_code}\n\tReason => {response.reason}"
-
-    def ask(self, exUrl, *args, **kwargs):
-        askUrl = self.BASE_URL + exUrl
-        res = self.custom_request('POST', askUrl, *args, **kwargs)
-        if (res.status_code != 200):
-            return self.negative_status_msg(res), 0
-        task_id = self.getTaskIDFromResult(res)
-        return res, task_id
-
-    def get_answer(self, taskid, *args, **kwargs):
-        query = self.answer_url + self.extendTaskID(taskid)
-        res = self.custom_request('GET', query, *args, **kwargs)
-        if (res.status_code != 200):
-            return self.negative_status_msg(res), 0
-        return res, 1
-
-    def custom_request(self, method, url, *args, **kwargs):
-
-        max_retries = 50
-        retry_delay = 3
-
-        for i in range(max_retries):
-            try:
-                response = super().request(method, url, *args, **kwargs)
-                response.raise_for_status()
-
-            except requests.exceptions.HTTPError as error:
-                if error.response.status_code ==500:
-                    raise LLMError(error.request, error.response, f"Response Error,status_code:{error.response.status_code},Reason: Use of Invalid Token")
-                elif error.response.status_code ==404:
-                    raise LLMError(error.request,error.response,f"404 Client Error: Not Found for url: {self.BASE_URL}")
-                raise error
-
-            except requests.exceptions.RequestException as error:
-                raise error 
-
-
-
-
-            if response.ok:
-                if method.lower() == "get" and response.json().get("data") is None:
-                    time.sleep(retry_delay)
-                    continue
-                else:
-                    return response
-            else:
-                time.sleep(retry_delay)
-            return response
-
-    @staticmethod
-    def get_task_id_from_result(response):
-        task_id = json.loads(response.text)
-        result = f"?task_id={task_id.get('task_id', '')}"
-        return result
-
-    @staticmethod
-    def get_answer_using_task_id(extend_url, my_auth):
+    def get_answer_using_task_id(self, extend_url, my_auth):
+        """call this method with task id to fetch response"""
         try:
             response = requests.get(
-                answer_url + extend_url, data={}, headers=my_auth)
+               self.answer_url + extend_url, data={}, headers=my_auth)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as error:
-            # Handle the exception appropriately, e.g., log the error
             raise error
 
     @staticmethod
-    def filter_response_text(val):
-        """
-        Filters out non-printable characters from the input string and parses it as JSON.
+    def negative_status_msg(response):
+        """ handler for non 200 response from fahamu api"""
+        return f"Error: Status code -{response.status_code}- Reason::{response.reason}"
 
-        Args:
-            val (str): Input string to be filtered and parsed.
+    def ask(self, ex_url, query,  *args, **kwargs):
+        """fahamu ask api interface"""
+        self.query = query
+        res = self.custom_request('POST', f"{self.base_url}{ex_url}", *args, **kwargs)
+        return res, json.loads(res.text)
 
-        Returns:
-            dict: Parsed JSON object.
-        # remove  this
-        """
-        return json.loads(''.join([str(char) for char in val if char in string.printable]))
+    def get_answer(self, taskid, *args, **kwargs):
+        """Fahamu get answer interface"""
+        query = f"{self.answer_url}?task_id={taskid['task_id']}"
+        res = self.custom_request('GET', query, *args, **kwargs)
+        return res, 1
 
-    def getTaskIDFromResult(self, res):
-        return json.loads(res.text)
-
-    def extendTaskID(self, task_id):
-        return '?task_id=' + str(task_id['task_id'])
-
-    def get_gnqa(self, query):
-        qstr = quote(query)
-        res, task_id = api_client.ask('?ask=' + qstr)
-        res, success = api_client.get_answer(task_id)
-
-        if success == 1:
-            resp_text = filter_response_text(res.text)
-            answer = resp_text.get('data', {}).get('answer', '')
-            context = resp_text.get('data', {}).get('context', '')
-            return answer, context
-        else:
-            return res, "Unfortunately, I have nothing."
+    def custom_request(self, method, url, *args, **kwargs):
+        """ make custom request to fahamu api ask and get response"""
+        max_retries = 50
+        retry_delay = 3
+        response_msg = {
+            404: "Api endpoint Does not exist",
+            500: "Use of Invalid Token/or the Fahamu Api is currently  down",
+            400: "You sent a bad Fahamu request",
+            401: "You do not have authorization to perform the request",
+        }
+        for _i in range(max_retries):
+            response = super().request(method, url, *args, **kwargs)
+            if response.ok:
+                if method.lower() == "get" and not response.json().get("data"):
+                    # note this is a dirty trick to check if fahamu has returned the results
+                    # the issue is that the api only returns 500 or 200 satus code
+                    # TODO: fix this on their end
+                    time.sleep(retry_delay)
+                    continue
+                return response
+            else:
+                raise LLMError(f"Request error with code:\
+                {response.status_code} occurred with reason:\
+                {response_msg.get(response.status_code,response.reason)}",
+                               self.query)
+                #time.sleep(retry_delay)
+        raise LLMError("Timeout error: We couldn't provide a response,Please try\
+        to rephrase your question to receive feedback",
+                       self.query)

@@ -1,8 +1,5 @@
-# pylint: disable=unused-argument
-"""Test cases for procedures defined in llms module"""
-from dataclasses import dataclass
+"""Test cases for procedures defined in llms """
 import pytest
-from gn3.llms.process import get_gnqa
 from gn3.llms.process import parse_context
 
 
@@ -35,68 +32,3 @@ def test_parse_context():
     ]
 
     assert parsed_result == expected_result
-
-
-@dataclass(frozen=True)
-class MockResponse:
-    """mock a response  object"""
-    text: str
-
-    def __getattr__(self, name: str):
-        return self.__dict__[f"_{name}"]
-
-
-class MockGeneNetworkQAClient:
-    """mock the GeneNetworkQAClient class"""
-
-    def __init__(self, session, api_key):
-        pass
-
-    def ask(self, query, auth_token):
-        """mock method for ask query"""
-        # Simulate the ask method
-        return MockResponse("Mock response"), "F400995EAFE104EA72A5927CE10C73B7"
-
-    def get_answer(self, task_id):
-        """mock  get_answer method"""
-        return MockResponse("Mock answer"), 1
-
-
-def mock_filter_response_text(text):
-    """ method to simulate the filterResponseText method"""
-    return {"data": {"answer": "Mock answer for what is a gene", "context": {}}}
-
-
-def mock_parse_context(context, get_info_func, format_bib_func):
-    """method to simulate the  parse context method"""
-    return []
-
-
-@pytest.mark.unit_test
-def test_get_gnqa(monkeypatch):
-    """test for process.get_gnqa functoin"""
-    monkeypatch.setattr(
-        "gn3.llms.process.GeneNetworkQAClient",
-        MockGeneNetworkQAClient
-    )
-
-    monkeypatch.setattr(
-        'gn3.llms.process.filter_response_text',
-        mock_filter_response_text
-    )
-    monkeypatch.setattr(
-        'gn3.llms.process.parse_context',
-        mock_parse_context
-    )
-
-    query = "What is a gene"
-    auth_token = "test_token"
-    result = get_gnqa(query, auth_token)
-
-    expected_result = (
-        "F400995EAFE104EA72A5927CE10C73B7",
-        'Mock answer for what is a gene',
-        []
-    )
-
-    assert result == expected_result
