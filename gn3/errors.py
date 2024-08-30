@@ -16,7 +16,7 @@ from authlib.oauth2.rfc6749.errors import OAuth2Error
 from flask import Flask, jsonify, Response, current_app
 
 from gn3.auth.authorisation.errors import AuthorisationError
-
+from  gn3.llms.errors import LLMError
 
 def add_trace(exc: Exception, jsonmsg: dict) -> dict:
     """Add the traceback to the error handling object."""
@@ -106,6 +106,21 @@ def handle_generic(exc: Exception) -> Response:
     return resp
 
 
+def handle_llm_error(exc: Exception) -> Response:
+    """ Handle llm erros if not handled  anywhere else. """
+    current_app.logger.error(exc)
+    resp = jsonify({
+        "query": exc.args[1],
+        "error_type": type(exc).__name__,
+        "error": (
+            exc.args[0] if bool(exc.args) else "Fahamu gnqa error occurred"
+        ),
+        "trace": traceback.format_exc()
+    })
+    resp.status_code = 500
+    return resp
+
+
 def register_error_handlers(app: Flask):
     """Register application-level error handlers."""
     app.register_error_handler(NotFound, page_not_found)
@@ -115,6 +130,7 @@ def register_error_handlers(app: Flask):
     app.register_error_handler(AuthorisationError, handle_authorisation_error)
     app.register_error_handler(RemoteDisconnected, internal_server_error)
     app.register_error_handler(URLError, url_server_error)
+    app.register_error_handler(LLMError, handle_llm_error)
     for exc in (
             EndPointInternalError,
             EndPointNotFound,

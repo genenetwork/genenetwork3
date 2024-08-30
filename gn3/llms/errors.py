@@ -35,8 +35,5 @@ class UnprocessableEntity(HTTPError):
             msg, request=request, response=response)
 
 
-class LLMError(HTTPError):
-    """Custom error from making Fahamu APi request """
-    def __init__(self, request, response, msg):
-        super(HTTPError, self).__init__(
-            msg, request=request, response=response)
+class LLMError(Exception):
+    """custom exception for LLMErrorMIxins"""

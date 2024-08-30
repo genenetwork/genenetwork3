@@ -1,125 +1,117 @@
 """Api endpoints for gnqa"""
-from datetime import timedelta
 import json
-import sqlite3
-from redis import Redis
-
+from datetime import datetime, timezone
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
 from flask import request
 
 from gn3.llms.process import get_gnqa
-from gn3.llms.process import get_user_queries
-from gn3.llms.process import fetch_query_results
 from gn3.llms.errors import LLMError
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.auth import db
 
+
 gnqa = Blueprint("gnqa", __name__)
 
 
-@gnqa.route("/gnqna", methods=["POST"])
-def gnqna():
-    """Main gnqa endpoint"""
+@gnqa.route("/search", methods=["PUT"])
+def search():
+    """Api  endpoint for searching queries in fahamu Api"""
     query = request.json.get("querygnqa", "")
     if not query:
         return jsonify({"error": "querygnqa is missing in the request"}), 400
-
-    try:
-        fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
-        if fahamu_token is None:
-            return jsonify({"query": query,
-                            "error": "Use of invalid fahamu auth token"}), 500
-        task_id, answer, refs = get_gnqa(
-            query, fahamu_token, current_app.config.get("DATA_DIR"))
-        response = {
-            "task_id": task_id,
-            "query": query,
-            "answer": answer,
-            "references": refs
-        }
-        with (Redis.from_url(current_app.config["REDIS_URI"],
-                             decode_responses=True) as redis_conn):
-            redis_conn.setex(
-                f"LLM:random_user-{query}",
-                timedelta(days=10), json.dumps(response))
-        return jsonify({
-            **response,
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
-    except LLMError as error:
-        return jsonify({"query": query,
-                        "error": f"Request failed-{str(error)}"}), 500
+    fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
+    if not fahamu_token:
+        raise LLMError(
+            "Request failed:an LLM authorisation token  is required ", query)
+    task_id, answer, refs = get_gnqa(
+        query, fahamu_token, current_app.config.get("DATA_DIR"))
+    response = {
+        "task_id": task_id,
+        "query": query,
+        "answer": answer,
+        "references": refs
+    }
+    with (db.connection(current_app.config["LLM_DB_PATH"]) as conn,
+          require_oauth.acquire("profile user") as token):
+        cursor = conn.cursor()
+        cursor.execute("""CREATE TABLE IF NOT EXISTS
+        history(user_id TEXT NOT NULL,
+        task_id TEXT NOT NULL,
+        query  TEXT NOT NULL,
+        results  TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY(task_id)) WITHOUT ROWID""")
+        cursor.execute(
+            """INSERT INTO history(user_id, task_id, query, results)
+            VALUES(?, ?, ?, ?)
+            """, (str(token.user.user_id), str(task_id["task_id"]),
+                  query,
+                  json.dumps(response))
+        )
+    return response
 
 
 @gnqa.route("/rating/<task_id>", methods=["POST"])
 @require_oauth("profile")
-def rating(task_id):
-    """Endpoint for rating qnqa query and answer"""
-    try:
-        llm_db_path = current_app.config["LLM_DB_PATH"]
-        with (require_oauth.acquire("profile") as token,
-              db.connection(llm_db_path) as conn):
-
-            results = request.json
-            user_id, query, answer, weight = (token.user.user_id,
-                                              results.get("query"),
-                                              results.get("answer"),
-                                              results.get("weight", 0))
-            cursor = conn.cursor()
-            create_table = """CREATE TABLE IF NOT EXISTS Rating(
-                  user_id TEXT NOT NULL,
-                  query TEXT NOT NULL,
-                  answer TEXT NOT NULL,
-                  weight INTEGER NOT NULL DEFAULT 0,
-                  task_id TEXT NOT NULL UNIQUE
-                  )"""
-            cursor.execute(create_table)
-            cursor.execute("""INSERT INTO Rating(user_id,query,
-            answer,weight,task_id)
-            VALUES(?,?,?,?,?)
-            ON CONFLICT(task_id) DO UPDATE SET
-            weight=excluded.weight
-            """, (str(user_id), query, answer, weight, task_id))
+def rate_queries(task_id):
+    """Api endpoint for rating GNQA query and answer"""
+    with (require_oauth.acquire("profile") as token,
+          db.connection(current_app.config["LLM_DB_PATH"]) as conn):
+        results = request.json
+        user_id, query, answer, weight = (token.user.user_id,
+                                          results.get("query"),
+                                          results.get("answer"),
+                                          results.get("weight", 0))
+        cursor = conn.cursor()
+        create_table = """CREATE TABLE IF NOT EXISTS Rating(
+              user_id TEXT NOT NULL,
+              query TEXT NOT NULL,
+              answer TEXT NOT NULL,
+              weight INTEGER NOT NULL DEFAULT 0,
+              task_id TEXT NOT NULL UNIQUE,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY(task_id))"""
+        cursor.execute(create_table)
+        cursor.execute("""INSERT INTO Rating(user_id, query,
+        answer, weight, task_id, created_at)
+        VALUES(?, ?, ?, ?, ?, ?)
+        ON CONFLICT(task_id) DO UPDATE SET
+        weight=excluded.weight
+        """, (str(user_id), query, answer, weight, task_id,
+              datetime.now(timezone.utc)))
         return {
-            "message":
-            "You have successfully rated this query:Thank you!!"
+           "message": "You have successfully rated this query.Thank you!"
         }, 200
-    except sqlite3.Error as error:
-        return jsonify({"error": str(error)}), 500
 
 
-@gnqa.route("/history/<query>", methods=["GET"])
+@gnqa.route("/history", methods=["GET", "DELETE"])
 @require_oauth("profile user")
-def fetch_user_hist(query):
-    """"Endpoint to fetch previos searches for User"""
-    with (require_oauth.acquire("profile user") as the_token,
-          Redis.from_url(current_app.config["REDIS_URI"],
-          decode_responses=True) as redis_conn):
-        return jsonify({
-            **fetch_query_results(query, the_token.user.id, redis_conn),
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
-
-
-@gnqa.route("/historys/<query>", methods=["GET"])
-def fetch_users_hist_records(query):
-    """method to fetch all users hist:note this is a test functionality
-    to be replaced by fetch_user_hist
-    """
-    with Redis.from_url(current_app.config["REDIS_URI"],
-                        decode_responses=True) as redis_conn:
-        return jsonify({
-            **fetch_query_results(query, "random_user", redis_conn),
-            "prev_queries": get_user_queries("random_user", redis_conn)
-        })
-
-
-@gnqa.route("/get_hist_names", methods=["GET"])
-def fetch_prev_hist_ids():
-    """Test method for fetching history for Anony Users"""
-    with (Redis.from_url(current_app.config["REDIS_URI"],
-                         decode_responses=True)) as redis_conn:
-        return jsonify({"prev_queries": get_user_queries("random_user",
-                                                         redis_conn)})
+def fetch_prev_history():
+    """Api endpoint to fetch GNQA previous search."""
+    with (require_oauth.acquire("profile user") as token,
+          db.connection(current_app.config["LLM_DB_PATH"]) as conn):
+        cursor = conn.cursor()
+        if request.method == "DELETE":
+            task_ids = list(request.json.values())
+            query = """DELETE FROM history
+            WHERE task_id IN ({})
+            and user_id=?""".format(",".join("?" * len(task_ids)))
+            cursor.execute(query, (*task_ids, str(token.user.user_id),))
+            return jsonify({})
+        elif (request.method == "GET" and
+              request.args.get("search_term")):
+            cursor.execute(
+                """SELECT results from history
+                Where task_id=? and user_id=?""",
+                (request.args.get("search_term"),
+                 str(token.user.user_id),))
+            record = cursor.fetchone()
+            if record:
+                return dict(record).get("results")
+            return {}
+        cursor.execute(
+            """SELECT task_id,query from history WHERE user_id=?""",
+            (str(token.user.user_id),))
+        return jsonify([dict(item) for item in cursor.fetchall()])

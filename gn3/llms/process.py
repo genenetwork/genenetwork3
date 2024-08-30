@@ -1,6 +1,7 @@
 """this module contains code for processing response from fahamu client.py"""
 # pylint: disable=C0301
 import os
+import re
 import string
 import json
 import logging
@@ -21,21 +22,12 @@ class DocIDs():
         * doc_ids.json: opens doc)ids for gn references
         * sugar_doc_ids:  open doci_ids for diabetes references
         """
-        self.doc_ids = self.load_file("doc_ids.json")
-        self.sugar_doc_ids = self.load_file("all_files.json")
+        self.doc_ids = load_file("doc_ids.json", BASEDIR)
+        self.sugar_doc_ids = load_file("all_files.json", BASEDIR)
         self.format_doc_ids(self.sugar_doc_ids)
 
-    def load_file(self, file_name):
-        """Method to load and read doc_id files"""
-        file_path = os.path.join(BASEDIR, file_name)
-        if os.path.isfile(file_path):
-            with open(file_path, "rb") as file_handler:
-                return json.load(file_handler)
-        else:
-            raise FileNotFoundError(f"{file_path}-- FIle does not exist\n")
-
     def format_doc_ids(self, docs):
-        """method to format doc_ids for list items"""
+        """method to format doc_ids for list items doc_id and doc_name"""
         for _key, val in docs.items():
             if isinstance(val, list):
                 for doc_obj in val:
@@ -43,7 +35,14 @@ class DocIDs():
                     self.doc_ids.update({doc_obj["id"]:  doc_name})
 
     def get_info(self, doc_id):
-        """ interface to make read from doc_ids"""
+        """ interface to make read from doc_ids
+           and extract info data  else returns
+           doc_id
+        Args:
+            doc_id: str: a search key for doc_ids
+        Returns:
+              an object with doc_info if doc_id in doc_ids
+        """
         if doc_id in self.doc_ids.keys():
             return self.doc_ids[doc_id]
         else:
@@ -51,7 +50,8 @@ class DocIDs():
 
 
 def format_bibliography_info(bib_info):
-    """Function for formatting bibliography info"""
+    """Utility function for formatting bibliography info
+    """
     if isinstance(bib_info, str):
         return bib_info.removesuffix('.txt')
     elif isinstance(bib_info, dict):
@@ -59,14 +59,16 @@ def format_bibliography_info(bib_info):
     return bib_info
 
 
-def filter_response_text(val):
-    """helper function for filtering non-printable chars"""
-    return json.loads(''.join([str(char)
-                               for char in val if char in string.printable]))
-
-
 def parse_context(context, get_info_func, format_bib_func):
-    """function to parse doc_ids content"""
+    """Function to parse doc_ids content
+     Args:
+         context: raw references from  fahamu api
+         get_info_func: function to get doc_ids info
+         format_bib_func:  function to foramt bibliography info
+    Returns:
+          an list with each item having (doc_id,bib_info,
+          combined reference text)
+    """
     results = []
     for doc_ids, summary in context.items():
         combo_txt = ""
@@ -75,13 +77,23 @@ def parse_context(context, get_info_func, format_bib_func):
         doc_info = get_info_func(doc_ids)
         bib_info = doc_ids if doc_ids == doc_info else format_bib_func(
             doc_info)
+        pattern = r'(https?://|www\.)[\w.-]+(\.[a-zA-Z]{2,})([/\w.-]*)*'
+        combo_text = re.sub(pattern,
+                            lambda x: f"<a href='{x[0]}' target=_blank> {x[0]} </a>",
+                            combo_txt)
         results.append(
-            {"doc_id": doc_ids, "bibInfo": bib_info, "comboTxt": combo_txt})
+            {"doc_id": doc_ids, "bibInfo": bib_info,
+             "comboTxt": combo_text})
     return results
 
 
 def load_file(filename, dir_path):
-    """function to open and load json file"""
+    """Utility function to read json file
+    Args:
+        filename:  file name to read
+        dir_path:  base directory for the file
+    Returns: json data read to a dict
+    """
     file_path = os.path.join(dir_path, f"{filename}")
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"{filename} was not found or is a directory")
@@ -90,8 +102,19 @@ def load_file(filename, dir_path):
 
 
 def fetch_pubmed(references, file_name, data_dir=""):
-    """method to fetch and populate references with pubmed"""
+    """
+    Fetches PubMed data from a JSON file and populates the\
+    references dictionary.
 
+    Args:
+        references (dict): Dictionary with document IDs as keys\
+    and reference data as values.
+        filename (str): Name of the JSON file containing PubMed data.
+        data_dir (str): Base directory where the data files are located.
+
+    Returns:
+        dict: Updated references dictionary populated with the PubMed data.
+    """
     try:
         pubmed = load_file(file_name, os.path.join(data_dir, "gn-meta/lit"))
         for reference in references:
@@ -116,42 +139,16 @@ def get_gnqa(query, auth_token, data_dir=""):
          answer
          references: contains doc_name,reference,pub_med_info
     """
-
     api_client = GeneNetworkQAClient(api_key=auth_token)
-    res, task_id = api_client.ask('?ask=' + quote(query), auth_token)
-    if task_id == 0:
-        raise RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")
-    res, status = api_client.get_answer(task_id)
-    if status == 1:
-        resp_text = filter_response_text(res.text)
-        if resp_text.get("data") is None:
-            return task_id, "Please try to rephrase your question to receive feedback", []
-        answer = resp_text['data']['answer']
-        context = resp_text['data']['context']
-        references = parse_context(
-            context, DocIDs().get_info, format_bibliography_info)
-        references = fetch_pubmed(references, "pubmed.json", data_dir)
-
-        return task_id, answer, references
-    else:
-        return task_id, "We couldn't provide a response,Please try to rephrase your question to receive feedback", []
-
-
-def fetch_query_results(query, user_id, redis_conn):
-    """this method fetches prev user query searches"""
-    result = redis_conn.get(f"LLM:{user_id}-{query}")
-    if result:
-        return json.loads(result)
-    return {
-        "query": query,
-        "answer": "Sorry No answer for you",
-        "references": [],
-        "task_id": None
-    }
-
-
-def get_user_queries(user_id, redis_conn):
-    """methos to fetch all queries for a specific user"""
-    results = redis_conn.keys(f"LLM:{user_id}*")
-    return [query for query in
-            [result.partition("-")[2] for result in results] if query != ""]
+    res, task_id = api_client.ask('?ask=' + quote(query), query=query)
+    res, _status = api_client.get_answer(task_id)
+    resp_text = json.loads(''.join([str(char)
+                           for char in res.text if char in string.printable]))
+    answer = re.sub(r'(https?://|www\.)[\w.-]+(\.[a-zA-Z]{2,})([/\w.-]*)*',
+                    lambda x: f"<a href='{x[0]}' target=_blank> {x[0]} </a>",
+                    resp_text["data"]["answer"])
+    context = resp_text['data']['context']
+    return task_id, answer, fetch_pubmed(parse_context(
+                            context, DocIDs().get_info,
+                            format_bibliography_info),
+                            "pubmed.json", data_dir)
