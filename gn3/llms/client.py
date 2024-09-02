@@ -69,16 +69,6 @@ class GeneNetworkQAClient(Session):
         self.mount("https://", adapter)
         self.mount("http://", adapter)
 
-    def get_answer_using_task_id(self, extend_url, my_auth):
-        """call this method with task id to fetch response"""
-        try:
-            response = requests.get(
-               self.answer_url + extend_url, data={}, headers=my_auth)
-            response.raise_for_status()
-            return response
-        except requests.exceptions.RequestException as error:
-            raise error
-
     @staticmethod
     def negative_status_msg(response):
         """ handler for non 200 response from fahamu api"""
