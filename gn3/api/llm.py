@@ -24,7 +24,7 @@ def search():
     fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
     if not fahamu_token:
         raise LLMError(
-            "Request failed:an LLM authorisation token  is required ", query)
+            "Request failed: an LLM authorisation token  is required ", query)
     task_id, answer, refs = get_gnqa(
         query, fahamu_token, current_app.config.get("DATA_DIR"))
     response = {
