@@ -97,7 +97,13 @@ class GeneNetworkQAClient(Session):
         return res, 1
 
     def custom_request(self, method, url, *args, **kwargs):
-        """ make custom request to fahamu api ask and get response"""
+        """
+        Make a custom request to the Fahamu API to ask and get a response.
+        This is a custom method, which is the current default for fetching items,
+        as it overrides the adapter provided above.
+        This function was created to debug the slow response rate of Fahamu and
+        provide custom a response.
+        """
         max_retries = 50
         retry_delay = 3
         response_msg = {
