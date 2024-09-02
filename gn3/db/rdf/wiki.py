@@ -15,7 +15,7 @@ WIKI_CONTEXT = BASE_CONTEXT | {
     "symbol": "rdfs:label",
     "reason": "gnt:reason",
     "species": "gnt:species",
-    "pubmed_id": "dct:references",
+    "pubmed_ids": "dct:references",
     "email": "foaf:mbox",
     "initial": "gnt:initial",
     "comment": "rdfs:comment",
