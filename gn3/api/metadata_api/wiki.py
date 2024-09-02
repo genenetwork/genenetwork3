@@ -72,7 +72,6 @@ def edit_wiki(comment_id: int):
 @wiki_blueprint.route("/<string:symbol>", methods=["GET"])
 def get_wiki_entries(symbol: str):
     """Fetch wiki entries"""
-    content_type = request.headers.get("Content-Type")
     status_code = 200
     response = get_wiki_entries_by_symbol(
         symbol=symbol,
@@ -81,7 +80,7 @@ def get_wiki_entries(symbol: str):
     if not data:
         data = {}
         status_code = 404
-    if content_type == "application/ld+json":
+    if request.headers.get("Accept") == "application/ld+json":
         payload = make_response(response)
         payload.headers["Content-Type"] = "application/ld+json"
         return payload, status_code
