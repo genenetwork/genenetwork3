@@ -90,9 +90,9 @@ class GeneNetworkQAClient(Session):
         res = self.custom_request('POST', f"{self.base_url}{ex_url}", *args, **kwargs)
         return res, json.loads(res.text)
 
-    def get_answer(self, taskid, *args, **kwargs):
+    def get_answer(self, task_obj, *args, **kwargs):
         """Fahamu get answer interface"""
-        query = f"{self.answer_url}?task_id={taskid['task_id']}"
+        query = f"{self.answer_url}?task_id={task_obj['task_id']}"
         res = self.custom_request('GET', query, *args, **kwargs)
         return res, 1
 
