@@ -48,7 +48,7 @@ class GeneNetworkQAClient(Session):
     """
 
     def __init__(self, api_key, timeout=30,
-                 total_retries=5, backoff_factor=30):
+                 total_retries=5, backoff_factor=2):
         super().__init__()
         self.headers.update(
             {"Authorization": "Bearer " + api_key})
