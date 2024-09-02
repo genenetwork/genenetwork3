@@ -23,8 +23,8 @@ class DocIDs():
         * sugar_doc_ids:  open doc_ids for diabetes references
         """
         self.doc_ids = load_file("doc_ids.json", BASEDIR)
-        self.sugar_doc_ids = load_file("all_files.json", BASEDIR)
-        self.format_doc_ids(self.sugar_doc_ids)
+        sugar_doc_ids = load_file("all_files.json", BASEDIR)
+        self.format_doc_ids(sugar_doc_ids)
 
     def format_doc_ids(self, docs):
         """method to format doc_ids for list items doc_id and doc_name"""
