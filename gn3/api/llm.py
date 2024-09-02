@@ -75,12 +75,11 @@ def rate_queries(task_id):
               PRIMARY KEY(task_id))"""
         cursor.execute(create_table)
         cursor.execute("""INSERT INTO Rating(user_id, query,
-        answer, weight, task_id, created_at)
-        VALUES(?, ?, ?, ?, ?, ?)
+        answer, weight, task_id)
+        VALUES(?, ?, ?, ?, ?)
         ON CONFLICT(task_id) DO UPDATE SET
         weight=excluded.weight
-        """, (str(user_id), query, answer, weight, task_id,
-              datetime.now(timezone.utc)))
+        """, (str(user_id), query, answer, weight, task_id))
         return {
            "message": "You have successfully rated this query.Thank you!"
         }, 200
