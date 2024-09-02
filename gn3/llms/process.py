@@ -19,8 +19,8 @@ class DocIDs():
     def __init__(self):
         """
         init method for Docids
-        * doc_ids.json: opens doc)ids for gn references
-        * sugar_doc_ids:  open doci_ids for diabetes references
+        * doc_ids.json: open doc_ids for gn references
+        * sugar_doc_ids:  open doc_ids for diabetes references
         """
         self.doc_ids = load_file("doc_ids.json", BASEDIR)
         self.sugar_doc_ids = load_file("all_files.json", BASEDIR)
