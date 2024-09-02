@@ -9,7 +9,7 @@ class MissingDBDataException(Exception):
     """Error due to DB missing some data"""
 
 
-def get_latest_comment(connection, comment_id: str) -> int:
+def get_latest_comment(connection, comment_id: int) -> int:
     """ Latest comment is one with the highest versionId """
     cursor = connection.cursor(DictCursor)
     query = """ SELECT versionId AS version, symbol, PubMed_ID AS pubmed_ids, sp.Name AS species,
@@ -19,7 +19,7 @@ def get_latest_comment(connection, comment_id: str) -> int:
 		WHERE gr.Id = %s
 		ORDER BY versionId DESC LIMIT 1;
     """
-    cursor.execute(query, (comment_id,))
+    cursor.execute(query, (str(comment_id),))
     result = cursor.fetchone()
     result["pubmed_ids"] = [x.strip() for x in result["pubmed_ids"].split()]
     categories_query = """
