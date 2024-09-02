@@ -119,19 +119,24 @@ CONSTRUCT {
          dct:hasVersion ?version ;
          dct:identifier $comment_id ;
          dct:identifier ?id_ .
-    OPTIONAL { ?uid gnt:reason ?reason } .
+    OPTIONAL { ?uid gnt:reason ?reason_ } .
     OPTIONAL {
         ?uid gnt:belongsToSpecies ?speciesId .
-        ?speciesId gnt:shortName ?species .
+        ?speciesId gnt:shortName ?species_ .
     } .
-    OPTIONAL { ?uid dct:references ?pubmedId . } .
-    OPTIONAL { ?uid foaf:homepage ?weburl . } .
-    OPTIONAL { ?uid gnt:initial ?usercode . } .
-    OPTIONAL { ?uid foaf:mbox ?email . } .
-    OPTIONAL { ?uid gnt:belongsToCategory ?category . } .
+    OPTIONAL { ?uid dct:references ?pmid . } .
+    OPTIONAL { ?uid foaf:homepage ?weburl_ . } .
+    OPTIONAL { ?uid gnt:initial ?usercode_ . } .
+    OPTIONAL { ?uid foaf:mbox ?email_ . } .
+    OPTIONAL { ?uid gnt:belongsToCategory ?category_ . } .
     BIND (str(?version) AS ?versionId) .
-    BIND (str(?pubmedId) AS ?pmid) .
     BIND (str(?createTime) AS ?created) .
+    BIND (COALESCE(?reason_, "") AS ?reason) .
+    BIND (COALESCE(?weburl_, "") AS ?weburl) .
+    BIND (COALESCE(?usercode_, "") AS ?usercode) .
+    BIND (COALESCE(?email_, "") AS ?email) .
+    BIND (COALESCE(?species_, "") AS ?species) .
+    BIND (COALESCE(?category_, "") AS ?category) .
 } ORDER BY DESC(?version) DESC(?createTime)
 """).substitute(prefix=RDF_PREFIXES, comment_id=comment_id)
     results = query_frame_and_compact(
