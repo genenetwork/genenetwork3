@@ -137,7 +137,7 @@ CONSTRUCT {
     BIND (COALESCE(?email_, "") AS ?email) .
     BIND (COALESCE(?species_, "") AS ?species) .
     BIND (COALESCE(?category_, "") AS ?category) .
-} ORDER BY DESC(?version) DESC(?createTime)
+}
 """).substitute(prefix=RDF_PREFIXES, comment_id=comment_id)
     results = query_frame_and_compact(
         query, WIKI_CONTEXT,
@@ -158,4 +158,9 @@ CONSTRUCT {
         else:
             result["pubmed_ids"] = []
         result["version"] = int(result["version"])
+    # We manually sort the array, since somehow "ORDER BY" in the
+    # sparql query is jumbled up during framing and compacting.  This
+    # operation isn't heavy since we don't get many versions per wiki
+    # entry.
+    results["data"] = sorted(data, key=lambda d: d["version"], reverse=True)
     return results
