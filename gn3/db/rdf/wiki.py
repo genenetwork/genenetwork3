@@ -109,7 +109,6 @@ CONSTRUCT {
          gnt:initial ?usercode ;
          gnt:belongsToCategory ?category ;
          gnt:hasVersion ?versionId ;
-         rdf:type gnc:GNWikiEntry ;
          dct:created ?created .
 } WHERE {
     ?symbolId rdfs:label ?symbolName .
