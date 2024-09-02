@@ -143,4 +143,19 @@ CONSTRUCT {
         query, WIKI_CONTEXT,
         sparql_uri
     )
+    data = results.get("data")
+    for result in data:
+        categories = result.get("categories")
+        if categories and isinstance(categories, str):
+            result["categories"] = [categories]
+        else:
+            result["categories"] = []
+        pmids = result.get("pubmed_ids")
+        if pmids and isinstance(pmids, str):
+            result["pubmed_ids"] = [pmids]
+        elif pmids:
+            result["pubmed_ids"] = [int(pmid) for pmid in pmids]
+        else:
+            result["pubmed_ids"] = []
+        result["version"] = int(result["version"])
     return results
