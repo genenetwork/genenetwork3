@@ -94,10 +94,8 @@ def load_file(filename, dir_path):
         dir_path:  base directory for the file
     Returns: json data read to a dict
     """
-    file_path = os.path.join(dir_path, f"{filename}")
-    if not os.path.isfile(file_path):
-        raise FileNotFoundError(f"{filename} was not found or is a directory")
-    with open(file_path, "rb") as file_handler:
+    with open(os.path.join(dir_path, f"{filename}"),
+              "rb") as file_handler:
         return json.load(file_handler)
 
 
