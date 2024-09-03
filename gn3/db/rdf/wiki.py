@@ -145,11 +145,9 @@ CONSTRUCT {
     )
     data = results.get("data")
     for result in data:
-        categories = result.get("categories")
+        categories = result.get("categories") or []
         if categories and isinstance(categories, str):
             result["categories"] = [categories]
-        else:
-            result["categories"] = []
         pmids = result.get("pubmed_ids")
         if pmids and isinstance(pmids, str):
             result["pubmed_ids"] = [pmids]
