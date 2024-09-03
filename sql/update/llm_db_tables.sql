@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS history (
     user_id TEXT NOT NULL,
     task_id TEXT NOT NULL,
     query TEXT NOT NULL,
-    results TEXT,
+    results JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (task_id)
 ) WITHOUT ROWID;
