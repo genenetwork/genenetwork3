@@ -1,4 +1,5 @@
 """Test cases for procedures defined in llms """
+# pylint: disable=C0301
 import pytest
 from gn3.llms.process import fetch_pubmed
 from gn3.llms.process import parse_context
@@ -36,6 +37,7 @@ def test_parse_context():
 
 @pytest.mark.unit_test
 def test_format_bib_info():
+    """Test for formatting bibliography info """
     mock_fahamu_bib_info = [
          {
              "author": "J.m",
@@ -52,17 +54,17 @@ def test_format_bib_info():
         "2015 - Differential regional and cellular distribution of TFF3 peptide in the human brain"
     ]
 
-    assert all([format_bibliography_info(data) == expected
+    assert all((format_bibliography_info(data) == expected
                 for data, expected
-                in zip(mock_fahamu_bib_info, expected_result)])
+                in zip(mock_fahamu_bib_info, expected_result)))
 
 
 @pytest.mark.unit_test
 def test_fetching_pubmed_info(monkeypatch):
-
-    def mock_load_file(filename, dir_path):
+    """Test for fetching and populating pubmed data with pubmed info"""
+    def mock_load_file(_filename, _dir_path):
         return {
-            "12121" : {
+            "12121": {
                 "Abstract": "items1",
                 "Author": "A1"
             }
@@ -83,22 +85,22 @@ def test_fetching_pubmed_info(monkeypatch):
         },
         {
             "title": "Aging",
-            "year" : "2014",
+            "year": "2014",
             "doc_id": "12122"
         }
     ]
 
-    data =  [        {
+    data = [{
             "title": "Genes",
             "year": "2014",
             "doi": "https/article/genes/12121",
             "doc_id": "12121",
-        },
-        {
+            },
+            {
             "title": "Aging",
-            "year" : "2014",
+            "year": "2014",
             "doc_id": "12122"
-        }]
+            }]
 
     assert (fetch_pubmed(data, "/pubmed.json",  "data/")
             == expected_results)
