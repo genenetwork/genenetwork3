@@ -1,7 +1,7 @@
 """Test cases for procedures defined in llms """
 import pytest
 from gn3.llms.process import parse_context
-
+from gn3.llms.process import format_bibliography_info
 
 
 @pytest.mark.unit_test
@@ -32,3 +32,25 @@ def test_parse_context():
     ]
 
     assert parsed_result == expected_result
+
+@pytest.mark.unit_test
+def test_format_bib_info():
+    mock_fahamu_bib_info = [
+         {
+             "author": "J.m",
+             "firstName": "john",
+             "title": "Genes and aging",
+             "year": 2013,
+             "doi": "https://Articles.com/12231"
+         },
+         "2019-Roy-Evaluation of Sirtuin-3 probe quality and co-expressed genes",
+         "2015 - Differential regional and cellular distribution of TFF3 peptide in the human brain.txt"]
+    expected_result = [
+        "J.m.Genes and aging.2013.https://Articles.com/12231 ",
+        "2019-Roy-Evaluation of Sirtuin-3 probe quality and co-expressed genes",
+        "2015 - Differential regional and cellular distribution of TFF3 peptide in the human brain"
+    ]
+
+    assert all([format_bibliography_info(data) == expected
+                for data, expected
+                in zip(mock_fahamu_bib_info, expected_result)])
