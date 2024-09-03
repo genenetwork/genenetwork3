@@ -1,6 +1,5 @@
 """Api endpoints for gnqa"""
 import json
-from datetime import datetime, timezone
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify

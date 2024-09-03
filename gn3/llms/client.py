@@ -2,8 +2,6 @@
 # pylint: disable=C0301
 import json
 import time
-
-import requests
 from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.adapters import Retry
