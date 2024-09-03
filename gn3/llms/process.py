@@ -41,13 +41,10 @@ class DocIDs():
         Args:
             doc_id: str: a search key for doc_ids
         Returns:
-              an object with doc_info if doc_id in doc_ids
+              an object if doc id exists else
+              raises a KeyError
         """
-        if doc_id in self.doc_ids.keys():
-            return self.doc_ids[doc_id]
-        else:
-            return doc_id
-
+        return self.doc_ids[doc_id]
 
 def format_bibliography_info(bib_info):
     """Utility function for formatting bibliography info
@@ -74,9 +71,11 @@ def parse_context(context, get_info_func, format_bib_func):
         combo_txt = ""
         for entry in summary:
             combo_txt += "\t" + entry["text"]
-        doc_info = get_info_func(doc_ids)
-        bib_info = doc_ids if doc_ids == doc_info else format_bib_func(
-            doc_info)
+        try:
+            doc_info = get_info_func(doc_ids)
+            bib_info = format_bib_func(doc_info)
+        except KeyError:
+            bib_info = doc_ids
         pattern = r'(https?://|www\.)[\w.-]+(\.[a-zA-Z]{2,})([/\w.-]*)*'
         combo_text = re.sub(pattern,
                             lambda x: f"<a href='{x[0]}' target=_blank> {x[0]} </a>",
