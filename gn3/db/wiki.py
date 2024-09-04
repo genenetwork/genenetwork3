@@ -21,14 +21,14 @@ def get_latest_comment(connection, comment_id: int) -> int:
     """
     cursor.execute(query, (str(comment_id),))
     result = cursor.fetchone()
-    result["pubmed_ids"] = [x.strip() for x in result["pubmed_ids"].split()]
+    result["pubmed_ids"] = [x.strip() for x in result.get("pubmed_ids", "").split()]
     categories_query = """
         SELECT grx.GeneRIFId, grx.versionId, gc.Name FROM GeneRIFXRef grx
                 INNER JOIN GeneCategory gc ON grx.GeneCategoryId=gc.Id
                 WHERE GeneRIFId = %s AND versionId=%s;
     """
 
-    cursor.execute(categories_query, (comment_id, result["version"]))
+    cursor.execute(categories_query, (str(comment_id), result["version"]))
     categories = cursor.fetchall()
     result["categories"] = [x["Name"] for x in categories]
     return result
