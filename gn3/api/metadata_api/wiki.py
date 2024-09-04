@@ -2,6 +2,7 @@
 
 import datetime
 from typing import Any, Dict
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from flask import Blueprint, request, jsonify, current_app, make_response
 from gn3 import db_utils
 from gn3.db import wiki
@@ -13,6 +14,7 @@ wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
 
 
 @wiki_blueprint.route("/<int:comment_id>/edit", methods=["POST"])
+@require_oauth("profile")
 def edit_wiki(comment_id: int):
     """Edit wiki comment. This is achieved by adding another entry with a new VersionId"""
     # FIXME: attempt to check and fix for types here with relevant errors
