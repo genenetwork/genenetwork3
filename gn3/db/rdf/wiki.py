@@ -156,9 +156,13 @@ CONSTRUCT {
         else:
             result["pubmed_ids"] = []
         result["version"] = int(result["version"])
-    # We manually sort the array, since somehow "ORDER BY" in the
-    # sparql query is jumbled up during framing and compacting.  This
-    # operation isn't heavy since we don't get many versions per wiki
-    # entry.
+
+    # We manually sort the array, since the SPARQL engine does not
+    # provide a guarantee that it will support an ORDER BY clause in a
+    # CONSTRUCT. Using ORDER BY on a solution sequence for a CONSTRUCT
+    # or DESCRIBE query has no direct effect because only SELECT
+    # returns a sequence of results.  See:
+    # <https://stackoverflow.com/questions/78186393>
+    # <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
     results["data"] = sorted(data, key=lambda d: d["version"], reverse=True)
     return results
