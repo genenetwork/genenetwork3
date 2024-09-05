@@ -1,5 +1,7 @@
 """Api endpoints for gnqa"""
 import json
+from datetime import datetime
+
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
@@ -94,15 +96,18 @@ def get_user_search_records():
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         cursor = conn.cursor()
         cursor.execute(
-            """SELECT task_id,query from history WHERE user_id=?""",
+            """SELECT task_id, query, created_at from history WHERE user_id=?""",
             (str(token.user.user_id),))
-        return jsonify([dict(item) for item in cursor.fetchall()])
+        results = [dict(item) for item in cursor.fetchall()]
+        return jsonify(sorted(results, reverse=True,
+                       key=lambda x: datetime.strptime(x.get("created_at"),
+                                                       '%Y-%m-%d %H:%M:%S')))
 
 
 @gnqa.route("/search/record/<task_id>", methods=["GET"])
 @require_oauth("profile user")
 def get_user_record_by_task(task_id):
-    """Get user record by task id """
+    """Get user previous search record by task id """
     with (require_oauth.acquire("profile user") as token,
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         cursor = conn.cursor()
@@ -120,7 +125,7 @@ def get_user_record_by_task(task_id):
 @gnqa.route("/search/record/<task_id>", methods=["DELETE"])
 @require_oauth("profile user")
 def delete_record(task_id):
-    """Delete user record by task-id"""
+    """Delete user previous seach record by task-id"""
     with (require_oauth.acquire("profile user") as token,
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         cursor = conn.cursor()
