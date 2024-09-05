@@ -84,32 +84,62 @@ def rate_queries(task_id):
         }, 200
 
 
-@gnqa.route("/history", methods=["GET", "DELETE"])
+@gnqa.route("/search/records", methods=["GET"])
 @require_oauth("profile user")
-def fetch_prev_history():
-    """Api endpoint to fetch GNQA previous search."""
+def get_user_search_records():
+    """get all  history records for a given user using their
+    user id
+    """
     with (require_oauth.acquire("profile user") as token,
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         cursor = conn.cursor()
-        if request.method == "DELETE":
-            task_ids = list(request.json.values())
-            query = """DELETE FROM history
-            WHERE task_id IN ({})
-            and user_id=?""".format(",".join("?" * len(task_ids)))
-            cursor.execute(query, (*task_ids, str(token.user.user_id),))
-            return jsonify({})
-        elif (request.method == "GET" and
-              request.args.get("search_term")):
-            cursor.execute(
-                """SELECT results from history
-                Where task_id=? and user_id=?""",
-                (request.args.get("search_term"),
-                 str(token.user.user_id),))
-            record = cursor.fetchone()
-            if record:
-                return dict(record).get("results")
-            return {}
         cursor.execute(
             """SELECT task_id,query from history WHERE user_id=?""",
             (str(token.user.user_id),))
         return jsonify([dict(item) for item in cursor.fetchall()])
+
+
+@gnqa.route("/search/record/<task_id>", methods=["GET"])
+@require_oauth("profile user")
+def get_user_record_by_task(task_id):
+    """Get user record by task id """
+    with (require_oauth.acquire("profile user") as token,
+          db.connection(current_app.config["LLM_DB_PATH"]) as conn):
+        cursor = conn.cursor()
+        cursor.execute(
+            """SELECT results from history
+            Where task_id=? and user_id=?""",
+            (task_id,
+             str(token.user.user_id),))
+        record = cursor.fetchone()
+        if record:
+            return dict(record).get("results")
+        return {}
+
+
+@gnqa.route("/search/record/<task_id>", methods=["DELETE"])
+@require_oauth("profile user")
+def delete_record(task_id):
+    """Delete user record by task-id"""
+    with (require_oauth.acquire("profile user") as token,
+          db.connection(current_app.config["LLM_DB_PATH"]) as conn):
+        cursor = conn.cursor()
+        query = """DELETE FROM history
+        WHERE task_id=? and user_id=?"""
+        cursor.execute(query, (task_id, token.user.user_id,))
+        return {"msg": f"Successfully Deleted the task {task_id}"}
+
+
+@gnqa.route("/search/records", methods=["DELETE"])
+@require_oauth("profile user")
+def delete_records():
+    """ Delete a users records using for all given task ids"""
+    with (require_oauth.acquire("profile user") as token,
+          db.connection(current_app.config["LLM_DB_PATH"]) as conn):
+        task_ids = list(request.json.values())
+        cursor = conn.cursor()
+        query = """DELETE FROM history
+        WHERE task_id IN ({})
+        and user_id=?""".format(",".join("?" * len(task_ids)))
+        cursor.execute(query, (*task_ids, str(token.user.user_id),))
+        return jsonify({})
