@@ -19,7 +19,7 @@ gnqa = Blueprint("gnqa", __name__)
 @gnqa.route("/search", methods=["PUT"])
 def search():
     """Api  endpoint for searching queries in fahamu Api"""
-    query = request.json.get("querygnqa", "")
+    query = request.args.get("query", "")
     if not query:
         return jsonify({"error": "querygnqa is missing in the request"}), 400
     fahamu_token = current_app.config.get("FAHAMU_AUTH_TOKEN")
