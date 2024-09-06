@@ -1,25 +1,54 @@
 """this module contains code for processing response from fahamu client.py"""
+# pylint: disable=C0301
 import os
+import re
 import string
 import json
-
-from urllib.parse import urljoin
-from urllib.parse import quote
 import logging
-import requests
+from urllib.parse import quote
 
 from gn3.llms.client import GeneNetworkQAClient
-from gn3.llms.response import DocIDs
 
 
 BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
-# pylint: disable=C0301
+class DocIDs():
+    """ Class Method to Parse document id and names from files"""
+    def __init__(self):
+        """
+        init method for Docids
+        * doc_ids.json: open doc_ids for gn references
+        * sugar_doc_ids:  open doc_ids for diabetes references
+        """
+        self.doc_ids = load_file("doc_ids.json", BASEDIR)
+        sugar_doc_ids = load_file("all_files.json", BASEDIR)
+        self.format_doc_ids(sugar_doc_ids)
 
+    def format_doc_ids(self, docs):
+        """method to format doc_ids for list items doc_id and doc_name"""
+        for _key, val in docs.items():
+            if isinstance(val, list):
+                for doc_obj in val:
+                    doc_name = doc_obj["filename"].removesuffix(".pdf").removesuffix(".txt").replace("_", "")
+                    self.doc_ids.update({doc_obj["id"]:  doc_name})
+
+    def get_info(self, doc_id):
+        """ interface to make read from doc_ids
+           and extract info data  else returns
+           doc_id
+        Args:
+            doc_id: str: a search key for doc_ids
+        Returns:
+              an object if doc id exists else
+              raises a KeyError
+        """
+        return self.doc_ids[doc_id]
 
 def format_bibliography_info(bib_info):
-    """Function for formatting bibliography info"""
+    """Utility function for formatting bibliography info
+    """
     if isinstance(bib_info, str):
         return bib_info.removesuffix('.txt')
     elif isinstance(bib_info, dict):
@@ -27,58 +56,62 @@ def format_bibliography_info(bib_info):
     return bib_info
 
 
-def filter_response_text(val):
-    """helper function for filtering non-printable chars"""
-    return json.loads(''.join([str(char)
-                               for char in val if char in string.printable]))
-
-
 def parse_context(context, get_info_func, format_bib_func):
-    """function to parse doc_ids content"""
+    """Function to parse doc_ids content
+     Args:
+         context: raw references from  fahamu api
+         get_info_func: function to get doc_ids info
+         format_bib_func:  function to foramt bibliography info
+    Returns:
+          an list with each item having (doc_id,bib_info,
+          combined reference text)
+    """
     results = []
     for doc_ids, summary in context.items():
         combo_txt = ""
         for entry in summary:
             combo_txt += "\t" + entry["text"]
-        doc_info = get_info_func(doc_ids)
-        bib_info = doc_ids if doc_ids == doc_info else format_bib_func(
-            doc_info)
+        try:
+            doc_info = get_info_func(doc_ids)
+            bib_info = format_bib_func(doc_info)
+        except KeyError:
+            bib_info = doc_ids
+        pattern = r'(https?://|www\.)[\w.-]+(\.[a-zA-Z]{2,})([/\w.-]*)*'
+        combo_text = re.sub(pattern,
+                            lambda x: f"<a href='{x[0]}' target=_blank> {x[0]} </a>",
+                            combo_txt)
         results.append(
-            {"doc_id": doc_ids, "bibInfo": bib_info, "comboTxt": combo_txt})
+            {"doc_id": doc_ids, "bibInfo": bib_info,
+             "comboTxt": combo_text})
     return results
 
 
-def rate_document(task_id, doc_id, rating, auth_token):
-    """This method is used to provide feedback for a document by making a rating."""
-    # todo move this to clients
-    try:
-        url = urljoin(BASE_URL,
-                      f"""/feedback?task_id={task_id}&document_id={doc_id}&feedback={rating}""")
-        headers = {"Authorization": f"Bearer {auth_token}"}
-
-        resp = requests.post(url, headers=headers)
-        resp.raise_for_status()
-
-        return {"status": "success", **resp.json()}
-    except requests.exceptions.HTTPError as http_error:
-        raise RuntimeError(f"HTTP Error Occurred:\
-            {http_error.response.text} -with status code- {http_error.response.status_code}") from http_error
-    except Exception as error:
-        raise RuntimeError(f"An error occurred: {str(error)}") from error
-
-
 def load_file(filename, dir_path):
-    """function to open and load json file"""
-    file_path = os.path.join(dir_path, f"{filename}")
-    if not os.path.isfile(file_path):
-        raise FileNotFoundError(f"{filename} was not found or is a directory")
-    with open(file_path, "rb") as file_handler:
+    """Utility function to read json file
+    Args:
+        filename:  file name to read
+        dir_path:  base directory for the file
+    Returns: json data read to a dict
+    """
+    with open(os.path.join(dir_path, f"{filename}"),
+              "rb") as file_handler:
         return json.load(file_handler)
 
 
 def fetch_pubmed(references, file_name, data_dir=""):
-    """method to fetch and populate references with pubmed"""
+    """
+    Fetches PubMed data from a JSON file and populates the\
+    references dictionary.
 
+    Args:
+        references (dict): Dictionary with document IDs as keys\
+    and reference data as values.
+        filename (str): Name of the JSON file containing PubMed data.
+        data_dir (str): Base directory where the data files are located.
+
+    Returns:
+        dict: Updated references dictionary populated with the PubMed data.
+    """
     try:
         pubmed = load_file(file_name, os.path.join(data_dir, "gn-meta/lit"))
         for reference in references:
@@ -92,44 +125,27 @@ def fetch_pubmed(references, file_name, data_dir=""):
         return references
 
 
-def get_gnqa(query, auth_token, tmp_dir=""):
-    """entry function for the gn3 api endpoint()"""
-
-    api_client = GeneNetworkQAClient(requests.Session(), api_key=auth_token)
-    res, task_id = api_client.ask('?ask=' + quote(query), auth_token)
-    if task_id == 0:
-        raise RuntimeError(f"Error connecting to Fahamu Api: {str(res)}")
-    res, success = api_client.get_answer(task_id)
-    if success == 1:
-        resp_text = filter_response_text(res.text)
-        if resp_text.get("data") is None:
-            return task_id, "Please try to rephrase your question to receive feedback", []
-        answer = resp_text['data']['answer']
-        context = resp_text['data']['context']
-        references = parse_context(
-            context, DocIDs().getInfo, format_bibliography_info)
-        references = fetch_pubmed(references, "pubmed.json", tmp_dir)
-
-        return task_id, answer, references
-    else:
-        return task_id, "Please try to rephrase your question to receive feedback", []
-
-
-def fetch_query_results(query, user_id, redis_conn):
-    """this method fetches prev user query searches"""
-    result = redis_conn.get(f"LLM:{user_id}-{query}")
-    if result:
-        return json.loads(result)
-    return {
-        "query": query,
-        "answer": "Sorry No answer for you",
-        "references": [],
-        "task_id": None
-    }
-
-
-def get_user_queries(user_id, redis_conn):
-    """methos to fetch all queries for a specific user"""
-
-    results = redis_conn.keys(f"LLM:{user_id}*")
-    return [query for query in [result.partition("-")[2] for result in results] if query != ""]
+def get_gnqa(query, auth_token, data_dir=""):
+    """entry function for the gn3 api endpoint()
+    ARGS:
+         query: what is  a gene
+         auth_token: token to connect to api_client
+         data_dir:  base datirectory for gn3 data
+    Returns:
+         task_id: fahamu unique identifier for task
+         answer
+         references: contains doc_name,reference,pub_med_info
+    """
+    api_client = GeneNetworkQAClient(api_key=auth_token)
+    res, task_id = api_client.ask('?ask=' + quote(query), query=query)
+    res, _status = api_client.get_answer(task_id)
+    resp_text = json.loads(''.join([str(char)
+                           for char in res.text if char in string.printable]))
+    answer = re.sub(r'(https?://|www\.)[\w.-]+(\.[a-zA-Z]{2,})([/\w.-]*)*',
+                    lambda x: f"<a href='{x[0]}' target=_blank> {x[0]} </a>",
+                    resp_text["data"]["answer"])
+    context = resp_text['data']['context']
+    return task_id, answer, fetch_pubmed(parse_context(
+                            context, DocIDs().get_info,
+                            format_bibliography_info),
+                            "pubmed.json", data_dir)

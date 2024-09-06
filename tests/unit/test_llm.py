@@ -1,10 +1,9 @@
-# pylint: disable=unused-argument
-"""Test cases for procedures defined in llms module"""
-from dataclasses import dataclass
+"""Test cases for procedures defined in llms """
+# pylint: disable=C0301
 import pytest
-from gn3.llms.process import get_gnqa
+from gn3.llms.process import fetch_pubmed
 from gn3.llms.process import parse_context
-
+from gn3.llms.process import format_bibliography_info
 
 
 @pytest.mark.unit_test
@@ -36,67 +35,72 @@ def test_parse_context():
 
     assert parsed_result == expected_result
 
+@pytest.mark.unit_test
+def test_format_bib_info():
+    """Test for formatting bibliography info """
+    mock_fahamu_bib_info = [
+         {
+             "author": "J.m",
+             "firstName": "john",
+             "title": "Genes and aging",
+             "year": 2013,
+             "doi": "https://Articles.com/12231"
+         },
+         "2019-Roy-Evaluation of Sirtuin-3 probe quality and co-expressed genes",
+         "2015 - Differential regional and cellular distribution of TFF3 peptide in the human brain.txt"]
+    expected_result = [
+        "J.m.Genes and aging.2013.https://Articles.com/12231 ",
+        "2019-Roy-Evaluation of Sirtuin-3 probe quality and co-expressed genes",
+        "2015 - Differential regional and cellular distribution of TFF3 peptide in the human brain"
+    ]
 
-@dataclass(frozen=True)
-class MockResponse:
-    """mock a response  object"""
-    text: str
-
-    def __getattr__(self, name: str):
-        return self.__dict__[f"_{name}"]
-
-
-class MockGeneNetworkQAClient:
-    """mock the GeneNetworkQAClient class"""
-
-    def __init__(self, session, api_key):
-        pass
-
-    def ask(self, query, auth_token):
-        """mock method for ask query"""
-        # Simulate the ask method
-        return MockResponse("Mock response"), "F400995EAFE104EA72A5927CE10C73B7"
-
-    def get_answer(self, task_id):
-        """mock  get_answer method"""
-        return MockResponse("Mock answer"), 1
-
-
-def mock_filter_response_text(text):
-    """ method to simulate the filterResponseText method"""
-    return {"data": {"answer": "Mock answer for what is a gene", "context": {}}}
-
-
-def mock_parse_context(context, get_info_func, format_bib_func):
-    """method to simulate the  parse context method"""
-    return []
+    assert all((format_bibliography_info(data) == expected
+                for data, expected
+                in zip(mock_fahamu_bib_info, expected_result)))
 
 
 @pytest.mark.unit_test
-def test_get_gnqa(monkeypatch):
-    """test for process.get_gnqa functoin"""
-    monkeypatch.setattr(
-        "gn3.llms.process.GeneNetworkQAClient",
-        MockGeneNetworkQAClient
-    )
+def test_fetching_pubmed_info(monkeypatch):
+    """Test for fetching and populating pubmed data with pubmed info"""
+    def mock_load_file(_filename, _dir_path):
+        return {
+            "12121": {
+                "Abstract": "items1",
+                "Author": "A1"
+            }
+        }
+    # patch the module with the mocked function
 
-    monkeypatch.setattr(
-        'gn3.llms.process.filter_response_text',
-        mock_filter_response_text
-    )
-    monkeypatch.setattr(
-        'gn3.llms.process.parse_context',
-        mock_parse_context
-    )
+    monkeypatch.setattr("gn3.llms.process.load_file", mock_load_file)
+    expected_results = [
+        {
+            "title": "Genes",
+            "year": "2014",
+            "doi": "https/article/genes/12121",
+            "doc_id": "12121",
+            "pubmed": {
+                "Abstract": "items1",
+                "Author": "A1"
+            }
+        },
+        {
+            "title": "Aging",
+            "year": "2014",
+            "doc_id": "12122"
+        }
+    ]
 
-    query = "What is a gene"
-    auth_token = "test_token"
-    result = get_gnqa(query, auth_token)
+    data = [{
+            "title": "Genes",
+            "year": "2014",
+            "doi": "https/article/genes/12121",
+            "doc_id": "12121",
+            },
+            {
+            "title": "Aging",
+            "year": "2014",
+            "doc_id": "12122"
+            }]
 
-    expected_result = (
-        "F400995EAFE104EA72A5927CE10C73B7",
-        'Mock answer for what is a gene',
-        []
-    )
-
-    assert result == expected_result
+    assert (fetch_pubmed(data, "/pubmed.json",  "data/")
+            == expected_results)

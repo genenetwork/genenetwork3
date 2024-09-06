@@ -25,7 +25,7 @@ from gn3.api.menu import menu
 from gn3.api.search import search
 from gn3.api.metadata import metadata
 from gn3.api.sampledata import sampledata
-from gn3.api.llm import GnQNA
+from gn3.api.llm import gnqa
 from gn3.auth import oauth2
 from gn3.case_attributes import caseattr
 
@@ -78,7 +78,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(sampledata, url_prefix="/api/sampledata")
     app.register_blueprint(oauth2, url_prefix="/api/oauth2")
     app.register_blueprint(caseattr, url_prefix="/api/case-attribute")
-    app.register_blueprint(GnQNA, url_prefix="/api/llm")
+    app.register_blueprint(gnqa, url_prefix="/api/llm")
 
     register_error_handlers(app)
     return app
