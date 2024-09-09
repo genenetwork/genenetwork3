@@ -1,5 +1,13 @@
 """Sparql queries to get metadata about WIKI and RIF metadata.
 
+NOTE: In the CONSTRUCT queries below, we manually sort the arrays from
+ the result of a CONSTRUCT.  This is because the SPARQL engine does
+ not provide a guarantee that it will support an ORDER BY clause in a
+ CONSTRUCT. Using ORDER BY on a solution sequence for a CONSTRUCT or
+ DESCRIBE query has no direct effect because only SELECT returns a
+ sequence of results.  See:
+   <https://stackoverflow.com/questions/78186393>
+   <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
 """
 from string import Template
 from gn3.db.rdf import (BASE_CONTEXT, RDF_PREFIXES,
@@ -104,6 +112,7 @@ CONSTRUCT {
     )
     data = [__sanitize_result(result)
             for result in results.get("data")]
+    # See note above in the doc-string
     results["data"] = sorted(data, key=lambda d: d["created"])
     if not data:
         return results
@@ -163,12 +172,6 @@ CONSTRUCT {
     )
     data = [__sanitize_result(result)
             for result in results.get("data")]
-    # We manually sort the array, since the SPARQL engine does not
-    # provide a guarantee that it will support an ORDER BY clause in a
-    # CONSTRUCT. Using ORDER BY on a solution sequence for a CONSTRUCT
-    # or DESCRIBE query has no direct effect because only SELECT
-    # returns a sequence of results.  See:
-    # <https://stackoverflow.com/questions/78186393>
-    # <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
+    # See note above in the doc-string
     results["data"] = sorted(data, key=lambda d: d["version"], reverse=True)
     return results
