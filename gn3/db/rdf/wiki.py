@@ -21,10 +21,6 @@ WIKI_CONTEXT = BASE_CONTEXT | {
     "comment": "rdfs:comment",
     "created": "dct:created",
     "id": "dct:identifier",
-    # This points to the RDF Node which is the unique identifier
-    # for this triplet.  It's constructed using the comment-id and
-    # the comment-versionId
-    "wiki_identifier": "@id",
 }
 
 
@@ -36,51 +32,53 @@ def get_wiki_entries_by_symbol(symbol: str, sparql_uri: str) -> dict:
 $prefix
 
 CONSTRUCT {
-    ?uid rdfs:label ?symbolName;
-         gnt:reason ?reason ;
-         gnt:species ?species ;
-         dct:references ?pmid ;
-         foaf:homepage ?weburl ;
-         rdfs:comment ?comment ;
-         foaf:mbox ?email ;
-         gnt:initial ?usercode ;
-         gnt:belongsToCategory ?category ;
-         gnt:hasVersion ?versionId ;
-         dct:created ?created ;
-         dct:identifier ?identifier .
+    ?comment rdfs:label ?symbolName;
+             gnt:reason ?reason ;
+             gnt:species ?species ;
+             dct:references ?pmid ;
+             foaf:homepage ?weburl ;
+             rdfs:comment ?text ;
+             foaf:mbox ?email ;
+             gnt:initial ?usercode ;
+             gnt:belongsToCategory ?category ;
+             gnt:hasVersion ?max ;
+             dct:created ?created ;
+             dct:identifier ?id_ .
 } WHERE {
     ?symbolId rdfs:label ?symbolName .
-    ?uid rdfs:comment ?comment ;
-         gnt:symbol ?symbolId ;
-         rdf:type gnc:GNWikiEntry ;
-         dct:created ?createTime .
+    ?comment rdfs:label ?text_ ;
+             gnt:symbol ?symbolId ;
+             rdf:type gnc:GNWikiEntry ;
+             dct:identifier ?id_ ;
+             dct:created ?createTime .
     FILTER ( LCASE(?symbolName) = LCASE('$symbol') ) .
     {
         SELECT (MAX(?vers) AS ?max) ?id_ WHERE {
-            ?symbolId rdfs:label ?symbolName .
-            ?uid dct:identifier ?id_ ;
-                 dct:hasVersion ?vers ;
-                 dct:identifier ?id_ ;
-                 gnt:symbol ?symbolId .
-            FILTER ( LCASE(?symbolName) = LCASE('$symbol') ) .
+            ?comment dct:identifier ?id_ ;
+                     dct:hasVersion ?vers .
         }
     }
-    ?uid dct:hasVersion ?max ;
-         dct:identifier ?id_ .
-    OPTIONAL { ?uid gnt:reason ?reason } .
+    ?comment dct:hasVersion ?max .
+    OPTIONAL { ?comment gnt:reason ?reason_ } .
     OPTIONAL {
-        ?uid gnt:belongsToSpecies ?speciesId .
+        ?comment gnt:belongsToSpecies ?speciesId .
         ?speciesId gnt:shortName ?species .
     } .
-    OPTIONAL { ?uid dct:references ?pubmedId . } .
-    OPTIONAL { ?uid foaf:homepage ?weburl . } .
-    OPTIONAL { ?uid gnt:initial ?usercode . } .
-    OPTIONAL { ?uid foaf:mbox ?email . } .
-    OPTIONAL { ?uid gnt:belongsToCategory ?category . } .
-    BIND (str(?version) AS ?versionId) .
-    BIND (str(?id_) AS ?identifier) .
-    BIND (str(?pubmedId) AS ?pmid) .
+    OPTIONAL { ?comment dct:references ?pmid_ } .
+    OPTIONAL { ?comment foaf:homepage ?weburl_ } .
+    OPTIONAL { ?comment gnt:initial ?usercode_ } .
+    OPTIONAL { ?comment foaf:mbox ?email_ } .
+    OPTIONAL { ?comment gnt:belongsToCategory ?category_ } .
     BIND (str(?createTime) AS ?created) .
+    BIND (str(?text_) AS ?text) .
+    BIND (str(?version) AS ?versionId) .
+    BIND (STR(COALESCE(?pmid_, "")) AS ?pmid) .
+    BIND (COALESCE(?reason_, "") AS ?reason) .
+    BIND (STR(COALESCE(?weburl_, "")) AS ?weburl) .
+    BIND (COALESCE(?usercode_, "") AS ?usercode) .
+    BIND (STR(COALESCE(?email_, "")) AS ?email) .
+    BIND (COALESCE(?species_, "") AS ?species) .
+    BIND (COALESCE(?category_, "") AS ?category) .
 }
 """).substitute(prefix=RDF_PREFIXES, symbol=symbol,)
     results = query_frame_and_compact(
@@ -88,6 +86,18 @@ CONSTRUCT {
         sparql_uri
     )
     data = results.get("data")
+    for result in data:
+        categories = result.get("categories") or []
+        if categories and isinstance(categories, str):
+            result["categories"] = [categories]
+        pmids = result.get("pubmed_ids")
+        if pmids and isinstance(pmids, str):
+            result["pubmed_ids"] = [pmids]
+        elif pmids:
+            result["pubmed_ids"] = [int(pmid.split("/")[-1]) for pmid in pmids]
+        else:
+            result["pubmed_ids"] = []
+    results["data"] = sorted(data, key=lambda d: d["created"])
     if not data:
         return results
     return results
@@ -99,42 +109,43 @@ def get_comment_history(comment_id: int, sparql_uri: str) -> dict:
 $prefix
 
 CONSTRUCT {
-    ?uid rdfs:label ?symbolName ;
-         gnt:reason ?reason ;
-         gnt:species ?species ;
-         dct:references ?pmid ;
-         foaf:homepage ?weburl ;
-         rdfs:comment ?comment ;
-         foaf:mbox ?email ;
-         gnt:initial ?usercode ;
-         gnt:belongsToCategory ?category ;
-         gnt:hasVersion ?versionId ;
-         dct:created ?created .
+    ?comment rdfs:label ?symbolName ;
+             gnt:reason ?reason ;
+             gnt:species ?species ;
+             dct:references ?pmid ;
+             foaf:homepage ?weburl ;
+             rdfs:comment ?text ;
+             foaf:mbox ?email ;
+             gnt:initial ?usercode ;
+             gnt:belongsToCategory ?category ;
+             gnt:hasVersion ?version ;
+             dct:created ?created .
 } WHERE {
     ?symbolId rdfs:label ?symbolName .
-    ?uid rdf:type gnc:GNWikiEntry ;
-         rdfs:comment ?comment ;
-         gnt:symbol ?symbolId ;
-         dct:created ?createTime ;
-         dct:hasVersion ?version ;
-         dct:identifier $comment_id ;
-         dct:identifier ?id_ .
-    OPTIONAL { ?uid gnt:reason ?reason_ } .
+    ?comment rdf:type gnc:GNWikiEntry ;
+             rdfs:label ?text_ ;
+             gnt:symbol ?symbolId ;
+             dct:created ?createTime ;
+             dct:hasVersion ?version ;
+             dct:identifier $comment_id ;
+             dct:identifier ?id_ .
+    OPTIONAL { ?comment gnt:reason ?reason_ } .
     OPTIONAL {
-        ?uid gnt:belongsToSpecies ?speciesId .
+        ?comment gnt:belongsToSpecies ?speciesId .
         ?speciesId gnt:shortName ?species_ .
     } .
-    OPTIONAL { ?uid dct:references ?pmid . } .
-    OPTIONAL { ?uid foaf:homepage ?weburl_ . } .
-    OPTIONAL { ?uid gnt:initial ?usercode_ . } .
-    OPTIONAL { ?uid foaf:mbox ?email_ . } .
-    OPTIONAL { ?uid gnt:belongsToCategory ?category_ . } .
-    BIND (str(?version) AS ?versionId) .
+    OPTIONAL { ?comment dct:references ?pmid_ . } .
+    OPTIONAL { ?comment foaf:homepage ?weburl_ . } .
+    OPTIONAL { ?comment gnt:initial ?usercode_ . } .
+    OPTIONAL { ?comment foaf:mbox ?email_ . } .
+    OPTIONAL { ?comment gnt:belongsToCategory ?category_ . } .
+    BIND (str(?text_) AS ?text) .
     BIND (str(?createTime) AS ?created) .
+    BIND (STR(COALESCE(?pmid_, "")) AS ?pmid) .
     BIND (COALESCE(?reason_, "") AS ?reason) .
-    BIND (COALESCE(?weburl_, "") AS ?weburl) .
+    BIND (STR(COALESCE(?weburl_, "")) AS ?weburl) .
     BIND (COALESCE(?usercode_, "") AS ?usercode) .
-    BIND (COALESCE(?email_, "") AS ?email) .
+    BIND (STR(COALESCE(?email_, "")) AS ?email) .
     BIND (COALESCE(?species_, "") AS ?species) .
     BIND (COALESCE(?category_, "") AS ?category) .
 }
@@ -152,7 +163,7 @@ CONSTRUCT {
         if pmids and isinstance(pmids, str):
             result["pubmed_ids"] = [pmids]
         elif pmids:
-            result["pubmed_ids"] = [int(pmid) for pmid in pmids]
+            result["pubmed_ids"] = [int(pmid.split("/")[-1]) for pmid in pmids]
         else:
             result["pubmed_ids"] = []
         result["version"] = int(result["version"])
