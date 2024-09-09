@@ -24,6 +24,23 @@ WIKI_CONTEXT = BASE_CONTEXT | {
 }
 
 
+def __sanitize_result(result: dict):
+    """Make sure `categories` and `pubmed_ids` are always arrays
+
+    """
+    categories = result.get("categories")
+    if isinstance(categories, str):
+        result["categories"] = [categories] if categories else []
+    pmids = result.get("pubmed_ids")
+    if isinstance(pmids, str):
+        result["pubmed_ids"] = [pmids] if pmids else []
+    if isinstance(pmids, int):
+        result["pubmed_ids"] = [pmids]
+    result["pubmed_ids"] = [int(pmid.split("/")[-1]) if isinstance(pmid, str) else pmid
+                            for pmid in result["pubmed_ids"]]
+    return result
+
+
 def get_wiki_entries_by_symbol(symbol: str, sparql_uri: str) -> dict:
     """Fetch all the Wiki entries using the symbol"""
     # This query uses a sub-query to fetch the latest comment by the
@@ -85,18 +102,8 @@ CONSTRUCT {
         query, WIKI_CONTEXT,
         sparql_uri
     )
-    data = results.get("data")
-    for result in data:
-        categories = result.get("categories") or []
-        if categories and isinstance(categories, str):
-            result["categories"] = [categories]
-        pmids = result.get("pubmed_ids")
-        if pmids and isinstance(pmids, str):
-            result["pubmed_ids"] = [pmids]
-        elif pmids:
-            result["pubmed_ids"] = [int(pmid.split("/")[-1]) for pmid in pmids]
-        else:
-            result["pubmed_ids"] = []
+    data = [__sanitize_result(result)
+            for result in results.get("data")]
     results["data"] = sorted(data, key=lambda d: d["created"])
     if not data:
         return results
@@ -154,20 +161,8 @@ CONSTRUCT {
         query, WIKI_CONTEXT,
         sparql_uri
     )
-    data = results.get("data")
-    for result in data:
-        categories = result.get("categories") or []
-        if categories and isinstance(categories, str):
-            result["categories"] = [categories]
-        pmids = result.get("pubmed_ids")
-        if pmids and isinstance(pmids, str):
-            result["pubmed_ids"] = [pmids]
-        elif pmids:
-            result["pubmed_ids"] = [int(pmid.split("/")[-1]) for pmid in pmids]
-        else:
-            result["pubmed_ids"] = []
-        result["version"] = int(result["version"])
-
+    data = [__sanitize_result(result)
+            for result in results.get("data")]
     # We manually sort the array, since the SPARQL engine does not
     # provide a guarantee that it will support an ORDER BY clause in a
     # CONSTRUCT. Using ORDER BY on a solution sequence for a CONSTRUCT
