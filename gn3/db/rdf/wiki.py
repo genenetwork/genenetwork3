@@ -50,7 +50,9 @@ def __sanitize_result(result: dict) -> dict:
     return result
 
 
-def get_wiki_entries_by_symbol(symbol: str, sparql_uri: str) -> dict:
+def get_wiki_entries_by_symbol(
+    symbol: str, sparql_uri: str, graph: str = "<http://genenetwork.org>"
+) -> dict:
     """Fetch all the Wiki entries using the symbol"""
     # This query uses a sub-query to fetch the latest comment by the
     # version id.
@@ -71,7 +73,7 @@ CONSTRUCT {
              gnt:hasVersion ?max ;
              dct:created ?created ;
              dct:identifier ?id_ .
-} WHERE {
+} FROM $graph WHERE {
     ?symbolId rdfs:label ?symbolName .
     ?comment rdfs:label ?text_ ;
              gnt:symbol ?symbolId ;
@@ -110,6 +112,7 @@ CONSTRUCT {
 """
     ).substitute(
         prefix=RDF_PREFIXES,
+        graph=graph,
         symbol=symbol,
     )
     results = query_frame_and_compact(query, WIKI_CONTEXT, sparql_uri)
@@ -121,7 +124,9 @@ CONSTRUCT {
     return results
 
 
-def get_comment_history(comment_id: int, sparql_uri: str) -> dict:
+def get_comment_history(
+    comment_id: int, sparql_uri: str, graph: str = "<http://genenetwork.org>"
+) -> dict:
     """Get all the historical data for a given id"""
     query = Template(
         """
@@ -139,7 +144,7 @@ CONSTRUCT {
              gnt:belongsToCategory ?category ;
              gnt:hasVersion ?version ;
              dct:created ?created .
-} WHERE {
+} FROM $graph WHERE {
     ?symbolId rdfs:label ?symbolName .
     ?comment rdf:type gnc:GNWikiEntry ;
              rdfs:label ?text_ ;
@@ -169,7 +174,7 @@ CONSTRUCT {
     BIND (COALESCE(?category_, "") AS ?category) .
 }
 """
-    ).substitute(prefix=RDF_PREFIXES, comment_id=comment_id)
+    ).substitute(prefix=RDF_PREFIXES, graph=graph, comment_id=comment_id)
     results = query_frame_and_compact(query, WIKI_CONTEXT, sparql_uri)
     data = [__sanitize_result(result) for result in results.get("data", {})]
     # See note above in the doc-string
