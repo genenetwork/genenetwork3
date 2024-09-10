@@ -31,8 +31,10 @@ WIKI_CONTEXT = BASE_CONTEXT | {
 }
 
 
-def __sanitize_result(result: dict):
+def __sanitize_result(result: dict) -> dict:
     """Make sure `categories` and `pubmed_ids` are always arrays"""
+    if not result:
+        return {}
     categories = result.get("categories")
     if isinstance(categories, str):
         result["categories"] = [categories] if categories else []
