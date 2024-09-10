@@ -10,8 +10,7 @@ NOTE: In the CONSTRUCT queries below, we manually sort the arrays from
    <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
 """
 from string import Template
-from gn3.db.rdf import (BASE_CONTEXT, RDF_PREFIXES,
-                        query_frame_and_compact)
+from gn3.db.rdf import BASE_CONTEXT, RDF_PREFIXES, query_frame_and_compact
 
 
 WIKI_CONTEXT = BASE_CONTEXT | {
@@ -33,9 +32,7 @@ WIKI_CONTEXT = BASE_CONTEXT | {
 
 
 def __sanitize_result(result: dict):
-    """Make sure `categories` and `pubmed_ids` are always arrays
-
-    """
+    """Make sure `categories` and `pubmed_ids` are always arrays"""
     categories = result.get("categories")
     if isinstance(categories, str):
         result["categories"] = [categories] if categories else []
@@ -44,8 +41,10 @@ def __sanitize_result(result: dict):
         result["pubmed_ids"] = [pmids] if pmids else []
     if isinstance(pmids, int):
         result["pubmed_ids"] = [pmids]
-    result["pubmed_ids"] = [int(pmid.split("/")[-1]) if isinstance(pmid, str) else pmid
-                            for pmid in result["pubmed_ids"]]
+    result["pubmed_ids"] = [
+        int(pmid.split("/")[-1]) if isinstance(pmid, str) else pmid
+        for pmid in result["pubmed_ids"]
+    ]
     return result
 
 
@@ -53,7 +52,8 @@ def get_wiki_entries_by_symbol(symbol: str, sparql_uri: str) -> dict:
     """Fetch all the Wiki entries using the symbol"""
     # This query uses a sub-query to fetch the latest comment by the
     # version id.
-    query = Template("""
+    query = Template(
+        """
 $prefix
 
 CONSTRUCT {
@@ -105,13 +105,13 @@ CONSTRUCT {
     BIND (COALESCE(?species_, "") AS ?species) .
     BIND (COALESCE(?category_, "") AS ?category) .
 }
-""").substitute(prefix=RDF_PREFIXES, symbol=symbol,)
-    results = query_frame_and_compact(
-        query, WIKI_CONTEXT,
-        sparql_uri
+"""
+    ).substitute(
+        prefix=RDF_PREFIXES,
+        symbol=symbol,
     )
-    data = [__sanitize_result(result)
-            for result in results.get("data")]
+    results = query_frame_and_compact(query, WIKI_CONTEXT, sparql_uri)
+    data = [__sanitize_result(result) for result in results.get("data")]
     # See note above in the doc-string
     results["data"] = sorted(data, key=lambda d: d["created"])
     if not data:
@@ -121,7 +121,8 @@ CONSTRUCT {
 
 def get_comment_history(comment_id: int, sparql_uri: str) -> dict:
     """Get all the historical data for a given id"""
-    query = Template("""
+    query = Template(
+        """
 $prefix
 
 CONSTRUCT {
@@ -165,13 +166,10 @@ CONSTRUCT {
     BIND (COALESCE(?species_, "") AS ?species) .
     BIND (COALESCE(?category_, "") AS ?category) .
 }
-""").substitute(prefix=RDF_PREFIXES, comment_id=comment_id)
-    results = query_frame_and_compact(
-        query, WIKI_CONTEXT,
-        sparql_uri
-    )
-    data = [__sanitize_result(result)
-            for result in results.get("data")]
+"""
+    ).substitute(prefix=RDF_PREFIXES, comment_id=comment_id)
+    results = query_frame_and_compact(query, WIKI_CONTEXT, sparql_uri)
+    data = [__sanitize_result(result) for result in results.get("data")]
     # See note above in the doc-string
     results["data"] = sorted(data, key=lambda d: d["version"], reverse=True)
     return results

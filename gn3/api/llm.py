@@ -100,8 +100,8 @@ def get_user_search_records():
             (str(token.user.user_id),))
         results = [dict(item) for item in cursor.fetchall()]
         return jsonify(sorted(results, reverse=True,
-                       key=lambda x: datetime.strptime(x.get("created_at"),
-                                                       '%Y-%m-%d %H:%M:%S')))
+                              key=lambda x: datetime.strptime(x.get("created_at"),
+                                                              '%Y-%m-%d %H:%M:%S')))
 
 
 @gnqa.route("/search/record/<task_id>", methods=["GET"])
