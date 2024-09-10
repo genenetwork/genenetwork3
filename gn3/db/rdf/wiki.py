@@ -111,7 +111,7 @@ CONSTRUCT {
         symbol=symbol,
     )
     results = query_frame_and_compact(query, WIKI_CONTEXT, sparql_uri)
-    data = [__sanitize_result(result) for result in results.get("data")]
+    data = [__sanitize_result(result) for result in results.get("data", {})]
     # See note above in the doc-string
     results["data"] = sorted(data, key=lambda d: d["created"])
     if not data:
@@ -169,7 +169,7 @@ CONSTRUCT {
 """
     ).substitute(prefix=RDF_PREFIXES, comment_id=comment_id)
     results = query_frame_and_compact(query, WIKI_CONTEXT, sparql_uri)
-    data = [__sanitize_result(result) for result in results.get("data")]
+    data = [__sanitize_result(result) for result in results.get("data", {})]
     # See note above in the doc-string
     results["data"] = sorted(data, key=lambda d: d["version"], reverse=True)
     return results
