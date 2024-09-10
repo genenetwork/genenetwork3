@@ -21,7 +21,9 @@ def get_latest_comment(connection, comment_id: int) -> int:
     """
     cursor.execute(query, (str(comment_id),))
     result = cursor.fetchone()
-    result["pubmed_ids"] = [x.strip() for x in result.get("pubmed_ids", "").split()]
+    if (pubmed_ids := result.get("pubmed_ids")) is None:
+        pubmed_ids = ""
+    result["pubmed_ids"] = [x.strip() for x in pubmed_ids.split()]
     categories_query = """
         SELECT grx.GeneRIFId, grx.versionId, gc.Name FROM GeneRIFXRef grx
                 INNER JOIN GeneCategory gc ON grx.GeneCategoryId=gc.Id
