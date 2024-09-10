@@ -143,8 +143,8 @@ def delete_records():
           db.connection(current_app.config["LLM_DB_PATH"]) as conn):
         task_ids = list(request.json.values())
         cursor = conn.cursor()
-        query = """DELETE FROM history
-        WHERE task_id IN ({})
-        and user_id=?""".format(",".join("?" * len(task_ids)))
+        query = f"""
+DELETE FROM history WHERE task_id IN ({', '.join('?' * len(task_ids))}) AND user_id=?
+        """
         cursor.execute(query, (*task_ids, str(token.user.user_id),))
         return jsonify({})
