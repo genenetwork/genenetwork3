@@ -163,18 +163,23 @@ PHENOTYPE_CONTEXT = (
 )
 
 
-def sparql_construct_query(query: str, endpoint: str) -> dict:
+def sparql_query(query: str, endpoint: str, format_type="json-ld") -> dict:
     """Query virtuoso using a CONSTRUCT query and return a json-ld
     dictionary"""
     sparql = SPARQLWrapper(endpoint)
+    if format_type == "json-ld":
+        sparql.setQuery(query)
+        results = sparql.queryAndConvert()
+        return json.loads(results.serialize(format=format_type))  # type: ignore
+    # For SELECTs
+    sparql.setReturnFormat(JSON)
     sparql.setQuery(query)
-    results = sparql.queryAndConvert()
-    return json.loads(results.serialize(format="json-ld"))  # type: ignore
+    return sparql.queryAndConvert()["results"]["bindings"]  # type: ignore
 
 
 def query_frame_and_compact(query: str, context: dict, endpoint: str) -> dict:
     """Frame and then compact the results given a context"""
-    results = sparql_construct_query(query, endpoint)
+    results = sparql_query(query, endpoint)
     return jsonld.compact(
         jsonld.frame(results, context), context, options={"graph": True}
     )
@@ -182,13 +187,13 @@ def query_frame_and_compact(query: str, context: dict, endpoint: str) -> dict:
 
 def query_and_compact(query: str, context: dict, endpoint: str) -> dict:
     """Compact the results given a context"""
-    results = sparql_construct_query(query, endpoint)
+    results = sparql_query(query, endpoint)
     return jsonld.compact(results, context, options={"graph": True})
 
 
 def query_and_frame(query: str, context: dict, endpoint: str) -> dict:
     """Frame the results given a context"""
-    results = sparql_construct_query(query, endpoint)
+    results = sparql_query(query, endpoint)
     return jsonld.frame(results, context)
 
 
