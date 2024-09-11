@@ -35,8 +35,9 @@ PREFIXES = {
     "xsd": "http://www.w3.org/2001/XMLSchema#",
 }
 
-RDF_PREFIXES = "\n".join([f"PREFIX {key}: <{value}>"
-                          for key, value in PREFIXES.items()])
+RDF_PREFIXES = "\n".join(
+    [f"PREFIX {key}: <{value}>" for key, value in PREFIXES.items()]
+)
 
 BASE_CONTEXT = {
     "data": "@graph",
@@ -126,39 +127,40 @@ PUBLICATION_CONTEXT = {
         "@id": "fabio:hasPublicationYear",
         "@type": "xsd:gYear",
     },
-    "month": {
-        "@id": "prism:publicationDate",
-        "@type": "xsd:gMonth"
-    },
+    "month": {"@id": "prism:publicationDate", "@type": "xsd:gMonth"},
 }
 
-PHENOTYPE_CONTEXT = BASE_CONTEXT | PUBLICATION_CONTEXT | {
-    "skos": "http://www.w3.org/2004/02/skos/core#",
-    "dcat": "http://www.w3.org/ns/dcat#",
-    "prism": "http://prismstandard.org/namespaces/basic/2.0/",
-    "traitName": "skos:altLabel",
-    "trait": "rdfs:label",
-    "altName": "rdfs:altLabel",
-    "description": "dct:description",
-    "abbreviation": "gnt:abbreviation",
-    "labCode": "gnt:labCode",
-    "submitter": "gnt:submitter",
-    "dataset": "dcat:Distribution",
-    "contributor": "dct:contributor",
-    "mean": "gnt:mean",
-    "locus": "gnt:locus",
-    "lodScore": "gnt:lodScore",
-    "references": "dct:isReferencedBy",
-    "additive": "gnt:additive",
-    "sequence": "gnt:sequence",
-    "prefLabel": "skos:prefLabel",
-    "identifier": "dct:identifier",
-    "chromosome": "gnt:chr",
-    "mb": "gnt:mb",
-    "peakLocation": "gnt:locus",
-    "species": "gnt:belongsToSpecies",
-    "group": "gnt:belongsToGroup",
-}
+PHENOTYPE_CONTEXT = (
+    BASE_CONTEXT
+    | PUBLICATION_CONTEXT
+    | {
+        "skos": "http://www.w3.org/2004/02/skos/core#",
+        "dcat": "http://www.w3.org/ns/dcat#",
+        "prism": "http://prismstandard.org/namespaces/basic/2.0/",
+        "traitName": "skos:altLabel",
+        "trait": "rdfs:label",
+        "altName": "rdfs:altLabel",
+        "description": "dct:description",
+        "abbreviation": "gnt:abbreviation",
+        "labCode": "gnt:labCode",
+        "submitter": "gnt:submitter",
+        "dataset": "dcat:Distribution",
+        "contributor": "dct:contributor",
+        "mean": "gnt:mean",
+        "locus": "gnt:locus",
+        "lodScore": "gnt:lodScore",
+        "references": "dct:isReferencedBy",
+        "additive": "gnt:additive",
+        "sequence": "gnt:sequence",
+        "prefLabel": "skos:prefLabel",
+        "identifier": "dct:identifier",
+        "chromosome": "gnt:chr",
+        "mb": "gnt:mb",
+        "peakLocation": "gnt:locus",
+        "species": "gnt:belongsToSpecies",
+        "group": "gnt:belongsToGroup",
+    }
+)
 
 
 def sparql_construct_query(query: str, endpoint: str) -> dict:
@@ -174,9 +176,8 @@ def query_frame_and_compact(query: str, context: dict, endpoint: str) -> dict:
     """Frame and then compact the results given a context"""
     results = sparql_construct_query(query, endpoint)
     return jsonld.compact(
-        jsonld.frame(results, context),
-        context,
-        options={"graph": True})
+        jsonld.frame(results, context), context, options={"graph": True}
+    )
 
 
 def query_and_compact(query: str, context: dict, endpoint: str) -> dict:
