@@ -86,11 +86,13 @@ class GeneNetworkQAClient(Session):
 
     def custom_request(self, method, url, *args, **kwargs):
         """
-        Make a custom request to the Fahamu API to ask and get a response.
-        This is a custom method, which is the current default for fetching items,
-        as it overrides the adapter provided above.
-        This function was created to debug the slow response rate of Fahamu and
-        provide custom a response.
+        Make a custom request to the Fahamu API
+        Note: We cannot use the adapter  above because Fahamu does not
+        have a task_id status tracking system.
+        If you query for a Fahamu task_id,
+        you might receive `{message: No data}` with a 200 status code.
+        This response is not conclusive since the task might be incomplete
+        and the status code is incorrect as well.
         """
         max_retries = 50
         retry_delay = 3
