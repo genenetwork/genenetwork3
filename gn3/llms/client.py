@@ -118,6 +118,6 @@ class GeneNetworkQAClient(Session):
                 {response_msg.get(response.status_code,response.reason)}",
                                self.query)
                 #time.sleep(retry_delay)
-        raise LLMError("Timeout error: We couldn't provide a response,Please try\
+        raise LLMError("Timeout error: We couldn't provide a  response on time, Please try\
         to rephrase your question to receive feedback",
                        self.query)
