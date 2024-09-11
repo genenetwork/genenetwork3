@@ -6,7 +6,7 @@ creating contexts to be used by jsonld when framing and/or compacting.
 """
 import json
 
-from SPARQLWrapper import SPARQLWrapper
+from SPARQLWrapper import SPARQLWrapper, POST, DIGEST, JSON
 from pyld import jsonld  # type: ignore
 
 
@@ -190,3 +190,20 @@ def query_and_frame(query: str, context: dict, endpoint: str) -> dict:
     """Frame the results given a context"""
     results = sparql_construct_query(query, endpoint)
     return jsonld.frame(results, context)
+
+
+def update_rdf(
+    query: str, sparql_user: str, sparql_password: str, sparql_auth_uri: str
+) -> str:
+    """Update RDF Graph content---INSERT/DELETE---in a Graph Store
+    using HTTP.  Example return:
+    'Insert into <http://genenetwork.org>, 14 (or less) triples -- done'
+    """
+    sparql = SPARQLWrapper(sparql_auth_uri)
+    sparql.setHTTPAuth(DIGEST)
+    sparql.setCredentials(sparql_user, sparql_password)
+    sparql.setMethod(POST)
+    sparql.setReturnFormat(JSON)
+    sparql.setQuery(query)
+    _r = sparql.queryAndConvert()["results"]  # type: ignore
+    return _r["bindings"][0]["callret-0"]["value"]  # type: ignore
