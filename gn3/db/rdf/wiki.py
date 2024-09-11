@@ -10,7 +10,8 @@ NOTE: In the CONSTRUCT queries below, we manually sort the arrays from
    <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
 """
 from string import Template
-from gn3.db.rdf import BASE_CONTEXT, RDF_PREFIXES, query_frame_and_compact
+from gn3.db.rdf import BASE_CONTEXT, RDF_PREFIXES, query_frame_and_compact, sparql_query
+from gn3.db.wiki import MissingDBDataException
 
 
 WIKI_CONTEXT = BASE_CONTEXT | {
@@ -180,3 +181,25 @@ CONSTRUCT {
     # See note above in the doc-string
     results["data"] = sorted(data, key=lambda d: d["version"], reverse=True)
     return results
+
+
+def get_next_comment_version(
+    comment_id: int, sparql_uri: str, graph: str = "<http://genenetwork.org>"
+) -> int:
+    "Find the next version to add"
+    query = Template(
+        """
+$prefix
+
+SELECT MAX(?version) as ?max_version FROM $graph WHERE {
+    ?comment rdf:type gnc:GNWikiEntry ;
+             dct:identifier "$comment_id"^^xsd:integer ;
+             dct:hasVersion ?version .
+}
+"""
+    ).substitute(prefix=RDF_PREFIXES, graph=graph, comment_id=comment_id)
+    results = sparql_query(
+        query=query, endpoint=sparql_uri, format_type="json")[0]
+    if not results:
+        raise MissingDBDataException
+    return int(results["max_version"]["value"]) + 1
