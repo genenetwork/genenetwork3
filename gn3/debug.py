@@ -2,11 +2,11 @@
 import logging
 from flask import current_app
 
-__this_module_name__ == __name__
+__this_module_name__ = __name__
 
 def getLogger():
     return (
-        logging.getLogger(__name__)
+        logging.getLogger(__this_module_name__)
         if not bool(current_app)
         else current_app.logger)
 
