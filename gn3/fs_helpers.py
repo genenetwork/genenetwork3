@@ -16,14 +16,20 @@ from werkzeug.utils import secure_filename
 from flask import current_app
 
 def get_tmpdir() -> str:
-    """Get the temp directory from the FLASK tmpdir setting. If it is not set, set it to /tmp. Note
-    that the app should check for environment settings to initialize its TMPDIR.
+    """Get the temp directory from the FLASK tmpdir setting. If it is
+    not set, set it to /tmp. Note that the app should check for
+    environment settings to initialize its TMPDIR.
+
     """
     tmpdir = current_app.config.get("TMPDIR")
     if not tmpdir:
         tmpdir = "/tmp"
     if not os.path.isdir(tmpdir):
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), f"TMPDIR {tmpdir} is not a valid directory")
+        raise FileNotFoundError(
+            errno.ENOENT,
+            os.strerror(errno.ENOENT),
+            f"TMPDIR {tmpdir} is not a valid directory"
+        )
 
     return tmpdir
 
@@ -32,8 +38,7 @@ def assert_path_exists(path: str, throw_error: bool = True) -> bool:
     if not os.path.isfile(path):
         if throw_error:
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
-        else:
-            return False
+        return False
     return True
 
 def assert_paths_exist(paths: ValuesView, throw_error: bool = True) -> bool:
