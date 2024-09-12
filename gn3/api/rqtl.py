@@ -6,7 +6,6 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from gn3.debug import __pk__
 from gn3.computations.rqtl import generate_rqtl_cmd, process_rqtl_mapping, \
                                   process_rqtl_pairscan, process_perm_output
 from gn3.fs_helpers import assert_paths_exist, get_tmpdir

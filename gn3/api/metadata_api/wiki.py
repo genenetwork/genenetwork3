@@ -5,7 +5,6 @@ from typing import Any, Dict
 from flask import Blueprint, request, jsonify, current_app, make_response
 from gn3 import db_utils
 from gn3.db import wiki
-from gn3.db.rdf import query_frame_and_compact
 from gn3.db.rdf.wiki import (get_wiki_entries_by_symbol,
                              get_comment_history)
 
@@ -121,6 +120,7 @@ def get_species():
 
 @wiki_blueprint.route("/<int:comment_id>/history", methods=["GET"])
 def get_history(comment_id):
+    """Fetch all of a given comment's history given it's comment id"""
     status_code = 200
     response = get_comment_history(comment_id=comment_id,
                                    sparql_uri=current_app.config["SPARQL_ENDPOINT"])

@@ -1,7 +1,5 @@
 """Procedures related to R/qtl computations"""
 import os
-import sys
-import logging
 from bisect import bisect
 from typing import Dict, List, Tuple, Union
 

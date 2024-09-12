@@ -1,14 +1,12 @@
 """Procedures related gemma computations"""
-import errno
 import os
 
 from base64 import b64encode
 from hashlib import md5
 from typing import Optional, Dict
 from typing import List
-from typing import ValuesView
 from gn3.commands import compose_gemma_cmd
-from gn3.fs_helpers import get_hash_of_files, assert_paths_exist
+from gn3.fs_helpers import get_hash_of_files
 
 
 def generate_hash_of_string(unhashed_str: str) -> str:
