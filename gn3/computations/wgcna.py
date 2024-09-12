@@ -79,8 +79,8 @@ def call_wgcna_script(rscript_path: str, request_data: dict):
                 return run_cmd_results
 
             output_file_data = json.load(outputfile)
-            output_file_data["gn3"]["image_data"] = process_image(
-                output_file_data["gn3"]["imageLoc"]).decode("ascii")
+            output_file_data["output"]["image_data"] = process_image(
+                output_file_data["output"]["imageLoc"]).decode("ascii")
             # json format only supports  unicode string// to get image data reconvert
 
             return {

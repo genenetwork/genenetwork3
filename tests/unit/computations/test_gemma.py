@@ -19,9 +19,9 @@ class TestGemma(unittest.TestCase):
             _file = generate_pheno_txt_file(tmpdir="/tmp",
                                             trait_filename="phenotype.txt",
                                             values=["x", "x", "BXD07 438.700"])
-            self.assertEqual(_file, ("/tmp/gn2/phenotype_"
+            self.assertEqual(_file, ("/tmp/gn3/phenotype_"
                                      "P7y6QWnwBPedSZdL0+m/GQ.txt"))
-        open_mock.assert_called_with(("/tmp/gn2/phenotype_"
+        open_mock.assert_called_with(("/tmp/gn3/phenotype_"
                                       "P7y6QWnwBPedSZdL0+m/GQ.txt"), "w", encoding="utf-8")
         open_mock.return_value.write.assert_has_calls([
             mock.call("NA\n"),

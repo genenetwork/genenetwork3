@@ -127,7 +127,7 @@ class TestWgcna(TestCase):
         wgcna_cmd = compose_wgcna_cmd(
             "wgcna.r", "/tmp/wgcna.json")
         self.assertEqual(
-            wgcna_cmd, "Rscript ./scripts/wgcna.r  /tmp/wgcna.json")
+            wgcna_cmd, "Rscript scripts/wgcna.r /tmp/wgcna.json")
 
     @pytest.mark.unit_test
     @mock.patch("gn3.computations.wgcna.TMPDIR", "/tmp")
