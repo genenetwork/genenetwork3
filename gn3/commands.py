@@ -3,6 +3,7 @@ commands"""
 import sys
 import json
 import pickle
+import logging
 import tempfile
 import subprocess
 
@@ -161,7 +162,8 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) ->
     out = str(results.stdout, 'utf-8')
     if results.returncode not in success_codes:  # Error!
         out = str(results.stderr, 'utf-8')
-        current_app.logger.debug(out)
+        (# We do not always run this within an app context
+            current_app.logger.debug if current_app else logging.debug)(out)
     return {"code": results.returncode, "output": out}
 
 def run_async_cmd(
