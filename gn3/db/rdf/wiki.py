@@ -186,11 +186,10 @@ CONSTRUCT {
 
 
 def update_wiki_comment(
-        comment_id: int,
-        payload: dict,
-        created: str,
-        next_version: int,
-        sparql_conf: dict,
+        insert_dict: dict,
+        sparql_user: str,
+        sparql_password: str,
+        sparql_auth_uri: str,
         graph: str = "<http://genenetwork.org>",
 ) -> tuple[str, int]:
     """Update a wiki comment by inserting a comment with the same
@@ -220,7 +219,7 @@ looks like:
             }
     }
     """
-    name = f"gn:wiki-{comment_id}-{next_version}"
+    name = f"gn:wiki-{insert_dict['Id']}-{insert_dict['versionId']}"
     comment_triple = Template("""$name rdf:label '''$comment'''@en ;
 rdf:type gnc:GNWikiEntry ;
 gnt:symbol "$symbol" ;
@@ -228,31 +227,31 @@ dct:identifier "$comment_id"^^xsd:integer ;
 dct:hasVersion "$next_version"^^xsd:integer ;
 dct:created "$created"^^xsd:datetime .
 """).substitute(
-        comment=payload["comment"],
-        name=name, symbol=payload['symbol'],
-        comment_id=comment_id, next_version=next_version,
-        created=created)
+        comment=insert_dict["comment"],
+        name=name, symbol=insert_dict['symbol'],
+        comment_id=insert_dict["Id"], next_version=insert_dict["versionId"],
+        created=insert_dict["createtime"])
     using = ""
-    if payload["email"]:
-        comment_triple += f"{name} foaf:mbox <{payload['email']}> .\n"
-    if payload["initial"]:
-        comment_triple += f"{name} gnt:initial \"{payload['initial']}\" .\n"
-    if payload["species"]:
+    if insert_dict["email"]:
+        comment_triple += f"{name} foaf:mbox <{insert_dict['email']}> .\n"
+    if insert_dict["initial"]:
+        comment_triple += f"{name} gnt:initial \"{insert_dict['initial']}\" .\n"
+    if insert_dict["species"]:
         comment_triple += f"{name} gnt:belongsToSpecies ?speciesId .\n"
         using = Template(
             """ USING $graph WHERE { ?speciesId gnt:shortName "$species" . } """).substitute(
-                graph=graph, species=payload["species"]
+                graph=graph, species=insert_dict["species"]
         )
-    if payload["reason"]:
-        comment_triple += f"{name} gnt:reason \"{payload['reason']}\" .\n"
-    if payload["web_url"]:
-        comment_triple += f"{name} foaf:homepage <{payload['web_url']}> .\n"
-    for pmid in payload["pubmed_ids"]:
+    if insert_dict["reason"]:
+        comment_triple += f"{name} gnt:reason \"{insert_dict['reason']}\" .\n"
+    if insert_dict["weburl"]:
+        comment_triple += f"{name} foaf:homepage <{insert_dict['weburl']}> .\n"
+    for pmid in insert_dict["PubMed_ID"].split():
         comment_triple += f"{name} dct:references pubmed:{pmid} .\n"
-    for category in payload["categories"]:
+    for category in insert_dict["categories"]:
         comment_triple += f'{name} gnt:belongsToCategory "{category}".\n'
 
-    res = update_rdf(
+    return update_rdf(
         query=Template(
             """
 $prefix
@@ -265,8 +264,7 @@ $comment_triple}
                 graph=graph,
                 comment_triple=comment_triple,
                 using=using),
-        sparql_user=sparql_conf["sparql_user"],
-        sparql_password=sparql_conf["sparql_password"],
-        sparql_auth_uri=sparql_conf["sparql_auth_uri"],
+        sparql_user=sparql_user,
+        sparql_password=sparql_password,
+        sparql_auth_uri=sparql_auth_uri,
     )
-    return (res, 200)

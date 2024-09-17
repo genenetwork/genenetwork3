@@ -25,20 +25,21 @@ def edit_wiki(comment_id: int):
     # FIXME: attempt to check and fix for types here with relevant errors
     payload: Dict[str, Any] = request.json  # type: ignore
     pubmed_ids = [str(x) for x in payload.get("pubmed_ids", [])]
-    created = datetime.datetime.now(datetime.timezone.utc).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
     insert_dict = {
         "Id": comment_id,
         "symbol": payload["symbol"],
         "PubMed_ID": " ".join(pubmed_ids),
         "comment": payload["comment"],
         "email": payload["email"],
-        "createtime": created,
+        "createtime": datetime.datetime.now(datetime.timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        ),
         "user_ip": request.environ.get("HTTP_X_REAL_IP", request.remote_addr),
         "weburl": payload.get("web_url"),
         "initial": payload.get("initial"),
         "reason": payload["reason"],
+        "species": payload["species"],
+        "categories": payload["categories"],
     }
 
     insert_query = """
@@ -76,14 +77,10 @@ def edit_wiki(comment_id: int):
         # Editing RDF:
         update_wiki_comment(
             comment_id=comment_id,
-            payload=payload,
-            next_version=next_version,
-            created=created,
-            sparql_conf={
-                "sparql_user": current_app.config["SPARQL_USER"],
-                "sparql_password": current_app.config["SPARQL_PASSWORD"],
-                "sparql_auth_uri": current_app.config["SPARQL_AUTH_URI"],
-            },
+            insert_dict=insert_dict,
+            sparql_user=current_app.config["SPARQL_USER"],
+            sparql_password=current_app.config["SPARQL_PASSWORD"],
+            sparql_auth_uri=current_app.config["SPARQL_AUTH_URI"]
         )
         return jsonify({"success": "ok"})
     return jsonify(error="Error editing wiki entry, most likely due to DB error!"), 500
