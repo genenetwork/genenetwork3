@@ -48,6 +48,7 @@ def edit_wiki(comment_id: int):
     """
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
         cursor = conn.cursor()
+        next_version = 0
         try:
             category_ids = wiki.get_categories_ids(
                 cursor, payload["categories"])
@@ -76,8 +77,8 @@ def edit_wiki(comment_id: int):
         update_wiki_comment(
             comment_id=comment_id,
             payload=payload,
+            next_version=next_version,
             sparql_conf={
-                "sparql_uri": current_app.config["SPARQL_ENDPOINT"],
                 "sparql_user": current_app.config["SPARQL_USER"],
                 "sparql_password": current_app.config["SPARQL_PASSWORD"],
                 "sparql_auth_uri": current_app.config["SPARQL_AUTH_URI"],
