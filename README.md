@@ -124,6 +124,10 @@ These configurations should be set in an external config file, pointed to with t
 - SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql")
 - XAPIAN_DB_PATH (ex: "/export/data/genenetwork/xapian")
 - TMPDIR
+- SPARQL_USER
+- SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql-auth/")
+- SPARQL_PASSWORD
+- SPARQL_AUTH_URI
 
 TMPDIR also needs to be set correctly for the R script(s) because they pass results on as files on the local system (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp). Note that the Guix build system should take care of the paths.
 
