@@ -2,9 +2,11 @@
 
 import datetime
 from typing import Any, Dict
-from gn3.auth.authorisation.oauth2.resource_server import require_oauth
+
 from flask import Blueprint, request, jsonify, current_app, make_response
+
 from gn3 import db_utils
+from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.db import wiki
 from gn3.db.rdf.wiki import (get_wiki_entries_by_symbol,
                              get_comment_history)
