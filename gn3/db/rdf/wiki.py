@@ -9,17 +9,13 @@ NOTE: In the CONSTRUCT queries below, we manually sort the arrays from
    <https://stackoverflow.com/questions/78186393>
    <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
 """
-import datetime
-
 from string import Template
 from gn3.db.rdf import (
     BASE_CONTEXT,
     RDF_PREFIXES,
     query_frame_and_compact,
-    sparql_query,
     update_rdf,
 )
-from gn3.db.wiki import MissingDBDataException
 
 
 WIKI_CONTEXT = BASE_CONTEXT | {
@@ -192,6 +188,7 @@ CONSTRUCT {
 def update_wiki_comment(
         comment_id: int,
         payload: dict,
+        created: str,
         next_version: int,
         sparql_conf: dict,
         graph: str = "<http://genenetwork.org>",
@@ -234,7 +231,7 @@ dct:created "$created"^^xsd:datetime .
         comment=payload["comment"],
         name=name, symbol=payload['symbol'],
         comment_id=comment_id, next_version=next_version,
-        created=datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S'))
+        created=created)
     using = ""
     if payload["email"]:
         comment_triple += f"{name} foaf:mbox <{payload['email']}> .\n"
