@@ -8,8 +8,11 @@ from flask import Blueprint, request, jsonify, current_app, make_response
 from gn3 import db_utils
 from gn3.auth.authorisation.oauth2.resource_server import require_oauth
 from gn3.db import wiki
-from gn3.db.rdf.wiki import (get_wiki_entries_by_symbol,
-                             get_comment_history)
+from gn3.db.rdf.wiki import (
+    get_wiki_entries_by_symbol,
+    get_comment_history,
+    update_wiki_comment,
+)
 
 
 wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
@@ -68,6 +71,18 @@ def edit_wiki(comment_id: int):
                 category_addition_query, (comment_id,
                                           insert_dict["versionId"], cat_id)
             )
+
+        # Editing RDF:
+        update_wiki_comment(
+            comment_id=comment_id,
+            payload=payload,
+            sparql_conf={
+                "sparql_uri": current_app.config["SPARQL_ENDPOINT"],
+                "sparql_user": current_app.config["SPARQL_USER"],
+                "sparql_password": current_app.config["SPARQL_PASSWORD"],
+                "sparql_auth_uri": current_app.config["SPARQL_AUTH_URI"],
+            },
+        )
         return jsonify({"success": "ok"})
     return jsonify(error="Error editing wiki entry, most likely due to DB error!"), 500
 
