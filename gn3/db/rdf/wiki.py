@@ -62,7 +62,7 @@ def get_wiki_entries_by_symbol(
 $prefix
 
 CONSTRUCT {
-    ?comment rdfs:label ?symbolName;
+    ?comment rdfs:label ?symbol;
              gnt:reason ?reason ;
              gnt:species ?species ;
              dct:references ?pmid ;
@@ -75,13 +75,12 @@ CONSTRUCT {
              dct:created ?created ;
              dct:identifier ?id_ .
 } FROM $graph WHERE {
-    ?symbolId rdfs:label ?symbolName .
     ?comment rdfs:label ?text_ ;
-             gnt:symbol ?symbolId ;
+             gnt:symbol ?symbol ;
              rdf:type gnc:GNWikiEntry ;
              dct:identifier ?id_ ;
              dct:created ?createTime .
-    FILTER ( LCASE(?symbolName) = LCASE('$symbol') ) .
+    FILTER ( LCASE(?symbol) = LCASE('$symbol') ) .
     {
         SELECT (MAX(?vers) AS ?max) ?id_ WHERE {
             ?comment dct:identifier ?id_ ;
@@ -146,10 +145,9 @@ CONSTRUCT {
              gnt:hasVersion ?version ;
              dct:created ?created .
 } FROM $graph WHERE {
-    ?symbolId rdfs:label ?symbolName .
     ?comment rdf:type gnc:GNWikiEntry ;
              rdfs:label ?text_ ;
-             gnt:symbol ?symbolId ;
+             gnt:symbol ?symbol ;
              dct:created ?createTime ;
              dct:hasVersion ?version ;
              dct:identifier $comment_id ;
