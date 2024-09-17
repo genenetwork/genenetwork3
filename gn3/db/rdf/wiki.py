@@ -9,8 +9,16 @@ NOTE: In the CONSTRUCT queries below, we manually sort the arrays from
    <https://stackoverflow.com/questions/78186393>
    <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
 """
+import datetime
+
 from string import Template
-from gn3.db.rdf import BASE_CONTEXT, RDF_PREFIXES, query_frame_and_compact, sparql_query
+from gn3.db.rdf import (
+    BASE_CONTEXT,
+    RDF_PREFIXES,
+    query_frame_and_compact,
+    sparql_query,
+    update_rdf,
+)
 from gn3.db.wiki import MissingDBDataException
 
 
@@ -201,3 +209,90 @@ SELECT MAX(?version) as ?max_version FROM $graph WHERE {
     if not results:
         raise MissingDBDataException
     return int(results["max_version"]["value"]) + 1
+
+
+def update_wiki_comment(
+    comment_id: int,
+    payload: dict,
+    sparql_conf: dict,
+    graph: str = "<http://genenetwork.org>",
+) -> tuple[str, int]:
+    """Update a wiki comment by inserting a comment with the same
+identifier but an updated version id.  The End form of this query
+looks like:
+
+    INSERT {
+            GRAPH <http://genenetwork.org> {
+            [ rdfs:label '''XXXX'''@en] rdf:type gnc:GNWikiEntry ;
+                    gnt:symbol "XXXX" ;
+                    foaf:mbox <XXXX> ;
+                    gnt:initial "XXXX" ;
+                    gnt:belongsToSpecies ?speciesId ;
+                    gnt:reason "XXXX" ;
+                    foaf:homepage <XXXX> ;
+                    dct:references pmid:XXXX ;
+                    dct:references pmid:XXXX ;
+                    gnt:belongsToCategory "XXXX";
+                    gnt:belongsToCategory "XXXX";
+                    dct:hasVersion "123"^^xsd:integer ;
+                    dct:identifier "1"^^xsd:integer ;
+                    dct:created "2024-09-11 11:00"^^xsd:datetime .
+
+            } USING <http://genenetwork.org> WHERE {
+                    ?speciesId gnt:shortName "{species}" .
+
+            }
+    }
+    """
+    next_version = get_next_comment_version(
+        comment_id, sparql_conf['sparql_uri'], graph)
+    name = f"gn:wiki-{comment_id}-{next_version}"
+    comment_triple = Template("""$name rdf:label '''$comment'''@en ;
+rdf:type gnc:GNWikiEntry ;
+gnt:symbol "$symbol" ;
+dct:identifier "$comment_id"^^xsd:integer ;
+dct:hasVersion "$next_version"^^xsd:integer ;
+dct:created "$created"^^xsd:datetime .
+""").substitute(
+        comment=payload["comment"],
+        name=name, symbol=payload['symbol'],
+        comment_id=comment_id, next_version=next_version,
+        created=datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S'))
+    using = ""
+    if payload["email"]:
+        comment_triple += f"{name} foaf:mbox <{payload['email']}> .\n"
+    if payload["initial"]:
+        comment_triple += f"{name} gnt:initial \"{payload['initial']}\" .\n"
+    if payload["species"]:
+        comment_triple += f"{name} gnt:belongsToSpecies ?speciesId .\n"
+        using = Template(
+            """ USING $graph WHERE { ?speciesId gnt:shortName "$species" . } """).substitute(
+                graph=graph, species=payload["species"]
+        )
+    if payload["reason"]:
+        comment_triple += f"{name} gnt:reason \"{payload['reason']}\" .\n"
+    if payload["web_url"]:
+        comment_triple += f"{name} foaf:homepage <{payload['web_url']}> .\n"
+    for pmid in payload["pubmed_ids"]:
+        comment_triple += f"{name} dct:references pubmed:{pmid} .\n"
+    for category in payload["categories"]:
+        comment_triple += f'{name} gnt:belongsToCategory "{category}".\n'
+
+    res = update_rdf(
+        query=Template(
+            """
+$prefix
+
+INSERT {
+GRAPH $graph {
+$comment_triple}
+} $using
+""").substitute(prefix=RDF_PREFIXES,
+                graph=graph,
+                comment_triple=comment_triple,
+                using=using),
+        sparql_user=sparql_conf["sparql_user"],
+        sparql_password=sparql_conf["sparql_password"],
+        sparql_auth_uri=sparql_conf["sparql_auth_uri"],
+    )
+    return (res, 200)
