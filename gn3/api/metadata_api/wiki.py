@@ -51,7 +51,7 @@ def edit_wiki(comment_id: int):
             species_id = wiki.get_species_id(cursor, payload["species"])
             next_version = wiki.get_next_comment_version(cursor, comment_id)
         except wiki.MissingDBDataException as missing_exc:
-            return jsonify(error=f"Error editting wiki entry, {missing_exc}"), 500
+            return jsonify(error=f"Error editing wiki entry, {missing_exc}"), 500
         insert_dict["SpeciesID"] = species_id
         insert_dict["versionId"] = next_version
         current_app.logger.debug(f"Running query: {insert_query}")
