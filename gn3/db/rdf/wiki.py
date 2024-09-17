@@ -189,33 +189,12 @@ CONSTRUCT {
     return results
 
 
-def get_next_comment_version(
-    comment_id: int, sparql_uri: str, graph: str = "<http://genenetwork.org>"
-) -> int:
-    "Find the next version to add"
-    query = Template(
-        """
-$prefix
-
-SELECT MAX(?version) as ?max_version FROM $graph WHERE {
-    ?comment rdf:type gnc:GNWikiEntry ;
-             dct:identifier "$comment_id"^^xsd:integer ;
-             dct:hasVersion ?version .
-}
-"""
-    ).substitute(prefix=RDF_PREFIXES, graph=graph, comment_id=comment_id)
-    results = sparql_query(
-        query=query, endpoint=sparql_uri, format_type="json")[0]
-    if not results:
-        raise MissingDBDataException
-    return int(results["max_version"]["value"]) + 1
-
-
 def update_wiki_comment(
-    comment_id: int,
-    payload: dict,
-    sparql_conf: dict,
-    graph: str = "<http://genenetwork.org>",
+        comment_id: int,
+        payload: dict,
+        next_version: int,
+        sparql_conf: dict,
+        graph: str = "<http://genenetwork.org>",
 ) -> tuple[str, int]:
     """Update a wiki comment by inserting a comment with the same
 identifier but an updated version id.  The End form of this query
@@ -244,8 +223,6 @@ looks like:
             }
     }
     """
-    next_version = get_next_comment_version(
-        comment_id, sparql_conf['sparql_uri'], graph)
     name = f"gn:wiki-{comment_id}-{next_version}"
     comment_triple = Template("""$name rdf:label '''$comment'''@en ;
 rdf:type gnc:GNWikiEntry ;
