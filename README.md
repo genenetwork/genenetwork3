@@ -126,10 +126,23 @@ These configurations should be set in an external config file, pointed to with t
 - TMPDIR
 - SPARQL_USER
 - SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql-auth/")
-- SPARQL_PASSWORD
-- SPARQL_AUTH_URI
+- GN3_SECRETS
 
 TMPDIR also needs to be set correctly for the R script(s) because they pass results on as files on the local system (previously there was an issue with it being set to /tmp instead of ~/genenetwork3/tmp). Note that the Guix build system should take care of the paths.
+
+### Secrets
+
+All of GN3's secret parameters are found inside the "GN3_SECRETS".  This file should contain the following:
+
+```
+SPARQL_USER = "XXX"
+SPARQL_PASSWORD = "XXXXXXXXXX"
+SPARQL_AUTH_URI="http://localhost:9082/sparql-auth/"
+SPARQL_CRUD_AUTH_URI="http://localhost:9082/sparql-graph-crud-auth"
+FAHAMU_AUTH_TOKEN="XXXXXX"
+```
+
+Note: The sparql configurations are important for running tests I.e. `pytest -k rdf`.
 
 ## Command-Line Utility Scripts
 
