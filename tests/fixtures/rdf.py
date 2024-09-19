@@ -30,10 +30,15 @@ def rdf_setup():
         os.path.dirname(__file__).split("fixtures")[0],
         "test_data/ttl-files/test-data.ttl",
     )
+
     # Define the query parameters and authentication
     params = {"graph": "http://cd-test.genenetwork.org"}
     auth = HTTPDigestAuth(
         sparql_conf["sparql_user"], sparql_conf["sparql_password"])
+
+    # Make sure this graph does not exist before running anything
+    requests.delete(url, params=params, auth=auth)
+
     # Open the file in binary mode and send the request
     with open(file_path, "rb") as file:
         response = requests.put(url, params=params, auth=auth, data=file)
