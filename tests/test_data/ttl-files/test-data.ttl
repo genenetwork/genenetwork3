@@ -1,0 +1,1056 @@
+@base <> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xkos: <http://rdf-vocabulary.ddialliance.org/xkos#> .
+@prefix gn: <http://genenetwork.org/id/> .
+@prefix gnc: <http://genenetwork.org/category/> .
+@prefix gnt: <http://genenetwork.org/term/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix pubmed: <http://rdf.ncbi.nlm.nih.gov/pubmed/> .
+@prefix taxon: <https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=> .
+@prefix generif: <http://www.ncbi.nlm.nih.gov/gene?cmd=Retrieve&dopt=Graphics&list_uids=> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+gnc:ResourceClassificationScheme a skos:ConceptScheme .
+gnc:ResourceClassificationScheme skos:prefLabel "GeneNetwork Classification Scheme For Resources" .
+gnc:ResourceClassificationScheme xkos:numberOfLevels "3" .
+gnc:ResourceClassificationScheme xkos:levels ( gnc:DatasetType gnc:Set gnc:Species ) .
+gnc:DatasetType a xkos:ClassificationLevel .
+gnc:DatasetType skos:prefLabel "The Type of a Dataset which can be a ProbeSet, Genotype, or Phenotype" .
+gnc:DatasetType xkos:depth "1" .
+gnc:DatasetType skos:member gnc:Probeset .
+gnc:DatasetType skos:member gnc:Genotype .
+gnc:DatasetType skos:member gnc:Phenotype .
+gnc:Probeset skos:prefLabel "mRNA Assay Datasets" .
+gnc:Probeset skos:altLabel "ProbeSet" .
+gnc:Genotype skos:prefLabel "Genotype" .
+gnc:Genotype skos:altLabel "DNA Markers and SNPs" .
+gnc:Phenotype skos:prefLabel "Phenotype" .
+gnc:Phenotype skos:altLabel "Traits and Cofactors" .
+gnc:Species a xkos:ClassificationLevel .
+gnc:Species skos:prefLabel "The species in which this resource belongs" .
+gnc:Species xkos:depth "3" .
+gnc:Species xkos:specializes gnc:Set .
+gnc:Species skos:member gn:Mus_musculus .
+gnc:Species skos:member gn:Rattus_norvegicus .
+gnc:Species skos:member gn:Arabidopsis_thaliana .
+gnc:Species skos:member gn:Homo_sapiens .
+gnc:Species skos:member gn:Hordeum_vulgare .
+gnc:Species skos:member gn:Drosophila_melanogaster .
+gnc:Species skos:member gn:Macaca_nemestrina .
+gnc:Species skos:member gn:Glycine_max .
+gnc:Species skos:member gn:Solanum_lycopersicum .
+gnc:Species skos:member gn:Populus_trichocarpa .
+gnc:Species skos:member gn:Oryzias_latipes .
+gnc:Species skos:member gn:Glossophaga_soricina .
+gnc:Set a xkos:ClassificationLevel .
+gnc:Set skos:prefLabel "The Type of Set, Ie InbredSet/OutbredSet that a resource can belong to" .
+gnc:Set xkos:depth "2" .
+gnc:Set xkos:generalizes gnc:Species .
+gnc:Set skos:member gn:setBxd .
+gnc:Set skos:member gn:setB6d2f2 .
+gnc:Set skos:member gn:setAxbxa .
+gnc:Set skos:member gn:setAkxd .
+gnc:Set skos:member gn:setB6btbrf2 .
+gnc:Set skos:member gn:setBxh .
+gnc:Set skos:member gn:setCxb .
+gnc:Set skos:member gn:setLxs .
+gnc:Set skos:member gn:setHxbbxh .
+gnc:Set skos:member gn:setBayxsha .
+gnc:Set skos:member gn:setBdf2-2005 .
+gnc:Set skos:member gn:setColxcvi .
+gnc:Set skos:member gn:setColxbur .
+gnc:Set skos:member gn:setMdp .
+gnc:Set skos:member gn:setSxm .
+gnc:Set skos:member gn:setB6d2f2-psu .
+gnc:Set skos:member gn:setBhf2 .
+gnc:Set skos:member gn:setBdf2-1999 .
+gnc:Set skos:member gn:setCtb6f2 .
+gnc:Set skos:member gn:setBhhbf2 .
+gnc:Set skos:member gn:setCeph-2004 .
+gnc:Set skos:member gn:setNzbxfvb-n2 .
+gnc:Set skos:member gn:setSrxshrspf2 .
+gnc:Set skos:member gn:setAd-cases-controls .
+gnc:Set skos:member gn:setAd-cases-controls-myers .
+gnc:Set skos:member gn:setQsm .
+gnc:Set skos:member gn:setCeph-2009 .
+gnc:Set skos:member gn:setOregon-r_x_2b3 .
+gnc:Set skos:member gn:setMacaca-fasicularis .
+gnc:Set skos:member gn:setHs .
+gnc:Set skos:member gn:setDgrp .
+gnc:Set skos:member gn:setHs-cc .
+gnc:Set skos:member gn:setHlc .
+gnc:Set skos:member gn:setCandle .
+gnc:Set skos:member gn:setHb .
+gnc:Set skos:member gn:setHsb .
+gnc:Set skos:member gn:setJ12xj58f2 .
+gnc:Set skos:member gn:setLxp .
+gnc:Set skos:member gn:setB6d2ri .
+gnc:Set skos:member gn:setSotnot-ohsu .
+gnc:Set skos:member gn:setHsnih-rgsmc .
+gnc:Set skos:member gn:setC57bl-6jxc57bl-6njf2 .
+gnc:Set skos:member gn:setScripps-2013 .
+gnc:Set skos:member gn:setHlt .
+gnc:Set skos:member gn:setAging-brain-uci .
+gnc:Set skos:member gn:setLinsenbardt-boehm .
+gnc:Set skos:member gn:setBrain-normal-nih-gibbs .
+gnc:Set skos:member gn:setGtex .
+gnc:Set skos:member gn:setJ12xj58f11 .
+gnc:Set skos:member gn:setHcp .
+gnc:Set skos:member gn:setGtex_v5 .
+gnc:Set skos:member gn:setCms .
+gnc:Set skos:member gn:setCie-inia .
+gnc:Set skos:member gn:setHsnih-palmer .
+gnc:Set skos:member gn:setTigem-retina-rna-seq .
+gnc:Set skos:member gn:setB6d2 .
+gnc:Set skos:member gn:setBxd-bone .
+gnc:Set skos:member gn:setCfw .
+gnc:Set skos:member gn:setPoplar .
+gnc:Set skos:member gn:setIslets-gerling .
+gnc:Set skos:member gn:setEmsr .
+gnc:Set skos:member gn:setCie-rma .
+gnc:Set skos:member gn:setBxd-longevity .
+gnc:Set skos:member gn:setLgsm-ai .
+gnc:Set skos:member gn:setD2gm .
+gnc:Set skos:member gn:setRetina-rgc-rheaume .
+gnc:Set skos:member gn:setBxd_dev .
+gnc:Set skos:member gn:setLgsm-ai-g34-a .
+gnc:Set skos:member gn:setLgsm-ai-g34-gbs .
+gnc:Set skos:member gn:setLgsm-ai-g34_39-43-gbs .
+gnc:Set skos:member gn:setLgsm-ai-g39-43-gbs .
+gnc:Set skos:member gn:setLgsm-aig34_50-56-gbs .
+gnc:Set skos:member gn:setJax-d2-mono-rna-seq .
+gnc:Set skos:member gn:setDod-bxd-gwi .
+gnc:Set skos:member gn:setHet3-itp .
+gnc:Set skos:member gn:setCc .
+gnc:Set skos:member gn:setGtex_v8 .
+gnc:Set skos:member gn:setUthsc-cannabinoid .
+gnc:Set skos:member gn:setB6-lens .
+gnc:Set skos:member gn:setNwu_wkyxf344_f2 .
+gnc:Set skos:member gn:setHiv-1tg .
+gnc:Set skos:member gn:setBxd-heart-metals .
+gnc:Set skos:member gn:setDo .
+gnc:Set skos:member gn:setBxd-ae .
+gnc:Set skos:member gn:setHrdp_hxb-bxh-bp .
+gnc:Set skos:member gn:setEbv_t_cells_perkins .
+gnc:Set skos:member gn:setMikk .
+gnc:Set skos:member gn:setDol .
+gnc:Set skos:member gn:setBxd-micturition .
+gnc:Set skos:member gn:setBxd-jax-ad .
+gnc:Set skos:member gn:setBxd-nia-ad .
+gnc:Set skos:member gn:setCcbxd-tm .
+gnc:Set skos:member gn:setGso .
+gnt:family a owl:ObjectProperty .
+gnt:family rdfs:domain gnc:Species .
+gnt:family skos:definition "This resource belongs to this family" .
+gnt:shortName a owl:ObjectProperty .
+gnt:shortName rdfs:domain gnc:Species .
+gnt:shortName skos:definition "The short name of a given resource" .
+gnt:belongsToSpecies a rdf:property .
+gnt:belongsToSpecies rdf:comment "This resource given to this species" .
+gnt:belongsToSpecies rdf:label "belongsToSpecies" .
+gn:Mus_musculus skos:inScheme gnc:ResourceClassificationScheme .
+gn:Mus_musculus rdfs:label "Mus musculus" .
+gn:Mus_musculus skos:prefLabel "Mouse (Mus musculus, mm10)" .
+gn:Mus_musculus skos:altLabel "Mouse" .
+gn:Mus_musculus gnt:shortName "mouse" .
+gn:Mus_musculus gnt:family "Vertebrates" .
+gn:Mus_musculus skos:notation taxon:10090 .
+gn:Rattus_norvegicus skos:inScheme gnc:ResourceClassificationScheme .
+gn:Rattus_norvegicus rdfs:label "Rattus norvegicus" .
+gn:Rattus_norvegicus skos:prefLabel "Rat (Rattus norvegicus, rn7.2)" .
+gn:Rattus_norvegicus skos:altLabel "Rat" .
+gn:Rattus_norvegicus gnt:shortName "rat" .
+gn:Rattus_norvegicus gnt:family "Vertebrates" .
+gn:Rattus_norvegicus skos:notation taxon:10116 .
+gn:Arabidopsis_thaliana skos:inScheme gnc:ResourceClassificationScheme .
+gn:Arabidopsis_thaliana rdfs:label "Arabidopsis thaliana" .
+gn:Arabidopsis_thaliana skos:prefLabel "Arabidopsis (Arabidopsis thaliana, araTha1)" .
+gn:Arabidopsis_thaliana skos:altLabel "Arabidopsis thaliana" .
+gn:Arabidopsis_thaliana gnt:shortName "arabidopsis" .
+gn:Arabidopsis_thaliana gnt:family "Plants" .
+gn:Arabidopsis_thaliana skos:notation taxon:3702 .
+gn:Homo_sapiens skos:inScheme gnc:ResourceClassificationScheme .
+gn:Homo_sapiens rdfs:label "Homo sapiens" .
+gn:Homo_sapiens skos:prefLabel "Human (Homo sapiens, hg19)" .
+gn:Homo_sapiens skos:altLabel "Human" .
+gn:Homo_sapiens gnt:shortName "human" .
+gn:Homo_sapiens gnt:family "Vertebrates" .
+gn:Homo_sapiens skos:notation taxon:9606 .
+gn:Hordeum_vulgare skos:inScheme gnc:ResourceClassificationScheme .
+gn:Hordeum_vulgare rdfs:label "Hordeum vulgare" .
+gn:Hordeum_vulgare skos:prefLabel "Barley (Hordeum vulgare)" .
+gn:Hordeum_vulgare skos:altLabel "Barley" .
+gn:Hordeum_vulgare gnt:shortName "barley" .
+gn:Hordeum_vulgare gnt:family "Plants" .
+gn:Hordeum_vulgare skos:notation taxon:4513 .
+gn:Drosophila_melanogaster skos:inScheme gnc:ResourceClassificationScheme .
+gn:Drosophila_melanogaster rdfs:label "Drosophila melanogaster" .
+gn:Drosophila_melanogaster skos:prefLabel "Fly (Drosophila melanogaster, dm6)" .
+gn:Drosophila_melanogaster skos:altLabel "Drosophila" .
+gn:Drosophila_melanogaster gnt:shortName "drosophila" .
+gn:Drosophila_melanogaster gnt:family "Other Metazoa" .
+gn:Drosophila_melanogaster skos:notation taxon:7227 .
+gn:Macaca_nemestrina skos:inScheme gnc:ResourceClassificationScheme .
+gn:Macaca_nemestrina rdfs:label "Macaca nemestrina" .
+gn:Macaca_nemestrina skos:prefLabel "Monkey (Macaca nemestrina)" .
+gn:Macaca_nemestrina skos:altLabel "Macaque monkey" .
+gn:Macaca_nemestrina gnt:shortName "macaque monkey" .
+gn:Macaca_nemestrina gnt:family "Vertebrates" .
+gn:Macaca_nemestrina skos:notation taxon:9544 .
+gn:Glycine_max skos:inScheme gnc:ResourceClassificationScheme .
+gn:Glycine_max rdfs:label "Glycine max" .
+gn:Glycine_max skos:prefLabel "Soybean (Glycine max, US DOE JGI-PGF v2 2021)" .
+gn:Glycine_max skos:altLabel "Soybean" .
+gn:Glycine_max gnt:shortName "soybean" .
+gn:Glycine_max gnt:family "Plants" .
+gn:Glycine_max skos:notation taxon:3847 .
+gn:Solanum_lycopersicum skos:inScheme gnc:ResourceClassificationScheme .
+gn:Solanum_lycopersicum rdfs:label "Solanum lycopersicum" .
+gn:Solanum_lycopersicum skos:prefLabel "Tomato (Solanum lycopersicum, GCF_001406875.1)" .
+gn:Solanum_lycopersicum skos:altLabel "Tomato" .
+gn:Solanum_lycopersicum gnt:shortName "tomato" .
+gn:Solanum_lycopersicum gnt:family "Plants" .
+gn:Solanum_lycopersicum skos:notation taxon:4081 .
+gn:Populus_trichocarpa skos:inScheme gnc:ResourceClassificationScheme .
+gn:Populus_trichocarpa rdfs:label "Populus trichocarpa" .
+gn:Populus_trichocarpa skos:prefLabel "Poplar (Populus trichocarpa)" .
+gn:Populus_trichocarpa skos:altLabel "Poplar" .
+gn:Populus_trichocarpa gnt:shortName "poplar" .
+gn:Populus_trichocarpa gnt:family "Plants" .
+gn:Populus_trichocarpa skos:notation taxon:3689 .
+gn:Oryzias_latipes skos:inScheme gnc:ResourceClassificationScheme .
+gn:Oryzias_latipes rdfs:label "Oryzias latipes" .
+gn:Oryzias_latipes skos:prefLabel "Medaka (Oryzias latipes, Oryl23)" .
+gn:Oryzias_latipes skos:altLabel "Oryzias latipes (Japanese medaka)" .
+gn:Oryzias_latipes gnt:shortName "Oryzias latipes" .
+gn:Oryzias_latipes gnt:family "Other Metazoa" .
+gn:Oryzias_latipes skos:notation taxon:8090 .
+gn:Glossophaga_soricina skos:inScheme gnc:ResourceClassificationScheme .
+gn:Glossophaga_soricina rdfs:label "Glossophaga soricina" .
+gn:Glossophaga_soricina skos:prefLabel "Bat (Glossophaga soricina, gsor23)" .
+gn:Glossophaga_soricina skos:altLabel "Bat (Glossophaga soricina)" .
+gn:Glossophaga_soricina gnt:shortName "bat" .
+gn:Glossophaga_soricina gnt:family "Vertebrates" .
+gn:Glossophaga_soricina skos:notation taxon:27638 .
+gnt:geneticType a owl:ObjectProperty .
+gnt:geneticType rdfs:domain gnc:set .
+gnt:code a owl:ObjectProperty .
+gnt:code rdfs:domain gnc:set .
+gnt:family rdfs:domain gnc:Set .
+gnt:mappingMethod a owl:ObjectProperty .
+gnt:mappingMethod rdfs:domain gnc:set .
+gnt:belongsToGroup a rdf:property .
+gnt:belongsToGroup rdf:comment "This resource given to this group" .
+gnt:belongsToGroup rdf:label "belongsToGroup" .
+gn:setBxd skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd rdfs:label "BXD Family" .
+gn:setBxd skos:prefLabel "BXD" .
+gn:setBxd gnt:geneticType "riset" .
+gn:setBxd gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setBxd gnt:mappingMethod "qtlreaper" .
+gn:setBxd gnt:code "BXD" .
+gn:setBxd xkos:generalizes gn:Mus_musculus .
+gn:setB6d2f2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setB6d2f2 rdfs:label "B6D2F2 OHSU Brain" .
+gn:setB6d2f2 skos:prefLabel "B6D2F2" .
+gn:setB6d2f2 gnt:geneticType "intercross" .
+gn:setB6d2f2 gnt:family "Crosses, AIL, HS" .
+gn:setB6d2f2 gnt:mappingMethod "qtlreaper" .
+gn:setB6d2f2 xkos:generalizes gn:Mus_musculus .
+gn:setAxbxa skos:inScheme gnc:ResourceClassificationScheme .
+gn:setAxbxa rdfs:label "AXB/BXA Family" .
+gn:setAxbxa skos:prefLabel "AXBXA" .
+gn:setAxbxa gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setAxbxa gnt:mappingMethod "qtlreaper" .
+gn:setAxbxa gnt:code "AXB" .
+gn:setAxbxa xkos:generalizes gn:Mus_musculus .
+gn:setAkxd skos:inScheme gnc:ResourceClassificationScheme .
+gn:setAkxd rdfs:label "AKXD Family" .
+gn:setAkxd skos:prefLabel "AKXD" .
+gn:setAkxd gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setAkxd gnt:mappingMethod "qtlreaper" .
+gn:setAkxd gnt:code "AKD" .
+gn:setAkxd xkos:generalizes gn:Mus_musculus .
+gn:setB6btbrf2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setB6btbrf2 rdfs:label "B6BTBRF2" .
+gn:setB6btbrf2 skos:prefLabel "B6BTBRF2" .
+gn:setB6btbrf2 gnt:geneticType "intercross" .
+gn:setB6btbrf2 gnt:family "Crosses, AIL, HS" .
+gn:setB6btbrf2 gnt:mappingMethod "qtlreaper" .
+gn:setB6btbrf2 gnt:code "BBT" .
+gn:setB6btbrf2 xkos:generalizes gn:Mus_musculus .
+gn:setBxh skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxh rdfs:label "BXH Family" .
+gn:setBxh skos:prefLabel "BXH" .
+gn:setBxh gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setBxh gnt:mappingMethod "qtlreaper" .
+gn:setBxh gnt:code "BXH" .
+gn:setBxh xkos:generalizes gn:Mus_musculus .
+gn:setCxb skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCxb rdfs:label "CXB Family" .
+gn:setCxb skos:prefLabel "CXB" .
+gn:setCxb gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setCxb gnt:mappingMethod "qtlreaper" .
+gn:setCxb gnt:code "CXB" .
+gn:setCxb xkos:generalizes gn:Mus_musculus .
+gn:setLxs skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLxs rdfs:label "ILSXISS (LXS) Family" .
+gn:setLxs skos:prefLabel "LXS" .
+gn:setLxs gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setLxs gnt:mappingMethod "qtlreaper" .
+gn:setLxs gnt:code "LXS" .
+gn:setLxs xkos:generalizes gn:Mus_musculus .
+gn:setHxbbxh skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHxbbxh rdfs:label "Hybrid Rat Diversity Panel (Includes HXB/BXH)" .
+gn:setHxbbxh skos:prefLabel "HXBBXH" .
+gn:setHxbbxh gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setHxbbxh gnt:mappingMethod "qtlreaper" .
+gn:setHxbbxh gnt:code "HRP" .
+gn:setHxbbxh xkos:generalizes gn:Rattus_norvegicus .
+gn:setBayxsha skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBayxsha rdfs:label "BayXSha" .
+gn:setBayxsha skos:prefLabel "BayXSha" .
+gn:setBayxsha gnt:mappingMethod "qtlreaper" .
+gn:setBayxsha xkos:generalizes gn:Arabidopsis_thaliana .
+gn:setBdf2-2005 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBdf2-2005 rdfs:label "B6D2F2 OHSU Striatum" .
+gn:setBdf2-2005 skos:prefLabel "BDF2-2005" .
+gn:setBdf2-2005 gnt:geneticType "intercross" .
+gn:setBdf2-2005 gnt:family "Crosses, AIL, HS" .
+gn:setBdf2-2005 gnt:mappingMethod "qtlreaper" .
+gn:setBdf2-2005 xkos:generalizes gn:Mus_musculus .
+gn:setColxcvi skos:inScheme gnc:ResourceClassificationScheme .
+gn:setColxcvi rdfs:label "ColXCvi" .
+gn:setColxcvi skos:prefLabel "ColXCvi" .
+gn:setColxcvi gnt:mappingMethod "qtlreaper" .
+gn:setColxcvi xkos:generalizes gn:Arabidopsis_thaliana .
+gn:setColxbur skos:inScheme gnc:ResourceClassificationScheme .
+gn:setColxbur rdfs:label "ColXBur" .
+gn:setColxbur skos:prefLabel "ColXBur" .
+gn:setColxbur gnt:mappingMethod "qtlreaper" .
+gn:setColxbur xkos:generalizes gn:Arabidopsis_thaliana .
+gn:setMdp skos:inScheme gnc:ResourceClassificationScheme .
+gn:setMdp rdfs:label "Mouse Diversity Panel" .
+gn:setMdp skos:prefLabel "MDP" .
+gn:setMdp gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setMdp gnt:mappingMethod "qtlreaper" .
+gn:setMdp gnt:code "MDP" .
+gn:setMdp xkos:generalizes gn:Mus_musculus .
+gn:setSxm skos:inScheme gnc:ResourceClassificationScheme .
+gn:setSxm rdfs:label "SXM" .
+gn:setSxm skos:prefLabel "SXM" .
+gn:setSxm gnt:mappingMethod "qtlreaper" .
+gn:setSxm gnt:code "SXM" .
+gn:setSxm xkos:generalizes gn:Hordeum_vulgare .
+gn:setB6d2f2-psu skos:inScheme gnc:ResourceClassificationScheme .
+gn:setB6d2f2-psu rdfs:label "B6D2F2 PSU Muscle" .
+gn:setB6d2f2-psu skos:prefLabel "B6D2F2-PSU" .
+gn:setB6d2f2-psu gnt:geneticType "intercross" .
+gn:setB6d2f2-psu gnt:family "Crosses, AIL, HS" .
+gn:setB6d2f2-psu gnt:mappingMethod "qtlreaper" .
+gn:setB6d2f2-psu xkos:generalizes gn:Mus_musculus .
+gn:setBhf2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBhf2 rdfs:label "B6C3HF2(APOE-) UCLA Metabolism" .
+gn:setBhf2 skos:prefLabel "BHF2" .
+gn:setBhf2 gnt:geneticType "intercross" .
+gn:setBhf2 gnt:family "Crosses, AIL, HS" .
+gn:setBhf2 gnt:mappingMethod "qtlreaper" .
+gn:setBhf2 xkos:generalizes gn:Mus_musculus .
+gn:setBdf2-1999 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBdf2-1999 rdfs:label "B6D2F2 UCLA Liver" .
+gn:setBdf2-1999 skos:prefLabel "BDF2-1999" .
+gn:setBdf2-1999 gnt:geneticType "intercross" .
+gn:setBdf2-1999 gnt:family "Crosses, AIL, HS" .
+gn:setBdf2-1999 gnt:mappingMethod "qtlreaper" .
+gn:setBdf2-1999 xkos:generalizes gn:Mus_musculus .
+gn:setCtb6f2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCtb6f2 rdfs:label "CastB6/B6Cast F2 UCLA" .
+gn:setCtb6f2 skos:prefLabel "CTB6F2" .
+gn:setCtb6f2 gnt:geneticType "intercross" .
+gn:setCtb6f2 gnt:family "Crosses, AIL, HS" .
+gn:setCtb6f2 gnt:mappingMethod "qtlreaper" .
+gn:setCtb6f2 xkos:generalizes gn:Mus_musculus .
+gn:setBhhbf2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBhhbf2 rdfs:label "B6C3HF2 UCLA Metabolism" .
+gn:setBhhbf2 skos:prefLabel "BHHBF2" .
+gn:setBhhbf2 gnt:geneticType "intercross" .
+gn:setBhhbf2 gnt:family "Crosses, AIL, HS" .
+gn:setBhhbf2 gnt:mappingMethod "qtlreaper" .
+gn:setBhhbf2 xkos:generalizes gn:Mus_musculus .
+gn:setCeph-2004 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCeph-2004 rdfs:label "Lymphoblastoid Cells: Gene Expression (CEPH, Williams)" .
+gn:setCeph-2004 skos:prefLabel "CEPH-2004" .
+gn:setCeph-2004 xkos:generalizes gn:Homo_sapiens .
+gn:setNzbxfvb-n2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setNzbxfvb-n2 rdfs:label "NZB/FVB N2 NCI" .
+gn:setNzbxfvb-n2 skos:prefLabel "NZBXFVB-N2" .
+gn:setNzbxfvb-n2 gnt:family "Non-genetic Cohort" .
+gn:setNzbxfvb-n2 gnt:mappingMethod "qtlreaper" .
+gn:setNzbxfvb-n2 xkos:generalizes gn:Mus_musculus .
+gn:setSrxshrspf2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setSrxshrspf2 rdfs:label "UIOWA SRxSHRSP F2" .
+gn:setSrxshrspf2 skos:prefLabel "SRxSHRSPF2" .
+gn:setSrxshrspf2 gnt:geneticType "intercross" .
+gn:setSrxshrspf2 gnt:family "Crosses and Heterogeneous Stock (individuals)" .
+gn:setSrxshrspf2 gnt:mappingMethod "qtlreaper" .
+gn:setSrxshrspf2 xkos:generalizes gn:Rattus_norvegicus .
+gn:setAd-cases-controls skos:inScheme gnc:ResourceClassificationScheme .
+gn:setAd-cases-controls rdfs:label "Brain, Aging: AD, Normal Gene Expression (Liang)" .
+gn:setAd-cases-controls skos:prefLabel "AD-cases-controls" .
+gn:setAd-cases-controls xkos:generalizes gn:Homo_sapiens .
+gn:setAd-cases-controls-myers skos:inScheme gnc:ResourceClassificationScheme .
+gn:setAd-cases-controls-myers rdfs:label "Brain, Aging: AD, Normal Gene Expression with Genotypes (Myers)" .
+gn:setAd-cases-controls-myers skos:prefLabel "AD-cases-controls-Myers" .
+gn:setAd-cases-controls-myers gnt:mappingMethod "Rqtl" .
+gn:setAd-cases-controls-myers xkos:generalizes gn:Homo_sapiens .
+gn:setQsm skos:inScheme gnc:ResourceClassificationScheme .
+gn:setQsm rdfs:label "QSM" .
+gn:setQsm skos:prefLabel "QSM" .
+gn:setQsm gnt:mappingMethod "qtlreaper" .
+gn:setQsm gnt:code "QSM" .
+gn:setQsm xkos:generalizes gn:Hordeum_vulgare .
+gn:setCeph-2009 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCeph-2009 rdfs:label "CEPH 2009 families" .
+gn:setCeph-2009 skos:prefLabel "CEPH-2009" .
+gn:setCeph-2009 xkos:generalizes gn:Homo_sapiens .
+gn:setOregon-r_x_2b3 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setOregon-r_x_2b3 rdfs:label "Oregon-R x 2b3" .
+gn:setOregon-r_x_2b3 skos:prefLabel "Oregon-R_x_2b3" .
+gn:setOregon-r_x_2b3 xkos:generalizes gn:Drosophila_melanogaster .
+gn:setMacaca-fasicularis skos:inScheme gnc:ResourceClassificationScheme .
+gn:setMacaca-fasicularis rdfs:label "Macaca fasicularis (Cynomolgus monkey)" .
+gn:setMacaca-fasicularis skos:prefLabel "Macaca-fasicularis" .
+gn:setMacaca-fasicularis gnt:mappingMethod "qtlreaper" .
+gn:setMacaca-fasicularis xkos:generalizes gn:Macaca_nemestrina .
+gn:setHs skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHs rdfs:label "Heterogeneous Stock" .
+gn:setHs skos:prefLabel "HS" .
+gn:setHs gnt:family "Crosses, AIL, HS" .
+gn:setHs gnt:code "HSA" .
+gn:setHs xkos:generalizes gn:Mus_musculus .
+gn:setDgrp skos:inScheme gnc:ResourceClassificationScheme .
+gn:setDgrp rdfs:label "Drosophila Genetic Reference Panel" .
+gn:setDgrp skos:prefLabel "DGRP" .
+gn:setDgrp xkos:generalizes gn:Drosophila_melanogaster .
+gn:setHs-cc skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHs-cc rdfs:label "DO Hitzemann Striatum mRNA n=90 (Feb11, no mapping)" .
+gn:setHs-cc skos:prefLabel "HS-CC" .
+gn:setHs-cc gnt:family "CC and DO Individual Data" .
+gn:setHs-cc gnt:code "HCC" .
+gn:setHs-cc xkos:generalizes gn:Mus_musculus .
+gn:setHlc skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHlc rdfs:label "Liver: Normal Gene Expression with Genotypes (Merck)" .
+gn:setHlc skos:prefLabel "HLC" .
+gn:setHlc gnt:mappingMethod "Rqtl" .
+gn:setHlc xkos:generalizes gn:Homo_sapiens .
+gn:setCandle skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCandle rdfs:label "Child Development: CANDLE Cohort with Genotypes (TUCI/UTHSC)" .
+gn:setCandle skos:prefLabel "CANDLE" .
+gn:setCandle gnt:code "CAN" .
+gn:setCandle xkos:generalizes gn:Homo_sapiens .
+gn:setHb skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHb rdfs:label "Brain, Aging: AD, HD, Normal Gene Expression (Harvard/Merck)" .
+gn:setHb skos:prefLabel "HB" .
+gn:setHb xkos:generalizes gn:Homo_sapiens .
+gn:setHsb skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHsb rdfs:label "Brain, Development: Normal Gene Expression (Yale/Sestan)" .
+gn:setHsb skos:prefLabel "HSB" .
+gn:setHsb xkos:generalizes gn:Homo_sapiens .
+gn:setJ12xj58f2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setJ12xj58f2 rdfs:label "J12XJ58F2" .
+gn:setJ12xj58f2 skos:prefLabel "J12XJ58F2" .
+gn:setJ12xj58f2 gnt:geneticType "intercross" .
+gn:setJ12xj58f2 gnt:mappingMethod "qtlreaper" .
+gn:setJ12xj58f2 xkos:generalizes gn:Glycine_max .
+gn:setLxp skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLxp rdfs:label "LXP" .
+gn:setLxp skos:prefLabel "LXP" .
+gn:setLxp gnt:mappingMethod "qtlreaper" .
+gn:setLxp gnt:code "LXP" .
+gn:setLxp xkos:generalizes gn:Solanum_lycopersicum .
+gn:setB6d2ri skos:inScheme gnc:ResourceClassificationScheme .
+gn:setB6d2ri rdfs:label "BXD Aged Hippocampus" .
+gn:setB6d2ri skos:prefLabel "B6D2RI" .
+gn:setB6d2ri gnt:geneticType "intercross" .
+gn:setB6d2ri gnt:family "BXD Individual Data" .
+gn:setB6d2ri gnt:mappingMethod "qtlreaper" .
+gn:setB6d2ri gnt:code "BDH" .
+gn:setB6d2ri xkos:generalizes gn:Mus_musculus .
+gn:setSotnot-ohsu skos:inScheme gnc:ResourceClassificationScheme .
+gn:setSotnot-ohsu rdfs:label "SOTNOT-OHSU" .
+gn:setSotnot-ohsu skos:prefLabel "SOTNOT-OHSU" .
+gn:setSotnot-ohsu gnt:geneticType "riset" .
+gn:setSotnot-ohsu gnt:family "Crosses, AIL, HS" .
+gn:setSotnot-ohsu gnt:mappingMethod "qtlreaper" .
+gn:setSotnot-ohsu xkos:generalizes gn:Mus_musculus .
+gn:setHsnih-rgsmc skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHsnih-rgsmc rdfs:label "NIH Heterogeneous Stock (RGSMC 2013)" .
+gn:setHsnih-rgsmc skos:prefLabel "HSNIH-RGSMC" .
+gn:setHsnih-rgsmc gnt:family "Crosses and Heterogeneous Stock (individuals)" .
+gn:setHsnih-rgsmc gnt:mappingMethod "qtlreaper" .
+gn:setHsnih-rgsmc gnt:code "HSS" .
+gn:setHsnih-rgsmc xkos:generalizes gn:Rattus_norvegicus .
+gn:setC57bl-6jxc57bl-6njf2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setC57bl-6jxc57bl-6njf2 rdfs:label "Reduced Complexity Cross (B6JxB6N F2)" .
+gn:setC57bl-6jxc57bl-6njf2 skos:prefLabel "C57BL-6JxC57BL-6NJF2" .
+gn:setC57bl-6jxc57bl-6njf2 gnt:geneticType "intercross" .
+gn:setC57bl-6jxc57bl-6njf2 gnt:family "Non-genetic Cohort" .
+gn:setC57bl-6jxc57bl-6njf2 gnt:mappingMethod "qtlreaper" .
+gn:setC57bl-6jxc57bl-6njf2 gnt:code "BRC" .
+gn:setC57bl-6jxc57bl-6njf2 xkos:generalizes gn:Mus_musculus .
+gn:setScripps-2013 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setScripps-2013 rdfs:label "Scripps C57BL/6J" .
+gn:setScripps-2013 skos:prefLabel "Scripps-2013" .
+gn:setScripps-2013 gnt:geneticType "intercross" .
+gn:setScripps-2013 gnt:family "Non-genetic Cohort" .
+gn:setScripps-2013 gnt:mappingMethod "qtlreaper" .
+gn:setScripps-2013 xkos:generalizes gn:Mus_musculus .
+gn:setHlt skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHlt rdfs:label "Lung: Normal Gene Expression (Merck)" .
+gn:setHlt skos:prefLabel "HLT" .
+gn:setHlt gnt:mappingMethod "Rqtl" .
+gn:setHlt xkos:generalizes gn:Homo_sapiens .
+gn:setAging-brain-uci skos:inScheme gnc:ResourceClassificationScheme .
+gn:setAging-brain-uci rdfs:label "Brain, Aging: Normal Gene Expression (UCI/Cotman)" .
+gn:setAging-brain-uci skos:prefLabel "Aging-Brain-UCI" .
+gn:setAging-brain-uci xkos:generalizes gn:Homo_sapiens .
+gn:setLinsenbardt-boehm skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLinsenbardt-boehm rdfs:label "B6D2 EtOH Selected Advanced Intercross" .
+gn:setLinsenbardt-boehm skos:prefLabel "Linsenbardt-Boehm" .
+gn:setLinsenbardt-boehm gnt:geneticType "intercross" .
+gn:setLinsenbardt-boehm gnt:family "Crosses, AIL, HS" .
+gn:setLinsenbardt-boehm gnt:mappingMethod "qtlreaper" .
+gn:setLinsenbardt-boehm xkos:generalizes gn:Mus_musculus .
+gn:setBrain-normal-nih-gibbs skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBrain-normal-nih-gibbs rdfs:label "Brain: Normal Gene Expression (NIH/Gibbs)" .
+gn:setBrain-normal-nih-gibbs skos:prefLabel "Brain-Normal-NIH-Gibbs" .
+gn:setBrain-normal-nih-gibbs xkos:generalizes gn:Homo_sapiens .
+gn:setGtex skos:inScheme gnc:ResourceClassificationScheme .
+gn:setGtex rdfs:label "GTEx v3 All Tissues, RNA-Seq with Genotypes" .
+gn:setGtex skos:prefLabel "GTEx" .
+gn:setGtex gnt:mappingMethod "Rqtl" .
+gn:setGtex xkos:generalizes gn:Homo_sapiens .
+gn:setJ12xj58f11 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setJ12xj58f11 rdfs:label "J12XJ58F11" .
+gn:setJ12xj58f11 skos:prefLabel "J12XJ58F11" .
+gn:setJ12xj58f11 gnt:mappingMethod "qtlreaper" .
+gn:setJ12xj58f11 xkos:generalizes gn:Glycine_max .
+gn:setHcp skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHcp rdfs:label "Brain, Cognition, Human Connectome Project" .
+gn:setHcp skos:prefLabel "HCP" .
+gn:setHcp xkos:generalizes gn:Homo_sapiens .
+gn:setGtex_v5 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setGtex_v5 rdfs:label "GTEx v5 All Tissues, RNA-Seq with Genotypes" .
+gn:setGtex_v5 skos:prefLabel "GTEx_v5" .
+gn:setGtex_v5 gnt:mappingMethod "Rqtl" .
+gn:setGtex_v5 xkos:generalizes gn:Homo_sapiens .
+gn:setCms skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCms rdfs:label "Chronic Mild Stress" .
+gn:setCms skos:prefLabel "CMS" .
+gn:setCms gnt:geneticType "riset" .
+gn:setCms gnt:family "Non-genetic Cohort" .
+gn:setCms xkos:generalizes gn:Mus_musculus .
+gn:setCie-inia skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCie-inia rdfs:label "Chronic Intermittent Ethanol Phase 1" .
+gn:setCie-inia skos:prefLabel "CIE-INIA" .
+gn:setCie-inia gnt:geneticType "riset" .
+gn:setCie-inia gnt:family "Non-genetic Cohort" .
+gn:setCie-inia xkos:generalizes gn:Mus_musculus .
+gn:setHsnih-palmer skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHsnih-palmer rdfs:label "NIH Heterogeneous Stock (Palmer)" .
+gn:setHsnih-palmer skos:prefLabel "HSNIH-Palmer" .
+gn:setHsnih-palmer gnt:family "Crosses and Heterogeneous Stock (individuals)" .
+gn:setHsnih-palmer gnt:mappingMethod "qtlreaper" .
+gn:setHsnih-palmer gnt:code "HSR" .
+gn:setHsnih-palmer xkos:generalizes gn:Rattus_norvegicus .
+gn:setTigem-retina-rna-seq skos:inScheme gnc:ResourceClassificationScheme .
+gn:setTigem-retina-rna-seq rdfs:label "Retina: Normal Adult Gene Expression, RNA-Seq (TIGEM)" .
+gn:setTigem-retina-rna-seq skos:prefLabel "TIGEM-Retina-RNA-Seq" .
+gn:setTigem-retina-rna-seq xkos:generalizes gn:Homo_sapiens .
+gn:setB6d2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setB6d2 rdfs:label "Glaucoma and Aged Retina UTHSC" .
+gn:setB6d2 skos:prefLabel "B6D2" .
+gn:setB6d2 gnt:family "Non-genetic Cohort" .
+gn:setB6d2 xkos:generalizes gn:Mus_musculus .
+gn:setBxd-bone skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd-bone rdfs:label "BXD Bone Individual Data" .
+gn:setBxd-bone skos:prefLabel "BXD-Bone" .
+gn:setBxd-bone gnt:geneticType "intercross" .
+gn:setBxd-bone gnt:family "BXD Individual Data" .
+gn:setBxd-bone gnt:mappingMethod "qtlreaper" .
+gn:setBxd-bone gnt:code "BDB" .
+gn:setBxd-bone xkos:generalizes gn:Mus_musculus .
+gn:setCfw skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCfw rdfs:label "CFW Outbred GWAS" .
+gn:setCfw skos:prefLabel "CFW" .
+gn:setCfw gnt:geneticType "intercross" .
+gn:setCfw gnt:family "Crosses, AIL, HS" .
+gn:setCfw gnt:mappingMethod "Rqtl" .
+gn:setCfw gnt:code "CFA" .
+gn:setCfw xkos:generalizes gn:Mus_musculus .
+gn:setPoplar skos:inScheme gnc:ResourceClassificationScheme .
+gn:setPoplar rdfs:label "Poplar" .
+gn:setPoplar skos:prefLabel "Poplar" .
+gn:setPoplar xkos:generalizes gn:Populus_trichocarpa .
+gn:setIslets-gerling skos:inScheme gnc:ResourceClassificationScheme .
+gn:setIslets-gerling rdfs:label "Pancreatic: Islets (UTHSC/Gerling)" .
+gn:setIslets-gerling skos:prefLabel "Islets-Gerling" .
+gn:setIslets-gerling xkos:generalizes gn:Homo_sapiens .
+gn:setEmsr skos:inScheme gnc:ResourceClassificationScheme .
+gn:setEmsr rdfs:label "Ethanol-Medicated Stress Reduction" .
+gn:setEmsr skos:prefLabel "EMSR" .
+gn:setEmsr gnt:geneticType "riset" .
+gn:setEmsr gnt:family "Non-genetic Cohort" .
+gn:setEmsr xkos:generalizes gn:Mus_musculus .
+gn:setCie-rma skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCie-rma rdfs:label "Chronic Intermittent Ethanol Phase 2" .
+gn:setCie-rma skos:prefLabel "CIE-RMA" .
+gn:setCie-rma gnt:family "Non-genetic Cohort" .
+gn:setCie-rma xkos:generalizes gn:Mus_musculus .
+gn:setBxd-longevity skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd-longevity rdfs:label "BXD NIA Longevity Study" .
+gn:setBxd-longevity skos:prefLabel "BXD-Longevity" .
+gn:setBxd-longevity gnt:geneticType "intercross" .
+gn:setBxd-longevity gnt:family "BXD Individual Data" .
+gn:setBxd-longevity gnt:mappingMethod "qtlreaper" .
+gn:setBxd-longevity gnt:code "BDL" .
+gn:setBxd-longevity xkos:generalizes gn:Mus_musculus .
+gn:setLgsm-ai skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLgsm-ai rdfs:label "LGSM AI Palmer" .
+gn:setLgsm-ai skos:prefLabel "LGSM-AI" .
+gn:setLgsm-ai gnt:geneticType "intercross" .
+gn:setLgsm-ai gnt:family "Crosses, AIL, HS" .
+gn:setLgsm-ai gnt:mappingMethod "Rqtl" .
+gn:setLgsm-ai gnt:code "LSF" .
+gn:setLgsm-ai xkos:generalizes gn:Mus_musculus .
+gn:setD2gm skos:inScheme gnc:ResourceClassificationScheme .
+gn:setD2gm rdfs:label "D2 Glaucoma Model" .
+gn:setD2gm skos:prefLabel "D2GM" .
+gn:setD2gm gnt:geneticType "intercross" .
+gn:setD2gm gnt:family "Non-genetic Cohort" .
+gn:setD2gm gnt:mappingMethod "Rqtl" .
+gn:setD2gm xkos:generalizes gn:Mus_musculus .
+gn:setRetina-rgc-rheaume skos:inScheme gnc:ResourceClassificationScheme .
+gn:setRetina-rgc-rheaume rdfs:label "Retina RGC Rheaume" .
+gn:setRetina-rgc-rheaume skos:prefLabel "Retina-RGC-Rheaume" .
+gn:setRetina-rgc-rheaume gnt:family "Non-genetic Cohort" .
+gn:setRetina-rgc-rheaume xkos:generalizes gn:Mus_musculus .
+gn:setBxd_dev skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd_dev rdfs:label "BXD Development" .
+gn:setBxd_dev skos:prefLabel "BXD_Dev" .
+gn:setBxd_dev gnt:geneticType "riset" .
+gn:setBxd_dev gnt:family "BXD Individual Data" .
+gn:setBxd_dev gnt:mappingMethod "qtlreaper" .
+gn:setBxd_dev xkos:generalizes gn:Mus_musculus .
+gn:setLgsm-ai-g34-a skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLgsm-ai-g34-a rdfs:label "LGSM AI G34 Palmer (Array)" .
+gn:setLgsm-ai-g34-a skos:prefLabel "LGSM-AI-G34-A" .
+gn:setLgsm-ai-g34-a gnt:geneticType "intercross" .
+gn:setLgsm-ai-g34-a gnt:family "Crosses, AIL, HS" .
+gn:setLgsm-ai-g34-a gnt:mappingMethod "Rqtl" .
+gn:setLgsm-ai-g34-a gnt:code "LSB" .
+gn:setLgsm-ai-g34-a xkos:generalizes gn:Mus_musculus .
+gn:setLgsm-ai-g34-gbs skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLgsm-ai-g34-gbs rdfs:label "LGSM AI G34 Palmer (GBS)" .
+gn:setLgsm-ai-g34-gbs skos:prefLabel "LGSM-AI-G34-GBS" .
+gn:setLgsm-ai-g34-gbs gnt:geneticType "intercross" .
+gn:setLgsm-ai-g34-gbs gnt:family "Crosses, AIL, HS" .
+gn:setLgsm-ai-g34-gbs gnt:mappingMethod "Rqtl" .
+gn:setLgsm-ai-g34-gbs gnt:code "LSC" .
+gn:setLgsm-ai-g34-gbs xkos:generalizes gn:Mus_musculus .
+gn:setLgsm-ai-g34_39-43-gbs skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLgsm-ai-g34_39-43-gbs rdfs:label "LGSM AI G34 G39-43 Palmer (GBS)" .
+gn:setLgsm-ai-g34_39-43-gbs skos:prefLabel "LGSM-AI-G34_39-43-GBS" .
+gn:setLgsm-ai-g34_39-43-gbs gnt:geneticType "intercross" .
+gn:setLgsm-ai-g34_39-43-gbs gnt:family "Crosses, AIL, HS" .
+gn:setLgsm-ai-g34_39-43-gbs gnt:mappingMethod "Rqtl" .
+gn:setLgsm-ai-g34_39-43-gbs gnt:code "LSA" .
+gn:setLgsm-ai-g34_39-43-gbs xkos:generalizes gn:Mus_musculus .
+gn:setLgsm-ai-g39-43-gbs skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLgsm-ai-g39-43-gbs rdfs:label "LGSM AI G39-43 Palmer (GBS)" .
+gn:setLgsm-ai-g39-43-gbs skos:prefLabel "LGSM-AI-G39-43-GBS" .
+gn:setLgsm-ai-g39-43-gbs gnt:geneticType "intercross" .
+gn:setLgsm-ai-g39-43-gbs gnt:family "Crosses, AIL, HS" .
+gn:setLgsm-ai-g39-43-gbs gnt:mappingMethod "Rqtl" .
+gn:setLgsm-ai-g39-43-gbs gnt:code "LSE" .
+gn:setLgsm-ai-g39-43-gbs xkos:generalizes gn:Mus_musculus .
+gn:setLgsm-aig34_50-56-gbs skos:inScheme gnc:ResourceClassificationScheme .
+gn:setLgsm-aig34_50-56-gbs rdfs:label "LGSM AI G34/50-56 Lionikas (GBS)" .
+gn:setLgsm-aig34_50-56-gbs skos:prefLabel "LGSM-AIG34_50-56-GBS" .
+gn:setLgsm-aig34_50-56-gbs gnt:geneticType "intercross" .
+gn:setLgsm-aig34_50-56-gbs gnt:family "Crosses, AIL, HS" .
+gn:setLgsm-aig34_50-56-gbs gnt:mappingMethod "Rqtl" .
+gn:setLgsm-aig34_50-56-gbs gnt:code "LSD" .
+gn:setLgsm-aig34_50-56-gbs xkos:generalizes gn:Mus_musculus .
+gn:setJax-d2-mono-rna-seq skos:inScheme gnc:ResourceClassificationScheme .
+gn:setJax-d2-mono-rna-seq rdfs:label "D2 Glaucoma Monocyte JAX" .
+gn:setJax-d2-mono-rna-seq skos:prefLabel "JAX-D2-Mono-RNA-Seq" .
+gn:setJax-d2-mono-rna-seq gnt:geneticType "intercross" .
+gn:setJax-d2-mono-rna-seq gnt:family "Non-genetic Cohort" .
+gn:setJax-d2-mono-rna-seq gnt:mappingMethod "Rqtl" .
+gn:setJax-d2-mono-rna-seq xkos:generalizes gn:Mus_musculus .
+gn:setDod-bxd-gwi skos:inScheme gnc:ResourceClassificationScheme .
+gn:setDod-bxd-gwi rdfs:label "BXD DOD Gulf War Illness" .
+gn:setDod-bxd-gwi skos:prefLabel "DOD-BXD-GWI" .
+gn:setDod-bxd-gwi gnt:geneticType "intercross" .
+gn:setDod-bxd-gwi gnt:family "BXD Individual Data" .
+gn:setDod-bxd-gwi gnt:mappingMethod "qtlreaper" .
+gn:setDod-bxd-gwi gnt:code "BDG" .
+gn:setDod-bxd-gwi xkos:generalizes gn:Mus_musculus .
+gn:setHet3-itp skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHet3-itp rdfs:label "Aging Mouse Lifespan Studies (NIA UM-HET3)" .
+gn:setHet3-itp skos:prefLabel "HET3-ITP" .
+gn:setHet3-itp gnt:geneticType "intercross" .
+gn:setHet3-itp gnt:family "Crosses, AIL, HS" .
+gn:setHet3-itp gnt:mappingMethod "HappyR" .
+gn:setHet3-itp gnt:code "ITP" .
+gn:setHet3-itp xkos:generalizes gn:Mus_musculus .
+gn:setCc skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCc rdfs:label "CC Family" .
+gn:setCc skos:prefLabel "CC" .
+gn:setCc gnt:geneticType "intercross" .
+gn:setCc gnt:family "Reference Populations (replicate average, SE, N)" .
+gn:setCc gnt:mappingMethod "Rqtl" .
+gn:setCc gnt:code "CCF" .
+gn:setCc xkos:generalizes gn:Mus_musculus .
+gn:setGtex_v8 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setGtex_v8 rdfs:label "GTEx v8 All Tissues, RNA-Seq without Genotypes" .
+gn:setGtex_v8 skos:prefLabel "GTEx_v8" .
+gn:setGtex_v8 gnt:mappingMethod "Rqtl" .
+gn:setGtex_v8 xkos:generalizes gn:Homo_sapiens .
+gn:setUthsc-cannabinoid skos:inScheme gnc:ResourceClassificationScheme .
+gn:setUthsc-cannabinoid rdfs:label "BXD UTHSC Cannabinoid Pilot" .
+gn:setUthsc-cannabinoid skos:prefLabel "UTHSC-Cannabinoid" .
+gn:setUthsc-cannabinoid gnt:geneticType "intercross" .
+gn:setUthsc-cannabinoid gnt:family "BXD Individual Data" .
+gn:setUthsc-cannabinoid gnt:mappingMethod "qtlreaper" .
+gn:setUthsc-cannabinoid gnt:code "UCP" .
+gn:setUthsc-cannabinoid xkos:generalizes gn:Mus_musculus .
+gn:setB6-lens skos:inScheme gnc:ResourceClassificationScheme .
+gn:setB6-lens rdfs:label "B6 Lens" .
+gn:setB6-lens skos:prefLabel "B6-Lens" .
+gn:setB6-lens gnt:geneticType "intercross" .
+gn:setB6-lens gnt:family "Non-genetic Cohort" .
+gn:setB6-lens gnt:mappingMethod "qtlreaper" .
+gn:setB6-lens gnt:code "B6L" .
+gn:setB6-lens xkos:generalizes gn:Mus_musculus .
+gn:setNwu_wkyxf344_f2 skos:inScheme gnc:ResourceClassificationScheme .
+gn:setNwu_wkyxf344_f2 rdfs:label "NWU WKYxF344 F2 Behavior" .
+gn:setNwu_wkyxf344_f2 skos:prefLabel "NWU_WKYxF344_F2" .
+gn:setNwu_wkyxf344_f2 gnt:geneticType "intercross" .
+gn:setNwu_wkyxf344_f2 gnt:family "Crosses and Heterogeneous Stock (individuals)" .
+gn:setNwu_wkyxf344_f2 gnt:mappingMethod "HappyR" .
+gn:setNwu_wkyxf344_f2 gnt:code "NWU" .
+gn:setNwu_wkyxf344_f2 xkos:generalizes gn:Rattus_norvegicus .
+gn:setHiv-1tg skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHiv-1tg rdfs:label "HIV-1Tg and Control" .
+gn:setHiv-1tg skos:prefLabel "HIV-1Tg" .
+gn:setHiv-1tg gnt:family "Groups Without Genotypes" .
+gn:setHiv-1tg gnt:mappingMethod "qtlreaper" .
+gn:setHiv-1tg gnt:code "RHV" .
+gn:setHiv-1tg xkos:generalizes gn:Rattus_norvegicus .
+gn:setBxd-heart-metals skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd-heart-metals rdfs:label "BXD Heart Metals" .
+gn:setBxd-heart-metals skos:prefLabel "BXD-Heart-Metals" .
+gn:setBxd-heart-metals gnt:geneticType "intercross" .
+gn:setBxd-heart-metals gnt:family "BXD Individual Data" .
+gn:setBxd-heart-metals gnt:mappingMethod "Rqtl" .
+gn:setBxd-heart-metals gnt:code "BHM" .
+gn:setBxd-heart-metals xkos:generalizes gn:Mus_musculus .
+gn:setDo skos:inScheme gnc:ResourceClassificationScheme .
+gn:setDo rdfs:label "DO Gatti Blood n=742 (2014, no mapping)" .
+gn:setDo skos:prefLabel "DO" .
+gn:setDo gnt:geneticType "intercross" .
+gn:setDo gnt:family "CC and DO Individual Data" .
+gn:setDo gnt:mappingMethod "Rqtl" .
+gn:setDo gnt:code "DOM" .
+gn:setDo xkos:generalizes gn:Mus_musculus .
+gn:setBxd-ae skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd-ae rdfs:label "BXD Adult and Aged Eye" .
+gn:setBxd-ae skos:prefLabel "BXD-AE" .
+gn:setBxd-ae gnt:geneticType "riset" .
+gn:setBxd-ae gnt:family "BXD Individual Data" .
+gn:setBxd-ae gnt:mappingMethod "qtlreaper" .
+gn:setBxd-ae xkos:generalizes gn:Mus_musculus .
+gn:setHrdp_hxb-bxh-bp skos:inScheme gnc:ResourceClassificationScheme .
+gn:setHrdp_hxb-bxh-bp rdfs:label "HRDP-HXB/BXH Brain Proteome" .
+gn:setHrdp_hxb-bxh-bp skos:prefLabel "HRDP_HXB-BXH-BP" .
+gn:setHrdp_hxb-bxh-bp gnt:family "HRDP-HXB/BXH Individual Data" .
+gn:setHrdp_hxb-bxh-bp gnt:mappingMethod "qtlreaper" .
+gn:setHrdp_hxb-bxh-bp gnt:code "WBP" .
+gn:setHrdp_hxb-bxh-bp xkos:generalizes gn:Rattus_norvegicus .
+gn:setEbv_t_cells_perkins skos:inScheme gnc:ResourceClassificationScheme .
+gn:setEbv_t_cells_perkins rdfs:label "EBV, T cells Type 1 Diabetes: Gene Expression (Perkins, Morahan)" .
+gn:setEbv_t_cells_perkins skos:prefLabel "EBV_T_Cells_PERKINS" .
+gn:setEbv_t_cells_perkins gnt:mappingMethod "Rqtl" .
+gn:setEbv_t_cells_perkins xkos:generalizes gn:Homo_sapiens .
+gn:setMikk skos:inScheme gnc:ResourceClassificationScheme .
+gn:setMikk rdfs:label "Medaka Inbred Kiyosu-Karlsruhe (MIKK) Panel" .
+gn:setMikk skos:prefLabel "MIKK" .
+gn:setMikk gnt:mappingMethod "qtlreaper" .
+gn:setMikk xkos:generalizes gn:Oryzias_latipes .
+gn:setDol skos:inScheme gnc:ResourceClassificationScheme .
+gn:setDol rdfs:label "DO Boon Lung Infection n=194 (Apr22)" .
+gn:setDol skos:prefLabel "DOL" .
+gn:setDol gnt:geneticType "intercross" .
+gn:setDol gnt:family "CC and DO Individual Data" .
+gn:setDol gnt:mappingMethod "qtlreaper" .
+gn:setDol gnt:code "DOL" .
+gn:setDol xkos:generalizes gn:Mus_musculus .
+gn:setBxd-micturition skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd-micturition rdfs:label "BXD Micturition Study" .
+gn:setBxd-micturition skos:prefLabel "BXD-Micturition" .
+gn:setBxd-micturition gnt:geneticType "intercross" .
+gn:setBxd-micturition gnt:family "BXD Individual Data" .
+gn:setBxd-micturition gnt:mappingMethod "qtlreaper" .
+gn:setBxd-micturition gnt:code "BMS" .
+gn:setBxd-micturition xkos:generalizes gn:Mus_musculus .
+gn:setBxd-jax-ad skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd-jax-ad rdfs:label "BXD JAX AD Study" .
+gn:setBxd-jax-ad skos:prefLabel "BXD-JAX-AD" .
+gn:setBxd-jax-ad gnt:geneticType "intercross" .
+gn:setBxd-jax-ad gnt:family "BXD Individual Data" .
+gn:setBxd-jax-ad gnt:mappingMethod "qtlreaper" .
+gn:setBxd-jax-ad gnt:code "BJA" .
+gn:setBxd-jax-ad xkos:generalizes gn:Mus_musculus .
+gn:setBxd-nia-ad skos:inScheme gnc:ResourceClassificationScheme .
+gn:setBxd-nia-ad rdfs:label "BXD NIA Alzheimer's Studies" .
+gn:setBxd-nia-ad skos:prefLabel "BXD-NIA-AD" .
+gn:setBxd-nia-ad gnt:geneticType "intercross" .
+gn:setBxd-nia-ad gnt:family "BXD Individual Data" .
+gn:setBxd-nia-ad gnt:mappingMethod "qtlreaper" .
+gn:setBxd-nia-ad gnt:code "5XF" .
+gn:setBxd-nia-ad xkos:generalizes gn:Mus_musculus .
+gn:setCcbxd-tm skos:inScheme gnc:ResourceClassificationScheme .
+gn:setCcbxd-tm rdfs:label "CC BXD Tabbaa Brain n=1041 (Jan23)" .
+gn:setCcbxd-tm skos:prefLabel "CCBXD-TM" .
+gn:setCcbxd-tm gnt:geneticType "intercross" .
+gn:setCcbxd-tm gnt:family "CC and DO Individual Data" .
+gn:setCcbxd-tm gnt:mappingMethod "qtlreaper" .
+gn:setCcbxd-tm gnt:code "CCB" .
+gn:setCcbxd-tm xkos:generalizes gn:Mus_musculus .
+gn:setGso skos:inScheme gnc:ResourceClassificationScheme .
+gn:setGso rdfs:label "HUB Winter Gsor families (2014-2022)" .
+gn:setGso skos:prefLabel "GSO" .
+gn:setGso gnt:mappingMethod "qtlreaper" .
+gn:setGso gnt:code "GSO" .
+gn:setGso xkos:generalizes gn:Glossophaga_soricina .
+
+gnc:GeneWikiEntry a rdfs:Class .
+gnc:GNWikiEntry rdfs:subClassOf gnc:GeneWikiEntry .
+gnt:initial a owl:ObjectProperty .
+gnt:initial rdfs:domain gnc:GeneWikiEntry .
+gnt:initial skos:definition "Optional user or project code or your initials" .
+gnt:reason a owl:ObjectProperty .
+gnt:reason rdfs:domain gnc:GeneWikiEntry .
+gnt:reason skos:definition "The reason why this resource was modified" .
+gnc:GNWikiEntry rdfs:comment "Represents GeneRIF Entries entered from GeneNetwork" .
+gnt:geneSymbol rdfs:domain gnc:GNWikiEntry .
+gn:wiki-1-0 rdfs:label '''hippocampal CA1-3 expression signature'''@en .
+gn:wiki-1-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-1-0 gnt:symbol "Lpl" .
+gn:wiki-1-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-1-0 dct:created "2005-12-16 21:23:23"^^xsd:datetime  .
+gn:wiki-1-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-1-0 dct:identifier "1"^^xsd:integer .
+gn:wiki-1-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-1-0 dct:references pubmed:15084669 .
+gn:wiki-230-0 rdfs:label '''Expression signature for cells in globus pallidus and cerebellar Purkinje cells of adults (ABA).  test'''@en .
+gn:wiki-230-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-230-0 gnt:symbol "Shh" .
+gn:wiki-230-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-230-0 dct:created "2021-02-06 06:43:40"^^xsd:datetime  .
+gn:wiki-230-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-230-0 dct:identifier "230"^^xsd:integer .
+gn:wiki-230-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-230-0 gnt:initial "RWW" .
+gn:wiki-230-0 gnt:reason "test" .
+gn:wiki-230-0 gnt:belongsToCategory "Expression patterns: mature cells, tissues" .
+gn:wiki-230-0 gnt:belongsToCategory "Probes and probe sets" .
+gn:wiki-230-1 rdfs:label '''Expression signature for cells in globus pallidus and cerebellar Purkinje cells (ABA).'''@en .
+gn:wiki-230-1 rdf:type gnc:GNWikiEntry .
+gn:wiki-230-1 gnt:symbol "Shh" .
+gn:wiki-230-1 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-230-1 dct:created "2005-12-31 23:03:41"^^xsd:datetime  .
+gn:wiki-230-1 foaf:mbox <XXX@XXX.com> .
+gn:wiki-230-1 dct:identifier "230"^^xsd:integer .
+gn:wiki-230-1 dct:hasVersion "1"^^xsd:integer .
+gn:wiki-230-1 gnt:initial "RWW" .
+gn:wiki-230-1 gnt:belongsToCategory "Expression patterns: mature cells, tissues" .
+gn:wiki-230-1 gnt:belongsToCategory "Probes and probe sets" .
+gn:wiki-230-2 rdfs:label '''Expression signature for cells in globus pallidus and cerebellar Purkinje cells of adults (ABA).'''@en .
+gn:wiki-230-2 rdf:type gnc:GNWikiEntry .
+gn:wiki-230-2 gnt:symbol "Shh" .
+gn:wiki-230-2 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-230-2 dct:created "2006-01-04 20:33:17"^^xsd:datetime  .
+gn:wiki-230-2 foaf:mbox <XXX@XXX.com> .
+gn:wiki-230-2 dct:identifier "230"^^xsd:integer .
+gn:wiki-230-2 dct:hasVersion "2"^^xsd:integer .
+gn:wiki-230-2 gnt:initial "RWW" .
+gn:wiki-230-2 gnt:reason "Slight clarification. Entered other fields." .
+gn:wiki-230-2 gnt:belongsToCategory "Expression patterns: mature cells, tissues" .
+gn:wiki-230-2 gnt:belongsToCategory "Probes and probe sets" .
+gn:wiki-308-0 rdfs:label '''Associated with glioma.'''@en .
+gn:wiki-308-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-308-0 gnt:symbol "Shh" .
+gn:wiki-308-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-308-0 dct:created "2022-08-24 19:22:05"^^xsd:datetime  .
+gn:wiki-308-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-308-0 dct:identifier "308"^^xsd:integer .
+gn:wiki-308-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-308-0 gnt:initial "RFC" .
+gn:wiki-308-0 gnt:reason "more" .
+gn:wiki-308-0 gnt:belongsToCategory "Health and disease associations" .
+gn:wiki-308-1 rdfs:label '''Associated with glioma'''@en .
+gn:wiki-308-1 rdf:type gnc:GNWikiEntry .
+gn:wiki-308-1 gnt:symbol "Shh" .
+gn:wiki-308-1 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-308-1 dct:created "2006-01-30 20:17:27"^^xsd:datetime  .
+gn:wiki-308-1 foaf:mbox <XXX@XXX.com> .
+gn:wiki-308-1 dct:identifier "308"^^xsd:integer .
+gn:wiki-308-1 dct:hasVersion "1"^^xsd:integer .
+gn:wiki-308-1 gnt:initial "RFC" .
+gn:wiki-308-1 gnt:belongsToCategory "Health and disease associations" .
+gn:wiki-1106-0 rdfs:label '''high similarities on four locations on three different chromosomes'''@en .
+gn:wiki-1106-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-1106-0 gnt:symbol "Ckb" .
+gn:wiki-1106-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-1106-0 dct:created "2007-01-16 10:06:34"^^xsd:datetime  .
+gn:wiki-1106-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-1106-0 dct:identifier "1106"^^xsd:integer .
+gn:wiki-1106-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-1106-0 gnt:initial "dcc" .
+gn:wiki-1158-0 rdfs:label '''Validated strong cis-QTL in CNS using allele-specific expression (ASE) SNaPshot assay (Daniel Ciobanu and al., 2007). Possible 3' UTR variants.'''@en .
+gn:wiki-1158-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-1158-0 gnt:symbol "Lpl" .
+gn:wiki-1158-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-1158-0 dct:created "2007-05-08 14:46:07"^^xsd:datetime  .
+gn:wiki-1158-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-1158-0 dct:identifier "1158"^^xsd:integer .
+gn:wiki-1158-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-1158-0 gnt:initial "dcc" .
+gn:wiki-1158-0 gnt:reason "addition" .
+gn:wiki-1158-0 gnt:belongsToCategory "Probes and probe sets" .
+gn:wiki-1158-0 gnt:belongsToCategory "Transcriptional and translation control" .
+gn:wiki-1158-1 rdfs:label '''putative 3' UTR variants'''@en .
+gn:wiki-1158-1 rdf:type gnc:GNWikiEntry .
+gn:wiki-1158-1 gnt:symbol "Lpl" .
+gn:wiki-1158-1 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-1158-1 dct:created "2007-02-09 09:23:40"^^xsd:datetime  .
+gn:wiki-1158-1 foaf:mbox <XXX@XXX.com> .
+gn:wiki-1158-1 dct:identifier "1158"^^xsd:integer .
+gn:wiki-1158-1 dct:hasVersion "1"^^xsd:integer .
+gn:wiki-1158-1 gnt:initial "dcc" .
+gn:wiki-1158-1 gnt:belongsToCategory "Probes and probe sets" .
+gn:wiki-1158-1 gnt:belongsToCategory "Transcriptional and translation control" .
+gn:wiki-1158-2 rdfs:label '''Validated strong cis-QTL in CNS using allele-specific expression (ASE) SNaPshot assay. Possible 3' UTR variants.'''@en .
+gn:wiki-1158-2 rdf:type gnc:GNWikiEntry .
+gn:wiki-1158-2 gnt:symbol "Lpl" .
+gn:wiki-1158-2 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-1158-2 dct:created "2007-04-05 09:11:05"^^xsd:datetime  .
+gn:wiki-1158-2 foaf:mbox <XXX@XXX.com> .
+gn:wiki-1158-2 dct:identifier "1158"^^xsd:integer .
+gn:wiki-1158-2 dct:hasVersion "2"^^xsd:integer .
+gn:wiki-1158-2 gnt:initial "dcc" .
+gn:wiki-1158-2 gnt:reason "new data" .
+gn:wiki-1158-2 gnt:belongsToCategory "Probes and probe sets" .
+gn:wiki-1158-2 gnt:belongsToCategory "Transcriptional and translation control" .
+gn:wiki-1328-0 rdfs:label '''cis QTL present in hippocampus LXS, ILM2970706 (distal 3' UTR), 121.4 LRS, ISS increases the trait;'''@en .
+gn:wiki-1328-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-1328-0 gnt:symbol "Lpl" .
+gn:wiki-1328-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-1328-0 dct:created "2007-05-10 10:52:22"^^xsd:datetime  .
+gn:wiki-1328-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-1328-0 dct:identifier "1328"^^xsd:integer .
+gn:wiki-1328-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-1328-0 gnt:initial "dcc" .
+gn:wiki-1328-0 gnt:belongsToCategory "Expression patterns: mature cells, tissues" .
+gn:wiki-1328-0 gnt:belongsToCategory "Gene structure and organization" .
+gn:wiki-1328-0 gnt:belongsToCategory "Genetic variation and alleles" .
+gn:wiki-2079-0 rdfs:label '''Individual probe analysis:probably true cisQTL'''@en .
+gn:wiki-2079-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-2079-0 gnt:symbol "Lpl" .
+gn:wiki-2079-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-2079-0 dct:created "2007-10-05 14:09:52"^^xsd:datetime  .
+gn:wiki-2079-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-2079-0 dct:identifier "2079"^^xsd:integer .
+gn:wiki-2079-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-2079-0 gnt:initial "DCC" .
+gn:wiki-2079-0 gnt:belongsToCategory "Genetic variation and alleles" .
+gn:wiki-2271-0 rdfs:label '''Merck, Rosetta, Schadt, Lusis target gene associated with obesity, diabetes and atherosclerosis.'''@en .
+gn:wiki-2271-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-2271-0 gnt:symbol "Lpl" .
+gn:wiki-2271-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-2271-0 dct:created "2008-05-13 13:48:50"^^xsd:datetime  .
+gn:wiki-2271-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-2271-0 dct:identifier "2271"^^xsd:integer .
+gn:wiki-2271-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-2271-0 gnt:initial "rww" .
+gn:wiki-2271-0 gnt:belongsToCategory "Health and disease associations" .
+gn:wiki-3242-0 rdfs:label '''Drug abuse and substance dependence gene list member. One of 172 genes with high expression in hippocampus and amygdala that contain clusters of SNPs associated with drug abuse in research volunteer samples that display nominal p < 0.05. C Johnson, T Drgon, George R Uhl and colleagues.'''@en .
+gn:wiki-3242-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-3242-0 gnt:symbol "AK5" .
+gn:wiki-3242-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-3242-0 dct:created "2009-10-30 08:14:32"^^xsd:datetime  .
+gn:wiki-3242-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-3242-0 dct:identifier "3242"^^xsd:integer .
+gn:wiki-3242-0 foaf:homepage <http://www.biomedcentral.com/1471-2350/9/113> .
+gn:wiki-3242-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-3242-0 gnt:initial "rww" .
+gn:wiki-3242-0 gnt:reason "improved" .
+gn:wiki-5005-0 rdfs:label '''cis eQTL in BXD brain RNA-seq data with LRS of 33 and high D allele. No obvious trans target transcripts.'''@en .
+gn:wiki-5005-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-5005-0 gnt:symbol "Lpl" .
+gn:wiki-5005-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-5005-0 dct:created "2012-11-10 13:30:09"^^xsd:datetime  .
+gn:wiki-5005-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-5005-0 dct:identifier "5005"^^xsd:integer .
+gn:wiki-5005-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-5005-0 gnt:belongsToCategory "Genetic variation and alleles" .
+gn:wiki-5006-0 rdfs:label '''Strong cis eQTL in brain RNA-seq data (LRS of 29 high B allele). Highly expressed in almost all neurons (not just interneurons). Trans targets of CKB include striatin (STRN) and C1QL3 (CTRP13).'''@en .
+gn:wiki-5006-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-5006-0 gnt:symbol "Ckb" .
+gn:wiki-5006-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-5006-0 dct:created "2012-11-11 10:37:11"^^xsd:datetime  .
+gn:wiki-5006-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-5006-0 dct:identifier "5006"^^xsd:integer .
+gn:wiki-5006-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-5006-0 gnt:belongsToCategory "Genetic variation and alleles" .
+gn:wiki-5006-0 gnt:belongsToCategory "Interactions: mRNA, proteins, other molecules" .
+gn:wiki-5868-0 rdfs:label '''Of interest to Lu Lu and colleagues (2015) due to modulation of expression of this gene in hippocampus following stress or ethanol (BXD Illumina Hippocampus data sets).'''@en .
+gn:wiki-5868-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-5868-0 gnt:symbol "Lpl" .
+gn:wiki-5868-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-5868-0 dct:created "2015-05-26 16:37:57"^^xsd:datetime  .
+gn:wiki-5868-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-5868-0 dct:identifier "5868"^^xsd:integer .
+gn:wiki-5868-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-6738-0 rdfs:label '''Possible retinal ganglion cell marker.'''@en .
+gn:wiki-6738-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-6738-0 gnt:symbol "Shh" .
+gn:wiki-6738-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-6738-0 dct:created "2018-03-12 10:51:31"^^xsd:datetime  .
+gn:wiki-6738-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-6738-0 dct:identifier "6738"^^xsd:integer .
+gn:wiki-6738-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-6738-0 gnt:belongsToCategory "Development and aging" .
+gn:wiki-7221-0 rdfs:label '''AC was here'''@en .
+gn:wiki-7221-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-7221-0 gnt:symbol "Shh" .
+gn:wiki-7221-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-7221-0 dct:created "2021-11-09 17:46:14"^^xsd:datetime  .
+gn:wiki-7221-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-7221-0 dct:identifier "7221"^^xsd:integer .
+gn:wiki-7221-0 dct:hasVersion "0"^^xsd:integer .
+gn:wiki-7273-0 rdfs:label '''Test'''@en .
+gn:wiki-7273-0 rdf:type gnc:GNWikiEntry .
+gn:wiki-7273-0 gnt:symbol "Shh" .
+gn:wiki-7273-0 gnt:belongsToSpecies gn:Mus_musculus .
+gn:wiki-7273-0 dct:created "2022-08-24 18:34:41"^^xsd:datetime  .
+gn:wiki-7273-0 foaf:mbox <XXX@XXX.com> .
+gn:wiki-7273-0 dct:identifier "7273"^^xsd:integer .
+gn:wiki-7273-0 dct:hasVersion "0"^^xsd:integer .
