@@ -43,6 +43,7 @@ def __sanitize_result(result: dict) -> dict:
     categories = result.get("categories")
     if isinstance(categories, str):
         result["categories"] = [categories] if categories else []
+    result["categories"] = sorted(result["categories"])
     pmids = result.get("pubmed_ids")
     if isinstance(pmids, str):
         result["pubmed_ids"] = [pmids] if pmids else []
@@ -52,6 +53,7 @@ def __sanitize_result(result: dict) -> dict:
         int(pmid.split("/")[-1]) if isinstance(pmid, str) else pmid
         for pmid in result["pubmed_ids"]
     ]
+    result["pubmed_ids"] = sorted(result["pubmed_ids"])
     return result
 
 
