@@ -154,8 +154,7 @@ CONSTRUCT {
              gnt:symbol ?symbol ;
              dct:created ?createTime ;
              dct:hasVersion ?version ;
-             dct:identifier $comment_id ;
-             dct:identifier ?id_ .
+             dct:identifier $comment_id .
     OPTIONAL { ?comment gnt:reason ?reason_ } .
     OPTIONAL {
         ?comment gnt:belongsToSpecies ?speciesId .
