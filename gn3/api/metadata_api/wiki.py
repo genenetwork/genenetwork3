@@ -76,7 +76,6 @@ def edit_wiki(comment_id: int):
 
         # Editing RDF:
         update_wiki_comment(
-            comment_id=comment_id,
             insert_dict=insert_dict,
             sparql_user=current_app.config["SPARQL_USER"],
             sparql_password=current_app.config["SPARQL_PASSWORD"],
