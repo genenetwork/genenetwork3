@@ -1,6 +1,6 @@
 """Tests for gn3/db/rdf/wiki.py"""
 from unittest import TestCase
-
+from tests.fixtures.rdf import rdf_setup, get_sparql_auth_conf
 import pytest
 import os
 
@@ -12,6 +12,7 @@ from gn3.db.rdf.wiki import (
 )
 
 
+SPARQL_CONF = get_sparql_auth_conf()
 GRAPH = "<http://cd-test.genenetwork.org>"
 
 
@@ -168,11 +169,11 @@ def test_sanitize_result(result, expected):
 
 
 @pytest.mark.rdf
-def test_get_wiki_entries_by_symbol():
+def test_get_wiki_entries_by_symbol(rdf_setup):
     """Test that wiki entries are fetched correctly by symbol"""
     result = get_wiki_entries_by_symbol(
         symbol="ckb",
-        sparql_uri=os.environ.get("SPARQL_ENDPOINT", "http://localhost:9082/sparql"),
+        sparql_uri=SPARQL_CONF["sparql_endpoint"],
         graph=GRAPH,
     )
     expected = {
@@ -239,10 +240,10 @@ def test_get_wiki_entries_by_symbol():
 
 
 @pytest.mark.rdf
-def test_get_comment_history():
+def test_get_comment_history(rdf_setup):
     result = get_comment_history(
         comment_id=1158,
-        sparql_uri=os.environ.get("SPARQL_ENDPOINT", "http://localhost:9082/sparql"),
+        sparql_uri=SPARQL_CONF["sparql_endpoint"],
         graph=GRAPH,
     )
     expected = {
