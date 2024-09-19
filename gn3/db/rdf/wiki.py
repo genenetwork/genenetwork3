@@ -196,7 +196,7 @@ def update_wiki_comment(
 identifier but an updated version id.
     """
     name = f"gn:wiki-{insert_dict['Id']}-{insert_dict['versionId']}"
-    comment_triple = Template("""$name rdf:label '''$comment'''@en ;
+    comment_triple = Template("""$name rdfs:label '''$comment'''@en ;
 rdf:type gnc:GNWikiEntry ;
 gnt:symbol "$symbol" ;
 dct:identifier "$comment_id"^^xsd:integer ;
