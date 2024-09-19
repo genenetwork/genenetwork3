@@ -97,7 +97,7 @@ CONSTRUCT {
     OPTIONAL { ?comment gnt:reason ?reason_ } .
     OPTIONAL {
         ?comment gnt:belongsToSpecies ?speciesId .
-        ?speciesId gnt:shortName ?species .
+        ?speciesId gnt:shortName ?species_ .
     } .
     OPTIONAL { ?comment dct:references ?pmid_ } .
     OPTIONAL { ?comment foaf:homepage ?weburl_ } .
