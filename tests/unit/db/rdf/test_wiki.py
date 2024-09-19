@@ -324,7 +324,6 @@ def test_get_comment_history(rdf_setup):
             },
         ],
     }
-    # breakpoint()
     TestCase().assertDictEqual(result, expected)
 
 
