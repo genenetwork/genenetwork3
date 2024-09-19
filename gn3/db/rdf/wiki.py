@@ -191,7 +191,7 @@ def update_wiki_comment(
         sparql_password: str,
         sparql_auth_uri: str,
         graph: str = "<http://genenetwork.org>",
-) -> tuple[str, int]:
+) -> str:
     """Update a wiki comment by inserting a comment with the same
 identifier but an updated version id.  The End form of this query
 looks like:
