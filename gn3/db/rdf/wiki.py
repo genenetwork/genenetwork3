@@ -193,31 +193,7 @@ def update_wiki_comment(
         graph: str = "<http://genenetwork.org>",
 ) -> str:
     """Update a wiki comment by inserting a comment with the same
-identifier but an updated version id.  The End form of this query
-looks like:
-
-    INSERT {
-            GRAPH <http://genenetwork.org> {
-            [ rdfs:label '''XXXX'''@en] rdf:type gnc:GNWikiEntry ;
-                    gnt:symbol "XXXX" ;
-                    foaf:mbox <XXXX> ;
-                    gnt:initial "XXXX" ;
-                    gnt:belongsToSpecies ?speciesId ;
-                    gnt:reason "XXXX" ;
-                    foaf:homepage <XXXX> ;
-                    dct:references pmid:XXXX ;
-                    dct:references pmid:XXXX ;
-                    gnt:belongsToCategory "XXXX";
-                    gnt:belongsToCategory "XXXX";
-                    dct:hasVersion "123"^^xsd:integer ;
-                    dct:identifier "1"^^xsd:integer ;
-                    dct:created "2024-09-11 11:00"^^xsd:datetime .
-
-            } USING <http://genenetwork.org> WHERE {
-                    ?speciesId gnt:shortName "{species}" .
-
-            }
-    }
+identifier but an updated version id.
     """
     name = f"gn:wiki-{insert_dict['Id']}-{insert_dict['versionId']}"
     comment_triple = Template("""$name rdf:label '''$comment'''@en ;
