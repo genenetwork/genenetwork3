@@ -138,7 +138,7 @@ def get_comment_history(
 $prefix
 
 CONSTRUCT {
-    ?comment rdfs:label ?symbolName ;
+    ?comment rdfs:label ?symbol ;
              gnt:reason ?reason ;
              gnt:species ?species ;
              dct:references ?pmid ;
