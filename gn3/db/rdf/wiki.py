@@ -106,7 +106,6 @@ CONSTRUCT {
     OPTIONAL { ?comment gnt:belongsToCategory ?category_ } .
     BIND (str(?createTime) AS ?created) .
     BIND (str(?text_) AS ?text) .
-    BIND (str(?version) AS ?versionId) .
     BIND (STR(COALESCE(?pmid_, "")) AS ?pmid) .
     BIND (COALESCE(?reason_, "") AS ?reason) .
     BIND (STR(COALESCE(?weburl_, "")) AS ?weburl) .
