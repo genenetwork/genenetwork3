@@ -137,8 +137,8 @@ All of GN3's secret parameters are found inside the "GN3_SECRETS".  This file sh
 ```
 SPARQL_USER = "XXX"
 SPARQL_PASSWORD = "XXXXXXXXXX"
-SPARQL_AUTH_URI="http://localhost:9082/sparql-auth/"
-SPARQL_CRUD_AUTH_URI="http://localhost:9082/sparql-graph-crud-auth"
+SPARQL_AUTH_URI="http://localhost:8890/sparql-auth/"
+SPARQL_CRUD_AUTH_URI="http://localhost:8890/sparql-graph-crud-auth"
 FAHAMU_AUTH_TOKEN="XXXXXX"
 ```
 
