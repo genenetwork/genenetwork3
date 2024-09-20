@@ -144,6 +144,16 @@ FAHAMU_AUTH_TOKEN="XXXXXX"
 
 Note: The sparql configurations are important for running tests I.e. `pytest -k rdf`.
 
+### Setting up Virtuoso for Local Development
+
+GN3 uses Virtuoso to:
+
+- Fetch metadata for the Xapian indexing script
+- Fetch metadata for some end-points
+- Test SPARQL queries for some unit tests
+
+Local development setup instructions can be found [here](https://issues.genenetwork.org/topics/engineering/working-with-virtuoso-locally), while a more comprehensive tutorial is available [here](https://issues.genenetwork.org/topics/systems/virtuoso).
+
 ## Command-Line Utility Scripts
 
 This project has a number of utility scripts that are needed in specific cirscumstances, and whose purpose is to support the operation of this application in one way or another. Have a look at the [Scripts.md file](./docs/Scripts.md] to see the details for each of the scripts that are available.
