@@ -9,8 +9,10 @@ import pytest
 def get_sparql_auth_conf() -> dict:
     """Fetch SPARQL auth configuration for the GN3_SECRETS file."""
     sparql_conf = config.Config("")
-    sparql_conf.from_envvar("GN3_SECRETS")
+    # When loading from the environment, GN3_CONF precedes
+    # GN3_SECRETS.  Don't change this order.
     sparql_conf.from_envvar("GN3_CONF")
+    sparql_conf.from_envvar("GN3_SECRETS")
     return {
         "sparql_user": sparql_conf["SPARQL_USER"],
         "sparql_auth_uri": sparql_conf["SPARQL_AUTH_URI"],
