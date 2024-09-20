@@ -135,8 +135,8 @@ TMPDIR also needs to be set correctly for the R script(s) because they pass resu
 All of GN3's secret parameters are found inside the "GN3_SECRETS".  This file should contain the following:
 
 ```
-SPARQL_USER = "XXX"
-SPARQL_PASSWORD = "XXXXXXXXXX"
+SPARQL_USER = "dba"
+SPARQL_PASSWORD = "dba"
 SPARQL_AUTH_URI="http://localhost:8890/sparql-auth/"
 SPARQL_CRUD_AUTH_URI="http://localhost:8890/sparql-graph-crud-auth"
 FAHAMU_AUTH_TOKEN="XXXXXX"
