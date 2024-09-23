@@ -40,13 +40,13 @@ def __sanitize_result(result: dict) -> dict:
     """Make sure `categories` and `pubmed_ids` are always arrays"""
     if not result:
         return {}
-    categories = result.get("categories", [])
+    categories = result.get("categories")
     if isinstance(categories, str):
-        result["categories"] = [categories]
+        result["categories"] = [categories] if categories else []
     result["categories"] = sorted(result["categories"])
-    pmids = result.get("pubmed_ids", [])
+    pmids = result.get("pubmed_ids")
     if isinstance(pmids, str):
-        result["pubmed_ids"] = [pmids]
+        result["pubmed_ids"] = [pmids] if pmids else []
     if isinstance(pmids, int):
         result["pubmed_ids"] = [pmids]
     result["pubmed_ids"] = [
