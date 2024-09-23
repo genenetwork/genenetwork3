@@ -187,6 +187,7 @@ def test_sanitize_result(result, expected):
 
 
 @pytest.mark.rdf
+@pytest.mark.unit_test
 def test_get_wiki_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
     """Test that wiki entries are fetched correctly by symbol"""
     result = get_wiki_entries_by_symbol(
@@ -261,6 +262,7 @@ and C1QL3 (CTRP13).",
 
 
 @pytest.mark.rdf
+@pytest.mark.unit_test
 def test_get_comment_history(rdf_setup):  # pylint: disable=W0613,W0621
     """Test fetching a comment's history from RDF"""
     result = get_comment_history(
@@ -353,6 +355,7 @@ Possible 3' UTR variants.",
 
 
 @pytest.mark.rdf
+@pytest.mark.unit_test
 def test_update_wiki_comment(rdf_setup):  # pylint: disable=W0613,W0621
     """Test that a comment is updated correctly"""
     update_wiki_comment(
