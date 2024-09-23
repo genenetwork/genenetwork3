@@ -1,8 +1,26 @@
-"""Tests for gn3/db/rdf/wiki.py"""
+"""Tests for gn3/db/rdf/wiki.py
+
+NOTE:
+
+Some errors like W0611, W0613, and W0621 are due to Pytest's usage of
+fixtures.  This errors are Ignored for now.  The alternative would be
+to install pylint-pytest:
+
+    https://github.com/pylint-dev/pylint-pytest
+
+More discussions:
+
+    https://github.com/PyCQA/meta/issues/56
+
+"""
 from unittest import TestCase
-from tests.fixtures.rdf import rdf_setup, get_sparql_auth_conf
 import pytest
-import os
+
+# pylint: disable=W0611
+from tests.fixtures.rdf import (
+    rdf_setup,
+    get_sparql_auth_conf
+)
 
 from gn3.db.rdf.wiki import (
     __sanitize_result,
@@ -169,7 +187,7 @@ def test_sanitize_result(result, expected):
 
 
 @pytest.mark.rdf
-def test_get_wiki_entries_by_symbol(rdf_setup):
+def test_get_wiki_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
     """Test that wiki entries are fetched correctly by symbol"""
     result = get_wiki_entries_by_symbol(
         symbol="ckb",
@@ -222,7 +240,10 @@ def test_get_wiki_entries_by_symbol(rdf_setup):
                     "Genetic variation and alleles",
                     "Interactions: mRNA, proteins, other molecules",
                 ],
-                "comment": "Strong cis eQTL in brain RNA-seq data (LRS of 29 high B allele). Highly expressed in almost all neurons (not just interneurons). Trans targets of CKB include striatin (STRN) and C1QL3 (CTRP13).",
+                "comment": "Strong cis eQTL in brain RNA-seq data \
+(LRS of 29 high B allele). Highly expressed in almost all neurons \
+(not just interneurons). Trans targets of CKB include striatin (STRN) \
+and C1QL3 (CTRP13).",
                 "created": "2012-11-11 10:37:11",
                 "email": "XXX@XXX.com",
                 "id": 5006,
@@ -240,7 +261,8 @@ def test_get_wiki_entries_by_symbol(rdf_setup):
 
 
 @pytest.mark.rdf
-def test_get_comment_history(rdf_setup):
+def test_get_comment_history(rdf_setup):  # pylint: disable=W0613,W0621
+    """Test fetching a comment's history from RDF"""
     result = get_comment_history(
         comment_id=1158,
         sparql_uri=SPARQL_CONF["sparql_endpoint"],
@@ -277,7 +299,8 @@ def test_get_comment_history(rdf_setup):
                     "Probes and probe sets",
                     "Transcriptional and translation control",
                 ],
-                "comment": "Validated strong cis-QTL in CNS using allele-specific expression (ASE) SNaPshot assay. Possible 3' UTR variants.",
+                "comment": "Validated strong cis-QTL in CNS using allele-specific \
+expression (ASE) SNaPshot assay. Possible 3' UTR variants.",
                 "created": "2007-04-05 09:11:05",
                 "email": "XXX@XXX.com",
                 "initial": "dcc",
@@ -311,7 +334,9 @@ def test_get_comment_history(rdf_setup):
                     "Probes and probe sets",
                     "Transcriptional and translation control",
                 ],
-                "comment": "Validated strong cis-QTL in CNS using allele-specific expression (ASE) SNaPshot assay (Daniel Ciobanu and al., 2007). Possible 3' UTR variants.",
+                "comment": "Validated strong cis-QTL in CNS using allele-specific \
+expression (ASE) SNaPshot assay (Daniel Ciobanu and al., 2007). \
+Possible 3' UTR variants.",
                 "created": "2007-05-08 14:46:07",
                 "email": "XXX@XXX.com",
                 "initial": "dcc",
@@ -328,9 +353,9 @@ def test_get_comment_history(rdf_setup):
 
 
 @pytest.mark.rdf
-def test_update_wiki_comment(rdf_setup):
+def test_update_wiki_comment(rdf_setup):  # pylint: disable=W0613,W0621
     """Test that a comment is updated correctly"""
-    response = update_wiki_comment(
+    update_wiki_comment(
         insert_dict={
             "Id": 230,
             "symbol": "Shh",
