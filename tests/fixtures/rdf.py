@@ -1,7 +1,7 @@
 """Test fixtures to set up a test named graph for loading RDF data."""
+import os
 from requests.auth import HTTPDigestAuth
 from flask import config
-import os
 import requests
 import pytest
 
