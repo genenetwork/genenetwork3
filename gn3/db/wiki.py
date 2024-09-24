@@ -11,11 +11,11 @@ class MissingDBDataException(Exception):
 
 def _decode_dict(result: dict):
     new_result = {}
-    for k, v in result.items():
-        if isinstance(v, bytes):
-            new_result[k] = v.decode()
+    for key, val in result.items():
+        if isinstance(val, bytes):
+            new_result[key] = val.decode()
         else:
-            new_result[k] = v
+            new_result[key] = val
     return new_result
 
 
