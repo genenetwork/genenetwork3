@@ -83,7 +83,7 @@ def edit_wiki(comment_id: int):
                 sparql_auth_uri=current_app.config["SPARQL_AUTH_URI"]
             )
         except Exception as exc:
-            conn.rollback()
+            conn.rollback() # type: ignore
             raise exc
         return jsonify({"success": "ok"})
     return jsonify(error="Error editing wiki entry, most likely due to DB error!"), 500
