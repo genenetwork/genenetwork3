@@ -74,13 +74,17 @@ def edit_wiki(comment_id: int):
                                           insert_dict["versionId"], cat_id)
             )
 
-        # Editing RDF:
-        update_wiki_comment(
-            insert_dict=insert_dict,
-            sparql_user=current_app.config["SPARQL_USER"],
-            sparql_password=current_app.config["SPARQL_PASSWORD"],
-            sparql_auth_uri=current_app.config["SPARQL_AUTH_URI"]
-        )
+        try:
+            # Editing RDF:
+            update_wiki_comment(
+                insert_dict=insert_dict,
+                sparql_user=current_app.config["SPARQL_USER"],
+                sparql_password=current_app.config["SPARQL_PASSWORD"],
+                sparql_auth_uri=current_app.config["SPARQL_AUTH_URI"]
+            )
+        except Exception as exc:
+            conn.rollback()
+            raise exc
         return jsonify({"success": "ok"})
     return jsonify(error="Error editing wiki entry, most likely due to DB error!"), 500
 
