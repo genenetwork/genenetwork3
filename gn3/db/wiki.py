@@ -9,6 +9,16 @@ class MissingDBDataException(Exception):
     """Error due to DB missing some data"""
 
 
+def _decode_dict(result: dict):
+    new_result = {}
+    for k, v in result.items():
+        if isinstance(v, bytes):
+            new_result[k] = v.decode()
+        else:
+            new_result[k] = v
+    return new_result
+
+
 def get_latest_comment(connection, comment_id: int) -> int:
     """ Latest comment is one with the highest versionId """
     cursor = connection.cursor(DictCursor)
@@ -20,7 +30,7 @@ def get_latest_comment(connection, comment_id: int) -> int:
 		ORDER BY versionId DESC LIMIT 1;
     """
     cursor.execute(query, (str(comment_id),))
-    result = cursor.fetchone()
+    result = _decode_dict(cursor.fetchone())
     if (pubmed_ids := result.get("pubmed_ids")) is None:
         pubmed_ids = ""
     result["pubmed_ids"] = [x.strip() for x in pubmed_ids.split()]
@@ -31,7 +41,7 @@ def get_latest_comment(connection, comment_id: int) -> int:
     """
 
     cursor.execute(categories_query, (str(comment_id), result["version"]))
-    categories = cursor.fetchall()
+    categories = [_decode_dict(x) for x in cursor.fetchall()]
     result["categories"] = [x["Name"] for x in categories]
     return result
 
