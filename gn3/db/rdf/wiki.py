@@ -86,7 +86,7 @@ CONSTRUCT {
              rdf:type gnc:GNWikiEntry ;
              dct:identifier ?id_ ;
              dct:created ?createTime .
-    FILTER ( LCASE(?symbol) = LCASE('$symbol') ) .
+    FILTER ( LCASE(STR(?symbol)) = LCASE("$symbol") ) .
     {
         SELECT (MAX(?vers) AS ?max) ?id_ WHERE {
             ?comment dct:identifier ?id_ ;
