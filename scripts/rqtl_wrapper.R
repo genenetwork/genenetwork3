@@ -62,7 +62,7 @@ geno_file = opt$geno
 pheno_file = opt$pheno
 
 # Generate randomized filename for cross object
-cross_file = file.path(tmp_dir, "gn3", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
+cross_file = file.path(opt$outdir, "gn3", paste(stri_rand_strings(1, 8), ".cross", sep = ""))
 
 trim <- function( x ) { gsub("(^[[:space:]]+|[[:space:]]+$)", "", x) }
 
@@ -288,9 +288,9 @@ if (opt$nperm > 0) {
 }
 
 if (!is.null(opt$filename)){
-  out_file = file.path(opt$outdir, "output", opt$filename)
+  out_file = file.path(opt$outdir, "gn3", opt$filename)
 } else {
-  out_file = file.path(opt$outdir, "output", paste(pheno_name, "_", stri_rand_strings(1, 8), sep = ""))
+  out_file = file.path(opt$outdir, "gn3", paste(pheno_name, "_", stri_rand_strings(1, 8), sep = ""))
 }
 
 if (!is.null(opt$addcovar) || !is.null(opt$control)){
