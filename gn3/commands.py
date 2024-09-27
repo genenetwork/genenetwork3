@@ -21,6 +21,7 @@ from redis.client import Redis  # Used only in type hinting
 
 from pymonad.either import Either, Left, Right
 
+from gn3.debug import __pk__
 from gn3.chancy import random_string
 from gn3.exceptions import RedisConnectionError
 
@@ -153,7 +154,7 @@ def run_sample_corr_cmd(method, this_trait_data, target_dataset_data):
 
 def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
-    parsed_cmd = json.loads(cmd)
+    parsed_cmd = json.loads(__pk__("Attempting to parse command", cmd))
     parsed_env = (json.loads(env) if env is not None else None)
 
     results = subprocess.run(
