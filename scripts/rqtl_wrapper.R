@@ -262,9 +262,9 @@ if (!is.null(opt$pairscan)) {
 # Calculate permutations
 if (opt$nperm > 0) {
   if (!is.null(opt$filename)){
-    perm_out_file = file.path(opt$outdir, "output", paste("PERM_", opt$filename, sep = "" ))
+    perm_out_file = file.path(opt$outdir, "gn3", paste("PERM_", opt$filename, sep = "" ))
   } else {
-    perm_out_file = file.path(opt$outdir, "output", paste(pheno_name, "_PERM_", stri_rand_strings(1, 8), sep = ""))
+    perm_out_file = file.path(opt$outdir, "gn3", paste(pheno_name, "_PERM_", stri_rand_strings(1, 8), sep = ""))
   }
 
   if (!is.null(opt$addcovar) || !is.null(opt$control)){
@@ -303,7 +303,7 @@ if (!is.null(opt$addcovar) || !is.null(opt$control)){
 
 verbose_print('Writing results to CSV file\n')
 if (!is.null(opt$pairscan)) {
-  map_out_file = file.path(opt$outdir, "output", paste("MAP_", opt$filename, sep = "" ))
+  map_out_file = file.path(opt$outdir, "gn3", paste("MAP_", opt$filename, sep = "" ))
   write.csv(qtl_results[1], out_file)
   write.csv(qtl_results[2], map_out_file)
 } else {
