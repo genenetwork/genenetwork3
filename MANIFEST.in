@@ -1,0 +1,2 @@
+global-include scripts/**/*.R
+global-exclude *~ *.py[cod]
