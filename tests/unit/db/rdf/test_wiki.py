@@ -29,8 +29,6 @@ from gn3.db.rdf.wiki import (
     update_wiki_comment,
 )
 
-
-SPARQL_CONF = get_sparql_auth_conf()
 GRAPH = "<http://cd-test.genenetwork.org>"
 
 
@@ -187,8 +185,9 @@ def test_sanitize_result(result, expected):
 
 
 @pytest.mark.rdf
-def test_get_wiki_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
+def test_get_wiki_entries_by_symbol(fxtr_app_config, rdf_setup):  # pylint: disable=W0613,W0621
     """Test that wiki entries are fetched correctly by symbol"""
+    SPARQL_CONF = get_sparql_auth_conf(fxtr_app_config)
     result = get_wiki_entries_by_symbol(
         symbol="ckb",
         sparql_uri=SPARQL_CONF["sparql_endpoint"],
@@ -261,8 +260,9 @@ and C1QL3 (CTRP13).",
 
 
 @pytest.mark.rdf
-def test_get_comment_history(rdf_setup):  # pylint: disable=W0613,W0621
+def test_get_comment_history(fxtr_app_config, rdf_setup):  # pylint: disable=W0613,W0621
     """Test fetching a comment's history from RDF"""
+    SPARQL_CONF = get_sparql_auth_conf(fxtr_app_config)
     result = get_comment_history(
         comment_id=1158,
         sparql_uri=SPARQL_CONF["sparql_endpoint"],
@@ -353,8 +353,9 @@ Possible 3' UTR variants.",
 
 
 @pytest.mark.rdf
-def test_update_wiki_comment(rdf_setup):  # pylint: disable=W0613,W0621
+def test_update_wiki_comment(fxtr_app_config, rdf_setup):  # pylint: disable=W0613,W0621
     """Test that a comment is updated correctly"""
+    SPARQL_CONF = get_sparql_auth_conf(fxtr_app_config)
     update_wiki_comment(
         insert_dict={
             "Id": 230,
