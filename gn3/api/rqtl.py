@@ -1,5 +1,6 @@
 """Endpoints for running the rqtl cmd"""
 import os
+from pathlib import Path
 
 from flask import Blueprint
 from flask import current_app
@@ -42,7 +43,9 @@ run the rqtl_wrapper script and return the results as JSON
         os.mkdir(outdir)
 
     rqtl_cmd = generate_rqtl_cmd(
-        rqtl_wrapper_cmd='scripts/rqtl_wrapper.R',
+        rqtl_wrapper_cmd=str(
+            Path(__file__).absolute().parent.parent.parent.joinpath(
+                'scripts/rqtl_wrapper.R')),
         rqtl_wrapper_kwargs=rqtl_kwargs,
         rqtl_wrapper_bool_kwargs=rqtl_bool_kwargs
     )
