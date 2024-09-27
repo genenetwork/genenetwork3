@@ -1,10 +1,10 @@
 """module contains code to preprocess and call wgcna script"""
-
 import os
 import json
 import uuid
-import subprocess
 import base64
+import subprocess
+from pathlib import Path
 
 
 from gn3.settings import TMPDIR
@@ -58,7 +58,10 @@ def process_image(image_loc: str) -> bytes:
 def compose_wgcna_cmd(rscript_path: str, temp_file_path: str):
     """function to componse wgcna cmd"""
     # (todo):issue relative paths to abs paths
-    cmd = f"Rscript scripts/{rscript_path} {temp_file_path}"
+    abs_rscript_path = str(
+        Path(__file__).absolute().parent.parent.parent.joinpath(
+            f"scripts/{rscript_path}"))
+    cmd = f"Rscript {abs_rscript_path} {temp_file_path}"
     return cmd
 
 
