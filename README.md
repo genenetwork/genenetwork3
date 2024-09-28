@@ -214,8 +214,6 @@ pytest
 To specify unit-tests:
 
 ```bash
-export AUTHLIB_INSECURE_TRANSPORT=true
-export OAUTH2_ACCESS_TOKEN_GENERATOR="tests.unit.auth.test_token.gen_token"
 pytest -k unit_test
 ```
 
