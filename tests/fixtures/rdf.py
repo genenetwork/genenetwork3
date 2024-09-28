@@ -1,9 +1,9 @@
 """Test fixtures to set up a test named graph for loading RDF data."""
 import os
-from requests.auth import HTTPDigestAuth
-from flask import config
-import requests
+
 import pytest
+import requests
+from requests.auth import HTTPDigestAuth
 
 
 def get_sparql_auth_conf(config_obj) -> dict:

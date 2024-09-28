@@ -187,10 +187,10 @@ def test_sanitize_result(result, expected):
 @pytest.mark.rdf
 def test_get_wiki_entries_by_symbol(fxtr_app_config, rdf_setup):  # pylint: disable=W0613,W0621
     """Test that wiki entries are fetched correctly by symbol"""
-    SPARQL_CONF = get_sparql_auth_conf(fxtr_app_config)
+    sparql_conf = get_sparql_auth_conf(fxtr_app_config)
     result = get_wiki_entries_by_symbol(
         symbol="ckb",
-        sparql_uri=SPARQL_CONF["sparql_endpoint"],
+        sparql_uri=sparql_conf["sparql_endpoint"],
         graph=GRAPH,
     )
     expected = {
@@ -262,10 +262,10 @@ and C1QL3 (CTRP13).",
 @pytest.mark.rdf
 def test_get_comment_history(fxtr_app_config, rdf_setup):  # pylint: disable=W0613,W0621
     """Test fetching a comment's history from RDF"""
-    SPARQL_CONF = get_sparql_auth_conf(fxtr_app_config)
+    sparql_conf = get_sparql_auth_conf(fxtr_app_config)
     result = get_comment_history(
         comment_id=1158,
-        sparql_uri=SPARQL_CONF["sparql_endpoint"],
+        sparql_uri=sparql_conf["sparql_endpoint"],
         graph=GRAPH,
     )
     expected = {
@@ -355,7 +355,7 @@ Possible 3' UTR variants.",
 @pytest.mark.rdf
 def test_update_wiki_comment(fxtr_app_config, rdf_setup):  # pylint: disable=W0613,W0621
     """Test that a comment is updated correctly"""
-    SPARQL_CONF = get_sparql_auth_conf(fxtr_app_config)
+    sparql_conf = get_sparql_auth_conf(fxtr_app_config)
     update_wiki_comment(
         insert_dict={
             "Id": 230,
@@ -371,14 +371,14 @@ def test_update_wiki_comment(fxtr_app_config, rdf_setup):  # pylint: disable=W06
             "species": "mouse",
             "categories": [],
         },
-        sparql_user=SPARQL_CONF["sparql_user"],
-        sparql_password=SPARQL_CONF["sparql_password"],
-        sparql_auth_uri=SPARQL_CONF["sparql_auth_uri"],
+        sparql_user=sparql_conf["sparql_user"],
+        sparql_password=sparql_conf["sparql_password"],
+        sparql_auth_uri=sparql_conf["sparql_auth_uri"],
         graph=GRAPH,
     )
     updated_history = get_comment_history(
         comment_id=230,
-        sparql_uri=SPARQL_CONF["sparql_endpoint"],
+        sparql_uri=sparql_conf["sparql_endpoint"],
         graph=GRAPH,
     )["data"]
     assert len(updated_history) == 4
