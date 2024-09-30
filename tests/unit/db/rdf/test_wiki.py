@@ -19,7 +19,7 @@ import pytest
 # pylint: disable=W0611
 from tests.fixtures.rdf import (
     rdf_setup,
-    get_sparql_auth_conf
+    SPARQL_CONF,
 )
 
 from gn3.db.rdf.wiki import (
@@ -187,7 +187,7 @@ def test_sanitize_result(result, expected):
 @pytest.mark.rdf
 def test_get_wiki_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
     """Test that wiki entries are fetched correctly by symbol"""
-    sparql_conf = get_sparql_auth_conf()
+    sparql_conf = SPARQL_CONF
     result = get_wiki_entries_by_symbol(
         symbol="ckb",
         sparql_uri=sparql_conf["sparql_endpoint"],
@@ -262,7 +262,7 @@ and C1QL3 (CTRP13).",
 @pytest.mark.rdf
 def test_get_comment_history(rdf_setup):  # pylint: disable=W0613,W0621
     """Test fetching a comment's history from RDF"""
-    sparql_conf = get_sparql_auth_conf()
+    sparql_conf = SPARQL_CONF
     result = get_comment_history(
         comment_id=1158,
         sparql_uri=sparql_conf["sparql_endpoint"],
@@ -355,7 +355,7 @@ Possible 3' UTR variants.",
 @pytest.mark.rdf
 def test_update_wiki_comment(rdf_setup):  # pylint: disable=W0613,W0621
     """Test that a comment is updated correctly"""
-    sparql_conf = get_sparql_auth_conf()
+    sparql_conf = SPARQL_CONF
     update_wiki_comment(
         insert_dict={
             "Id": 230,
