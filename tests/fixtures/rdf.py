@@ -48,7 +48,8 @@ def rdf_setup():
         "test_data/ttl-files/test-data.ttl",
     )
     # We intentionally use a temporary directory.  This way, all the
-    # database created by virtuoso are cleaned after running tests.
+    # virtuoso database files are properly cleaned up after running
+    # tests.
     with tempfile.TemporaryDirectory() as tmpdirname:
         init_file = os.path.join(tmpdirname, "virtuoso.ini")
         # Create the virtuoso init file which we use when
