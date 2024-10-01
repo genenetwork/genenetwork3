@@ -5,7 +5,6 @@ import subprocess
 
 from string import Template
 
-import psutil  # type: ignore
 import pytest
 import requests
 from requests.auth import HTTPDigestAuth
@@ -22,23 +21,6 @@ SPARQL_CONF = {
 }
 
 
-def get_process_id(name) -> list:
-    """Return process ids found by (partial) name or regex.
-
-    >>> get_process_id('kthreadd')
-    [2]
-    >>> get_process_id('watchdog')
-    [10, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61]  # ymmv
-    >>> get_process_id('non-existent process')
-    []
-    """
-    with subprocess.Popen(
-        ["pgrep", "-f", name], stdout=subprocess.PIPE, shell=False
-    ) as proc:
-        response = proc.communicate()[0]
-        return [int(pid) for pid in response.split()]
-
-
 @pytest.fixture(scope="session")
 def rdf_setup():
     """Upload RDF to a Virtuoso named graph"""
@@ -47,30 +29,27 @@ def rdf_setup():
         dir_path,
         "test_data/ttl-files/test-data.ttl",
     )
-    # We intentionally use a temporary directory.  This way, all the
-    # virtuoso database files are properly cleaned up after running
-    # tests.
     with tempfile.TemporaryDirectory() as tmpdirname:
         init_file = os.path.join(tmpdirname, "virtuoso.ini")
-        # Create the virtuoso init file which we use when
-        # bootstrapping virtuoso.
         with open(init_file, "w", encoding="utf-8") as file_:
             file_.write(Template(VIRTUOSO_INI_FILE).substitute(
                 dir_path=tmpdirname))
-        # Here we intentionally ignore the "+foreground" option to
-        # allow virtuoso to run in the background.
+        # when using shell=True, pass in string as args, ref: https://stackoverflow.com/a/10661488
+        command = f"virtuoso-t +foreground +wait +no-checkpoint +configfile {init_file}"
         with subprocess.Popen(
-            [
-                "virtuoso-t",
-                "+wait",
-                "+no-checkpoint",
-                "+configfile",
-                init_file,
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
         ) as pid:
-            pid.wait()
+            while pid.stdout.readable():
+                line = pid.stdout.readline()
+                if not line:
+                    raise RuntimeError("Something went wrong running virtuoso")
+                # virtuoso is ready for connections
+                if "server online at" in line.lower():
+                    break
             # Define the query parameters and authentication
             params = {"graph": "http://cd-test.genenetwork.org"}
             auth = HTTPDigestAuth("dba", "dba")
@@ -92,5 +71,4 @@ def rdf_setup():
             requests.delete(
                 SPARQL_CONF["sparql_crud_auth_uri"], params=params, auth=auth
             )
-            for pid_ in get_process_id(init_file):
-                psutil.Process(pid_).kill()
+            pid.terminate()
