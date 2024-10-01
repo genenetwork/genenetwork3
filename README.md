@@ -123,6 +123,8 @@ These configurations should be set in an external config file, pointed to with t
 
 - SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql")
 - XAPIAN_DB_PATH (ex: "/export/data/genenetwork/xapian")
+- SPARQL_AUTH_URI (ex: "http://localhost:8890/sparql-auth/")
+- SPARQL_CRUD_AUTH_URI (ex: "http://localhost:8890/sparql-graph-crud-auth")
 - TMPDIR
 - SPARQL_USER
 - SPARQL_ENDPOINT (ex: "http://localhost:9082/sparql-auth/")
@@ -137,12 +139,8 @@ All of GN3's secret parameters are found inside the "GN3_SECRETS".  This file sh
 ```
 SPARQL_USER = "dba"
 SPARQL_PASSWORD = "dba"
-SPARQL_AUTH_URI="http://localhost:8890/sparql-auth/"
-SPARQL_CRUD_AUTH_URI="http://localhost:8890/sparql-graph-crud-auth"
 FAHAMU_AUTH_TOKEN="XXXXXX"
 ```
-
-Note: The sparql configurations are important for running tests I.e. `pytest -k rdf`.
 
 ### Setting up Virtuoso for Local Development
 
