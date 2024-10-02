@@ -34,7 +34,11 @@
 	        (substitute* "tests/fixtures/rdf.py"
 	         (("virtuoso-t")
 	          (string-append #$virtuoso-ose "/bin/virtuoso-t"))))))
-      	   (add-after 'build 'rdf-tests
+	   ;; The logical flow for running tests is to perform static
+	   ;; checks(pylint and mypy) before running the unit-tests in
+	   ;; order to catch issues earlier.  Network tests such as RDF
+	   ;; should run after the unit tests to maintain that order.
+      	   (add-after 'check 'rdf-tests
 	   	   (lambda _
 	   	     (invoke "pytest" "-k" "rdf")))
      	   (add-before 'build 'pylint
