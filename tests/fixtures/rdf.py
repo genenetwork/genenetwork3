@@ -34,7 +34,9 @@ def rdf_setup():
         with open(init_file, "w", encoding="utf-8") as file_:
             file_.write(Template(VIRTUOSO_INI_FILE).substitute(
                 dir_path=tmpdirname))
-        # when using shell=True, pass in string as args, ref: https://stackoverflow.com/a/10661488
+        # when using shell=True, pass in string as args, ref:
+        # https://stackoverflow.com/a/10661488
+        # pylint: disable-next=line-too-long
         command = f"virtuoso-t +foreground +wait +no-checkpoint +configfile {init_file}"
         with subprocess.Popen(
             command,
