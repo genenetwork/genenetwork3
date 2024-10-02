@@ -1,4 +1,5 @@
 """Test fixtures to set up a test named graph for loading RDF data."""
+import pathlib
 import os
 import tempfile
 import subprocess
@@ -24,7 +25,7 @@ SPARQL_CONF = {
 @pytest.fixture(scope="session")
 def rdf_setup():
     """Upload RDF to a Virtuoso named graph"""
-    dir_path = os.path.dirname(__file__).split("fixtures")[0]
+    dir_path = pathlib.Path(__file__).parent.parent
     file_path = os.path.join(
         dir_path,
         "test_data/ttl-files/test-data.ttl",
