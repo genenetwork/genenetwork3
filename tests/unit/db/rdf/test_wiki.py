@@ -22,11 +22,14 @@ from tests.fixtures.rdf import (
     SPARQL_CONF,
 )
 
+from tests.unit.db.rdf.data import LPL_RIF_ENTRIES
+
 from gn3.db.rdf.wiki import (
     __sanitize_result,
     get_wiki_entries_by_symbol,
     get_comment_history,
     update_wiki_comment,
+    get_rif_entries_by_symbol,
 )
 
 GRAPH = "<http://cd-test.genenetwork.org>"
@@ -396,3 +399,14 @@ def test_update_wiki_comment(rdf_setup):  # pylint: disable=W0613,W0621
         "version": 3,
         "web_url": "http://some-website.com",
     })
+
+
+@pytest.mark.rdf
+def test_get_rif_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
+    """Test fetching NCBI Rif Metadata from RDF"""
+    sparql_conf = SPARQL_CONF
+    assert get_rif_entries_by_symbol(
+        symbol="Lpl",
+        sparql_uri=sparql_conf["sparql_endpoint"],
+        graph=GRAPH,
+    ) == LPL_RIF_ENTRIES
