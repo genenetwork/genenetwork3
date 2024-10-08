@@ -9,6 +9,7 @@ NOTE: In the CONSTRUCT queries below, we manually sort the arrays from
    <https://stackoverflow.com/questions/78186393>
    <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
 """
+from datetime import datetime
 from string import Template
 from gn3.db.rdf import (
     BASE_CONTEXT,
@@ -32,6 +33,20 @@ WIKI_CONTEXT = BASE_CONTEXT | {
     "initial": "gnt:initial",
     "comment": "rdfs:comment",
     "created": "dct:created",
+    "id": "dct:identifier",
+}
+
+RIF_CONTEXT = BASE_CONTEXT | {
+    "dct": "http://purl.org/dc/terms/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "symbol": "gnt:symbol",
+    "species": "gnt:species",
+    "taxonomic_id": "skos:notation",
+    "gene_id": "gnt:hasGeneId",
+    "pubmed_id": "dct:references",
+    "created": "dct:created",
+    "comment": "rdfs:comment",
+    "version": "dct:hasVersion",
     "id": "dct:identifier",
 }
 
@@ -244,3 +259,46 @@ $comment_triple}
         sparql_password=sparql_password,
         sparql_auth_uri=sparql_auth_uri,
     )
+
+
+def get_rif_entries_by_symbol(
+        symbol: str, sparql_uri: str, graph: str = "<http://genenetwork.org>"
+) -> dict:
+    """Fetch NCBI RIF entries by a symbol.  Symbol here is case in-sensitive."""
+    query = Template("""
+$prefix
+
+CONSTRUCT {
+    ?comment gnt:symbol ?symbol ;
+             gnt:species ?species ;
+             dct:references ?pmid ;
+             rdfs:comment ?text ;
+             dct:hasVersion ?version ;
+             dct:created ?created ;
+             gnt:hasGeneId ?gene_id ;
+             skos:notation ?taxonId .
+} FROM $graph WHERE {
+    ?comment rdfs:label ?text_ ;
+             gnt:symbol ?symbol ;
+             rdf:type gnc:NCBIWikiEntry ;
+             gnt:hasGeneId ?gene_id_ ;
+             dct:hasVersion ?version ;
+             dct:references ?pmid_ ;
+             dct:created ?createTime ;
+             gnt:belongsToSpecies ?speciesId .
+    ?speciesId gnt:shortName ?species .
+    FILTER ( LCASE(STR(?symbol)) = LCASE("$symbol") ) .
+    OPTIONAL { ?comment skos:notation ?taxonId_ . } .
+    BIND (STR(?text_) AS ?text) .
+    BIND (xsd:integer(STRAFTER(STR(?taxonId_), STR(taxon:))) AS ?taxonId) .
+    BIND (xsd:integer(STRAFTER(STR(?pmid_), STR(pubmed:))) AS ?pmid) .
+    BIND (xsd:integer(STRAFTER(STR(?gene_id_), STR(generif:))) AS ?gene_id) .
+    BIND (STR(?createTime) AS ?created) .
+}
+""").substitute(prefix=RDF_PREFIXES, graph=graph, symbol=symbol)
+    results = query_frame_and_compact(query, RIF_CONTEXT, sparql_uri)
+    results["data"] = sorted(
+        results["data"],
+        key=lambda k: (k["species"],
+                       datetime.strptime(k["created"], "%Y-%m-%d %H:%M:%S")))
+    return results

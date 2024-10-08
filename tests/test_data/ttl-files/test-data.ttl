@@ -1054,3 +1054,276 @@ gn:wiki-7273-0 dct:created "2022-08-24 18:34:41"^^xsd:datetime  .
 gn:wiki-7273-0 foaf:mbox <XXX@XXX.com> .
 gn:wiki-7273-0 dct:identifier "7273"^^xsd:integer .
 gn:wiki-7273-0 dct:hasVersion "0"^^xsd:integer .
+
+gnc:NCBIWikiEntry rdfs:subClassOf gnc:GeneWikiEntry .
+gnc:NCBIWikiEntry rdfs:comment "Represents GeneRIF Entries obtained from NCBI" .
+gn:rif-12709-37156912-2023-05-17T20:43:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Creatine kinase B suppresses ferroptosis by phosphorylating GPX4 through a moonlighting function.'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Ckb" ;
+	gnt:hasGeneId generif:12709 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37156912 ;
+	dct:created "2023-05-17 20:43:00"^^xsd:datetime  .
+gn:rif-13176-36456775-2023-03-01T20:36:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'DCC/netrin-1 regulates cell death in oligodendrocytes after brain injury.'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Dcc" ;
+	gnt:hasGeneId generif:13176 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36456775 ;
+	dct:created "2023-03-01 20:36:00"^^xsd:datetime  .
+gn:rif-13176-37541362-2023-09-21T20:40:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Prefrontal cortex-specific Dcc deletion induces schizophrenia-related behavioral phenotypes and fail to be rescued by olanzapine treatment.'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Dcc" ;
+	gnt:hasGeneId generif:13176 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37541362 ;
+	dct:created "2023-09-21 20:40:00"^^xsd:datetime  .
+gn:rif-16956-36519761-2023-04-27T20:33:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Parkin regulates neuronal lipid homeostasis through SREBP2-lipoprotein lipase pathway-implications for Parkinson\'s disease.'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Lpl" ;
+	gnt:hasGeneId generif:16956 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36519761 ;
+	dct:created "2023-04-27 20:33:00"^^xsd:datetime  .
+gn:rif-20423-36853961-2023-03-08T20:38:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'IHH, SHH, and primary cilia mediate epithelial-stromal cross-talk during decidualization in mice.'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Shh" ;
+	gnt:hasGeneId generif:20423 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36853961 ;
+	dct:created "2023-03-08 20:38:00"^^xsd:datetime  .
+gn:rif-20423-37190906-2023-07-12T09:09:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'The SHH-GLI1 pathway is required in skin expansion and angiogenesis.'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Shh" ;
+	gnt:hasGeneId generif:20423 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37190906 ;
+	dct:created "2023-07-12 09:09:00"^^xsd:datetime  .
+gn:rif-20423-37460185-2023-07-20T20:39:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label '[Effect study of Sonic hedgehog overexpressed hair follicle stem cells in hair follicle regeneration].'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Shh" ;
+	gnt:hasGeneId generif:20423 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37460185 ;
+	dct:created "2023-07-20 20:39:00"^^xsd:datetime  .
+gn:rif-20423-37481204-2023-09-26T20:37:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Sonic Hedgehog and WNT Signaling Regulate a Positive Feedback Loop Between Intestinal Epithelial and Stromal Cells to Promote Epithelial Regeneration.'@en ;
+	gnt:belongsToSpecies gn:Mus_musculus ;
+	gnt:symbol "Shh" ;
+	gnt:hasGeneId generif:20423 ;
+	skos:notation taxon:10090 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37481204 ;
+	dct:created "2023-09-26 20:37:00"^^xsd:datetime  .
+gn:rif-24539-38114521-2023-12-29T20:33:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Developing a model to predict the early risk of hypertriglyceridemia based on inhibiting lipoprotein lipase (LPL): a translational study.'@en ;
+	gnt:belongsToSpecies gn:Rattus_norvegicus ;
+	gnt:symbol "Lpl" ;
+	gnt:hasGeneId generif:24539 ;
+	skos:notation taxon:10116 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:38114521 ;
+	dct:created "2023-12-29 20:33:00"^^xsd:datetime  .
+gn:rif-29499-36906487-2023-06-23T20:38:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Regulation of Shh/Bmp4 Signaling Pathway by DNA Methylation in Rectal Nervous System Development of Fetal Rats with Anorectal Malformation.'@en ;
+	gnt:belongsToSpecies gn:Rattus_norvegicus ;
+	gnt:symbol "Shh" ;
+	gnt:hasGeneId generif:29499 ;
+	skos:notation taxon:10116 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36906487 ;
+	dct:created "2023-06-23 20:38:00"^^xsd:datetime  .
+gn:rif-29499-37815888-2023-10-24T20:38:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Sonic hedgehog signaling promotes angiogenesis of endothelial progenitor cells to improve pressure ulcers healing by PI3K/AKT/eNOS signaling.'@en ;
+	gnt:belongsToSpecies gn:Rattus_norvegicus ;
+	gnt:symbol "Shh" ;
+	gnt:hasGeneId generif:29499 ;
+	skos:notation taxon:10116 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37815888 ;
+	dct:created "2023-10-24 20:38:00"^^xsd:datetime  .
+gn:rif-1152-37156912-2023-05-17T20:43:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Creatine kinase B suppresses ferroptosis by phosphorylating GPX4 through a moonlighting function.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "CKB" ;
+	gnt:hasGeneId generif:1152 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37156912 ;
+	dct:created "2023-05-17 20:43:00"^^xsd:datetime  .
+gn:rif-1630-36889039-2023-04-04T09:45:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Mirror movements and callosal dysgenesis in a family with a DCC mutation: Neuropsychological and neuroimaging outcomes.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "DCC" ;
+	gnt:hasGeneId generif:1630 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36889039 ;
+	dct:created "2023-04-04 09:45:00"^^xsd:datetime  .
+gn:rif-1630-36852451-2023-07-07T20:37:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'An imbalance of netrin-1 and DCC during nigral degeneration in experimental models and patients with Parkinson\'s disease.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "DCC" ;
+	gnt:hasGeneId generif:1630 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36852451 ;
+	dct:created "2023-07-07 20:37:00"^^xsd:datetime  .
+gn:rif-4023-36763533-2023-02-23T20:40:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Angiopoietin-like protein 4/8 complex-mediated plasmin generation leads to cleavage of the complex and restoration of LPL activity.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36763533 ;
+	dct:created "2023-02-23 20:40:00"^^xsd:datetime  .
+gn:rif-4023-36652113-2023-04-07T20:39:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'The breast cancer microenvironment and lipoprotein lipase: Another negative notch for a beneficial enzyme?'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36652113 ;
+	dct:created "2023-04-07 20:39:00"^^xsd:datetime  .
+gn:rif-4023-36519761-2023-04-27T20:33:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Parkin regulates neuronal lipid homeostasis through SREBP2-lipoprotein lipase pathway-implications for Parkinson\'s disease.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36519761 ;
+	dct:created "2023-04-27 20:33:00"^^xsd:datetime  .
+gn:rif-4023-36708756-2023-05-22T20:32:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Plasma Lipoprotein Lipase Is Associated with Risk of Future Major Adverse Cardiovascular Events in Patients Following Carotid Endarterectomy.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:36708756 ;
+	dct:created "2023-05-22 20:32:00"^^xsd:datetime  .
+gn:rif-4023-37155355-2023-07-04T21:12:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Inverse association between apolipoprotein C-II and cardiovascular mortality: role of lipoprotein lipase activity modulation.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37155355 ;
+	dct:created "2023-07-04 21:12:00"^^xsd:datetime  .
+gn:rif-4023-37432202-2023-07-13T20:35:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Effect of the Interaction between Seaweed Intake and LPL Polymorphisms on Metabolic Syndrome in Middle-Aged Korean Adults.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37432202 ;
+	dct:created "2023-07-13 20:35:00"^^xsd:datetime  .
+gn:rif-4023-37568214-2023-08-14T20:37:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Frameshift coding sequence variants in the LPL gene: identification of two novel events and exploration of the genotype-phenotype relationship for variants reported to date.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37568214 ;
+	dct:created "2023-08-14 20:37:00"^^xsd:datetime  .
+gn:rif-4023-37550668-2023-08-22T20:29:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'The East Asian-specific LPL p.Ala288Thr (c.862G > A) missense variant exerts a mild effect on protein function.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37550668 ;
+	dct:created "2023-08-22 20:29:00"^^xsd:datetime  .
+gn:rif-4023-37128695-2023-09-12T20:35:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Interaction between APOE, APOA1, and LPL Gene Polymorphisms and Variability in Changes in Lipid and Blood Pressure following Orange Juice Intake: A Pilot Study.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37128695 ;
+	dct:created "2023-09-12 20:35:00"^^xsd:datetime  .
+gn:rif-4023-37427758-2023-09-25T09:33:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Variants within the LPL gene confer susceptility to diabetic kidney disease and rapid decline in kidney function in Chinese patients with type 2 diabetes.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37427758 ;
+	dct:created "2023-09-25 09:33:00"^^xsd:datetime  .
+gn:rif-4023-37901192-2023-11-01T08:55:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'The Association of Adipokines and Myokines in the Blood of Obese Children and Adolescents with Lipoprotein Lipase rs328 Gene Variants.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37901192 ;
+	dct:created "2023-11-01 08:55:00"^^xsd:datetime  .
+gn:rif-4023-37871217-2023-11-10T08:44:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'The lipoprotein lipase that is shuttled into capillaries by GPIHBP1 enters the glycocalyx where it mediates lipoprotein processing.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37871217 ;
+	dct:created "2023-11-10 08:44:00"^^xsd:datetime  .
+gn:rif-4023-37858495-2023-12-28T20:33:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Clinical profile, genetic spectrum and therapy evaluation of 19 Chinese pediatric patients with lipoprotein lipase deficiency.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37858495 ;
+	dct:created "2023-12-28 20:33:00"^^xsd:datetime  .
+gn:rif-4023-38114521-2023-12-29T20:33:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Developing a model to predict the early risk of hypertriglyceridemia based on inhibiting lipoprotein lipase (LPL): a translational study.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "LPL" ;
+	gnt:hasGeneId generif:4023 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:38114521 ;
+	dct:created "2023-12-29 20:33:00"^^xsd:datetime  .
+gn:rif-6469-37511358-2023-08-19T08:35:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Low Expression of the NRP1 Gene Is Associated with Shorter Overall Survival in Patients with Sonic Hedgehog and Group 3 Medulloblastoma.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "SHH" ;
+	gnt:hasGeneId generif:6469 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37511358 ;
+	dct:created "2023-08-19 08:35:00"^^xsd:datetime  .
+gn:rif-6469-37307020-2023-09-21T20:40:00-5 rdf:type gnc:NCBIWikiEntry ;
+	rdfs:label 'Activation of Sonic Hedgehog Signaling Pathway Regulates Human Trabecular Meshwork Cell Function.'@en ;
+	gnt:belongsToSpecies gn:Homo_sapiens ;
+	gnt:symbol "SHH" ;
+	gnt:hasGeneId generif:6469 ;
+	skos:notation taxon:9606 ;
+	dct:hasVersion "5"^^xsd:integer ;
+	dct:references pubmed:37307020 ;
+	dct:created "2023-09-21 20:40:00"^^xsd:datetime  .
