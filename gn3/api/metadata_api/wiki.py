@@ -1,4 +1,4 @@
-"""API for accessing/editting wiki metadata"""
+"""API for accessing/editing rif/wiki metadata"""
 
 import datetime
 from typing import Any, Dict
@@ -12,10 +12,12 @@ from gn3.db.rdf.wiki import (
     get_wiki_entries_by_symbol,
     get_comment_history,
     update_wiki_comment,
+    get_rif_entries_by_symbol,
 )
 
 
 wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
+rif_blueprint = Blueprint("rif", __name__, url_prefix="rif")
 
 
 @wiki_blueprint.route("/<int:comment_id>/edit", methods=["POST"])
@@ -83,7 +85,7 @@ def edit_wiki(comment_id: int):
                 sparql_auth_uri=current_app.config["SPARQL_AUTH_URI"]
             )
         except Exception as exc:
-            conn.rollback() # type: ignore
+            conn.rollback()  # type: ignore
             raise exc
         return jsonify({"success": "ok"})
     return jsonify(error="Error editing wiki entry, most likely due to DB error!"), 500
@@ -149,6 +151,23 @@ def get_history(comment_id):
     if not data:
         data = {}
         status_code = 404
+    if request.headers.get("Accept") == "application/ld+json":
+        payload = make_response(response)
+        payload.headers["Content-Type"] = "application/ld+json"
+        return payload, status_code
+    return jsonify(data), status_code
+
+
+@rif_blueprint.route("/<string:symbol>", methods=["GET"])
+def get_ncbi_rif_entries(symbol: str):
+    """Fetch NCBI RIF entries"""
+    status_code = 200
+    response = get_rif_entries_by_symbol(
+        symbol,
+        sparql_uri=current_app.config["SPARQL_ENDPOINT"])
+    data = response.get("data")
+    if not data:
+        data, status_code = {}, 404
     if request.headers.get("Accept") == "application/ld+json":
         payload = make_response(response)
         payload.headers["Content-Type"] = "application/ld+json"

@@ -27,6 +27,7 @@ from gn3.api.metadata_api import wiki
 
 metadata = Blueprint("metadata", __name__)
 metadata.register_blueprint(wiki.wiki_blueprint)
+metadata.register_blueprint(wiki.rif_blueprint)
 
 
 @metadata.route("/datasets/<name>", methods=["GET"])
