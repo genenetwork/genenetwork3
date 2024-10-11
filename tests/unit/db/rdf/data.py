@@ -2,14 +2,9 @@
 
 LPL_RIF_ENTRIES = {
     "@context": {
-        "data": "@graph",
-        "type": "@type",
-        "gn": "http://genenetwork.org/id/",
-        "gnc": "http://genenetwork.org/category/",
+        "dct": "http://purl.org/dc/terms/",
         "gnt": "http://genenetwork.org/term/",
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
-        "dct": "http://purl.org/dc/terms/",
         "skos": "http://www.w3.org/2004/02/skos/core#",
         "symbol": "gnt:symbol",
         "species": "gnt:species",
@@ -19,7 +14,6 @@ LPL_RIF_ENTRIES = {
         "created": "dct:created",
         "comment": "rdfs:comment",
         "version": "dct:hasVersion",
-        "id": "dct:identifier",
     },
     "data": [
         {
