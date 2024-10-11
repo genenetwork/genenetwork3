@@ -187,27 +187,32 @@ CONSTRUCT {
 
 
 def update_wiki_comment(
-        insert_dict: dict,
-        sparql_user: str,
-        sparql_password: str,
-        sparql_auth_uri: str,
-        graph: str = "<http://genenetwork.org>",
+    insert_dict: dict,
+    sparql_user: str,
+    sparql_password: str,
+    sparql_auth_uri: str,
+    graph: str = "<http://genenetwork.org>",
 ) -> str:
     """Update a wiki comment by inserting a comment with the same
-identifier but an updated version id.
+    identifier but an updated version id.
     """
     name = f"gn:wiki-{insert_dict['Id']}-{insert_dict['versionId']}"
-    comment_triple = Template("""$name rdfs:label '''$comment'''@en ;
+    comment_triple = Template(
+        """$name rdfs:label '''$comment'''@en ;
 rdf:type gnc:GNWikiEntry ;
 gnt:symbol "$symbol" ;
 dct:identifier "$comment_id"^^xsd:integer ;
 dct:hasVersion "$next_version"^^xsd:integer ;
 dct:created "$created"^^xsd:datetime .
-""").substitute(
+"""
+    ).substitute(
         comment=insert_dict["comment"],
-        name=name, symbol=insert_dict['symbol'],
-        comment_id=insert_dict["Id"], next_version=insert_dict["versionId"],
-        created=insert_dict["createtime"])
+        name=name,
+        symbol=insert_dict["symbol"],
+        comment_id=insert_dict["Id"],
+        next_version=insert_dict["versionId"],
+        created=insert_dict["createtime"],
+    )
     using = ""
     if insert_dict["email"]:
         comment_triple += f"{name} foaf:mbox <{insert_dict['email']}> .\n"
@@ -216,9 +221,8 @@ dct:created "$created"^^xsd:datetime .
     if insert_dict["species"]:
         comment_triple += f"{name} gnt:belongsToSpecies ?speciesId .\n"
         using = Template(
-            """ USING $graph WHERE { ?speciesId gnt:shortName "$species" . } """).substitute(
-                graph=graph, species=insert_dict["species"]
-        )
+            """ USING $graph WHERE { ?speciesId gnt:shortName "$species" . } """
+        ).substitute(graph=graph, species=insert_dict["species"])
     if insert_dict["reason"]:
         comment_triple += f"{name} gnt:reason \"{insert_dict['reason']}\" .\n"
     if insert_dict["weburl"]:
@@ -237,10 +241,10 @@ INSERT {
 GRAPH $graph {
 $comment_triple}
 } $using
-""").substitute(prefix=RDF_PREFIXES,
-                graph=graph,
-                comment_triple=comment_triple,
-                using=using),
+"""
+        ).substitute(
+            prefix=RDF_PREFIXES, graph=graph, comment_triple=comment_triple, using=using
+        ),
         sparql_user=sparql_user,
         sparql_password=sparql_password,
         sparql_auth_uri=sparql_auth_uri,
@@ -289,7 +293,7 @@ FROM $graph WHERE {
 } ORDER BY ?species ?createTime
 """
     ).substitute(prefix=RDF_PREFIXES, graph=graph, symbol=symbol)
-    results: dict[str, dict|list] = {
+    results: dict[str, dict | list] = {
         "@context": {
             "dct": "http://purl.org/dc/terms/",
             "gnt": "http://genenetwork.org/term/",
@@ -305,7 +309,7 @@ FROM $graph WHERE {
             "version": "dct:hasVersion",
         }
     }
-    data: list[dict[str, int|str]] = []
+    data: list[dict[str, int | str]] = []
     for entry in sparql_query(query=query, endpoint=sparql_uri, format_type="json"):
         data.append(
             {
