@@ -9,13 +9,13 @@ NOTE: In the CONSTRUCT queries below, we manually sort the arrays from
    <https://stackoverflow.com/questions/78186393>
    <https://www.w3.org/TR/rdf-sparql-query/#modOrderBy>
 """
-from datetime import datetime
 from string import Template
 from gn3.db.rdf import (
     BASE_CONTEXT,
     RDF_PREFIXES,
     query_frame_and_compact,
     update_rdf,
+    sparql_query,
 )
 
 
@@ -33,20 +33,6 @@ WIKI_CONTEXT = BASE_CONTEXT | {
     "initial": "gnt:initial",
     "comment": "rdfs:comment",
     "created": "dct:created",
-    "id": "dct:identifier",
-}
-
-RIF_CONTEXT = BASE_CONTEXT | {
-    "dct": "http://purl.org/dc/terms/",
-    "skos": "http://www.w3.org/2004/02/skos/core#",
-    "symbol": "gnt:symbol",
-    "species": "gnt:species",
-    "taxonomic_id": "skos:notation",
-    "gene_id": "gnt:hasGeneId",
-    "pubmed_id": "dct:references",
-    "created": "dct:created",
-    "comment": "rdfs:comment",
-    "version": "dct:hasVersion",
     "id": "dct:identifier",
 }
 
@@ -262,43 +248,72 @@ $comment_triple}
 
 
 def get_rif_entries_by_symbol(
-        symbol: str, sparql_uri: str, graph: str = "<http://genenetwork.org>"
+    symbol: str, sparql_uri: str, graph: str = "<http://genenetwork.org>"
 ) -> dict:
-    """Fetch NCBI RIF entries by a symbol.  Symbol here is case in-sensitive."""
-    query = Template("""
+    """Fetch NCBI RIF entries for a given symbol (case-insensitive).
+
+This function retrieves NCBI RIF entries using a SPARQL `SELECT` query
+instead of a `CONSTRUCT` to avoid truncation.  The Virtuoso SPARQL
+engine limits query results to 1,048,576 triples per solution, and
+NCBI entries can exceed this limit.  Since there may be more than
+2,000 entries, which could result in the number of triples surpassing
+the limit, `SELECT` is used to ensure complete data retrieval without
+truncation.  See:
+
+<https://community.openlinksw.com/t/sparql-query-limiting-results-to-100000-triples/2131>
+
+    """
+    # XXX: Consider pagination
+    query = Template(
+        """
 $prefix
 
-CONSTRUCT {
-    ?comment gnt:symbol ?symbol ;
-             gnt:species ?species ;
-             dct:references ?pmid ;
-             rdfs:comment ?text ;
-             dct:hasVersion ?version ;
-             dct:created ?created ;
-             gnt:hasGeneId ?gene_id ;
-             skos:notation ?taxonId .
-} FROM $graph WHERE {
-    ?comment rdfs:label ?text_ ;
-             gnt:symbol ?symbol ;
-             rdf:type gnc:NCBIWikiEntry ;
-             gnt:hasGeneId ?gene_id_ ;
-             dct:hasVersion ?version ;
-             dct:references ?pmid_ ;
-             dct:created ?createTime ;
-             gnt:belongsToSpecies ?speciesId .
-    ?speciesId gnt:shortName ?species .
-    FILTER ( LCASE(STR(?symbol)) = LCASE("$symbol") ) .
-    OPTIONAL { ?comment skos:notation ?taxonId_ . } .
-    BIND (STR(?text_) AS ?text) .
-    BIND (xsd:integer(STRAFTER(STR(?taxonId_), STR(taxon:))) AS ?taxonId) .
-    BIND (xsd:integer(STRAFTER(STR(?pmid_), STR(pubmed:))) AS ?pmid) .
+SELECT ?comment ?symbol ?species ?pubmed_id ?version ?created ?gene_id ?taxonomic_id
+FROM $graph WHERE {
+    ?comment_id rdfs:label ?text_ ;
+                gnt:symbol ?symbol ;
+                rdf:type gnc:NCBIWikiEntry ;
+                gnt:hasGeneId ?gene_id_ ;
+                dct:hasVersion ?version ;
+                dct:references ?pmid_ ;
+                dct:created ?createTime ;
+                gnt:belongsToSpecies ?speciesId .
+    ?speciesId rdfs:label ?species .
+    FILTER ( LCASE(?symbol) = LCASE("$symbol") ) .
+    OPTIONAL { ?comment_id skos:notation ?taxonId_ . } .
+    BIND (STR(?text_) AS ?comment) .
+    BIND (xsd:integer(STRAFTER(STR(?taxonId_), STR(taxon:))) AS ?taxonomic_id) .
+    BIND (xsd:integer(STRAFTER(STR(?pmid_), STR(pubmed:))) AS ?pubmed_id) .
     BIND (xsd:integer(STRAFTER(STR(?gene_id_), STR(generif:))) AS ?gene_id) .
     BIND (STR(?createTime) AS ?created) .
-}
-""").substitute(prefix=RDF_PREFIXES, graph=graph, symbol=symbol)
-    results = query_frame_and_compact(query, RIF_CONTEXT, sparql_uri)
-    results["data"] = sorted(
-        results["data"],
-        key=lambda k: (k["species"],
-                       datetime.strptime(k["created"], "%Y-%m-%d %H:%M:%S")))
+} ORDER BY ?species ?createTime
+"""
+    ).substitute(prefix=RDF_PREFIXES, graph=graph, symbol=symbol)
+    results: dict[str, dict|list] = {
+        "@context": {
+            "dct": "http://purl.org/dc/terms/",
+            "gnt": "http://genenetwork.org/term/",
+            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+            "skos": "http://www.w3.org/2004/02/skos/core#",
+            "symbol": "gnt:symbol",
+            "species": "gnt:species",
+            "taxonomic_id": "skos:notation",
+            "gene_id": "gnt:hasGeneId",
+            "pubmed_id": "dct:references",
+            "created": "dct:created",
+            "comment": "rdfs:comment",
+            "version": "dct:hasVersion",
+        }
+    }
+    data: list[dict[str, int|str]] = []
+    for entry in sparql_query(query=query, endpoint=sparql_uri, format_type="json"):
+        data.append(
+            {
+                key: int(metadata.get("value"))
+                if metadata.get("value").isdigit()
+                else metadata.get("value")
+                for key, metadata in entry.items()
+            }
+        )
+    results["data"] = data
     return results

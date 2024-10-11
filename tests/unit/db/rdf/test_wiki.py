@@ -405,8 +405,11 @@ def test_update_wiki_comment(rdf_setup):  # pylint: disable=W0613,W0621
 def test_get_rif_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
     """Test fetching NCBI Rif Metadata from RDF"""
     sparql_conf = SPARQL_CONF
-    assert get_rif_entries_by_symbol(
+    entries = get_rif_entries_by_symbol(
         symbol="Lpl",
         sparql_uri=sparql_conf["sparql_endpoint"],
         graph=GRAPH,
-    ) == LPL_RIF_ENTRIES
+    )
+    assert len(LPL_RIF_ENTRIES["data"]) == len(entries["data"])
+    for result, expected in zip(LPL_RIF_ENTRIES["data"], entries["data"]):
+        TestCase().assertDictEqual(result, expected)
