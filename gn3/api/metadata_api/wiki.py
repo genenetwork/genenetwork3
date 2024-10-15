@@ -22,7 +22,7 @@ rif_blueprint = Blueprint("rif", __name__, url_prefix="rif")
 
 @wiki_blueprint.route("/<int:comment_id>/edit", methods=["POST"])
 @require_token
-def edit_wiki(comment_id: int, **kwargs):
+def edit_wiki(comment_id: int, **kwargs):# pylint: disable=[unused-argument]
     """Edit wiki comment. This is achieved by adding another entry with a new VersionId"""
     # FIXME: attempt to check and fix for types here with relevant errors
     payload: Dict[str, Any] = request.json  # type: ignore

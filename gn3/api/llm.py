@@ -102,10 +102,9 @@ def rate_queries(task_id, auth_token=None):
     user_id = get_user_id(auth_token)
     with db.connection(current_app.config["LLM_DB_PATH"]) as conn:
         results = request.json
-        user_id, query, answer, weight = (user_id,
-                                          results.get("query"),
-                                          results.get("answer"),
-                                          results.get("weight", 0))
+        query, answer, weight = (results.get("query"),
+                                 results.get("answer"),
+                                 results.get("weight", 0))
         cursor = conn.cursor()
         cursor.execute("""INSERT INTO Rating(user_id, query,
         answer, weight, task_id)
@@ -170,12 +169,15 @@ def delete_records(auth_token=None):
     with db.connection(current_app.config["LLM_DB_PATH"]) as conn:
         task_ids = list(request.json.values())
         cursor = conn.cursor()
-        query = f""" DELETE FROM history WHERE task_id IN ({', '.join('?' * len(task_ids))}) AND user_id=? """
+        query = ("DELETE FROM history WHERE task_id IN "
+                 f"({', '.join('?' * len(task_ids))}) "
+                 "AND user_id=?")
         cursor.execute(query, (*task_ids, get_user_id(auth_token),))
         return jsonify({})
 
 
 def get_user_id(auth_token: Optional[dict] = None):
+    """Retrieve the user ID from the JWT token."""
     if auth_token is None or auth_token.get("jwt", {}).get("sub") is None:
         raise LLMError("Invalid auth token encountered")
     user_id = auth_token["jwt"]["sub"]
