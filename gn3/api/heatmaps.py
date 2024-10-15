@@ -33,7 +33,7 @@ def clustered_heatmaps():
         with io.StringIO() as io_str:
             figure = build_heatmap(conn,
                                    traits_fullnames,
-                                   current_app.config["GENOTYPE_FILES"],
+                                   f'{current_app.config["GENOTYPE_FILES"]}/genotype',
                                    vertical=vertical,
                                    tmpdir=current_app.config["TMPDIR"])
             figure.write_json(io_str)
