@@ -6,7 +6,7 @@ from typing import Any, Dict
 from flask import Blueprint, request, jsonify, current_app, make_response
 
 from gn3 import db_utils
-from gn3.auth.authorisation.oauth2.resource_server import require_oauth
+from gn3.oauth2.authorisation import require_token
 from gn3.db import wiki
 from gn3.db.rdf.wiki import (
     get_wiki_entries_by_symbol,
@@ -21,8 +21,8 @@ rif_blueprint = Blueprint("rif", __name__, url_prefix="rif")
 
 
 @wiki_blueprint.route("/<int:comment_id>/edit", methods=["POST"])
-@require_oauth("profile")
-def edit_wiki(comment_id: int):
+@require_token
+def edit_wiki(comment_id: int, **kwargs):
     """Edit wiki comment. This is achieved by adding another entry with a new VersionId"""
     # FIXME: attempt to check and fix for types here with relevant errors
     payload: Dict[str, Any] = request.json  # type: ignore
