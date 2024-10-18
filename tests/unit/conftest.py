@@ -15,7 +15,7 @@ def fxtr_app():
         testdb = Path(testdir).joinpath(
             f'testdb_{datetime.now().strftime("%Y%m%dT%H%M%S")}')
         app = create_app({
-            "TESTING": True, "AUTH_DB": testdb,
+            "TESTING": True,
             "OAUTH2_ACCESS_TOKEN_GENERATOR": "tests.unit.auth.test_token.gen_token"
         })
         app.testing = True

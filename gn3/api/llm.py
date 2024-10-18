@@ -12,7 +12,7 @@ from gn3.llms.process import get_gnqa
 from gn3.llms.errors import LLMError
 
 from gn3.oauth2.authorisation import require_token
-from gn3.auth import db
+from gn3 import sqlite_db_utils as db
 
 
 gnqa = Blueprint("gnqa", __name__)
