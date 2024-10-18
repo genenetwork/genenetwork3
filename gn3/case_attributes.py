@@ -27,7 +27,7 @@ from gn3.commands import run_cmd
 from gn3.db_utils import Connection, database_connection
 
 from gn3.oauth2.authorisation import require_token
-from gn3.auth.authorisation.errors import AuthorisationError
+from gn3.oauth2.errors import AuthorisationError
 
 caseattr = Blueprint("case-attribute", __name__)
 

@@ -16,7 +16,7 @@ from authlib.oauth2.rfc6749.errors import OAuth2Error
 from flask import Flask, jsonify, Response, current_app
 
 from gn3.oauth2 import errors as oautherrors
-from gn3.auth.authorisation.errors import AuthorisationError
+from gn3.oauth2.errors import AuthorisationError
 from  gn3.llms.errors import LLMError
 
 def add_trace(exc: Exception, jsonmsg: dict) -> dict:
@@ -60,7 +60,7 @@ def handle_authorisation_error(exc: AuthorisationError):
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
         "error_description": " :: ".join(exc.args)
-    })), exc.error_code
+    })), 500
 
 
 def handle_oauth2_errors(exc: OAuth2Error):

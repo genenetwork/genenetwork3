@@ -9,7 +9,8 @@ from flask import Blueprint
 from flask import request
 from flask import current_app
 
-from gn3.auth.authorisation.errors import AuthorisationError
+
+from gn3.oauth2.errors import AuthorisationError
 from gn3.db.datasets import (retrieve_metadata,
                              save_metadata,
                              get_history)

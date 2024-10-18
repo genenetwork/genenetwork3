@@ -3,7 +3,6 @@
 ## Copy to run-dev.sh and update the appropriate environment variables.
 
 export SQL_URI="${SQL_URI:+${SQL_URI}}"
-export AUTH_DB="${AUTH_DB:+${AUTH_DB}}"
 export FLASK_DEBUG=1
 export FLASK_APP="main.py"
 export AUTHLIB_INSECURE_TRANSPORT=true
@@ -19,13 +18,6 @@ then
     echo "ERROR: You need to specify the 'SQL_URI' environment variable";
     exit 1;
 fi
-
-if [ -z "${AUTH_DB}" ]
-then
-    echo "ERROR: You need to specify the 'AUTH_DB' environment variable";
-    exit 1;
-fi
-
 
 # flask run --port=8080
 flask ${CMD_ARGS[@]}
