@@ -18,11 +18,11 @@ if (length(args)==0) {
 } else {
 
   json_file_path = args[1]
-  # convert this to an absolute file path 
-  
 }
 
-# validation for the json file 
+# validation for the json file
+
+
 if (!(file.exists(json_file_path))) {
    stop("The input file path does not exists")
 } else {
@@ -31,11 +31,10 @@ json_data  = fromJSON(file = json_file_path)
 }
 
 
+
 # generate random string file path here
 genRandomFileName <- function(prefix,file_ext=".txt"){
-
 	randStr = paste(prefix,stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"),sep="_")
-
 	return(paste(randStr,file_ext,sep=""))
 }
 
@@ -43,12 +42,25 @@ genRandomFileName <- function(prefix,file_ext=".txt"){
 # TODO improve on this or use option
 
 
+
+# should put constraints for items data required for this 
 crosstype <- json_data$crosstype
 geno_file <- json_data$geno_file
 pheno_file <- json_data$pheno_file
 geno_map_file <- json_data$geno_map_file 
 pheno_covar_file <- json_data$phenocovar_file
 alleles <- json_data$alleles
+founder_geno_file = json_data$founder_geno_file
+gmap_file = json_data$gmap_file
+
+
+# work on the optional parameters
+
+# better fit for reading the data
+# make validations
+
+# parsing the required data for example the geno_codes
+
 
 # geno_codes  handle the geno codes here 
 
@@ -69,6 +81,24 @@ str_glue(
 
 # issue I can no define the different paths for files for example pheno_file 
 
+# think about the issue about geno codes ~~~~
+# function to generate a cross file from a json list
+
+generate_cross_object  <- function(json_data){
+return (write_control_file(control_file_path,
+    crosstype= json_data$crosstype,
+    geno_file= json_data$geno_file,
+    pheno_file= json_data$pheno_file,    
+    gmap_file= json_data$geno_map_file,
+    phenocovar_file= json_data$phenocovar_file,
+    geno_codes= json_data$geno_codes,
+    alleles= json_data$alleles,    
+    na.strings=json_data$na.strings,
+    overwrite = TRUE))
+}
+
+
+# alternatively pass a  yaml file with
 dataset <- write_control_file(control_file_path,
     crosstype= crosstype,
     geno_file= geno_file,
@@ -79,7 +109,6 @@ dataset <- write_control_file(control_file_path,
     alleles= alleles,    
     na.strings=c("-", "NA"),
     overwrite = TRUE)
-
 
 # make validation for the data
 dataset  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
@@ -108,3 +137,36 @@ cat(" IDs for all individuals in the dataset object that have phenotype data")
 ind_ids_pheno(dataset)
 cat("Name of the founder Strains/n")
 founders(dataset)
+
+# Work on computing the genetic probabilities
+
+
+analysis_type <- "single"
+
+
+perform_genetic_pr <- function(cross, cores= 1, error_prob=0.002, analysis_type="single"){
+# improve on this 
+if (analysis_type == "single"){
+    pr <- calc_genoprob(cross, error_prob= error_prob, quiet=FALSE, cores=cores)
+    return (pr)
+}
+}
+
+# get the genetic probability
+
+Pr = perform_genetic_pr(dataset)
+cat("Summaries  on the genetic probabilites \n")
+print(Pr)
+summary(Pr)
+
+
+#calculate genotyping error LOD scores, to help identify potential genotyping errors (and problem markers and/or individuals
+error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = 4)
+print(error_lod)
+
+
+# 
+
+
+
+
