@@ -315,7 +315,7 @@ perform_permutation_test <- function(cross,
   }
   else if (method == "LOCO") {
     kinship = calc_kinship(genome_prob, "loco")
-    operm3 <- scan1perm(
+    perm <- scan1perm(
       genome_prob,
       cross$pheno,
       kinship = kinship ,
@@ -331,3 +331,22 @@ perform_permutation_test <- function(cross,
 perm <- perform_permutation_test(dataset, Pr, n_perm = 2, method = "LMM")
 # get the permutation summary with a significance threshold
 summary(perm, alpha = c(0.2, 0.05))
+
+# find function to perform the LOD peaks
+
+find_lod_peaks <-function(scan_results, cross, threshold=4,  drop=1.5){
+# can this take pmap??? which map should we use???
+# TODO add more ags
+print("Finding the lod peaks with thresholds n and drop n\n")
+return (find_peaks(scan_results, cross$gmap, threshold= threshold, drop=drop))
+}
+
+# add the number of cores
+lod_peaks <- find_lod_peaks(results, dataset)
+print(load_peaks)
+
+# how can we perform qtl effect computations ??? with input from user
+
+# what data should we return to the user
+
+# improve on this script
