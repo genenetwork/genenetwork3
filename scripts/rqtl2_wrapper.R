@@ -188,13 +188,13 @@ perform_genome_scan <- function(cross, genome_prob, method, covar =NULL, xCovar=
 {
 if (method == "LMM") {
    # provide parameters for this
-   kinship = kinship(genome_prob)
+   kinship = calc_kinship(genome_prob)
    out  <- scan1(genome_prob, cross$pheno, kinship=kinship, addcovar=covar, Xcovar=Xcovar)    
 }
 
 if (method == "LOCO") {
 # perform kinship inside better option
-  kinship = kinship(genome_prob, "loco")
+  kinship = calc_kinship(genome_prob, "loco")
   out <- scan1(genome_prob, cross$pheno, kinship=kinship,addcovar=covar, Xcovar=Xcovar)
 }
 else {
@@ -228,3 +228,37 @@ return (image_loc)
 
 lod_file_path <- generate_lod_plot(dataset, results, "HK")
 lod_file_path
+
+# work on 2 pair scan multiple pair scan # multiple pair scan
+
+# Q  how do we perform geno scan with Genome scan with a single-QTL model ????
+
+# perform  permutation tests for single-QTL method
+ 
+
+perform_permutation_test <- function(cross, genome_prob, n_perm, method="HKK", covar=NULL, Xcovar=NULL, perm_strata=NULL){
+# todo add chr_lengths and perm_Xsp
+
+if (method == "HKK") {
+    perm <- scan1perm(genome_prob, cross$pheno, Xcovar=Xcovar, n_perm= n_perm, perm_strata=perm_strata)
+}
+else if (method == "LMM") {
+   kinship = calc_kinship(genome_prob)
+   perm <- scan1perm(genome_prob, cross$pheno,
+                    kinship=kinship, Xcovar=Xcovar,
+		    n_perm=n_perm)
+}
+else if (method == "LOCO") {
+ kinship = calc_kinship(genome_prob, "loco")
+operm3 <- scan1perm(genome_prob, cross$pheno,
+                   kinship=kinship , perm_strata=perm_strata,
+                   Xcovar= Xcovar, n_perm=n_perm)
+}
+return (perm) 
+}
+
+# TODO ! get these parameters from argument from the user
+perm <- perform_permutation_test(dataset,Pr, n_perm=2, method="LMM")
+# get the permutation summary with a significance threshold
+summary(perm, alpha=c(0.2, 0.05))
+
