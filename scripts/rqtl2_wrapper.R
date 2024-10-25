@@ -207,5 +207,24 @@ return (out)
 results <- perform_genome_scan(cross=dataset, genome_prob=Pr, method = "HMM")
 
 
-results
+results # this should probably return the method use here 
 
+# plot for the LOD scores from  performing the genome scan
+
+generate_lod_plot <- function(cross, scan_result, method, base_dir="."){
+# Plot LOD curves for a genome scan
+color <- c("slateblue", "violetred", "green3")
+par(mar=c(4.1, 4.1, 1.6, 1.1))
+ymx <- maxlod(scan_result)
+file_name = genRandomFileName(prefix="RQTL_LOD_SCORE_",file_ext=".png")
+image_loc = file.path(base_dir ,file_name)
+png(image_loc, width=1000, height=600, type='cairo-png')
+plot(scan_result, cross$gmap, lodcolumn=1, col=color[1], main=colnames(cross$pheno)[1],
+              ylim=c(0, ymx*1.02))
+legend("topleft", lwd=2, col=color[1], method, bg="gray90", lty=c(1,1,2))
+dev.off()
+return (image_loc)
+}
+
+lod_file_path <- generate_lod_plot(dataset, results, "HK")
+lod_file_path
