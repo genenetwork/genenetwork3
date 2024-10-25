@@ -165,8 +165,47 @@ error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = 4)
 print(error_lod)
 
 
-# 
+#  Perform genome scane
+
+# rework on this issue
+## grab phenotypes and covariates; ensure that covariates have names attribute
+pheno <- dataset$pheno
+covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
+names(covar) <- rownames(dataset$covar)
+Xcovar <- get_x_covar(dataset)
+
+print(pheno)
+print(covar)
+print(Xcovar)
+
+# rework on fetching th Xcovar and getting the covar data 
+
+# perform kinship
 
 
+perform_genome_scan <- function(cross, genome_prob, method, covar =NULL, xCovar=NULL)
+# perform scan1 using haley-knott regression or linear model, or LOCO linear model
+{
+if (method == "LMM") {
+   # provide parameters for this
+   kinship = kinship(genome_prob)
+   out  <- scan1(genome_prob, cross$pheno, kinship=kinship, addcovar=covar, Xcovar=Xcovar)    
+}
 
+if (method == "LOCO") {
+# perform kinship inside better option
+  kinship = kinship(genome_prob, "loco")
+  out <- scan1(genome_prob, cross$pheno, kinship=kinship,addcovar=covar, Xcovar=Xcovar)
+}
+else {
+# perform using Haley Knott 
+out <- scan1(genome_prob, cross$pheno, addcovar=NULL, Xcovar=Xcovar)
+}
+return (out)
+}
+
+results <- perform_genome_scan(cross=dataset, genome_prob=Pr, method = "HMM")
+
+
+results
 
