@@ -20,7 +20,7 @@ if (length(args) == 0) {
   json_file_path = args[1]
 }
 
-# validation for the json file
+# TODO validation for the json file
 
 
 if (!(file.exists(json_file_path))) {
@@ -39,23 +39,9 @@ genRandomFileName <- function(prefix, file_ext = ".txt") {
   return(paste(randStr, file_ext, sep = ""))
 }
 
-# this should be read from the json file assigned to variables
-# TODO improve on this or use option
 
 
-
-# should put constraints for items data required for this
-crosstype <- json_data$crosstype
-geno_file <- json_data$geno_file
-pheno_file <- json_data$pheno_file
-geno_map_file <- json_data$geno_map_file
-pheno_covar_file <- json_data$phenocovar_file
-alleles <- json_data$alleles
-founder_geno_file = json_data$founder_geno_file
-gmap_file = json_data$gmap_file
-
-
-# work on the optional parameters
+# TODO work on the optional parameters
 
 # better fit for reading the data
 # make validations
@@ -103,18 +89,9 @@ generate_cross_object  <- function(json_data) {
 
 
 # alternatively pass a  yaml file with
-dataset <- write_control_file(
-  control_file_path,
-  crosstype = crosstype,
-  geno_file = geno_file,
-  pheno_file = pheno_file,
-  gmap_file = geno_map_file,
-  phenocovar_file = pheno_covar_file,
-  geno_codes = c(L = 1L, C = 2L),
-  alleles = alleles,
-  na.strings = c("-", "NA"),
-  overwrite = TRUE
-)
+
+
+generate_cross_object(json_data)
 
 # make validation for the data
 dataset  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
@@ -177,7 +154,7 @@ error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = 4)
 print(error_lod)
 
 
-#  Perform genome scane
+#  Perform genome scan
 
 # rework on this issue
 ## grab phenotypes and covariates; ensure that covariates have names attribute
@@ -190,9 +167,8 @@ print(pheno)
 print(covar)
 print(Xcovar)
 
-# rework on fetching th Xcovar and getting the covar data
+# TODO: rework on fetching th Xcovar and getting the covar data
 
-# perform kinship
 
 
 perform_genome_scan <- function(cross,
@@ -292,7 +268,8 @@ perform_permutation_test <- function(cross,
                                      covar = NULL,
                                      Xcovar = NULL,
                                      perm_strata = NULL) {
-  # todo add chr_lengths and perm_Xsp
+				     
+  # TODO! add chr_lengths and perm_Xsp
   
   if (method == "HKK") {
     perm <- scan1perm(
@@ -332,7 +309,7 @@ perm <- perform_permutation_test(dataset, Pr, n_perm = 2, method = "LMM")
 # get the permutation summary with a significance threshold
 summary(perm, alpha = c(0.2, 0.05))
 
-# find function to perform the LOD peaks
+#  function to perform the LOD peaks
 
 find_lod_peaks <-function(scan_results, cross, threshold=4,  drop=1.5){
 # can this take pmap??? which map should we use???
@@ -340,13 +317,8 @@ find_lod_peaks <-function(scan_results, cross, threshold=4,  drop=1.5){
 print("Finding the lod peaks with thresholds n and drop n\n")
 return (find_peaks(scan_results, cross$gmap, threshold= threshold, drop=drop))
 }
-
-# add the number of cores
+# TODO! add the number of cores
 lod_peaks <- find_lod_peaks(results, dataset)
-print(load_peaks)
+print(lod_peaks)
 
-# how can we perform qtl effect computations ??? with input from user
-
-# what data should we return to the user
-
-# improve on this script
+# TODO! format to return the data ??? 
