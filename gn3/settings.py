@@ -8,7 +8,7 @@ import os
 import uuid
 import tempfile
 
-BCRYPT_SALT = "$2b$12$mxLvu9XRLlIaaSeDxt8Sle"  # Change this!
+BCRYPT_SALT = ""
 DATA_DIR = ""
 GEMMA_WRAPPER_CMD = os.environ.get("GEMMA_WRAPPER", "gemma-wrapper")
 CACHEDIR = ""
@@ -29,13 +29,9 @@ LMDB_PATH = os.environ.get(
 SQL_URI = os.environ.get(
     "SQL_URI", "mysql://webqtlout:webqtlout@localhost/db_webqtl")
 SECRET_KEY = "password"
-# gn2 results only used in fetching dataset info
-
 
 # FAHAMU API TOKEN
 FAHAMU_AUTH_TOKEN = ""
-
-GN2_BASE_URL = "http://www.genenetwork.org/"
 
 # wgcna script
 WGCNA_RSCRIPT = "wgcna_analysis.R"
@@ -83,31 +79,4 @@ ROUND_TO = 10
 
 MULTIPROCESSOR_PROCS = 6  # Number of processes to spawn
 
-AUTH_SERVER_URL = "https://auth.genenetwork.org"
-AUTH_MIGRATIONS = "migrations/auth"
-OAUTH2_SCOPE = (
-    "profile", "group", "role", "resource", "user", "masquerade",
-    "introspect")
-
-
-try:
-    # *** SECURITY CONCERN ***
-    # Clients with access to this privileges create a security concern.
-    # Be careful when adding to this configuration
-    OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE = tuple(
-        uuid.UUID(client_id) for client_id in
-        os.environ.get(
-            "OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE", "").split(","))
-except ValueError as _valerr:
-    OAUTH2_CLIENTS_WITH_INTROSPECTION_PRIVILEGE = tuple()
-
-try:
-    # *** SECURITY CONCERN ***
-    # Clients with access to this privileges create a security concern.
-    # Be careful when adding to this configuration
-    OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE = tuple(
-        uuid.UUID(client_id) for client_id in
-        os.environ.get(
-            "OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE", "").split(","))
-except ValueError as _valerr:
-    OAUTH2_CLIENTS_WITH_DATA_MIGRATION_PRIVILEGE = tuple()
+AUTH_SERVER_URL = ""
