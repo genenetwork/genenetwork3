@@ -16,8 +16,8 @@ option_list <- list(
 make_option(c("-i", "--input_file"), action="store", default=NULL, type='character', help="a yaml or json file with required data to create the cross file"),
 make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "),
  make_option(c("-d", "--directory"), action = "store", default = NULL, type = "character", help="Temporary working directory: should also host the input file ."),
- make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)") 
-
+ make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)"),
+make_option(c("-o", "--output_file"), action="store", default=NULL, type='character', help="a file name of where to write the output json results")
 )
 
 
@@ -38,6 +38,9 @@ if (is.null(opt$input_file)) {
   stop("Argument for the Input metadata file is Missing ", call. = FALSE)
 } else {
    input_file = opt$input_file
+}
+(is.null(opt$output_file)){
+stop("You need to provide an output file to write the ouput data")
 }
 
 # file_path
@@ -452,8 +455,7 @@ output = list(lod_peaks = lod_peaks,
 	     )
 
 output_json_data <-toJSON(output)
-file_name = genRandomFileName(prefix = "RQTL_output_", file_ext = ".json")
-output_file_path = file.path("." , file_name)
+output_file_path = file.path(opt$directory , opt$output_file)
 str_glue("The output file path is  {output_file_path}")
 cat("Writing to the output file\n")
 write(output_json_data, file=output_file_path)
