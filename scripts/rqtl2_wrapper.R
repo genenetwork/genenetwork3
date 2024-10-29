@@ -13,6 +13,7 @@ args = commandArgs(trailingOnly = TRUE)
 
 NO_OF_CORES = 4
 SCAN_METHOD = "HK"
+NO_OF_PERMUTATION = 2
 
 # get the json file path with pre metadata required to create the cross
 
@@ -312,27 +313,53 @@ lod_file_path <- generate_lod_plot(dataset, scan_results, "HK")
 lod_file_path
 
 
-# Note pair scan does not exists in rqtl2
-
 # perform  permutation tests for single-QTL method
+
 perform_permutation_test <- function(cross,
                                      genome_prob,
                                      n_perm,
                                      method = "HKK",
                                      covar = NULL,
                                      Xcovar = NULL,
+				     addcovar = NULL,
+				     intcovar = NULL,
+				     perm_Xsp = FALSE,
+				     model = c("normal", "binary"),
+				     chr_lengths = NULL,
                                      perm_strata = NULL) {
-				     
+
+  #' Function to peform permutation tests for single QTL method
+  #' @description The scan1perm() function takes the
+  #' same arguments as scan1(), plus additional a #rguments to control the permutations:  
+  #" @param cross the cross object required to fetch the pheno
+  #' @param genome_prob the genomic probability matrix
+  #' @param method to computation method used to perform the genomic scan
+  #' @param intcovar
+  #' @param addcovar
+  #' @param Xcovar
+  #' @param perm_Xsp  If TRUE, do separate permutations for the autosomes and the X chromosome.
+  #' @param perm_strata Vector of strata, for a stratified permutation test.  
+  #' @param n_perm Number of permutation replicates.
+  #' @param chr_lengths engths of the chromosomes;
+  #' @return  object of class "scan1perm". 
   # TODO! add chr_lengths and perm_Xsp
 
-  cat("performing permutation tes for the cross object\n") 
-  if (method == "HKK") {
+  cat("performing permutation test for the cross object\n") 
+  if (method == "HK") {
+
+
     perm <- scan1perm(
       genome_prob,
       cross$pheno,
       Xcovar = Xcovar,
+      intcovar = intcovar,
+      addcovar = addcovar,
       n_perm = n_perm,
-      perm_strata = perm_strata
+      model = model,
+      perm_Xsp = perm_Xsp,
+      perm_strata = perm_strata,
+      chr_lengths = chr_lengths,
+      cores = NO_OF_CORES
     )
   }
   else if (method == "LMM") {
@@ -342,7 +369,13 @@ perform_permutation_test <- function(cross,
       cross$pheno,
       kinship = kinship,
       Xcovar = Xcovar,
-      n_perm = n_perm
+      intcovar = intcovar,
+      addcovar = addcovar,
+      n_perm = n_perm,
+      perm_Xsp = perm_Xsp,
+      model = model,
+      chr_lengths = chr_lengths,
+      cores = NO_OF_CORES
     )
   }
   else if (method == "LOCO") {
@@ -353,17 +386,31 @@ perform_permutation_test <- function(cross,
       kinship = kinship ,
       perm_strata = perm_strata,
       Xcovar = Xcovar,
-      n_perm = n_perm
+      intcovar = intcovar,
+      addcovar = addcovar,
+      n_perm = n_perm,
+      perm_Xsp = perm_Xsp,
+      model = model,
+      chr_lengths = chr_lengths,
+      cores = NO_OF_CORES
     )
   }
   return (perm)
 }
 
 # TODO ! get these parameters from argument from the user
-perm <- perform_permutation_test(dataset, Pr, n_perm = 2, method = "LMM")
+perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION, method = "LMM")
 # get the permutation summary with a significance threshold
-summary(perm, alpha = c(0.2, 0.05))
+get_lod_significance <- function(perm, threshold = c(0.2, 0.05)){
+      cat("Fetch the lod with significance thresholds ")
+      cat(threshold)
+      cat("\n")
+      summary(perm, alpha = threshold)
+}
 
+lod_significance <- get_lod_significance(perm)
+
+stop("Test kkk")
 #  function to perform the LOD peaks
 
 find_lod_peaks <-function(scan_results, cross, threshold=4,  drop=1.5){
