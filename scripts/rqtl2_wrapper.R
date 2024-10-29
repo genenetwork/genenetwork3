@@ -30,8 +30,6 @@ if (!(file.exists(json_file_path))) {
   json_data  = fromJSON(file = json_file_path)
 }
 
-
-
 # generate random string file path here
 genRandomFileName <- function(prefix, file_ext = ".txt") {
   randStr = paste(prefix, stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"), sep =
@@ -39,17 +37,7 @@ genRandomFileName <- function(prefix, file_ext = ".txt") {
   return(paste(randStr, file_ext, sep = ""))
 }
 
-
-
 # TODO work on the optional parameters
-
-# better fit for reading the data
-# make validations
-
-# parsing the required data for example the geno_codes
-
-
-# geno_codes  handle the geno codes here
 
 # make assertion for the geno_file and the geno_file exists
 # make assertion for the physical map file or the geno map file exists
@@ -59,87 +47,32 @@ control_file_path  <- file.path("/home/kabui",
                                 genRandomFileName(prefix = "control_", file_ext = ".json"))
 
 str_glue("Generated control file path is  {control_file_path}")
-
-
-
-# create the cross file here from the arguments provided
-# todo add more validation checks here
-
-# issue I can no define the different paths for files for example pheno_file
-
-# think about the issue about geno codes ~~~~
-# function to generate a cross file from a json list
-
-
-
-# work on the default from the json_data validation here
 # better defaults for the json file
-
-
-json_data
-
-json_data$na_strings
-
-
 if (is.null(json_data$sep)){
 cat("Using ',' as a default sep for cross file\n")
 json_data$sep = ","
 }
-
 if (is.null(json_data$na.strings)){
 cat("Using '-' and 'NA' as the default na.strings\n")
  json_data$na.strings = c("-" , "NA")
 }
 
-if (is.null(json_data$geno_transposed)) {
-cat("Using FALSE as default parameter for geno_transposed\n")
-json_data$geno_transposed = FALSE
+
+# use this better defaults
+default_keys = c(
+                "geno_transposed", "founder_geno_transposed",
+                "pheno_transposed" , "covar_transposed",
+		"phenocovar_transposed")
+
+for (item in default_keys) {
+if (!(item %in% names(json_data))){
+  cat("Using FALSE as default parameter for ", item)
+  cat("\n")
+  json_data[item] =  FALSE
 }
-
-if (is.null(json_data$founder_geno_transposed)){
-cat("Using FALSE as default parameter for founder_geno_transposed\n")
-json_data$founder_geno_transposed = FALSE
-}
-
-
-if (is.null(json_data$pheno_transposed)) {
-cat("Using FALSE as default parameter for pheno_transposed\n")
-json_data$geno_transposed = FALSE
-}
-
-
-
-if( is.null(json_data$covar_transposed) ){
-cat("Using FALSE as default parameter for covar_transposed\n")
-json_data$covar_transposed  = FALSE
 }
 
 
-if (is.null(json_data$phenocovar_transposed)){
-cat("Using FALSE as default parameter for phenocovar_transposed\n")
-json_data$phenocovar_transposed = FALSE
-}
-
-
-
-# probably check on using a dict for check this parameter
-# more like default object parameter
-
-
-cross_default1 <- c(
- "sep" = ",",
- "na_strings" = c("-", "NA"),
- "geno_transposed" = FALSE,
- "covar_transposed" = FALSE,
- "pheno_transposed" = FALSE,
- "founder_geno_transposed" = FALSE,
- "phenocovar_transposed" = FALSE
- 
-)
-
-
-
-# mssing something here
 generate_cross_object  <- function(json_data) {
  # function to write the cross object from a json data object
   return (
