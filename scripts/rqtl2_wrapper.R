@@ -272,7 +272,12 @@ scan_results
 
 # plot for the LOD scores from  performing the genome scan
 generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
-  # Plot LOD curves for a genome scan
+  #' @description Plot LOD curves for a genome scan
+  #' @param the cross object
+  #' @param scan1 results
+  #' @param the method used to compute the scan1 results HK,LMM or LOCO
+  #' @param base_dir the path to write the generated plot
+  #' @return a string with the file path for the plot
   color <- c("slateblue", "violetred", "green3")
   par(mar = c(4.1, 4.1, 1.6, 1.1))
   ymx <- maxlod(scan_result)
@@ -301,6 +306,7 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
   dev.off()
   return (image_loc)
 }
+
 
 lod_file_path <- generate_lod_plot(dataset, scan_results, "HK")
 lod_file_path
