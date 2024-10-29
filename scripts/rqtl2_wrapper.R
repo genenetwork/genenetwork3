@@ -23,8 +23,6 @@ if (length(args) == 0) {
   json_file_path = args[1]
 }
 
-# TODO validation for the json file
-
 
 if (!(file.exists(json_file_path))) {
   stop("The input file path does not exists")
@@ -407,20 +405,19 @@ get_lod_significance <- function(perm, threshold = c(0.2, 0.05)){
       cat("\n")
       summary(perm, alpha = threshold)
 }
-
 lod_significance <- get_lod_significance(perm)
 
-stop("Test kkk")
-#  function to perform the LOD peaks
 
-find_lod_peaks <-function(scan_results, cross, threshold=4,  drop=1.5){
-# can this take pmap??? which map should we use???
-# TODO add more ags
-print("Finding the lod peaks with thresholds n and drop n\n")
-return (find_peaks(scan_results, cross$gmap, threshold= threshold, drop=drop))
-}
-# TODO! add the number of cores
-lod_peaks <- find_lod_peaks(scan_results, dataset)
-print(lod_peaks)
 
-# TODO! format to return the data ??? 
+# get the lod peaks
+# fix issue with map
+
+cat("Fetching the lod peaks\n")
+lod_peaks = find_peaks(
+  scan_results,
+  threshold =0,
+  map = dataset$gmap,
+  cores = NO_OF_CORES
+)
+
+lod_peaks
