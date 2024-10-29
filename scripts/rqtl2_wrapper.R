@@ -15,34 +15,40 @@ option_list <- list(
   computation"),
 make_option(c("-i", "--input_file"), action="store", default=NULL, type='character', help="a yaml or json file with required data to create the cross file"),
 make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "),
- make_option(c("-d", "--directory"), action = "store", default = tempdir(), type = "character", help="Temporary working directory: should also host the input file ."),
+ make_option(c("-d", "--directory"), action = "store", default = NULL, type = "character", help="Temporary working directory: should also host the input file ."),
  make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)") 
 
 )
- 
+
 
 opt <- parse_args(OptionParser(option_list=option_list))
-
+# check for mandatory args
+if(is.null(opt$directory)){
+stop("You need  to specify  a working temporary directory which should have be base_dir for the input file")
+}
 
 NO_OF_CORES = opt$cores
 SCAN_METHOD = opt$method
 NO_OF_PERMUTATION = opt$nperm
 
 # get the json file path with pre metadata required to create the cross
+# assumption is that the input file should be in the  temp working directory
 
 if (is.null(opt$input_file)) {
   stop("Argument for the Input metadata file is Missing ", call. = FALSE)
 } else {
-  json_file_path = opt$input_file
+   input_file = opt$input_file
 }
 
+# file_path
 
+input_file_path = file.path(opt$directory, input_file)
 
-if (!(file.exists(json_file_path))) {
-  stop("The input file path does not exists")
+if (!(file.exists(input_file_path))) {
+  str_glue("The input file {opt$input_file} path does not exists in the directory {opt$directory}")
 } else {
-  str_glue("The input path for the metadata >>>>>>> {json_file_path}")
-  json_data  = fromJSON(file = json_file_path)
+  str_glue("The input path for the metadata >>>>>>> {input_file_path}")
+  json_data  = fromJSON(file = input_file_path)
 }
 
 # generate random string file paths
