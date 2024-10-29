@@ -13,7 +13,6 @@ args = commandArgs(trailingOnly = TRUE)
 
 # get the json file path with pre metadata required to create the cross
 
-
 if (length(args) == 0) {
   stop("Argument for the metadata file is Missing ", call. = FALSE)
 } else {
@@ -30,24 +29,23 @@ if (!(file.exists(json_file_path))) {
   json_data  = fromJSON(file = json_file_path)
 }
 
-# generate random string file path here
+# generate random string file paths
+
 genRandomFileName <- function(prefix, file_ext = ".txt") {
   randStr = paste(prefix, stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"), sep =
                     "_")
   return(paste(randStr, file_ext, sep = ""))
 }
 
-# TODO work on the optional parameters
+# TODO work on the optional parameters e.g cores, type of computation
 
-# make assertion for the geno_file and the geno_file exists
-# make assertion for the physical map file or the geno map file exists
+# TODO create temp directory for this workspace pass this as argument
 
-# create temp directory for this workspace
 control_file_path  <- file.path("/home/kabui",
                                 genRandomFileName(prefix = "control_", file_ext = ".json"))
 
 str_glue("Generated control file path is  {control_file_path}")
-# better defaults for the json file
+
 if (is.null(json_data$sep)){
 cat("Using ',' as a default sep for cross file\n")
 json_data$sep = ","
@@ -56,7 +54,6 @@ if (is.null(json_data$na.strings)){
 cat("Using '-' and 'NA' as the default na.strings\n")
  json_data$na.strings = c("-" , "NA")
 }
-
 
 # use this better defaults
 default_keys = c(
@@ -71,7 +68,6 @@ if (!(item %in% names(json_data))){
   json_data[item] =  FALSE
 }
 }
-
 
 generate_cross_object  <- function(json_data) {
  # function to write the cross object from a json data object
@@ -102,14 +98,14 @@ generate_cross_object  <- function(json_data) {
   )
 }
 
-
-# alternatively pass a  yaml file with
+# generate the cross file
 
 generate_cross_object(json_data)
 
+# read from the cross file path
 dataset  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
-# check integrity of the cross
 
+# check integrity of the cross
 
 cat("Check the integrity of the cross object")
 check_cross2(dataset)
@@ -137,10 +133,7 @@ founders(dataset)
 
 # Work on computing the genetic probabilities
 
-
 analysis_type <- "single"
-
-
 perform_genetic_pr <- function(cross,
                                cores = 1,
                                error_prob = 0.002,
@@ -162,29 +155,24 @@ cat("Summaries  on the genetic probabilites \n")
 print(Pr)
 summary(Pr)
 
+#calculate genotyping error LOD scores
 
-#calculate genotyping error LOD scores, to help identify potential genotyping errors (and problem markers and/or individuals
 error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = 4)
 print(error_lod)
 
 
 #  Perform genome scan
-
-# rework on this issue
+# TODO! rework on this issue
 ## grab phenotypes and covariates; ensure that covariates have names attribute
 pheno <- dataset$pheno
 covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
 names(covar) <- rownames(dataset$covar)
 Xcovar <- get_x_covar(dataset)
-
 print(pheno)
 print(covar)
 print(Xcovar)
 
 # TODO: rework on fetching th Xcovar and getting the covar data
-
-
-
 perform_genome_scan <- function(cross,
                                 genome_prob,
                                 method,
@@ -233,7 +221,6 @@ results <- perform_genome_scan(cross = dataset,
 results # this should probably return the method use here
 
 # plot for the LOD scores from  performing the genome scan
-
 generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
   # Plot LOD curves for a genome scan
   color <- c("slateblue", "violetred", "green3")
@@ -268,13 +255,10 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
 lod_file_path <- generate_lod_plot(dataset, results, "HK")
 lod_file_path
 
-# work on 2 pair scan multiple pair scan # multiple pair scan
 
-# Q  how do we perform geno scan with Genome scan with a single-QTL model ????
+# Note pair scan does not exists in rqtl2
 
 # perform  permutation tests for single-QTL method
-
-
 perform_permutation_test <- function(cross,
                                      genome_prob,
                                      n_perm,
@@ -284,7 +268,8 @@ perform_permutation_test <- function(cross,
                                      perm_strata = NULL) {
 				     
   # TODO! add chr_lengths and perm_Xsp
-  
+
+  cat("performing permutation tes for the cross object\n") 
   if (method == "HKK") {
     perm <- scan1perm(
       genome_prob,
