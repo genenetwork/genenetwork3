@@ -221,11 +221,23 @@ print(Xcovar)
 
 # Function to perform scan1
 
+
+cat("Computing the kinship")
+if (method == "LMM"){
+    kinship = calc_kinship(genome_prob)
+} else if (method == "LOCO"){
+    kinship = calc_kinship(genome_prob, "loco")
+}else {
+ kinship = NULL
+}
+
+
 perform_genome_scan <- function(cross,
                                 genome_prob,
                                 method="HK",
                                 addcovar = NULL,
 				intcovar = NULL,
+				kinship = NULL,
 				model = c("normal","binary"),
                                 Xcovar = NULL) {
     #' perform genome scan
@@ -243,7 +255,6 @@ perform_genome_scan <- function(cross,
   if (method == "LMM") {
     # provide parameters for this
     cat("Performing scan1 using Linear mixed model\n")
-    kinship = calc_kinship(genome_prob)
     out  <- scan1(
       genome_prob,
       cross$pheno,
@@ -256,7 +267,6 @@ perform_genome_scan <- function(cross,
     )
   }  else if (method == "LOCO") {
     cat("Performing scan1 using Leave one chromosome out\n")
-    kinship = calc_kinship(genome_prob, "loco")
     out <- scan1(
       genome_prob,
       cross$pheno,
@@ -288,6 +298,7 @@ perform_genome_scan <- function(cross,
 # Perform the genome scan for the cross object
 scan_results <- perform_genome_scan(cross = dataset,
                                genome_prob = Pr,
+			       kinship = kinship,
                                method = SCAN_METHOD)
 
 scan_results
@@ -345,6 +356,7 @@ perform_permutation_test <- function(cross,
 				     addcovar = NULL,
 				     intcovar = NULL,
 				     perm_Xsp = FALSE,
+				     kinship = NULL,
 				     model = c("normal", "binary"),
 				     chr_lengths = NULL,
                                      perm_strata = NULL) {
@@ -367,8 +379,6 @@ perform_permutation_test <- function(cross,
 
   cat("performing permutation test for the cross object\n") 
   if (method == "HK") {
-
-
     perm <- scan1perm(
       genome_prob,
       cross$pheno,
@@ -384,7 +394,6 @@ perform_permutation_test <- function(cross,
     )
   }
   else if (method == "LMM") {
-    kinship = calc_kinship(genome_prob)
     perm <- scan1perm(
       genome_prob,
       cross$pheno,
@@ -400,7 +409,6 @@ perform_permutation_test <- function(cross,
     )
   }
   else if (method == "LOCO") {
-    kinship = calc_kinship(genome_prob, "loco")
     perm <- scan1perm(
       genome_prob,
       cross$pheno,
