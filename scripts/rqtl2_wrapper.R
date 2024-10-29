@@ -330,7 +330,7 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
 }
 
 
-lod_plot_path <- generate_lod_plot(dataset, scan_results, "HK")
+lod_plot_path <- generate_lod_plot(dataset, scan_results, "HK", base_dir=opt$directory)
 lod_plot_path
 
 
