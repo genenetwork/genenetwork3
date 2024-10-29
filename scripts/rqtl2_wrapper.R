@@ -307,8 +307,8 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
 }
 
 
-lod_file_path <- generate_lod_plot(dataset, scan_results, "HK")
-lod_file_path
+lod_plot_path <- generate_lod_plot(dataset, scan_results, "HK")
+lod_plot_path
 
 
 # perform  permutation tests for single-QTL method
@@ -421,3 +421,20 @@ lod_peaks = find_peaks(
 )
 
 lod_peaks
+cat("Generating the ouput data as  vector\n")
+output = list(lod_peaks = lod_peaks,
+             scan_results =scan_results,
+	     lod_significance = lod_significance,
+	     permutation_results = perm,
+	     lod_peaks = lod_peaks,
+	     lod_plot_path =lod_plot_path,
+	     scan_method = SCAN_METHOD  
+	     )
+
+output_json_data <-toJSON(output)
+file_name = genRandomFileName(prefix = "RQTL_output_", file_ext = ".json")
+output_file_path = file.path("." , file_name)
+str_glue("The output file path is  {output_file_path}")
+cat("Writing to the output file\n")
+write(output_json_data, file=output_file_path)
+
