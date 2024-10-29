@@ -11,6 +11,8 @@ options(stringsAsFactors = FALSE)
 
 args = commandArgs(trailingOnly = TRUE)
 
+NO_OF_CORES = 4
+
 # get the json file path with pre metadata required to create the cross
 
 if (length(args) == 0) {
@@ -169,9 +171,14 @@ print(Pr)
 summary(Pr)
 
 
-#calculate genotyping error LOD scores
-error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = 4)
-print(error_lod)
+#Function to  Calculate genotyping error LOD scores
+cat("Calculate genotype error LOD scores\n")
+error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = NO_OF_CORES)
+# combine into one matrix
+error_lod <- do.call("cbind", error_lod)
+print(error_lod
+
+
 
 
 #  Perform genome scan
