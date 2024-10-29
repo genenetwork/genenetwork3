@@ -66,7 +66,7 @@ genRandomFileName <- function(prefix, file_ext = ".txt") {
 
 # TODO create temp directory for this workspace pass this as argument
 
-control_file_path  <- file.path("/home/kabui",
+control_file_path  <- file.path(opt$directory,
                                 genRandomFileName(prefix = "control_", file_ext = ".json"))
 
 str_glue("Generated control file path is  {control_file_path}")
