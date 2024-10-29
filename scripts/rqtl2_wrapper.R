@@ -6,22 +6,36 @@ library(qtl2)
 library(rjson)
 library(stringi)
 library(stringr)
+library(optparse)
 
-options(stringsAsFactors = FALSE)
 
-args = commandArgs(trailingOnly = TRUE)
 
-NO_OF_CORES = 4
-SCAN_METHOD = "HK"
-NO_OF_PERMUTATION = 2
+option_list <- list(
+  make_option(c("-c", "--cores"), type="integer", default=1, help="No of cores to use while making
+  computation"),
+make_option(c("-i", "--input_file"), action="store", default=NULL, type='character', help="a yaml or json file with required data to create the cross file"),
+make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "),
+ make_option(c("-d", "--directory"), action = "store", default = tempdir(), type = "character", help="Temporary working directory: should also host the input file ."),
+ make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)") 
+
+)
+ 
+
+opt <- parse_args(OptionParser(option_list=option_list))
+
+
+NO_OF_CORES = opt$cores
+SCAN_METHOD = opt$method
+NO_OF_PERMUTATION = opt$nperm
 
 # get the json file path with pre metadata required to create the cross
 
-if (length(args) == 0) {
-  stop("Argument for the metadata file is Missing ", call. = FALSE)
+if (is.null(opt$input_file)) {
+  stop("Argument for the Input metadata file is Missing ", call. = FALSE)
 } else {
-  json_file_path = args[1]
+  json_file_path = opt$input_file
 }
+
 
 
 if (!(file.exists(json_file_path))) {
@@ -258,14 +272,14 @@ perform_genome_scan <- function(cross,
 		 )
   }
 
+
   return (out)
 }
 
-# TODO rename this to genome scan results 
+# Perform the genome scan for the cross object
 scan_results <- perform_genome_scan(cross = dataset,
                                genome_prob = Pr,
                                method = SCAN_METHOD)
-
 
 scan_results
 
