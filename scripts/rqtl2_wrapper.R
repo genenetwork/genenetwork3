@@ -12,6 +12,7 @@ options(stringsAsFactors = FALSE)
 args = commandArgs(trailingOnly = TRUE)
 
 NO_OF_CORES = 4
+SCAN_METHOD = "HK"
 
 # get the json file path with pre metadata required to create the cross
 
@@ -176,7 +177,7 @@ cat("Calculate genotype error LOD scores\n")
 error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = NO_OF_CORES)
 # combine into one matrix
 error_lod <- do.call("cbind", error_lod)
-print(error_lod
+print(error_lod)
 
 
 
@@ -192,53 +193,82 @@ print(pheno)
 print(covar)
 print(Xcovar)
 
+
+
 # TODO: rework on fetching th Xcovar and getting the covar data
+
+# Function to perform scan1
+
 perform_genome_scan <- function(cross,
                                 genome_prob,
-                                method,
-                                covar = NULL,
-                                xCovar = NULL)
-  # perform scan1 using haley-knott regression or linear model, or LOCO linear model
-{
+                                method="HK",
+                                addcovar = NULL,
+				intcovar = NULL,
+				model = c("normal","binary"),
+                                Xcovar = NULL) {
+    #' perform genome scan
+    #' @description  perform scan1 using haley-knott regression, perform scan1 using haley-knott      #'  or linear model, or LOCO linear model
+    #' the cross object required to pull the pheno
+    #' @param  method to method to perform scan1 either by haley-knott regression(HL),
+    #' linear mixed model(LMM) or , for the LOCO method(LOCO)
+    #' @param intcovar A numeric optional matrix of interactive covariates.
+    #' @param addcovar An optional numeric matrix of additive covariates.
+    #' @param Xcovar An optional numeric matrix with additional additive covariates used for null     #'  used for null hypothesis when scanning the X chromosome.
+    #' @param model Indicates whether to use a normal model (least squares) or binary model
+    #' @return An object of class "scan1"
+
+
   if (method == "LMM") {
     # provide parameters for this
+    cat("Performing scan1 using Linear mixed model\n")
     kinship = calc_kinship(genome_prob)
     out  <- scan1(
       genome_prob,
       cross$pheno,
       kinship = kinship,
       addcovar = covar,
-      Xcovar = Xcovar
+      Xcovar = Xcovar,
+      intcovar = intcovar,
+      model = model,
+      cores = NO_OF_CORES
     )
-  }
-  
-  if (method == "LOCO") {
-    # perform kinship inside better option
+  }  else if (method == "LOCO") {
+    cat("Performing scan1 using Leave one chromosome out\n")
     kinship = calc_kinship(genome_prob, "loco")
     out <- scan1(
       genome_prob,
       cross$pheno,
       kinship = kinship,
       addcovar = covar,
-      Xcovar = Xcovar
+      intcovar = intcovar,
+      model = model,
+      Xcovar = Xcovar,
+      cores = NO_OF_CORES
     )
   }
-  else {
-    # perform using Haley Knott
+  
+  else if (method == "HK"){
+    cat("Performing scan1 using Haley Knott\n")
     out <- scan1(genome_prob,
                  cross$pheno,
                  addcovar = NULL,
-                 Xcovar = Xcovar)
+		 intcovar = intcovar,
+		 model = model,
+                 Xcovar = Xcovar,
+		 cores = NO_OF_CORES		 
+		 )
   }
+
   return (out)
 }
 
-results <- perform_genome_scan(cross = dataset,
+# TODO rename this to genome scan results 
+scan_results <- perform_genome_scan(cross = dataset,
                                genome_prob = Pr,
-                               method = "HMM")
+                               method = SCAN_METHOD)
 
 
-results # this should probably return the method use here
+scan_results
 
 # plot for the LOD scores from  performing the genome scan
 generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
@@ -272,7 +302,7 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
   return (image_loc)
 }
 
-lod_file_path <- generate_lod_plot(dataset, results, "HK")
+lod_file_path <- generate_lod_plot(dataset, scan_results, "HK")
 lod_file_path
 
 
@@ -337,7 +367,7 @@ print("Finding the lod peaks with thresholds n and drop n\n")
 return (find_peaks(scan_results, cross$gmap, threshold= threshold, drop=drop))
 }
 # TODO! add the number of cores
-lod_peaks <- find_lod_peaks(results, dataset)
+lod_peaks <- find_lod_peaks(scan_results, dataset)
 print(lod_peaks)
 
 # TODO! format to return the data ??? 
