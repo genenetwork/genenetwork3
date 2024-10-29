@@ -70,7 +70,78 @@ str_glue("Generated control file path is  {control_file_path}")
 # think about the issue about geno codes ~~~~
 # function to generate a cross file from a json list
 
+
+
+# work on the default from the json_data validation here
+# better defaults for the json file
+
+
+json_data
+
+json_data$na_strings
+
+
+if (is.null(json_data$sep)){
+cat("Using ',' as a default sep for cross file\n")
+json_data$sep = ","
+}
+
+if (is.null(json_data$na.strings)){
+cat("Using '-' and 'NA' as the default na.strings\n")
+ json_data$na.strings = c("-" , "NA")
+}
+
+if (is.null(json_data$geno_transposed)) {
+cat("Using FALSE as default parameter for geno_transposed\n")
+json_data$geno_transposed = FALSE
+}
+
+if (is.null(json_data$founder_geno_transposed)){
+cat("Using FALSE as default parameter for founder_geno_transposed\n")
+json_data$founder_geno_transposed = FALSE
+}
+
+
+if (is.null(json_data$pheno_transposed)) {
+cat("Using FALSE as default parameter for pheno_transposed\n")
+json_data$geno_transposed = FALSE
+}
+
+
+
+if( is.null(json_data$covar_transposed) ){
+cat("Using FALSE as default parameter for covar_transposed\n")
+json_data$covar_transposed  = FALSE
+}
+
+
+if (is.null(json_data$phenocovar_transposed)){
+cat("Using FALSE as default parameter for phenocovar_transposed\n")
+json_data$phenocovar_transposed = FALSE
+}
+
+
+
+# probably check on using a dict for check this parameter
+# more like default object parameter
+
+
+cross_default1 <- c(
+ "sep" = ",",
+ "na_strings" = c("-", "NA"),
+ "geno_transposed" = FALSE,
+ "covar_transposed" = FALSE,
+ "pheno_transposed" = FALSE,
+ "founder_geno_transposed" = FALSE,
+ "phenocovar_transposed" = FALSE
+ 
+)
+
+
+
+# mssing something here
 generate_cross_object  <- function(json_data) {
+ # function to write the cross object from a json data object
   return (
     write_control_file(
       control_file_path,
@@ -78,10 +149,21 @@ generate_cross_object  <- function(json_data) {
       geno_file = json_data$geno_file,
       pheno_file = json_data$pheno_file,
       gmap_file = json_data$geno_map_file,
+      pmap_file = json_data$pheno_map_file,
       phenocovar_file = json_data$phenocovar_file,
       geno_codes = json_data$geno_codes,
       alleles = json_data$alleles,
       na.strings = json_data$na.strings,
+      geno_transposed = json_data$geno_transposed,
+      sex_file = json_data$sex_file,
+      founder_geno_file = json_data$founder_geno_file,
+      covar_file = json_data$covar_file,
+      sex_covar = json_data$sex_covar,
+      sex_codes = json_data$sex_codes,
+      crossinfo_file = json_data$crossinfo_file,
+      crossinfo_covar = json_data$crossinfo_covar,
+      crossinfo_codes = json_data$crossinfo_codes,
+      xchr = json_data$xchr,
       overwrite = TRUE
     )
   )
@@ -90,13 +172,12 @@ generate_cross_object  <- function(json_data) {
 
 # alternatively pass a  yaml file with
 
-
 generate_cross_object(json_data)
 
-# make validation for the data
 dataset  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
-
 # check integrity of the cross
+
+
 cat("Check the integrity of the cross object")
 check_cross2(dataset)
 if (check_cross2(dataset)) {
