@@ -131,32 +131,45 @@ ind_ids_pheno(dataset)
 cat("Name of the founder Strains/n")
 founders(dataset)
 
-# Work on computing the genetic probabilities
-
-analysis_type <- "single"
+# Function for  computing the genetic probabilities
 perform_genetic_pr <- function(cross,
                                cores = 1,
-                               error_prob = 0.002,
-                               analysis_type = "single") {
-  # improve on this
-  if (analysis_type == "single") {
-    pr <- calc_genoprob(cross,
-                        error_prob = error_prob,
-                        quiet = FALSE,
-                        cores = cores)
-    return (pr)
-  }
-}
+			       step=1,
+			       map=NULL,
+			       use_pseudomarkers=FALSE,
+			       map_function=c("haldane", "kosambi", "c-f", "morgan"),
+                               error_prob = 0.002
+                               ) {
+    #' Function to calculate the  genetic probabilities
+    #' @description function to perform genetic probabilities
+    #' @param  cores number no of cores to use Defaults to "1"
+    #' @param map  Genetic map of markers.  defaults to "NONE"
+    #' @param  use_pseudomarkers option to insert pseudo markers in the gmap default "FALSE"
+    #' @param error_prob
+    #' @param map_function Character string indicating the map function to use to convert genetic
+    #' @param step for  default "1"
+    #' @return a list of three-dimensional arrays of probabilities, individuals x genotypes x pst
 
-# get the genetic probability
+  cat("Finding the  genetic Probabilities\n")
+  if (use_pseudomarkers){
+  map <- insert_pseudomarkers(cross$gmap, step=step)
+  return(calc_genoprob(cross, map=map,
+                       error_prob=error_prob, map_function=map_function,
+		       quiet=FALSE, cores=cores))
+  }
+  else {
+      return (calc_genoprob(cross, map=map, error_prob=error_prob,
+                           quiet = FALSE, map_function =map_function,
+                           cores = cores))
+  }}
 
 Pr = perform_genetic_pr(dataset)
 cat("Summaries  on the genetic probabilites \n")
 print(Pr)
 summary(Pr)
 
-#calculate genotyping error LOD scores
 
+#calculate genotyping error LOD scores
 error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = 4)
 print(error_lod)
 
