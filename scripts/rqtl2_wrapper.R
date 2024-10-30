@@ -17,7 +17,8 @@ make_option(c("-i", "--input_file"), action="store", default=NULL, type='charact
 make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "),
  make_option(c("-d", "--directory"), action = "store", default = NULL, type = "character", help="Temporary working directory: should also host the input file ."),
  make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)"),
-make_option(c("-o", "--output_file"), action="store", default=NULL, type='character', help="a file name of where to write the output json results")
+make_option(c("-o", "--output_file"), action="store", default=NULL, type='character', help="a file name of where to write the output json results"),
+  make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata")
 )
 
 
@@ -394,8 +395,17 @@ perform_permutation_test <- function(cross,
 
 
 
-# TODO ! get these parameters from argument from the user
-perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION, method = "LMM")
+
+# check if pstrata
+
+if (!(is.null(opt$pstrata)) && (!is.null(Xcovar))){
+perm_strata <- mat2strata(Xcovar)
+} else {
+perm_strata <- NULL
+}
+
+perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION,perm_strata = perm_strata, method = "LMM")
+
 # get the permutation summary with a significance threshold
 get_lod_significance <- function(perm, threshold = c(0.2, 0.05)){
       cat("Fetch the lod with significance thresholds ")
