@@ -39,7 +39,7 @@ if (is.null(opt$input_file)) {
 } else {
    input_file = opt$input_file
 }
-(is.null(opt$output_file)){
+if (is.null(opt$output_file)){
 stop("You need to provide an output file to write the ouput data")
 }
 
@@ -49,6 +49,7 @@ input_file_path = file.path(opt$directory, input_file)
 
 if (!(file.exists(input_file_path))) {
   str_glue("The input file {opt$input_file} path does not exists in the directory {opt$directory}")
+  stop("The input file does not exists the temp directory")
 } else {
   str_glue("The input path for the metadata >>>>>>> {input_file_path}")
   json_data  = fromJSON(file = input_file_path)
@@ -223,9 +224,9 @@ print(Xcovar)
 
 
 cat("Computing the kinship")
-if (method == "LMM"){
+if (opt$method == "LMM"){
     kinship = calc_kinship(genome_prob)
-} else if (method == "LOCO"){
+} else if (opt$method == "LOCO"){
     kinship = calc_kinship(genome_prob, "loco")
 }else {
  kinship = NULL
@@ -364,7 +365,7 @@ perform_permutation_test <- function(cross,
   #' Function to peform permutation tests for single QTL method
   #' @description The scan1perm() function takes the
   #' same arguments as scan1(), plus additional a #rguments to control the permutations:  
-  #" @param cross the cross object required to fetch the pheno
+  #' @param cross the cross object required to fetch the pheno
   #' @param genome_prob the genomic probability matrix
   #' @param method to computation method used to perform the genomic scan
   #' @param intcovar
@@ -375,26 +376,8 @@ perform_permutation_test <- function(cross,
   #' @param n_perm Number of permutation replicates.
   #' @param chr_lengths engths of the chromosomes;
   #' @return  object of class "scan1perm". 
-  # TODO! add chr_lengths and perm_Xsp
-
-  cat("performing permutation test for the cross object\n") 
-  if (method == "HK") {
-    perm <- scan1perm(
-      genome_prob,
-      cross$pheno,
-      Xcovar = Xcovar,
-      intcovar = intcovar,
-      addcovar = addcovar,
-      n_perm = n_perm,
-      model = model,
-      perm_Xsp = perm_Xsp,
-      perm_strata = perm_strata,
-      chr_lengths = chr_lengths,
-      cores = NO_OF_CORES
-    )
-  }
-  else if (method == "LMM") {
-    perm <- scan1perm(
+  cat("performing permutation test for the cross object\n")
+  return (scan1perm(
       genome_prob,
       cross$pheno,
       kinship = kinship,
@@ -406,26 +389,10 @@ perform_permutation_test <- function(cross,
       model = model,
       chr_lengths = chr_lengths,
       cores = NO_OF_CORES
-    )
-  }
-  else if (method == "LOCO") {
-    perm <- scan1perm(
-      genome_prob,
-      cross$pheno,
-      kinship = kinship ,
-      perm_strata = perm_strata,
-      Xcovar = Xcovar,
-      intcovar = intcovar,
-      addcovar = addcovar,
-      n_perm = n_perm,
-      perm_Xsp = perm_Xsp,
-      model = model,
-      chr_lengths = chr_lengths,
-      cores = NO_OF_CORES
-    )
-  }
-  return (perm)
+    ))
 }
+
+
 
 # TODO ! get these parameters from argument from the user
 perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION, method = "LMM")
@@ -441,7 +408,7 @@ lod_significance <- get_lod_significance(perm)
 
 
 # get the lod peaks
-# fix issue with map
+# TODO fix issue when fetching the gmap or allow to use pseudomarkers
 
 cat("Fetching the lod peaks\n")
 lod_peaks = find_peaks(
