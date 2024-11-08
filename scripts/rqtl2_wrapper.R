@@ -430,8 +430,50 @@ lod_peaks = find_peaks(
 
 lod_peaks
 cat("Generating the ouput data as  vector\n")
+
+# get the estimated qtl effects
+cat("Getting the estimated qtl effects\n")
+
+get_qtl_effect <- function(chromosome,geno_prob,pheno,covar=NULL,LOCO= NULL){
+     cat("Finding the qtl effect\n")
+     chr_Pr <- geno_prob[,chromosome]
+     if (!is.null(chr_Pr)){
+     str_glue("Find qtl effect for chromosome {chromosome} and pheno {pheno}")
+     if (!is.null(LOCO)) {
+          str_glue("Find qtl effect for chromosome {chromosome} and pheno {pheno} and LOCO {chromosome}")
+     kinship <- calc_kinship(chr_Pr, "loco")[[chromosome]]
+     return(scan1coef(chr_Pr, pheno, kinship, addcovar=covar))
+     }
+     else {
+      return(scan1coef(chr_Pr, pheno, addcovar=covar))
+     }
+     }
+    return(NULL)
+}
+
+
+
+# take the first phenotype in the dataset
+
+# grab phenotypes and covariates; ensure that covariates have names attribute
+# in this case we are using the first chromosome
+pheno <- dataset$pheno[,1]
+if (!is.null(dataset$covar) && !is.null(dataset$covar$sex)){
+ covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
+ names(covar) <- rownames(dataset$covar)
+} else {
+covar  <- NULL
+}
+covar
+
+
+# TODO fix this hardcoded chromosome
+# TODO get all chromosomes and iterate coeff_results for a given chromosomes
+coeff_results  <- get_qtl_effect("5", Pr, pheno)
+
 output = list(lod_peaks = lod_peaks,
              scan_results =scan_results,
+	     genetic_probabilities = Pr,
 	     lod_significance = lod_significance,
 	     permutation_results = perm,
 	     lod_peaks = lod_peaks,
@@ -444,4 +486,7 @@ output_file_path = file.path(opt$directory , opt$output_file)
 str_glue("The output file path is  {output_file_path}")
 cat("Writing to the output file\n")
 write(output_json_data, file=output_file_path)
+
+
+
 
