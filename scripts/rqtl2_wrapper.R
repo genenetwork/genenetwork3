@@ -196,6 +196,14 @@ print(Pr)
 summary(Pr)
 
 
+# perform allele probabilites if cross ways
+
+# convert this to lower
+if (dataset$crosstype == "4way"){
+  #
+  aPr <- genoprob_to_alleleprob(pr)
+}
+
 #Function to  Calculate genotyping error LOD scores
 cat("Calculate genotype error LOD scores\n")
 error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = NO_OF_CORES)
@@ -224,7 +232,10 @@ print(Xcovar)
 # Function to perform scan1
 
 
-cat("Computing the kinship")
+# refactor this to a function
+
+
+get_kinship <- function(probability, method="LMM"){
 if (opt$method == "LMM"){
     kinship = calc_kinship(genome_prob)
 } else if (opt$method == "LOCO"){
@@ -232,6 +243,16 @@ if (opt$method == "LMM"){
 }else {
  kinship = NULL
 }
+}
+
+
+if (dataset$crosstype == "4way"){
+  kinship <- get_kinship(aPr, opt$method)
+} else {
+   kinship <- get_kinship(Pr, "loco")
+}
+
+
 
 
 perform_genome_scan <- function(cross,
@@ -285,7 +306,7 @@ perform_genome_scan <- function(cross,
     cat("Performing scan1 using Haley Knott\n")
     out <- scan1(genome_prob,
                  cross$pheno,
-                 addcovar = NULL,
+                 addcovar = covar,
 		 intcovar = intcovar,
 		 model = model,
                  Xcovar = Xcovar,
@@ -298,10 +319,18 @@ perform_genome_scan <- function(cross,
 }
 
 # Perform the genome scan for the cross object
-scan_results <- perform_genome_scan(cross = dataset,
+if (dataset$crosstype == "4way"){
+  sex <- (DOex$covar$Sex == "male")*1
+  names(sex) <- rownames(dataset$covar)
+  sex <- setNames( (dataset$covar$Sex == "male")*1, rownames(DOex$covar))
+  scan_results <- perform_genoeme_scan(aPr, dataset, kinship=kinship, method = "LOCO", addcovar = sex)  
+} else {
+  scan_results <- perform_genome_scan(cross = dataset,
                                genome_prob = Pr,
 			       kinship = kinship,
                                method = SCAN_METHOD)
+}
+
 
 scan_results
 
