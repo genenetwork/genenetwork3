@@ -194,8 +194,6 @@ if (cross$crosstype == "4way"){
   aPr <- genoprob_to_alleleprob(pr)
 }
 
-
-
 #Function to  Calculate genotyping error LOD scores
 cat("Calculating the  genotype error LOD scores\n")
 error_lod <- calc_errorlod(cross, Pr, quiet = FALSE, cores = NO_OF_CORES)
@@ -211,12 +209,12 @@ cat("Getting the phenotypes and covariates\n")
 pheno <- cross$pheno
 
 covar <- match(cross$covar$sex, c("f", "m")) # make numeric
+
 if (!is.null(covar)){
  names(covar) <- rownames(cross$covar)
 }
 print("The covariates are")
 print(covar)
-
 Xcovar <- get_x_covar(cross)
 print("The Xcovar are ")
 print(Xcovar)
@@ -308,9 +306,9 @@ perform_genome_scan <- function(cross,
 
 # Perform the genome scan for the cross object
 if (cross$crosstype == "4way"){
-  sex <- (DOex$covar$Sex == "male")*1
+  sex <- (cross$covar$Sex == "male")*1
   names(sex) <- rownames(cross$covar)
-  sex <- setNames( (cross$covar$Sex == "male")*1, rownames(DOex$covar))
+  sex <- setNames( (cross$covar$Sex == "male")*1, rownames(cross$covar))
   scan_results <- perform_genome_scan(aPr, cross, kinship=kinship, method = "LOCO", addcovar = sex)  
 } else {
   scan_results <- perform_genome_scan(cross = cross,
