@@ -49,6 +49,7 @@ input_file_path = file.path(opt$directory, input_file)
 
 if (!(file.exists(input_file_path))) {
   str_glue("The input file {opt$input_file} path does not exists in the directory {opt$directory}")
+  
   stop("The input file does not exists the temp directory")
 } else {
   str_glue("The input path for the metadata >>>>>>> {input_file_path}")
@@ -89,8 +90,7 @@ default_keys = c(
 
 for (item in default_keys) {
 if (!(item %in% names(json_data))){
-  cat("Using FALSE as default parameter for ", item)
-  cat("\n")
+  cat("Using FALSE as default parameter for ", item, "\n")
   json_data[item] =  FALSE
 }
 }
@@ -495,8 +495,7 @@ meffects_plots <- c()
 
 # TODO add plots for meffects
 for (chr in chr_names(dataset)){
-  cat("Getting the qtl effect for chromosome", chr)
-  cat("\n")
+  cat("Getting the qtl effect for chromosome", chr, "\n")
    if (dataset$crosstype == "4way"){
      coeff_results <- get_qtl_effect(chr, aPr, pheno, LOCO="LOCO", covar = sex)
      file_name = genRandomFileName(prefix = "RQTL_EFFECT_", file_ext = ".png")
