@@ -17,7 +17,8 @@ make_option(c("-i", "--input_file"), action="store", default=NULL, type='charact
   computation"),
   make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "), 
  make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)"),
-  make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata")
+  make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata"),
+    make_option(c("-t", "--threshold"), type="integer", default= 1,  action="store_true", help="Minimum LOD score for a Peak")
 )
 
 opt_parser = OptionParser(option_list=option_list);
@@ -32,7 +33,8 @@ NO_OF_PERMUTATION = opt$nperm
 
 if(is.null(opt$directory) || !(dir.exists(opt$directory))){
 # check if directory exists
-stop("The working directory does not exists or is NULL\n")
+  print_help(opt_parser)
+ stop("The working directory does not exists or is NULL\n")
 }
 
 INPUT_FILE_PATH = opt$input_file
@@ -430,10 +432,10 @@ lod_significance <- get_lod_significance(perm)
 # TODO fix the threshold here
 
 
-cat("Fetching the lod peaks\n")
+cat("Fetching the lod peaks with threshold", opt$threshold, "\n")
 lod_peaks = find_peaks(
   scan_results,
-  threshold =0,
+  threshold =opt$threshold,
   map = dataset$gmap,
   cores = NO_OF_CORES
 )
@@ -461,7 +463,6 @@ get_qtl_effect <- function(chromosome,geno_prob,pheno,covar=NULL,LOCO= NULL){
 
 # take the first phenotype in the dataset
 # grab phenotypes and covariates; ensure that covariates have names attribute
-
 pheno <- dataset$pheno[,1]
 if (!is.null(dataset$covar) && !is.null(dataset$covar$sex)){
  covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
@@ -469,8 +470,6 @@ if (!is.null(dataset$covar) && !is.null(dataset$covar$sex)){
 } else {
 covar  <- NULL
 }
-
-
 
 meffects <- c()
 meffects_plots <- c()
