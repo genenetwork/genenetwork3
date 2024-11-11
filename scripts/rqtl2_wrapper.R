@@ -10,16 +10,15 @@ library(optparse)
 
 
 option_list <- list(
-  make_option(c("-c", "--cores"), type="integer", default=1, help="No of cores to use while making
-  computation"),
+   make_option(c("-d", "--directory"), action = "store", default = NULL, type = "character", help="Temporary working directory: should also host the input file ."),   
 make_option(c("-i", "--input_file"), action="store", default=NULL, type='character', help="a yaml or json file with required data to create the cross file"),
-make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "),
- make_option(c("-d", "--directory"), action = "store", default = NULL, type = "character", help="Temporary working directory: should also host the input file ."),
+ make_option(c("-o", "--output_file"), action="store", default=NULL, type='character', help="a file path  of where to write the output json results"),
+   make_option(c("-c", "--cores"), type="integer", default=1, help="No of cores to use while making
+  computation"),
+  make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "), 
  make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)"),
-make_option(c("-o", "--output_file"), action="store", default=NULL, type='character', help="a file name of where to write the output json results"),
   make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata")
 )
-
 
 opt <- parse_args(OptionParser(option_list=option_list))
 NO_OF_CORES = opt$cores
@@ -27,7 +26,7 @@ SCAN_METHOD = opt$method
 NO_OF_PERMUTATION = opt$nperm
 
 # Step: check for mandatory file paths 
-# NOTE this is the working dir should be the path for both INPUT and OUTPUT_FILE
+# NOTE this is the working dir where the cross file will be generated 
 # NOTE this is where the cross file is generated
 
 if(is.null(opt$directory) || !(dir.exists(opt$directory))){
@@ -35,17 +34,17 @@ if(is.null(opt$directory) || !(dir.exists(opt$directory))){
 stop("The working directory does not exists or is NULL\n")
 }
 
-INPUT_FILE_PATH = file.path(opt$directory, opt$input_file)
-OUTPUT_FILE_PATH = file.path(opt$directory , opt$output_file)
+INPUT_FILE_PATH = opt$input_file
+OUTPUT_FILE_PATH = opt$output_file 
 
 if (!(file.exists(INPUT_FILE_PATH))) {
-  stop("The input file", INPUT_FILE_PATH, " you provided does not exists the directory", opt$directory, "\n")
+  stop("The input file", INPUT_FILE_PATH, " you provided does not exists\n")
 } else {
   cat("Input file exists Reading the input file .... \n")
 
 }
 if (!(file.exists(OUTPUT_FILE_PATH))) {
-  stop("The output file  ",OUTPUT_FILE_PATH, " you provided does not exists in the  directory",  opt$directory, "\n")
+  stop("The output file  ",OUTPUT_FILE_PATH, " you provided does not exists\n")
 } else {
   cat("Output file exists ...", OUTPUT_FILE_PATH, "\n")
 }
@@ -92,7 +91,7 @@ if (!(item %in% names(json_data))){
 
 
 
-
+# Note the files below should be in the same directory as the location for the crosss file
 generate_cross_object  <- function(control_file_path, json_data) {
  # function to write the cross object from a json data object
   return (
@@ -308,13 +307,11 @@ perform_genome_scan <- function(cross,
 }
 
 # Perform the genome scan for the cross object
-
-
 if (dataset$crosstype == "4way"){
   sex <- (DOex$covar$Sex == "male")*1
   names(sex) <- rownames(dataset$covar)
   sex <- setNames( (dataset$covar$Sex == "male")*1, rownames(DOex$covar))
-  scan_results <- perform_genoeme_scan(aPr, dataset, kinship=kinship, method = "LOCO", addcovar = sex)  
+  scan_results <- perform_genome_scan(aPr, dataset, kinship=kinship, method = "LOCO", addcovar = sex)  
 } else {
   scan_results <- perform_genome_scan(cross = dataset,
                                genome_prob = Pr,
