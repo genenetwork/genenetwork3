@@ -95,7 +95,7 @@ if (!(item %in% names(json_data))){
 }
 }
 
-generate_cross_object  <- function(json_data) {
+generate_cross_object  <- function(control_file_path, json_data) {
  # function to write the cross object from a json data object
   return (
     write_control_file(
@@ -126,7 +126,7 @@ generate_cross_object  <- function(json_data) {
 
 # generate the cross file
 
-generate_cross_object(json_data)
+generate_cross_object(control_file_path, json_data)
 
 # read from the cross file path
 dataset  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
@@ -159,7 +159,7 @@ founders(dataset)
 
 # Function for  computing the genetic probabilities
 perform_genetic_pr <- function(cross,
-                               cores = 1,
+                               cores =  NO_OF_CORES,
 			       step=1,
 			       map=NULL,
 			       use_pseudomarkers=FALSE,
