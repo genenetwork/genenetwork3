@@ -4,8 +4,8 @@
 
 library(qtl2)
 library(rjson)
+
 library(stringi)
-library(stringr)
 library(optparse)
 
 
@@ -48,11 +48,9 @@ stop("You need to provide an output file to write the ouput data")
 input_file_path = file.path(opt$directory, input_file)
 
 if (!(file.exists(input_file_path))) {
-  str_glue("The input file {opt$input_file} path does not exists in the directory {opt$directory}")
-  
-  stop("The input file does not exists the temp directory")
+  stop("The input file you provided does not exists the temp directory")
 } else {
-  str_glue("The input path for the metadata >>>>>>> {input_file_path}")
+  cat("The input file for the metadata is >>>>>", input_file_path, "\n")
   json_data  = fromJSON(file = input_file_path)
 }
 
@@ -71,7 +69,7 @@ genRandomFileName <- function(prefix, file_ext = ".txt") {
 control_file_path  <- file.path(opt$directory,
                                 genRandomFileName(prefix = "control_", file_ext = ".json"))
 
-str_glue("Generated control file path is  {control_file_path}")
+cat("Generated the control file path at", control_file_path, "\n")
 
 if (is.null(json_data$sep)){
 cat("Using ',' as a default sep for cross file\n")
@@ -461,9 +459,9 @@ get_qtl_effect <- function(chromosome,geno_prob,pheno,covar=NULL,LOCO= NULL){
      cat("Finding the qtl effect\n")
      chr_Pr <- geno_prob[,chromosome]
      if (!is.null(chr_Pr)){
-     str_glue("Find qtl effect for chromosome {chromosome} and pheno {pheno}")
+      cat("Finding qtl effect for chromosome ", chromosome, "\n")
      if (!is.null(LOCO)) {
-          str_glue("Find qtl effect for chromosome {chromosome} and pheno {pheno} and LOCO {chromosome}")
+        cat("Finding qtl effect for chromosome ", chromosome, "with LOCO \n")
      kinship <- calc_kinship(chr_Pr, "loco")[[chromosome]]
      return(scan1coef(chr_Pr, pheno, kinship, addcovar=covar))
      }
@@ -534,7 +532,7 @@ output = list(lod_peaks = lod_peaks,
 
 output_json_data <-toJSON(output)
 output_file_path = file.path(opt$directory , opt$output_file)
-str_glue("The output file path is  {output_file_path}")
+cat("The output file path generated is",  output_file_path, "\n")
 cat("Writing to the output file\n")
 write(output_json_data, file=output_file_path)
 
