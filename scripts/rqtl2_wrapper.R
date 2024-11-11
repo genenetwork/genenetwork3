@@ -9,7 +9,6 @@ library(stringr)
 library(optparse)
 
 
-
 option_list <- list(
   make_option(c("-c", "--cores"), type="integer", default=1, help="No of cores to use while making
   computation"),
@@ -306,7 +305,7 @@ perform_genome_scan <- function(cross,
     cat("Performing scan1 using Haley Knott\n")
     out <- scan1(genome_prob,
                  cross$pheno,
-                 addcovar = covar,
+                 addcovar = NULL,
 		 intcovar = intcovar,
 		 model = model,
                  Xcovar = Xcovar,
@@ -437,9 +436,7 @@ perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION,perm_st
 
 # get the permutation summary with a significance threshold
 get_lod_significance <- function(perm, threshold = c(0.2, 0.05)){
-      cat("Fetch the lod with significance thresholds ")
-      cat(threshold)
-      cat("\n")
+      cat("Fetch the lod with significance thresholds ", threshold, "\n")
       summary(perm, alpha = threshold)
 }
 lod_significance <- get_lod_significance(perm)
