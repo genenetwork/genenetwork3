@@ -534,6 +534,7 @@ output = list(lod_peaks = lod_peaks,
 	     lod_peaks = lod_peaks,
 	     chromosomes  = chr_names(dataset),
 	     meffects = meffects,
+	     meffects_plots = meffects_plots,
 	     lod_plot_path =lod_plot_path,
 	     scan_method = SCAN_METHOD  
 	     )
