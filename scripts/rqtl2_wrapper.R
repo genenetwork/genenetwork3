@@ -174,7 +174,7 @@ perform_genetic_pr <- function(cross,
     #' @param step for  default "1"
     #' @return a list of three-dimensional arrays of probabilities, individuals x genotypes x pst
 
-  cat("Finding the  genetic Probabilities\n")
+
   if (use_pseudomarkers){
   cat("Using pseudo markers for genetic probabilites\n")
   map <- insert_pseudomarkers(cross$gmap, step=step)
@@ -184,51 +184,45 @@ perform_genetic_pr <- function(cross,
 		       quiet=FALSE, cores=cores)) 
 }
 
+# Step: calculate the genetic probabilities
+cat("Calculating the genetic probabilities\n")
 Pr = perform_genetic_pr(dataset)
-cat("Summaries  on the genetic probabilites \n")
-print(Pr)
-summary(Pr)
 
 
-# perform allele probabilites if cross ways
-
-# convert this to lower
+# Step: perform allele probabilites if cross ways
 if (dataset$crosstype == "4way"){
-  #
+ cat("Calculating Allele Genetic probability for 4way cross\n")
   aPr <- genoprob_to_alleleprob(pr)
 }
 
+
+
 #Function to  Calculate genotyping error LOD scores
-cat("Calculate genotype error LOD scores\n")
+cat("Calculating the  genotype error LOD scores\n")
 error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = NO_OF_CORES)
 # combine into one matrix
 error_lod <- do.call("cbind", error_lod)
-print(error_lod)
 
 
 
 
-#  Perform genome scan
-# TODO! rework on this issue
 ## grab phenotypes and covariates; ensure that covariates have names attribute
+# TODO rework on this 
+cat("Getting the phenotypes and covariates\n")
 pheno <- dataset$pheno
+
 covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
-names(covar) <- rownames(dataset$covar)
-Xcovar <- get_x_covar(dataset)
-print(pheno)
+if (!is.null(covar)){
+ names(covar) <- rownames(dataset$covar)
+}
+print("The covariates are")
 print(covar)
+
+Xcovar <- get_x_covar(dataset)
+print("The Xcovar are ")
 print(Xcovar)
 
-
-
-# TODO: rework on fetching th Xcovar and getting the covar data
-
-# Function to perform scan1
-
-
-# refactor this to a function
-
-
+#  Function to calculate the kinship 
 get_kinship <- function(probability, method="LMM"){
 if (opt$method == "LMM"){
     kinship = calc_kinship(genome_prob)
@@ -240,6 +234,7 @@ if (opt$method == "LMM"){
 }
 
 
+cat("Calculating the kinship for the genetic probability\n")
 if (dataset$crosstype == "4way"){
   kinship <- get_kinship(aPr, opt$method)
 } else {
@@ -248,10 +243,10 @@ if (dataset$crosstype == "4way"){
 
 
 
-
+# Function to perform genome scan
 perform_genome_scan <- function(cross,
                                 genome_prob,
-                                method="HK",
+                                method,
                                 addcovar = NULL,
 				intcovar = NULL,
 				kinship = NULL,
@@ -313,6 +308,8 @@ perform_genome_scan <- function(cross,
 }
 
 # Perform the genome scan for the cross object
+
+
 if (dataset$crosstype == "4way"){
   sex <- (DOex$covar$Sex == "male")*1
   names(sex) <- rownames(dataset$covar)
@@ -324,11 +321,7 @@ if (dataset$crosstype == "4way"){
 			       kinship = kinship,
                                method = SCAN_METHOD)
 }
-
-
-scan_results
-
-# plot for the LOD scores from  performing the genome scan
+# function plot for the LOD scores from  performing the genome scan
 generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
   #' @description Plot LOD curves for a genome scan
   #' @param the cross object
@@ -336,6 +329,7 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
   #' @param the method used to compute the scan1 results HK,LMM or LOCO
   #' @param base_dir the path to write the generated plot
   #' @return a string with the file path for the plot
+  cat("Generting the lod plot for the LOD scores\n")
   color <- c("slateblue", "violetred", "green3")
   par(mar = c(4.1, 4.1, 1.6, 1.1))
   ymx <- maxlod(scan_result)
@@ -367,15 +361,14 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
 
 
 lod_plot_path <- generate_lod_plot(dataset, scan_results, "HK", base_dir=opt$directory)
-lod_plot_path
+cat("Generated the lod plot at ", lod_plot_path, "\n")
 
 
-# perform  permutation tests for single-QTL method
-
+# function: perform  permutation tests for single-QTL method
 perform_permutation_test <- function(cross,
                                      genome_prob,
                                      n_perm,
-                                     method = "HKK",
+                                     method =  opt$method,
                                      covar = NULL,
                                      Xcovar = NULL,
 				     addcovar = NULL,
@@ -400,7 +393,7 @@ perform_permutation_test <- function(cross,
   #' @param n_perm Number of permutation replicates.
   #' @param chr_lengths engths of the chromosomes;
   #' @return  object of class "scan1perm". 
-  cat("performing permutation test for the cross object\n")
+  cat("performing permutation test for the cross object with permutations", n_perm, "\n")
   return (scan1perm(
       genome_prob,
       cross$pheno,
@@ -420,26 +413,28 @@ perform_permutation_test <- function(cross,
 
 
 # check if pstrata
-
 if (!(is.null(opt$pstrata)) && (!is.null(Xcovar))){
 perm_strata <- mat2strata(Xcovar)
 } else {
 perm_strata <- NULL
 }
 
-perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION,perm_strata = perm_strata, method = "LMM")
+# Step: Performing the permutation test
+perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION,perm_strata = perm_strata, method = opt$method)
+
 
 # get the permutation summary with a significance threshold
 get_lod_significance <- function(perm, threshold = c(0.2, 0.05)){
-      cat("Fetch the lod with significance thresholds ", threshold, "\n")
+      cat("Fetching  the lod with significance thresholds as ", threshold, "\n")
       summary(perm, alpha = threshold)
 }
 lod_significance <- get_lod_significance(perm)
 
 
 
-# get the lod peaks
-# TODO fix issue when fetching the gmap or allow to use pseudomarkers
+# step: get the lod peaks
+# TODO fix the threshold here
+
 
 cat("Fetching the lod peaks\n")
 lod_peaks = find_peaks(
@@ -449,12 +444,8 @@ lod_peaks = find_peaks(
   cores = NO_OF_CORES
 )
 
-lod_peaks
-cat("Generating the ouput data as  vector\n")
 
-# get the estimated qtl effects
-cat("Getting the estimated qtl effects\n")
-
+# step: get the estimated qtl effects
 get_qtl_effect <- function(chromosome,geno_prob,pheno,covar=NULL,LOCO= NULL){
      cat("Finding the qtl effect\n")
      chr_Pr <- geno_prob[,chromosome]
@@ -475,9 +466,8 @@ get_qtl_effect <- function(chromosome,geno_prob,pheno,covar=NULL,LOCO= NULL){
 
 
 # take the first phenotype in the dataset
-
 # grab phenotypes and covariates; ensure that covariates have names attribute
-# in this case we are using the first chromosome
+
 pheno <- dataset$pheno[,1]
 if (!is.null(dataset$covar) && !is.null(dataset$covar$sex)){
  covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
@@ -490,12 +480,12 @@ covar
 
 meffects <- c()
 meffects_plots <- c()
-
 # TODO add plots for meffects
 for (chr in chr_names(dataset)){
   cat("Getting the qtl effect for chromosome", chr, "\n")
    if (dataset$crosstype == "4way"){
      coeff_results <- get_qtl_effect(chr, aPr, pheno, LOCO="LOCO", covar = sex)
+     cat("Generating the qtl effects plots\n")
      file_name = genRandomFileName(prefix = "RQTL_EFFECT_", file_ext = ".png")
      image_loc = file.path(base_dir , file_name)
      par(mar=c(4.1, 4.1, 0.6, 0.6))
@@ -516,7 +506,6 @@ for (chr in chr_names(dataset)){
  
     meffects <- append(meffects, coeff_results)
 }
-
 output = list(lod_peaks = lod_peaks,
              scan_results =scan_results,
 	     genetic_probabilities = Pr,
@@ -525,13 +514,12 @@ output = list(lod_peaks = lod_peaks,
 	     lod_peaks = lod_peaks,
 	     chromosomes  = chr_names(dataset),
 	     meffects = meffects,
+	     error_lod = error_lod,
 	     meffects_plots = meffects_plots,
 	     lod_plot_path =lod_plot_path,
 	     scan_method = SCAN_METHOD  
 	     )
-
 output_json_data <-toJSON(output)
-
 cat("The output file path generated is",  OUTPUT_FILE_PATH, "\n")
 cat("Writing to the output file\n")
 write(output_json_data, file=OUTPUT_FILE_PATH)
