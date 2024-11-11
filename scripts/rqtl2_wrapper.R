@@ -497,16 +497,32 @@ covar
 
 
 meffects <- c()
+meffects_plots <- c()
+
 # TODO add plots for meffects
 for (chr in chr_names(dataset)){
   cat("Getting the qtl effect for chromosome", chr)
   cat("\n")
    if (dataset$crosstype == "4way"){
      coeff_results <- get_qtl_effect(chr, aPr, pheno, LOCO="LOCO", covar = sex)
+     file_name = genRandomFileName(prefix = "RQTL_EFFECT_", file_ext = ".png")
+     image_loc = file.path(base_dir , file_name)
+     par(mar=c(4.1, 4.1, 0.6, 0.6))
+       png(image_loc,
+      width = 1000,
+      height = 600,
+      type = 'cairo-png') 
+      plot(
+      coeff_results,
+      cross$gmap[chr],
+     bgcolor="gray95",
+     legend="bottomleft"
+     )
+     meffects <- append(meffects_plots, image_loc)
    } else {
     coeff_results  <- get_qtl_effect(chr, Pr, pheno)
    }
-
+ 
     meffects <- append(meffects, coeff_results)
 }
 
