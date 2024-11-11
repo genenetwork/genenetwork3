@@ -1,13 +1,12 @@
-# This script file contains  the an implementation of qtl mapping using r-qtl2
-# For r-qtl1 implementation see: Scripts/rqtl_wrapper.R
-# load the library
+# This file contains  an  implementation of qtl mapping using r-qtl2
+# For r-qtl1 implementation see: ./rqtl_wrapper.R
 
 library(qtl2)
 library(rjson)
-
 library(stringi)
 library(optparse)
 
+# TODO add mapping function as a parameter:
 
 option_list <- list(
    make_option(c("-d", "--directory"), action = "store", default = NULL, type = "character", help="Temporary working directory: should also host the input file ."),   
@@ -61,6 +60,7 @@ genRandomFileName <- function(prefix, string_size = 9 , file_ext = ".txt") {
 
 
 # Step: Generate the control file name
+
 control_file_path  <- file.path(opt$directory,
                                 genRandomFileName(prefix = "control", file_ext = ".json"))
 cat("Generated the control file path at ", control_file_path, "\n")
@@ -159,7 +159,6 @@ perform_genetic_pr <- function(cross,
                                cores =  NO_OF_CORES,
 			       step=1,
 			       map=NULL,
-			       use_pseudomarkers=FALSE,
 			       map_function=c("haldane", "kosambi", "c-f", "morgan"),
                                error_prob = 0.002
                                ) {
@@ -173,19 +172,23 @@ perform_genetic_pr <- function(cross,
     #' @param step for  default "1"
     #' @return a list of three-dimensional arrays of probabilities, individuals x genotypes x pst
 
-
-  if (use_pseudomarkers){
-  cat("Using pseudo markers for genetic probabilites\n")
-  map <- insert_pseudomarkers(cross$gmap, step=step)
-  }
   return(calc_genoprob(cross, map=map,
                        error_prob=error_prob, map_function=map_function,
 		       quiet=FALSE, cores=cores)) 
 }
 
+
+#Step:  insert pseudomarkers to genetic map
+# TODO need to review this to match rqtl1
+cat("Inserting pseudomarkers to the genetic map with steps", 1 , "and stepwidth" , "fixed\n")
+MAP <- insert_pseudomarkers(cross$gmap, step= 1, stepwidth = "fixed", cores = NO_OF_CORES)
+
+
 # Step: calculate the genetic probabilities
 cat("Calculating the genetic probabilities\n")
-Pr = perform_genetic_pr(cross)
+Pr = perform_genetic_pr(cross, map = MAP)
+
+
 
 
 # Step: perform allele probabilites if cross ways
@@ -207,14 +210,16 @@ error_lod <- do.call("cbind", error_lod)
 # TODO rework on this 
 cat("Getting the phenotypes and covariates\n")
 pheno <- cross$pheno
-
 covar <- match(cross$covar$sex, c("f", "m")) # make numeric
+covar
 
 if (!is.null(covar)){
  names(covar) <- rownames(cross$covar)
+ 
 }
 print("The covariates are")
-print(covar)
+covar
+
 Xcovar <- get_x_covar(cross)
 print("The Xcovar are ")
 print(Xcovar)
