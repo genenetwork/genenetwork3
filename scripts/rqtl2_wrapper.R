@@ -467,9 +467,20 @@ covar  <- NULL
 covar
 
 
+
 # TODO fix this hardcoded chromosome
 # TODO get all chromosomes and iterate coeff_results for a given chromosomes
 coeff_results  <- get_qtl_effect("5", Pr, pheno)
+
+meffects <- c()
+# TODO add plots for meffects
+
+for (chr in chr_names(dataset)){
+  cat("Getting the qtl effect for chromosome", chr)
+  cat("\n")
+   coeff_results  <- get_qtl_effect(chr, Pr, pheno)
+    meffects <- append(meffects, coeff_results)
+}
 
 output = list(lod_peaks = lod_peaks,
              scan_results =scan_results,
@@ -477,6 +488,8 @@ output = list(lod_peaks = lod_peaks,
 	     lod_significance = lod_significance,
 	     permutation_results = perm,
 	     lod_peaks = lod_peaks,
+	     chromosomes  = chr_names(dataset),
+	     meffects = meffects,
 	     lod_plot_path =lod_plot_path,
 	     scan_method = SCAN_METHOD  
 	     )
@@ -486,7 +499,4 @@ output_file_path = file.path(opt$directory , opt$output_file)
 str_glue("The output file path is  {output_file_path}")
 cat("Writing to the output file\n")
 write(output_json_data, file=output_file_path)
-
-
-
 
