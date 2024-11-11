@@ -20,7 +20,8 @@ make_option(c("-i", "--input_file"), action="store", default=NULL, type='charact
   make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata")
 )
 
-opt <- parse_args(OptionParser(option_list=option_list))
+opt_parser = OptionParser(option_list=option_list);
+opt <- parse_args(opt_parser)
 NO_OF_CORES = opt$cores
 SCAN_METHOD = opt$method
 NO_OF_PERMUTATION = opt$nperm
@@ -36,14 +37,14 @@ stop("The working directory does not exists or is NULL\n")
 
 INPUT_FILE_PATH = opt$input_file
 OUTPUT_FILE_PATH = opt$output_file 
-
 if (!(file.exists(INPUT_FILE_PATH))) {
+  print_help(opt_parser)
   stop("The input file", INPUT_FILE_PATH, " you provided does not exists\n")
 } else {
   cat("Input file exists Reading the input file .... \n")
-
 }
 if (!(file.exists(OUTPUT_FILE_PATH))) {
+  print_help(opt_parser)
   stop("The output file  ",OUTPUT_FILE_PATH, " you provided does not exists\n")
 } else {
   cat("Output file exists ...", OUTPUT_FILE_PATH, "\n")
@@ -55,9 +56,6 @@ genRandomFileName <- function(prefix, string_size = 9 , file_ext = ".txt") {
                     "_")
   return(paste(randStr, file_ext, sep = ""))
 }
-
-
-
 
 
 # Step: Generate the control file name
@@ -422,12 +420,11 @@ perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION,perm_st
 
 # get the permutation summary with a significance threshold
 get_lod_significance <- function(perm, threshold = c(0.2, 0.05)){
-      cat("Fetching  the lod with significance thresholds as ", threshold, "\n")
-      summary(perm, alpha = threshold)
+     cat("Getting the permutation summary with significance thresholds as ", threshold, "\n")
+     summary(perm, alpha = threshold)
 }
+
 lod_significance <- get_lod_significance(perm)
-
-
 
 # step: get the lod peaks
 # TODO fix the threshold here
@@ -472,7 +469,7 @@ if (!is.null(dataset$covar) && !is.null(dataset$covar$sex)){
 } else {
 covar  <- NULL
 }
-covar
+
 
 
 meffects <- c()
@@ -499,8 +496,7 @@ for (chr in chr_names(dataset)){
      meffects <- append(meffects_plots, image_loc)
    } else {
     coeff_results  <- get_qtl_effect(chr, Pr, pheno)
-   }
- 
+   } 
     meffects <- append(meffects, coeff_results)
 }
 output = list(lod_peaks = lod_peaks,
