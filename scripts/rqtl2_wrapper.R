@@ -496,18 +496,17 @@ covar  <- NULL
 covar
 
 
-
-# TODO fix this hardcoded chromosome
-# TODO get all chromosomes and iterate coeff_results for a given chromosomes
-coeff_results  <- get_qtl_effect("5", Pr, pheno)
-
 meffects <- c()
 # TODO add plots for meffects
-
 for (chr in chr_names(dataset)){
   cat("Getting the qtl effect for chromosome", chr)
   cat("\n")
-   coeff_results  <- get_qtl_effect(chr, Pr, pheno)
+   if (dataset$crosstype == "4way"){
+     coeff_results <- get_qtl_effect(chr, aPr, pheno, LOCO="LOCO", covar = sex)
+   } else {
+    coeff_results  <- get_qtl_effect(chr, Pr, pheno)
+   }
+
     meffects <- append(meffects, coeff_results)
 }
 
