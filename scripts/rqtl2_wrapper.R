@@ -41,8 +41,8 @@ OUTPUT_FILE_PATH = file.path(opt$directory , opt$output_file)
 if (!(file.exists(INPUT_FILE_PATH))) {
   stop("The input file", INPUT_FILE_PATH, " you provided does not exists the directory", opt$directory, "\n")
 } else {
-  cat("Input file exists Reading the input file .... ", INPUT_FILE_PATH, "\n")
-  json_data  = fromJSON(file = INPUT_FILE_PATH)
+  cat("Input file exists Reading the input file .... \n")
+
 }
 if (!(file.exists(OUTPUT_FILE_PATH))) {
   stop("The output file  ",OUTPUT_FILE_PATH, " you provided does not exists in the  directory",  opt$directory, "\n")
@@ -50,22 +50,26 @@ if (!(file.exists(OUTPUT_FILE_PATH))) {
   cat("Output file exists ...", OUTPUT_FILE_PATH, "\n")
 }
 
-# generate random string file paths
-genRandomFileName <- function(prefix, file_ext = ".txt") {
-  randStr = paste(prefix, stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"), sep =
+# Utility function to generate random file names of size n:
+genRandomFileName <- function(prefix, string_size = 9 , file_ext = ".txt") {
+  randStr = paste(prefix, stri_rand_strings(1, string_size, pattern = "[A-Za-z0-9]"), sep =
                     "_")
   return(paste(randStr, file_ext, sep = ""))
 }
 
-# TODO work on the optional parameters e.g cores, type of computation
 
-# TODO create temp directory for this workspace pass this as argument
 
+
+
+# Step: Generate the control file name
 control_file_path  <- file.path(opt$directory,
-                                genRandomFileName(prefix = "control_", file_ext = ".json"))
+                                genRandomFileName(prefix = "control", file_ext = ".json"))
+cat("Generated the control file path at ", control_file_path, "\n")
 
-cat("Generated the control file path at", control_file_path, "\n")
 
+# Step: Reading and Parsing the input file
+cat("Reading and parsing the input file \n")
+json_data  = fromJSON(file = INPUT_FILE_PATH)
 if (is.null(json_data$sep)){
 cat("Using ',' as a default sep for cross file\n")
 json_data$sep = ","
@@ -74,8 +78,6 @@ if (is.null(json_data$na.strings)){
 cat("Using '-' and 'NA' as the default na.strings\n")
  json_data$na.strings = c("-" , "NA")
 }
-
-# use this better defaults
 default_keys = c(
                 "geno_transposed", "founder_geno_transposed",
                 "pheno_transposed" , "covar_transposed",
@@ -87,6 +89,9 @@ if (!(item %in% names(json_data))){
   json_data[item] =  FALSE
 }
 }
+
+
+
 
 generate_cross_object  <- function(control_file_path, json_data) {
  # function to write the cross object from a json data object
@@ -117,15 +122,13 @@ generate_cross_object  <- function(control_file_path, json_data) {
   )
 }
 
-# generate the cross file
-
+# Step: generate the cross file
+cat("Generating the cross object at ", control_file_path, "\n")
 generate_cross_object(control_file_path, json_data)
 
-# read from the cross file path
+cat("reading the cross object from", control_file_path, "\n")
 dataset  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
-
 # check integrity of the cross
-
 cat("Check the integrity of the cross object")
 check_cross2(dataset)
 if (check_cross2(dataset)) {
@@ -133,6 +136,7 @@ if (check_cross2(dataset)) {
 } else {
   print("Dataset does not meet required specifications")
 }
+
 
 # Dataset Summarys
 cat("A Summary about the Dataset You Provided\n")
@@ -149,6 +153,7 @@ cat(" IDs for all individuals in the dataset object that have phenotype data")
 ind_ids_pheno(dataset)
 cat("Name of the founder Strains/n")
 founders(dataset)
+
 
 # Function for  computing the genetic probabilities
 perform_genetic_pr <- function(cross,
