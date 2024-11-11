@@ -22,40 +22,35 @@ make_option(c("-o", "--output_file"), action="store", default=NULL, type='charac
 
 
 opt <- parse_args(OptionParser(option_list=option_list))
-# check for mandatory args
-if(is.null(opt$directory)){
-stop("You need  to specify  a working temporary directory which should have be base_dir for the input file")
-}
-
 NO_OF_CORES = opt$cores
 SCAN_METHOD = opt$method
 NO_OF_PERMUTATION = opt$nperm
 
-# get the json file path with pre metadata required to create the cross
-# assumption is that the input file should be in the  temp working directory
+# Step: check for mandatory file paths 
+# NOTE this is the working dir should be the path for both INPUT and OUTPUT_FILE
+# NOTE this is where the cross file is generated
 
-if (is.null(opt$input_file)) {
-  stop("Argument for the Input metadata file is Missing ", call. = FALSE)
-} else {
-   input_file = opt$input_file
-}
-if (is.null(opt$output_file)){
-stop("You need to provide an output file to write the ouput data")
+if(is.null(opt$directory) || !(dir.exists(opt$directory))){
+# check if directory exists
+stop("The working directory does not exists or is NULL\n")
 }
 
-# file_path
+INPUT_FILE_PATH = file.path(opt$directory, opt$input_file)
+OUTPUT_FILE_PATH = file.path(opt$directory , opt$output_file)
 
-input_file_path = file.path(opt$directory, input_file)
-
-if (!(file.exists(input_file_path))) {
-  stop("The input file you provided does not exists the temp directory")
+if (!(file.exists(INPUT_FILE_PATH))) {
+  stop("The input file", INPUT_FILE_PATH, " you provided does not exists the directory", opt$directory, "\n")
 } else {
-  cat("The input file for the metadata is >>>>>", input_file_path, "\n")
-  json_data  = fromJSON(file = input_file_path)
+  cat("Input file exists Reading the input file .... ", INPUT_FILE_PATH, "\n")
+  json_data  = fromJSON(file = INPUT_FILE_PATH)
+}
+if (!(file.exists(OUTPUT_FILE_PATH))) {
+  stop("The output file  ",OUTPUT_FILE_PATH, " you provided does not exists in the  directory",  opt$directory, "\n")
+} else {
+  cat("Output file exists ...", OUTPUT_FILE_PATH, "\n")
 }
 
 # generate random string file paths
-
 genRandomFileName <- function(prefix, file_ext = ".txt") {
   randStr = paste(prefix, stri_rand_strings(1, 9, pattern = "[A-Za-z0-9]"), sep =
                     "_")
@@ -531,8 +526,8 @@ output = list(lod_peaks = lod_peaks,
 	     )
 
 output_json_data <-toJSON(output)
-output_file_path = file.path(opt$directory , opt$output_file)
-cat("The output file path generated is",  output_file_path, "\n")
+
+cat("The output file path generated is",  OUTPUT_FILE_PATH, "\n")
 cat("Writing to the output file\n")
-write(output_json_data, file=output_file_path)
+write(output_json_data, file=OUTPUT_FILE_PATH)
 
