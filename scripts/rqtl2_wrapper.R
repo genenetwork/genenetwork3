@@ -178,16 +178,13 @@ perform_genetic_pr <- function(cross,
 
   cat("Finding the  genetic Probabilities\n")
   if (use_pseudomarkers){
+  cat("Using pseudo markers for genetic probabilites\n")
   map <- insert_pseudomarkers(cross$gmap, step=step)
+  }
   return(calc_genoprob(cross, map=map,
                        error_prob=error_prob, map_function=map_function,
-		       quiet=FALSE, cores=cores))
-  }
-  else {
-      return (calc_genoprob(cross, map=map, error_prob=error_prob,
-                           quiet = FALSE, map_function =map_function,
-                           cores = cores))
-  }}
+		       quiet=FALSE, cores=cores)) 
+}
 
 Pr = perform_genetic_pr(dataset)
 cat("Summaries  on the genetic probabilites \n")
