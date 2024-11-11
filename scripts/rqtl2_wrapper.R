@@ -126,32 +126,32 @@ cat("Generating the cross object at ", control_file_path, "\n")
 generate_cross_object(control_file_path, json_data)
 
 cat("reading the cross object from", control_file_path, "\n")
-dataset  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
+cross  <- read_cross2(control_file_path, quiet = FALSE) # replace this with a dynamic path
 # check integrity of the cross
 cat("Check the integrity of the cross object")
-check_cross2(dataset)
-if (check_cross2(dataset)) {
-  print("Dataset meets required specifications for a cross")
+check_cross2(cross)
+if (check_cross2(cross)) {
+  print("Cross meets required specifications for a cross")
 } else {
-  print("Dataset does not meet required specifications")
+  print("Cross does not meet required specifications")
 }
 
 
-# Dataset Summarys
-cat("A Summary about the Dataset You Provided\n")
-summary(dataset)
-n_ind(dataset)
-n_chr(dataset)
+# Cross Summarys
+cat("A Summary about the Cross You Provided\n")
+summary(cross)
+n_ind(cross)
+n_chr(cross)
 cat("names of markers in the  object\n")
-marker_names(dataset)
+marker_names(cross)
 cat("names of phenotypes in a the object")
-pheno_names(dataset)
-cat("IDs for all individuals in the dataset cross object that have genotype data\n")
-ind_ids_geno(dataset)
-cat(" IDs for all individuals in the dataset object that have phenotype data")
-ind_ids_pheno(dataset)
+pheno_names(cross)
+cat("IDs for all individuals in the cross cross object that have genotype data\n")
+ind_ids_geno(cross)
+cat(" IDs for all individuals in the cross object that have phenotype data")
+ind_ids_pheno(cross)
 cat("Name of the founder Strains/n")
-founders(dataset)
+founders(cross)
 
 
 # Function for  computing the genetic probabilities
@@ -185,11 +185,11 @@ perform_genetic_pr <- function(cross,
 
 # Step: calculate the genetic probabilities
 cat("Calculating the genetic probabilities\n")
-Pr = perform_genetic_pr(dataset)
+Pr = perform_genetic_pr(cross)
 
 
 # Step: perform allele probabilites if cross ways
-if (dataset$crosstype == "4way"){
+if (cross$crosstype == "4way"){
  cat("Calculating Allele Genetic probability for 4way cross\n")
   aPr <- genoprob_to_alleleprob(pr)
 }
@@ -198,7 +198,7 @@ if (dataset$crosstype == "4way"){
 
 #Function to  Calculate genotyping error LOD scores
 cat("Calculating the  genotype error LOD scores\n")
-error_lod <- calc_errorlod(dataset, Pr, quiet = FALSE, cores = NO_OF_CORES)
+error_lod <- calc_errorlod(cross, Pr, quiet = FALSE, cores = NO_OF_CORES)
 # combine into one matrix
 error_lod <- do.call("cbind", error_lod)
 
@@ -208,16 +208,16 @@ error_lod <- do.call("cbind", error_lod)
 ## grab phenotypes and covariates; ensure that covariates have names attribute
 # TODO rework on this 
 cat("Getting the phenotypes and covariates\n")
-pheno <- dataset$pheno
+pheno <- cross$pheno
 
-covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
+covar <- match(cross$covar$sex, c("f", "m")) # make numeric
 if (!is.null(covar)){
- names(covar) <- rownames(dataset$covar)
+ names(covar) <- rownames(cross$covar)
 }
 print("The covariates are")
 print(covar)
 
-Xcovar <- get_x_covar(dataset)
+Xcovar <- get_x_covar(cross)
 print("The Xcovar are ")
 print(Xcovar)
 
@@ -234,7 +234,7 @@ if (opt$method == "LMM"){
 
 
 cat("Calculating the kinship for the genetic probability\n")
-if (dataset$crosstype == "4way"){
+if (cross$crosstype == "4way"){
   kinship <- get_kinship(aPr, opt$method)
 } else {
    kinship <- get_kinship(Pr, "loco")
@@ -307,13 +307,13 @@ perform_genome_scan <- function(cross,
 }
 
 # Perform the genome scan for the cross object
-if (dataset$crosstype == "4way"){
+if (cross$crosstype == "4way"){
   sex <- (DOex$covar$Sex == "male")*1
-  names(sex) <- rownames(dataset$covar)
-  sex <- setNames( (dataset$covar$Sex == "male")*1, rownames(DOex$covar))
-  scan_results <- perform_genome_scan(aPr, dataset, kinship=kinship, method = "LOCO", addcovar = sex)  
+  names(sex) <- rownames(cross$covar)
+  sex <- setNames( (cross$covar$Sex == "male")*1, rownames(DOex$covar))
+  scan_results <- perform_genome_scan(aPr, cross, kinship=kinship, method = "LOCO", addcovar = sex)  
 } else {
-  scan_results <- perform_genome_scan(cross = dataset,
+  scan_results <- perform_genome_scan(cross = cross,
                                genome_prob = Pr,
 			       kinship = kinship,
                                method = SCAN_METHOD)
@@ -357,7 +357,7 @@ generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
 }
 
 
-lod_plot_path <- generate_lod_plot(dataset, scan_results, "HK", base_dir=opt$directory)
+lod_plot_path <- generate_lod_plot(cross, scan_results, "HK", base_dir=opt$directory)
 cat("Generated the lod plot at ", lod_plot_path, "\n")
 
 
@@ -417,7 +417,7 @@ perm_strata <- NULL
 }
 
 # Step: Performing the permutation test
-perm <- perform_permutation_test(dataset, Pr, n_perm = NO_OF_PERMUTATION,perm_strata = perm_strata, method = opt$method)
+perm <- perform_permutation_test(cross, Pr, n_perm = NO_OF_PERMUTATION,perm_strata = perm_strata, method = opt$method)
 
 
 # get the permutation summary with a significance threshold
@@ -436,7 +436,7 @@ cat("Fetching the lod peaks with threshold", opt$threshold, "\n")
 lod_peaks = find_peaks(
   scan_results,
   threshold =opt$threshold,
-  map = dataset$gmap,
+  map = cross$gmap,
   cores = NO_OF_CORES
 )
 
@@ -461,12 +461,12 @@ get_qtl_effect <- function(chromosome,geno_prob,pheno,covar=NULL,LOCO= NULL){
 
 
 
-# take the first phenotype in the dataset
+# take the first phenotype in the cross
 # grab phenotypes and covariates; ensure that covariates have names attribute
-pheno <- dataset$pheno[,1]
-if (!is.null(dataset$covar) && !is.null(dataset$covar$sex)){
- covar <- match(dataset$covar$sex, c("f", "m")) # make numeric
- names(covar) <- rownames(dataset$covar)
+pheno <- cross$pheno[,1]
+if (!is.null(cross$covar) && !is.null(cross$covar$sex)){
+ covar <- match(cross$covar$sex, c("f", "m")) # make numeric
+ names(covar) <- rownames(cross$covar)
 } else {
 covar  <- NULL
 }
@@ -474,9 +474,9 @@ covar  <- NULL
 meffects <- c()
 meffects_plots <- c()
 # TODO add plots for meffects
-for (chr in chr_names(dataset)){
+for (chr in chr_names(cross)){
   cat("Getting the qtl effect for chromosome", chr, "\n")
-   if (dataset$crosstype == "4way"){
+   if (cross$crosstype == "4way"){
      coeff_results <- get_qtl_effect(chr, aPr, pheno, LOCO="LOCO", covar = sex)
      cat("Generating the qtl effects plots\n")
      file_name = genRandomFileName(prefix = "RQTL_EFFECT_", file_ext = ".png")
@@ -504,7 +504,7 @@ output = list(lod_peaks = lod_peaks,
 	     lod_significance = lod_significance,
 	     permutation_results = perm,
 	     lod_peaks = lod_peaks,
-	     chromosomes  = chr_names(dataset),
+	     chromosomes  = chr_names(cross),
 	     meffects = meffects,
 	     error_lod = error_lod,
 	     meffects_plots = meffects_plots,
