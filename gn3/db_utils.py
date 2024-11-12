@@ -1,10 +1,11 @@
 """module contains all db related stuff"""
-import contextlib
 import logging
-from typing import Any, Iterator, Protocol
+import contextlib
 from urllib.parse import urlparse
-import MySQLdb as mdb
+from typing import Any, Iterator, Protocol
+
 import xapian
+import MySQLdb as mdb
 
 
 LOGGER = logging.getLogger(__file__)
