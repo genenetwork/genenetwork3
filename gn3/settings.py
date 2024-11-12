@@ -7,7 +7,6 @@ application settings.
 import os
 import tempfile
 
-BCRYPT_SALT = ""
 DATA_DIR = ""
 GEMMA_WRAPPER_CMD = os.environ.get("GEMMA_WRAPPER", "gemma-wrapper")
 CACHEDIR = ""

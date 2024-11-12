@@ -41,9 +41,6 @@ def verify_app_config(app: Flask) -> None:
         2. provides examples for what to set as config variables (helps local dev)
     """
     app_config = {
-        "BCRYPT_SALT": """set BCRYPT_SALT to $2b$12$mxLvu9XRLlIaaSeDxt8Sle for local dev work
-        or run `python3 -c "import bcrypt; print(bcrypt.gensalt().decode())` to get a new one
-        """,
         "AUTH_SERVER_URL": """AUTH_SERVER_URL is used for api requests that need login.
         For local dev, use the running auth server url, which defaults to http://127.0.0.1:8081
         """,
