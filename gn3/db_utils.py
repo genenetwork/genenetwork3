@@ -2,7 +2,7 @@
 import logging
 import contextlib
 from urllib.parse import urlparse
-from typing import Any, Iterator, Protocol
+from typing import Any, Iterator, Protocol, Callable
 
 import xapian
 import MySQLdb as mdb
@@ -26,7 +26,7 @@ def __parse_db_opts__(opts: str) -> dict:
         "cursorclass", "use_unicode", "charset", "collation", "auth_plugin",
         "sql_mode", "client_flag", "multi_statements", "ssl_mode", "ssl",
         "local_infile", "autocommit", "binary_prefix")
-    conversion_fns = {
+    conversion_fns: dict[str, Callable] = {
         **{opt: str for opt in allowed_opts},
         "connect_timeout": int,
         "compress": __check_true__,
@@ -39,9 +39,11 @@ def __parse_db_opts__(opts: str) -> dict:
         "autocommit": __check_true__,
         "binary_prefix": __check_true__
     }
-    keyvals = tuple(filter(bool, opts.split("&")))
-    if len(keyvals) > 0:
-        keyvals = tuple(tuple(item.strip() for item in keyval.split("=")) for keyval in keyvals)
+    queries = tuple(filter(bool, opts.split("&")))
+    if len(queries) > 0:
+        keyvals: tuple[tuple[str, ...], ...] = tuple(
+            tuple(item.strip() for item in query.split("="))
+            for query in queries)
         def __check_opt__(opt):
             assert opt in allowed_opts, (
                 f"Invalid database connection option ({opt}) provided.")
