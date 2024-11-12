@@ -5,7 +5,6 @@ DO NOT import from this file, use `flask.current_app.config` instead to get the
 application settings.
 """
 import os
-import uuid
 import tempfile
 
 BCRYPT_SALT = ""
