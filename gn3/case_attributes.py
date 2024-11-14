@@ -77,7 +77,7 @@ def required_access(
             result = requests.get(
                 # this section fetches the resource ID from the auth server
                 urljoin(current_app.config["AUTH_SERVER_URL"],
-                        "auth/resource/inbredset/resource-id"
+                        "auth/resource/populations/resource-id"
                         f"/{__species_id__(conn)}/{inbredset_id}"))
             if result.status_code == 200:
                 resource_id = result.json()["resource-id"]
