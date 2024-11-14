@@ -186,7 +186,7 @@ def __case_attribute_values_by_inbred_set__(
             "ON ca.CaseAttributeId=caxrn.CaseAttributeId "
             "INNER JOIN Strain AS s "
             "ON caxrn.StrainId=s.Id "
-            "WHERE ca.InbredSetId=%(inbredset_id)s "
+            "WHERE caxrn.InbredSetId=%(inbredset_id)s "
             "ORDER BY StrainName",
             {"inbredset_id": inbredset_id})
         return tuple(
