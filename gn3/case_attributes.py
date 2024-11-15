@@ -203,7 +203,7 @@ def __process_orig_data__(fieldnames, cadata, strains) -> tuple[dict, ...]:
     data = {item["StrainName"]: item for item in cadata}
     return tuple(
         {
-            "Strain": strain["Name"],
+            "Sample": strain["Name"],
             **{
                 key: data.get(
                     strain["Name"], {}).get("case-attributes", {}).get(key, "")
@@ -216,7 +216,7 @@ def __process_edit_data__(fieldnames, form_data) -> tuple[dict, ...]:
     def __process__(acc, strain_cattrs):
         strain, cattrs = strain_cattrs
         return acc + ({
-            "Strain": strain, **{
+            "Sample": strain, **{
             field: cattrs["case-attributes"].get(field, "")
             for field in fieldnames[1:]
             }
@@ -327,19 +327,19 @@ def __apply_additions__(
 def __apply_modifications__(
         cursor, inbredset_id: int, modifications_diff, fieldnames) -> None:
     """Apply modifications: changes values of existing case attributes."""
-    cattrs = tuple(field for field in fieldnames if field != "Strain")
+    cattrs = tuple(field for field in fieldnames if field != "Sample")
 
     def __retrieve_changes__(acc, row):
         orig = dict(zip(fieldnames, row["Original"].split(",")))
         new = dict(zip(fieldnames, row["Current"].split(",")))
         return acc + tuple({
-            "Strain": new["Strain"],
+            "Sample": new["Sample"],
             cattr: new[cattr]
         } for cattr in cattrs if new[cattr] != orig[cattr])
 
     new_rows: tuple[dict, ...] = reduce(
         __retrieve_changes__, modifications_diff, tuple())
-    strain_names = tuple({row["Strain"] for row in new_rows})
+    strain_names = tuple({row["Sample"] for row in new_rows})
     cursor.execute("SELECT Id AS StrainId, Name AS StrainName FROM Strain "
                    f"WHERE Name IN ({', '.join(['%s'] * len(strain_names))})",
                    strain_names)
@@ -364,7 +364,7 @@ def __apply_modifications__(
         tuple(
             {
                 "isetid": inbredset_id,
-                "strainid": strain_ids[row["Strain"]],
+                "strainid": strain_ids[row["Sample"]],
                 "cattrid": cattr_ids[cattr],
                 "value": row[cattr]
             }
@@ -377,11 +377,11 @@ def __apply_modifications__(
         tuple(
             {
                 "isetid": inbredset_id,
-                "strainid": strain_ids[row["Strain"]],
+                "strainid": strain_ids[row["Sample"]],
                 "cattrid": cattr_ids[cattr]
             }
             for row in new_rows
-            for cattr in (key for key in row.keys() if key != "Strain")
+            for cattr in (key for key in row.keys() if key != "Sample")
             if not bool(row[cattr].strip())))
 
 def __apply_deletions__(
@@ -471,7 +471,7 @@ def edit_case_attributes(inbredset_id: int, auth_token = None) -> Response:
         required_access(auth_token,
                         inbredset_id,
                         ("system:inbredset:edit-case-attribute",))
-        fieldnames = tuple(["Strain"] + sorted(
+        fieldnames = tuple(["Sample"] + sorted(
             attr["Name"] for attr in
             __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
         try:
