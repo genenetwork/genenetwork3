@@ -6,7 +6,8 @@ import uuid
 from flask import current_app
 from flask import jsonify
 from flask import Blueprint
-
+from redis import Redis
+from computations.rqtl2 import create_rqtl2_task
 rqtl2 = Blueprint("rqtl2", __name__)
 
 
@@ -31,14 +32,17 @@ def compute():
 @rqtl2.route("/submit", methods=["GET"])
 def submit():
     """Endpoint create an rqtl2 task and return a str id"""
-    return str(uuid.uuid4())
+    with Redis() as conn:
+        task_id = create_rqtl2_task(conn)  # error to be caught by error.py app level
+        return jsonify(task_id)
 
 
-@rqtl2.route("/task/<str:task_id>", methods=["GET"])
-def get_task():
+@rqtl2.route("/task/<task_id>", methods=["GET"])
+def get_task(task_id):
     """Polling endpoint to fetch task_id and the metadata"""
     return {
         str(uuid.uuid4()): {
+            "task_id": task_id,
             "results": [],
             "status": "queued",
             "stdout": "",
