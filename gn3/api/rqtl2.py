@@ -3,11 +3,15 @@
 
 import subprocess
 import uuid
+import threading
 from flask import current_app
 from flask import jsonify
 from flask import Blueprint
 from redis import Redis
+
 from computations.rqtl2 import create_rqtl2_task
+from computations.rqtl2 import execute_script
+
 rqtl2 = Blueprint("rqtl2", __name__)
 
 
@@ -34,6 +38,11 @@ def submit():
     """Endpoint create an rqtl2 task and return a str id"""
     with Redis() as conn:
         task_id = create_rqtl2_task(conn)  # error to be caught by error.py app level
+        script_path = current_app.config.get("RQTL2_WRAPPER")
+        # start background task for executing script
+        thread = threading.Thread(target=execute_script,
+                                  args=(task_id, conn, script_path, {}))
+        thread.start()
         return jsonify(task_id)
 
 
