@@ -6,7 +6,7 @@ from flask import Blueprint
 rqtl2 = Blueprint("rqtl2", __name__)
 
 
-@rqtl2.route("/compute", method=["GET"])
+@rqtl2.route("/compute", methods=["GET"])
 def compute():
     """Init endpoint for computing qtl anaylsis using rqtl2"""
     # preprocessing data from the client
