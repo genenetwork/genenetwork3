@@ -2,6 +2,7 @@
 """
 
 import subprocess
+import uuid
 from flask import current_app
 from flask import jsonify
 from flask import Blueprint
@@ -25,3 +26,22 @@ def compute():
         print(deco_line)
     p.wait()
     return jsonify({"data": []})
+
+
+@rqtl2.route("/submit", methods=["GET"])
+def submit():
+    """Endpoint create an rqtl2 task and return a str id"""
+    return str(uuid.uuid4())
+
+
+@rqtl2.route("/task/<str:task_id>", methods=["GET"])
+def get_task():
+    """Polling endpoint to fetch task_id and the metadata"""
+    return {
+        str(uuid.uuid4()): {
+            "results": [],
+            "status": "queued",
+            "stdout": "",
+            "stderror": "",
+        }
+    }
