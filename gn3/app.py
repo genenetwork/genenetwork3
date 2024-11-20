@@ -14,6 +14,7 @@ from flask_cors import CORS  # type: ignore
 from gn3.loggers import setup_app_handlers
 from gn3.api.gemma import gemma
 from gn3.api.rqtl import rqtl
+from gn3.api.rqtl2 import rqtl2
 from gn3.api.general import general
 from gn3.api.heatmaps import heatmaps
 from gn3.api.correlation import correlation
@@ -28,6 +29,7 @@ from gn3.api.metadata import metadata
 from gn3.api.sampledata import sampledata
 from gn3.api.llm import gnqa
 from gn3.case_attributes import caseattr
+
 
 
 class ConfigurationError(Exception):
@@ -107,6 +109,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(sampledata, url_prefix="/api/sampledata")
     app.register_blueprint(caseattr, url_prefix="/api/case-attribute")
     app.register_blueprint(gnqa, url_prefix="/api/llm")
+    app.register_blueprint(rqtl2, url_prefix="/api/rqtl2")
 
     register_error_handlers(app)
     return app
