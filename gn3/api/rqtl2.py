@@ -36,3 +36,15 @@ def compute():
         return jsonify({"msg": "success", "results": "file_here"})
     else:
         return jsonify({"msg": "fail", "error": "Process failed"})
+
+
+@rqtl2.route("/stream/<indetifier>",  methods=["GET"])
+def stream(indetifier):
+    """ This endpoints streams stdout from a file expects
+    the indetifier to be the file """
+    output_file = os.path.join(current_app.config.get("TMPDIR"),
+                               f"{indetifier}.txt")
+    # raise error if file does not exist
+    with open(output_file) as file_handler:
+        # rethink how we do the read should this be stream / yield ????
+        return jsonify({"data": file_handler.readlines()})
