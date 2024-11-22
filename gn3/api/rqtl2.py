@@ -6,6 +6,7 @@ import os
 from flask import current_app
 from flask import jsonify
 from flask import Blueprint
+from flask import request
 
 rqtl2 = Blueprint("rqtl2", __name__)
 
@@ -42,9 +43,11 @@ def compute():
 def stream(indetifier):
     """ This endpoints streams stdout from a file expects
     the indetifier to be the file """
+    # add seek position to this
     output_file = os.path.join(current_app.config.get("TMPDIR"),
                                f"{indetifier}.txt")
     # raise error if file does not exist
     with open(output_file) as file_handler:
-        # rethink how we do the read should this be stream / yield ????
-        return jsonify({"data": file_handler.readlines()})
+        # rethink how we do the read should this be stream / yield/peak ????
+        return jsonify({"data": file_handler.readlines(),
+                        "pointer": file_handler.tell()})
