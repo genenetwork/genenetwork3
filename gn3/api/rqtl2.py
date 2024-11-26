@@ -13,8 +13,10 @@ rqtl2 = Blueprint("rqtl2", __name__)
 @rqtl2.route("/compute", methods=["GET"])
 def compute():
     """Endpoint for computing QTL analysis using R/QTL2"""
-    wkdir = current_app.config.get("TMPDIR")
-    output_file = os.path.join(wkdir, "output.txt")
+    # get the run id to act as file identifier default to output
+    run_id = request.args.get("id", "output")
+    output_file = os.path.join(current_app.config.get("TMPDIR"),
+                               f"{run_id}.txt")
     # this should be computed locally not via files
     rscript_cmd = (
         f"Rscript ./scripts/rqtl2_wrapper.R "
@@ -28,30 +30,32 @@ def compute():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT
     )
-    # TODO rethink where we write this file
     for line in iter(process.stdout.readline, b""):
-        # dont modify
+        # these allow endpoint stream to read the file since
+        # no read and write file same tiem
         with open(output_file, "a+") as file_handler:
             file_handler.write(line.decode("utf-8"))
-
     process.stdout.close()
     process.wait()
     if process.returncode == 0:
-        return jsonify({"msg": "success", "results": "file_here"})
-    else:
-        return jsonify({"msg": "fail", "error": "Process failed"})
+        return jsonify({"msg": "success",
+                        "results": "file_here",
+                        "run_id": run_id})
+    return jsonify({"msg": "fail",
+                    "error": "Process failed",
+                    "run_id": run_id})
 
 
-@rqtl2.route("/stream/<indetifier>",  methods=["GET"])
-def stream(indetifier):
+@rqtl2.route("/stream/<identifier>",  methods=["GET"])
+def stream(identifier="output"):
     """ This endpoints streams stdout from a file expects
     the indetifier to be the file """
-    # add seek position to this
     output_file = os.path.join(current_app.config.get("TMPDIR"),
-                               f"{indetifier}.txt")
+                               f"{identifier}.txt")
     seek_position = int(request.args.get("peak", 0))
     with open(output_file) as file_handler:
-        # rethink how we do the read should this be stream / yield/peak ????
+        # read to the last position default to 0
         file_handler.seek(seek_position)
         return jsonify({"data": file_handler.readlines(),
+                        "run_id": identifier,
                         "pointer": file_handler.tell()})
