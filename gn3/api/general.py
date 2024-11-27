@@ -1,5 +1,6 @@
 """General API endpoints.  Put endpoints that can't be grouped together nicely
 here."""
+import os
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
@@ -68,3 +69,31 @@ def run_r_qtl(geno_filestr, pheno_filestr):
     cmd = (f"Rscript {rqtl_wrapper} "
            f"{geno_filestr} {pheno_filestr}")
     return jsonify(run_cmd(cmd)), 201
+
+
+@general.route("/stream ",  methods=["GET"])
+def stream():
+    """
+    This endpoint streams the stdout content from a file.
+    It expects an identifier to be passed as a query parameter.
+    Example: `/stream?id=<identifier>`
+   The `id` will be used to locate the corresponding file.
+   You can also pass an optional `peak` parameter
+    to specify the file position to start reading from.
+   Query Parameters:
+   - `id` (required): The identifier used to locate the file.
+   - `peak` (optional): The position in the file to start reading from.
+   Returns:
+   - dict with data(stdout), run_id unique id for file,
+    pointer last read position for file
+  """
+    run_id = request.args.get("id", "")
+    output_file = os.path.join(current_app.config.get("TMPDIR"),
+                               f"{run_id}.txt")
+    seek_position = int(request.args.get("peak", 0))
+    with open(output_file) as file_handler:
+        # read to the last position default to 0
+        file_handler.seek(seek_position)
+        return jsonify({"data": file_handler.readlines(),
+                        "run_id": run_id,
+                        "pointer": file_handler.tell()})
