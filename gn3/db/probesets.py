@@ -40,40 +40,42 @@ class Probeset: # pylint: disable=[too-many-instance-attributes]
 # Mapping from the Phenotype dataclass to the actual column names in the
 # database
 probeset_mapping = {
-    "id_": "Id",
-    "name": "Name",
-    "symbol": "symbol",
-    "description": "description",
-    "probe_target_description": "Probe_Target_Description",
-    "chr_": "Chr",
-    "mb": "Mb",
-    "alias": "alias",
-    "geneid": "GeneId",
-    "homologeneid": "HomoloGeneID",
-    "unigeneid": "UniGeneId",
-    "omim": "OMIM",
-    "refseq_transcriptid": "RefSeq_TranscriptId",
-    "blatseq": "BlatSeq",
-    "targetseq": "TargetSeq",
-    "strand_probe": "Strand_Probe",
-    "probe_set_target_region": "Probe_set_target_region",
-    "probe_set_specificity": "Probe_set_specificity",
-    "probe_set_blat_score": "Probe_set_BLAT_score",
-    "probe_set_blat_mb_start": "Probe_set_Blat_Mb_start",
-    "probe_set_blat_mb_end": "Probe_set_Blat_Mb_end",
-    "probe_set_strand": "Probe_set_strand",
-    "probe_set_note_by_rw": "Probe_set_Note_by_RW",
-    "flag": "flag"
+    "id_": "ProbeSet.Id",
+    "name": "ProbeSet.Name",
+    "symbol": "ProbeSet.symbol",
+    "description": "ProbeSet.description",
+    "probe_target_description": "ProbeSet.Probe_Target_Description",
+    "chr_": "ProbeSet.Chr",
+    "mb": "ProbeSet.Mb",
+    "alias": "ProbeSet.alias",
+    "geneid": "ProbeSet.GeneId",
+    "homologeneid": "ProbeSet.HomoloGeneID",
+    "unigeneid": "ProbeSet.UniGeneId",
+    "omim": "ProbeSet.OMIM",
+    "refseq_transcriptid": "ProbeSet.RefSeq_TranscriptId",
+    "blatseq": "ProbeSet.BlatSeq",
+    "targetseq": "ProbeSet.TargetSeq",
+    "strand_probe": "ProbeSet.Strand_Probe",
+    "probe_set_target_region": "ProbeSet.Probe_set_target_region",
+    "probe_set_specificity": "ProbeSet.Probe_set_specificity",
+    "probe_set_blat_score": "ProbeSet.Probe_set_BLAT_score",
+    "probe_set_blat_mb_start": "ProbeSet.Probe_set_Blat_Mb_start",
+    "probe_set_blat_mb_end": "ProbeSet.Probe_set_Blat_Mb_end",
+    "probe_set_strand": "ProbeSet.Probe_set_strand",
+    "probe_set_note_by_rw": "ProbeSet.Probe_set_Note_by_RW",
+    "flag": "ProbeSet.flag"
 }
 
-def fetch_probeset_metadata_by_name(conn: DBConnection, name: str) -> dict:
+def fetch_probeset_metadata_by_name(conn: DBConnection, trait_name: str, dataset_name: str) -> dict:
     """Fetch a ProbeSet's metadata by its `name`."""
     with conn.cursor(cursorclass=DictCursor) as cursor:
         cols = ", ".join(mapping_to_query_columns(probeset_mapping))
         cursor.execute((f"SELECT {cols} "
-                        "FROM ProbeSet "
-                        "WHERE Name = %(name)s"),
-                       {"name": name})
+                        "FROM ProbeSetFreeze "
+                        "INNER JOIN ProbeSetXRef ON ProbeSetXRef.`ProbeSetFreezeId` = ProbeSetFreeze.`Id` "
+                        "INNER JOIN ProbeSet ON ProbeSet.`Id` = ProbeSetXRef.`ProbeSetId` "
+                        "WHERE ProbeSet.Name = %(trait_name)s AND ProbeSetFreeze.Name = %(ds_name)s"),
+                       {"trait_name": trait_name, "ds_name": dataset_name})
         return cursor.fetchone()
 
 def update_probeset(conn, probeset_id, data:dict) -> int:
