@@ -25,6 +25,7 @@ def compute():
         "-o /home/kabui/r_playground/rqtl_output.json "
         "--nperm 100  --threshold 1 --cores 0"
     )
+    # pylint: disable=consider-using-with
     process = subprocess.Popen(
         rscript_cmd, shell=True,
         stdout=subprocess.PIPE,
