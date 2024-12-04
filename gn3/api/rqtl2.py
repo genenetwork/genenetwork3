@@ -1,7 +1,6 @@
 """ File contains endpoints for rqlt2"""
 
 import subprocess
-import uuid
 import os
 from flask import current_app
 from flask import jsonify
@@ -9,6 +8,7 @@ from flask import Blueprint
 from flask import request
 
 rqtl2 = Blueprint("rqtl2", __name__)
+
 
 @rqtl2.route("/compute", methods=["GET"])
 def compute():
@@ -19,11 +19,11 @@ def compute():
                                f"{run_id}.txt")
     # this should be computed locally not via files
     rscript_cmd = (
-        f"Rscript ./scripts/rqtl2_wrapper.R "
-        f"-i /home/kabui/r_playground/meta_grav.json "
-        f"-d /home/kabui/r_playground "
-        f"-o /home/kabui/r_playground/rqtl_output.json "
-        f"--nperm 100  --threshold 1 --cores 0"
+        "Rscript ./scripts/rqtl2_wrapper.R "
+        "-i /home/kabui/r_playground/meta_grav.json "
+        "-d /home/kabui/r_playground "
+        "-o /home/kabui/r_playground/rqtl_output.json "
+        "--nperm 100  --threshold 1 --cores 0"
     )
     process = subprocess.Popen(
         rscript_cmd, shell=True,
@@ -33,7 +33,7 @@ def compute():
     for line in iter(process.stdout.readline, b""):
         # these allow endpoint stream to read the file since
         # no read and write file same tiem
-        with open(output_file, "a+") as file_handler:
+        with open(output_file, "a+", encoding="utf-8") as file_handler:
             file_handler.write(line.decode("utf-8"))
     process.stdout.close()
     process.wait()
@@ -53,7 +53,7 @@ def stream(identifier="output"):
     output_file = os.path.join(current_app.config.get("TMPDIR"),
                                f"{identifier}.txt")
     seek_position = int(request.args.get("peak", 0))
-    with open(output_file) as file_handler:
+    with open(output_file, encoding="utf-8") as file_handler:
         # read to the last position default to 0
         file_handler.seek(seek_position)
         return jsonify({"data": file_handler.readlines(),

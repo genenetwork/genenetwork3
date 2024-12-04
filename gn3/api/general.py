@@ -91,7 +91,7 @@ def stream():
     output_file = os.path.join(current_app.config.get("TMPDIR"),
                                f"{run_id}.txt")
     seek_position = int(request.args.get("peak", 0))
-    with open(output_file) as file_handler:
+    with open(output_file, encoding="utf-8") as file_handler:
         # read to the last position default to 0
         file_handler.seek(seek_position)
         return jsonify({"data": file_handler.readlines(),

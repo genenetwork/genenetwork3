@@ -8,6 +8,9 @@ from gn3.db_utils import Connection as DBConnection
 
 from .query_tools import mapping_to_query_columns
 
+
+# pylint: disable = line-too-long
+
 @dataclass(frozen=True)
 class Probeset: # pylint: disable=[too-many-instance-attributes]
     """Data Type that represents a Probeset"""
