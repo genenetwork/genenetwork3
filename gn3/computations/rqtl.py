@@ -321,7 +321,7 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
                 continue
 
             line_items = line.split(",")
-            perm_results.append(float(line_items[1]))
+            perm_results.append(float(line_items[1].replace("\"", "")))
 
     suggestive = np.percentile(np.array(perm_results), 67)
     significant = np.percentile(np.array(perm_results), 95)
