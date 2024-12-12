@@ -1,5 +1,6 @@
 """Procedures used to work with the various bio-informatics cli
 commands"""
+import os
 import sys
 import json
 import pickle
@@ -49,7 +50,8 @@ def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
                      rqtl_wrapper_bool_kwargs: list) -> str:
     """Compose a valid R/qtl command given the correct input"""
     # Add kwargs with values
-    cmd = f"Rscript { rqtl_wrapper_cmd } " + " ".join(
+    rscript = os.environ.get("RSCRIPT", "Rscript")
+    cmd = f"{rscript} { rqtl_wrapper_cmd } " + " ".join(
         [f"--{key} {val}" for key, val in rqtl_wrapper_kwargs.items()])
 
     # Add boolean kwargs (kwargs that are either on or off, like --interval)
