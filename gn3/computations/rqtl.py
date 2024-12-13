@@ -312,16 +312,16 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
     suggestive and significant thresholds"""
 
     perm_results = []
-    outdir = os.path.join(get_tmpdir(),"gn3")
+    outdir = os.path.join(get_tmpdir(), "gn3")
 
-    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
+    with open(os.path.join(outdir, file_name), "r", encoding="utf-8") as the_file:
         for i, line in enumerate(the_file):
             if i == 0:
                 # Skip header line
                 continue
 
-            line_items = line.split(",")
-            perm_results.append(float(line_items[1].replace("\"", "")))
+            snp, chromosome, position, lod_score = line.split(",")
+            perm_results.append(float(lod_score))
 
     suggestive = np.percentile(np.array(perm_results), 67)
     significant = np.percentile(np.array(perm_results), 95)
