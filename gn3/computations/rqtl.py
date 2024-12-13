@@ -314,7 +314,8 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
     perm_results = []
     outdir = os.path.join(get_tmpdir(), "gn3")
 
-    with open(os.path.join(outdir, file_name), "r", encoding="utf-8") as the_file:
+    with open(os.path.join(outdir, file_name),
+              "r", encoding="utf-8") as the_file:
         for i, line in enumerate(the_file):
             if i == 0:
                 # Skip header line
