@@ -321,7 +321,7 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
                 # Skip header line
                 continue
 
-            snp, chromosome, position, lod_score = line.split(",")
+            _snp, _chromosome, _position, lod_score = line.split(",")
             perm_results.append(float(lod_score))
 
     suggestive = np.percentile(np.array(perm_results), 67)
