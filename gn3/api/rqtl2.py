@@ -57,6 +57,7 @@ def stream(identifier="output"):
     with open(output_file, encoding="utf-8") as file_handler:
         # read to the last position default to 0
         file_handler.seek(seek_position)
-        return jsonify({"data": file_handler.readlines(),
-                        "run_id": identifier,
-                        "pointer": file_handler.tell()})
+        results = {"data": file_handler.readlines(),
+                   "run_id": identifier,
+                   "pointer": file_handler.tell()}
+        return jsonify(results)
