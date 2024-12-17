@@ -67,8 +67,7 @@ def process_rqtl_mapping(file_name: str) -> List:
     # Later I should probably redo this using csv.read to avoid the
     # awkwardness with removing quotes with [1:-1]
     outdir = os.path.join(get_tmpdir(),"gn3")
-
-    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
+    with open(os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
         for line in the_file:
             line_items = line.split(",")
             if line_items[1][1:-1] == "chr" or not line_items:
@@ -316,15 +315,13 @@ def process_perm_output(file_name: str) -> Tuple[List, float, float]:
 
     with open(os.path.join(outdir, file_name),
               "r", encoding="utf-8") as the_file:
+
         for i, line in enumerate(the_file):
             if i == 0:
                 # Skip header line
                 continue
-
             _snp, _chromosome, _position, lod_score = line.split(",")
             perm_results.append(float(lod_score))
-
     suggestive = np.percentile(np.array(perm_results), 67)
     significant = np.percentile(np.array(perm_results), 95)
-
     return perm_results, suggestive, significant
