@@ -64,9 +64,11 @@ run the rqtl_wrapper script and return the results as JSON
     run_id = request.args.get("id", str(uuid.uuid4()))
     if not os.path.isfile(os.path.join(current_app.config.get("TMPDIR"),
                                        "gn3", rqtl_cmd.get('output_file'))):
-        stream_ouput_file = os.path.join(current_app.config.get("TMPDIR"),
+        pass
+    stream_ouput_file = os.path.join(current_app.config.get("TMPDIR"),
                                          f"{run_id}.txt")
-        run_process(rqtl_cmd.get("rqtl_cmd"), stream_ouput_file, run_id)
+
+    results =  run_process(rqtl_cmd.get("rqtl_cmd"), stream_ouput_file, run_id)
 
     if "pairscan" in rqtl_bool_kwargs:
         rqtl_output['results'] = process_rqtl_pairscan(rqtl_cmd.get('output_file'), genofile)
