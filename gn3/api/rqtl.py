@@ -30,6 +30,7 @@ run the rqtl_wrapper script and return the results as JSON
     run_id = request.args.get("id")
     with open(os.path.join(current_app.config.get("TMPDIR"),
                            f"{run_id}.txt"), "w+", encoding="utf-8"):
+        # TODO thos should  be refactored
         pass
     # Split kwargs by those with values and boolean ones
     # that just convert to True/False
