@@ -29,7 +29,7 @@ run the rqtl_wrapper script and return the results as JSON
 
     run_id = request.args.get("id")
     with open(os.path.join(current_app.config.get("TMPDIR"),
-                           f"{run_id}.txt"), "w+"):
+                           f"{run_id}.txt"), "w+", encoding="utf-8"):
         pass
     # Split kwargs by those with values and boolean ones
     # that just convert to True/False
@@ -68,7 +68,7 @@ run the rqtl_wrapper script and return the results as JSON
     stream_ouput_file = os.path.join(current_app.config.get("TMPDIR"),
                                          f"{run_id}.txt")
 
-    results =  run_process(rqtl_cmd.get("rqtl_cmd"), stream_ouput_file, run_id)
+    run_process(rqtl_cmd.get("rqtl_cmd"), stream_ouput_file, run_id)
 
     if "pairscan" in rqtl_bool_kwargs:
         rqtl_output['results'] = process_rqtl_pairscan(rqtl_cmd.get('output_file'), genofile)
@@ -76,8 +76,8 @@ run the rqtl_wrapper script and return the results as JSON
         rqtl_output['results'] = process_rqtl_mapping(rqtl_cmd.get('output_file'))
 
     if int(rqtl_kwargs['nperm']) > 0:
-        rqtl_output['perm_results'], rqtl_output['suggestive'],
-        rqtl_output['significant'] = process_perm_output(rqtl_cmd.get('output_file'))
+        # pylint: disable=C0301
+        rqtl_output['perm_results'], rqtl_output['suggestive'], rqtl_output['significant'] = process_perm_output(rqtl_cmd.get('output_file'))
 
     return jsonify(rqtl_output)
 
@@ -94,7 +94,7 @@ def run_process(rscript_cmd, output_file, run_id):
     for line in iter(process.stdout.readline, b""):
         # these allow endpoint stream to read the file since
         # no read and write file same tiem
-        with open(output_file, "a+") as file_handler:
+        with open(output_file, "a+", encoding="utf-8") as file_handler:
             file_handler.write(line.decode("utf-8"))
     process.stdout.close()
     process.wait()
