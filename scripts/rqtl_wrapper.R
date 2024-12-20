@@ -24,7 +24,7 @@ option_list = list(
   make_option(c("--control"), type="character", default=NULL, help="Name of marker (contained in genotype file) to be used as a control"),
   make_option(c("-o", "--outdir"), type="character", default=file.path(tmp_dir, "gn3"), help="Directory in which to write result file"),
   make_option(c("-f", "--filename"), type="character", default=NULL, help="Name to use for result file"),
-  make_option(c("-v", "--verbose"), action="store_true", default=NULL, help="Show extra information")
+  make_option(c("-v", "--verbose"), action="store_true", default=TRUE, help="Show extra information")
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -353,5 +353,8 @@ if (!is.null(opt$pairscan)) {
     colnames(qtl_results)[4:7] <- c("AC", "AD", "BC", "BD")
   }
 
+
   write.csv(qtl_results, out_file)
 }
+
+
