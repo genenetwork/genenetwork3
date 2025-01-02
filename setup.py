@@ -13,21 +13,21 @@ setup(author='Bonface M. K.',
       description=('GeneNetwork3 REST API for data '
                    'science and machine learning'),
       install_requires=[
-          "bcrypt>=3.1.7",
-          "click",
-          "Flask==1.1.2",
-          "mypy==0.790",
-          "mypy-extensions==0.4.3",
-          "mysqlclient==2.0.1",
-          "numpy==1.20.1",
-          "pylint==2.5.3",
-          "pymonad",
-          "redis==3.5.3",
-          "requests==2.25.1",
-          "scipy==1.6.0",
-          "plotly==4.14.3",
-          "pyld",
-          "flask-cors==3.0.9",
+          "bcrypt>=3.1.7"
+          "click"
+          "Flask==1.1.2"
+          "mypy==0.790"
+          "mypy-extensions==0.4.3"
+          "mysqlclient==2.0.1"
+          "numpy==1.20.1"
+          "pylint==2.5.3"
+          "pymonad"
+          "redis==3.5.3"
+          "requests==2.25.1"
+          "scipy==1.6.0"
+          "plotly==4.14.3"
+          "pyld"
+          "flask-cors==3.0.9"
           "xapian-bindings"
       ],
       include_package_data=True,
