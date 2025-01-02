@@ -1,2 +1,2 @@
-global-include scripts/**/*.R
+global-include scripts/**/*.R gn3/**/*.json
 global-exclude *~ *.py[cod]
