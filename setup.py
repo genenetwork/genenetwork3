@@ -28,7 +28,7 @@ setup(author='Bonface M. K.',
           "plotly==4.14.3",
           "pyld",
           "flask-cors==3.0.9",
-          "xapian-bindings"
+          # "xapian-bindings"
       ],
       include_package_data=True,
       scripts=["scripts/index-genenetwork"],
