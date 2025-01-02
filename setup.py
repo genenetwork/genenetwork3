@@ -39,7 +39,11 @@ setup(author='Bonface M. K.',
       packages=find_packages(),
       url='https://github.com/genenetwork/genenetwork3',
       version='3.12',
-      tests_require=["pytest", "hypothesis"],
+      tests_require=[
+          "pytest",
+          "hypothesis",
+          "pytest-mock"
+      ],
       cmdclass={
           "run_tests": RunTests ## testing
       })
