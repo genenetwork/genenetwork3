@@ -4,6 +4,9 @@ library(stringi)
 library(stringr)
 
 
+
+cat("Running the qtl script.\n")
+
 tmp_dir = Sys.getenv("TMPDIR")
 if (!dir.exists(tmp_dir)) {
   tmp_dir = "/tmp"
@@ -357,4 +360,4 @@ if (!is.null(opt$pairscan)) {
   write.csv(qtl_results, out_file)
 }
 
-
+cat("End of script. Now working on processing the results.\n")
