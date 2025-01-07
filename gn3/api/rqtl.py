@@ -87,10 +87,8 @@ def run_process(rscript_cmd, output_file, run_id):
     """Main function to do the streaming"""
     # TODO: move this function to own file
     # pylint: disable=consider-using-with
-    # added this inorder not to set shell=True
-    rscript_cmd = rscript_cmd.split()
     process = subprocess.Popen(
-        rscript_cmd,
+        rscript_cmd, shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT
     )
