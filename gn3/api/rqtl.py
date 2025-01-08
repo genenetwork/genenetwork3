@@ -129,8 +129,8 @@ def run_process(cmd, output_file, run_id):
             process.wait()
         if process.returncode == 0:
             return {"msg": "success", "code": 0, "run_id": run_id}
-        return {"msg": "Process failed",
+        return {"msg": "error occurred", "error": "Process failed",
                 "code": process.returncode, "run_id": run_id}
     except subprocess.CalledProcessError as error:
-        return {"msg": "Process failed",
+        return {"msg": "error occurred",
                 "error": str(error), "run_id": run_id}
