@@ -23,7 +23,7 @@ rqtl = Blueprint("rqtl", __name__)
 
 @rqtl.route("/compute", methods=["POST"])
 @enable_streaming
-def compute(stream_ouput_file):
+def compute(stream_output_file):
     """Given at least a geno_file and pheno_file, generate and
     run the rqtl_wrapper script and return the results as JSON
 
@@ -72,7 +72,7 @@ def compute(stream_ouput_file):
         )
     ):
         pass
-    run_process(rqtl_cmd.get("rqtl_cmd").split(), stream_ouput_file, run_id)
+    run_process(rqtl_cmd.get("rqtl_cmd").split(), stream_output_file, run_id)
 
     if "pairscan" in rqtl_bool_kwargs:
         rqtl_output["results"] = process_rqtl_pairscan(
