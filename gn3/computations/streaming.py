@@ -1,5 +1,8 @@
 """Module contains streaming procedures  for genenetwork. """
+import os
 import subprocess
+from functools import wraps
+from flask import current_app, has_app_context, request
 
 
 def run_process(cmd, output_file, run_id):
@@ -32,3 +35,22 @@ def run_process(cmd, output_file, run_id):
     except subprocess.CalledProcessError as error:
         return {"msg": "error occurred",
                 "error": str(error), "run_id": run_id}
+
+
+def enable_streaming(func):
+    """Decorator function to enable streaming for an endpoint
+    Note: should be used only in an app context
+    """
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        if not has_app_context:
+            raise RuntimeError("This decorator must be used within an app context.")
+        run_id = request.args.get("id")
+        stream_ouput_file = os.path.join(current_app.config.get("TMPDIR"),
+                                         f"{run_id}.txt")
+        with open(stream_ouput_file, "w+", encoding="utf-8",
+                  ) as file_handler:
+            file_handler.write("File created for streaming\n"
+                               )
+        return func(stream_ouput_file, *args, **kwargs)
+    return decorated_function

@@ -15,14 +15,15 @@ from gn3.computations.rqtl import (
     process_rqtl_pairscan,
     process_perm_output,
 )
-from gn3.computations.streaming import run_process
+from gn3.computations.streaming import run_process, enable_streaming
 from gn3.fs_helpers import assert_path_exists, get_tmpdir
 
 rqtl = Blueprint("rqtl", __name__)
 
 
 @rqtl.route("/compute", methods=["POST"])
-def compute():
+@enable_streaming
+def compute(stream_ouput_file):
     """Given at least a geno_file and pheno_file, generate and
     run the rqtl_wrapper script and return the results as JSON
 
@@ -31,17 +32,6 @@ def compute():
     phenofile = request.form["pheno_file"]
     assert_path_exists(genofile)
     assert_path_exists(phenofile)
-
-    run_id = request.args.get("id")
-    with open(
-        os.path.join(current_app.config.get("TMPDIR"), f"{run_id}.txt"),
-        "w+",
-        encoding="utf-8",
-    ):
-        # TODO thos should  be refactored
-        pass
-    # Split kwargs by those with values and boolean ones
-    # that just convert to True/False
     kwargs = ["covarstruct", "model", "method", "nperm", "scale", "control"]
     boolean_kwargs = ["addcovar", "interval", "pstrata", "pairscan"]
     all_kwargs = kwargs + boolean_kwargs
@@ -75,7 +65,6 @@ def compute():
     )
 
     rqtl_output = {}
-    #  get the stdout file
     run_id = request.args.get("id", str(uuid.uuid4()))
     if not os.path.isfile(
         os.path.join(
@@ -83,8 +72,6 @@ def compute():
         )
     ):
         pass
-    stream_ouput_file = os.path.join(current_app.config.get("TMPDIR"), f"{run_id}.txt")
-
     run_process(rqtl_cmd.get("rqtl_cmd").split(), stream_ouput_file, run_id)
 
     if "pairscan" in rqtl_bool_kwargs:
