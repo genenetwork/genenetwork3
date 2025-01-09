@@ -2,7 +2,7 @@
 import os
 import subprocess
 from functools import wraps
-from flask import current_app, has_app_context, request
+from flask import current_app, request
 
 
 def run_process(cmd, output_file, run_id):
@@ -43,8 +43,6 @@ def enable_streaming(func):
     """
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        if not has_app_context:
-            raise RuntimeError("This decorator must be used within an app context.")
         run_id = request.args.get("id")
         stream_ouput_file = os.path.join(current_app.config.get("TMPDIR"),
                                          f"{run_id}.txt")
