@@ -11,7 +11,7 @@ streaming = Blueprint("stream", __name__)
 @streaming.route("/<identifier>",  methods=["GET"])
 def stream(identifier):
     """ This endpoint streams stdout from a file.
-    It expects the indetifier to be the filename
+    It expects the identifier to be the filename
     in the TMPDIR created at the main computation
     endpoint see example api/rqtl."""
     output_file = os.path.join(current_app.config.get("TMPDIR"),
