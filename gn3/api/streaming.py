@@ -5,11 +5,11 @@ from flask import jsonify
 from flask import Blueprint
 from flask import request
 
-streaming = Blueprint("streaming", __name__)
+streaming = Blueprint("stream", __name__)
 
 
-@streaming.route("/stream/<identifier>",  methods=["GET"])
-def stream(identifier="output"):
+@streaming.route("/<identifier>",  methods=["GET"])
+def stream(identifier):
     """ This endpoints streams stdout from a file expects
     the indetifier to be the file """
     output_file = os.path.join(current_app.config.get("TMPDIR"),

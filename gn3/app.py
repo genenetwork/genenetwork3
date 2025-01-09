@@ -28,6 +28,7 @@ from gn3.api.metadata import metadata
 from gn3.api.sampledata import sampledata
 from gn3.api.llm import gnqa
 from gn3.api.rqtl2 import rqtl2
+from gn3.api.streaming import streaming
 from gn3.case_attributes import caseattr
 
 
@@ -109,6 +110,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(caseattr, url_prefix="/api/case-attribute")
     app.register_blueprint(gnqa, url_prefix="/api/llm")
     app.register_blueprint(rqtl2, url_prefix="/api/rqtl2")
+    app.register_blueprint(streaming, url_prefix="/api/stream")
 
     register_error_handlers(app)
     return app
