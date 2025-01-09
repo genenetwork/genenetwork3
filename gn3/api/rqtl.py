@@ -2,7 +2,6 @@
 
 import os
 import uuid
-import subprocess
 from pathlib import Path
 
 from flask import Blueprint
