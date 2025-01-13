@@ -110,7 +110,7 @@ def pairscan_for_figure(file_name: str) -> Dict:
     # Open the file with the actual results, written as a list of lists
     outdir = os.path.join(get_tmpdir(),"gn3")
 
-    with open( os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
+    with open(os.path.join(outdir, file_name), "r",encoding="utf-8") as the_file:
         lod_results = []
         for i, line in enumerate(the_file):
             if i == 0:  # Skip first line
@@ -133,14 +133,17 @@ def pairscan_for_figure(file_name: str) -> Dict:
     ) as the_file:
         chr_list = []  # type: List
         pos_list = []  # type: List
+        markers = []
         for i, line in enumerate(the_file):
             if i == 0:  # Skip first line
                 continue
             line_items = [item.rstrip("\n") for item in line.split(",")]
             chr_list.append(line_items[1][1:-1])
             pos_list.append(line_items[2])
+            markers.append(line_items[0])
         figure_data["chr"] = chr_list
         figure_data["pos"] = pos_list
+        figure_data["name"] = markers
 
     return figure_data
 
