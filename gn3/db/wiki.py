@@ -70,6 +70,14 @@ def get_next_comment_version(cursor, comment_id: int) -> int:
     return latest_version + 1
 
 
+def get_next_comment_id(cursor) -> int:
+    """Get the next GeneRIF.Id"""
+    cursor.execute(
+        "SELECT MAX(Id) from GeneRIF"
+    )
+    return cursor.fetchone()[0] + 1
+
+
 def get_categories_ids(cursor, categories: List[str]) -> List[int]:
     """Get the categories_ids from a list of category strings"""
     dict_cats = get_categories(cursor)

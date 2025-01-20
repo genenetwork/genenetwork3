@@ -3,6 +3,7 @@
 import datetime
 from typing import Any, Dict
 
+from typing import Optional
 from flask import Blueprint, request, jsonify, current_app, make_response
 
 from gn3 import db_utils
@@ -20,10 +21,11 @@ wiki_blueprint = Blueprint("wiki", __name__, url_prefix="wiki")
 rif_blueprint = Blueprint("rif", __name__, url_prefix="rif")
 
 
+@wiki_blueprint.route("/edit", methods=["POST"], defaults={'comment_id': None})
 @wiki_blueprint.route("/<int:comment_id>/edit", methods=["POST"])
 @require_token
-def edit_wiki(comment_id: int, **kwargs):# pylint: disable=[unused-argument]
-    """Edit wiki comment. This is achieved by adding another entry with a new VersionId"""
+def edit_wiki(comment_id: Optional[int], **kwargs):  # pylint: disable=[unused-argument]
+    """Edit/Insert wiki comment. This is achieved by adding another entry with a new VersionId"""
     # FIXME: attempt to check and fix for types here with relevant errors
     payload: Dict[str, Any] = request.json  # type: ignore
     pubmed_ids = [str(x) for x in payload.get("pubmed_ids", [])]
@@ -51,12 +53,14 @@ def edit_wiki(comment_id: int, **kwargs):# pylint: disable=[unused-argument]
     """
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
         cursor = conn.cursor()
+        if not comment_id:
+            comment_id = wiki.get_next_comment_id(cursor)
+            insert_dict["Id"] = comment_id
         next_version = 0
         try:
             category_ids = wiki.get_categories_ids(
                 cursor, payload["categories"])
             species_id = wiki.get_species_id(cursor, payload["species"])
-            next_version = wiki.get_next_comment_version(cursor, comment_id)
         except wiki.MissingDBDataException as missing_exc:
             return jsonify(error=f"Error editing wiki entry, {missing_exc}"), 500
         insert_dict["SpeciesID"] = species_id
