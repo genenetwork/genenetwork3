@@ -21,7 +21,8 @@ def generate_rqtl2_files(data, workspace_dir):
     for file_name, data_key in file_to_name_map.items():
         if data_key in data:
             file_path = write_to_csv(workspace_dir, f"{file_name}.csv", data[data_key])
-            parsed_files[file_name] = file_path
+            if file_path:
+                parsed_files[file_name] = file_path
     return {**data, **parsed_files}
 
 
@@ -31,7 +32,7 @@ def write_to_csv(work_dir, file_name, data:list[dict],
     if headers is not provided use the keys for first boject.
     """
     if not data:
-        return
+        return ""
     if headers is None:
         headers = data[0].keys()
     file_path = os.path.join(work_dir, file_name)
