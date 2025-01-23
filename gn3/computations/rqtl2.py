@@ -9,7 +9,6 @@ def generate_rqtl2_files(data, workspace_dir):
     """Prepare data  and generate necessary CSV  files
     required to write to control_file
     """
-    # Map of file names to corresponding data keys in the provided dictionary
     file_to_name_map = {
         "geno_file": "geno_data",
         "pheno_file": "pheno_data",
