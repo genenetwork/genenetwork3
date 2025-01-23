@@ -30,9 +30,11 @@ def write_to_csv(work_dir, file_name, data:list[dict],
     """Functions to write data list  to csv file
     if headers is not provided use the keys for first boject.
     """
-    file_path = os.path.join(work_dir, file_name)
-    if headers is None and data:
+    if not data:
+        return
+    if headers is None:
         headers = data[0].keys()
+    file_path = os.path.join(work_dir, file_name)
     with open(file_path, "w", encoding="utf-8") as file_handler:
         writer = csv.DictWriter(file_handler, fieldnames=headers,
                                delimiter=delimiter)
@@ -72,7 +74,7 @@ def create_file(file_path):
     """Utility function to create file given a file_path"""
     try:
         with open(file_path, "x",encoding="utf-8") as _file_handler:
-            return True, "File created at"
+            return True, f"File created at {file_path}"
     except FileExistsError:
         return False, "File Already Exists"
 
