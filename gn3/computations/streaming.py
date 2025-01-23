@@ -5,12 +5,12 @@ from functools import wraps
 from flask import current_app, request
 
 
-def run_process(cmd, output_file, run_id):
+def run_process(cmd, log_file, run_id):
     """Function to execute an external process and
        capture the stdout in a file
       input:
            cmd: the command to execute as a list of args.
-           output_file: abs file path to write the stdout.
+           log_file: abs file path to write the stdout.
            run_id: unique id to identify the process
 
       output:
@@ -25,16 +25,19 @@ def run_process(cmd, output_file, run_id):
         ) as process:
             for line in iter(process.stdout.readline, b""):
                 # phase: capture the stdout for each line allowing read and write
-                with open(output_file, "a+", encoding="utf-8") as file_handler:
+                with open(log_file, "a+", encoding="utf-8") as file_handler:
                     file_handler.write(line.decode("utf-8"))
             process.wait()
-        if process.returncode == 0:
-            return {"msg": "success", "code": 0, "run_id": run_id}
-        return {"msg": "error occurred", "error": "Process failed",
-                "code": process.returncode, "run_id": run_id}
+            return {"msg": "success" if process.returncode == 0 else "Process failed",
+                    "run_id": run_id,
+                    "log_file": log_file,
+                    "code": process.returncode}
     except subprocess.CalledProcessError as error:
-        return {"msg": "error occurred", "code":error.returncode,
-                "error": str(error), "run_id": run_id}
+        return {"msg": "error occurred",
+                "code": error.returncode,
+                "error": str(error),
+                "run_id": run_id,
+                "log_file": log_file}
 
 
 def enable_streaming(func):
