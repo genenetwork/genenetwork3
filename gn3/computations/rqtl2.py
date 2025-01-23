@@ -76,3 +76,20 @@ def create_file(file_path):
     except FileExistsError:
         return False, "File Already Exists"
 
+
+def prepare_files(tmpdir):
+    """Prepare necessary files and workspace dir  for computation."""
+    workspace_dir = os.path.join(tmpdir, str(uuid.uuid4())) #
+    os.makedirs(workspace_dir)
+    input_file = os.path.join(workspace_dir, f"rqtl2-input-{uuid.uuid4()}.json")
+    output_file = os.path.join(workspace_dir, f"rqtl2-output-{uuid.uuid4()}.json")
+
+    # to ensure streaming api has access to file  even after computation ends
+    # .. Create the log file outside the workspace_dir
+    log_file = os.path.join(tmpdir, f"rqtl2-log-{uuid.uuid4()}")
+    for file_path in [input_file, output_file, log_file]:
+        create_file(file_path)
+    return workspace_dir, input_file, output_file, log_file
+
+
+
