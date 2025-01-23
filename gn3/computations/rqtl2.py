@@ -49,3 +49,20 @@ def validate_required_keys(required_keys:list, data:dict) -> tuple[bool, str]:
         return False, f"Required key(s) missing: {', '.join(missing_keys)}"
     return True, ""
 
+
+def compose_rqtl2_cmd(rqtl_path, input_file,
+                      output_file, workspace_dir,
+                      data, config):
+    """Compose the command for running the R/QTL2 analysis."""
+    # pylint: disable=R0913
+    params = {
+        "input_file": input_file,
+        "directory": workspace_dir,
+        "output_file": output_file,
+        "nperm": data.get("nperm", 0),
+        "threshold": data.get("threshold", 1),
+        "cores": config.get('MULTIPROCESSOR_PROCS', 1)
+    }
+    rscript_path  = config.get("RSCRIPT", "Rscript")
+    return  f"{rscript_path} { rqtl_path } " + " ".join(
+        [f"--{key} {val}" for key, val in params.items()])
