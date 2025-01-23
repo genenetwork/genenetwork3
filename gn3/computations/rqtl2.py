@@ -1,7 +1,9 @@
+"""Module contains functions to parse and process rqtl2 input and output"""
 import os
 import csv
 import uuid
 import json
+
 
 def generate_rqtl2_files(data, workspace_dir):
     """Prepare data  and generate necessary CSV  files
@@ -89,7 +91,6 @@ def prepare_files(tmpdir):
         create_file(file_path)
     return workspace_dir, input_file, output_file, log_file
 
-
 def write_input_file(input_file, workspace_dir, data):
     """
     Write input data to a json file to be passed
@@ -99,5 +100,3 @@ def write_input_file(input_file, workspace_dir, data):
         # todo choose a better variable name
         rqtl2_files = generate_rqtl2_files(data, workspace_dir)
         json.dump(rqtl2_files, file_handler)
-
-
