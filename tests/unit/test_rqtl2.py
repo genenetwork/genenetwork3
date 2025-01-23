@@ -18,8 +18,8 @@ def test_generate_rqtl2_files(mock_write_to_csv):
         "/tmp/workspace/pheno_file.csv"
     )
     data = {"crosstype": "riself",
-            "geno_data": [],
-            "pheno_data":  [],
+            "geno_data": [{"NAME": "Ge_code_1"}],
+            "pheno_data":  [{"NAME": "14343_at"}],
             "alleles": ["L", "C"],
             "geno_codes": {
                 "L": 1,
@@ -34,6 +34,19 @@ def test_generate_rqtl2_files(mock_write_to_csv):
                         **data
                         }
     assert test_results == expected_results
+
+    # assert data is written to the csv
+    expected_calls = [mock.call(
+        "/tmp/workspace",
+        "geno_file.csv",
+        [{"NAME": "Ge_code_1"}]
+    ),
+        mock.call(
+        "/tmp/workspace",
+        "pheno_file.csv",
+        [{"NAME": "14343_at"}]
+    )]
+    mock_write_to_csv.assert_has_calls(expected_calls)
 
 
 @pytest.mark.unit_test
