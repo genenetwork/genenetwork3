@@ -40,3 +40,12 @@ def write_to_csv(work_dir, file_name, data:list[dict],
         for row in  data:
             writer.writerow(row)
         return file_path
+
+
+def validate_required_keys(required_keys:list, data:dict) -> tuple[bool, str]:
+    """Check for missing keys in data object"""
+    missing_keys = [key for key in required_keys if key not in data]
+    if missing_keys:
+        return False, f"Required key(s) missing: {', '.join(missing_keys)}"
+    return True, ""
+
