@@ -66,3 +66,13 @@ def compose_rqtl2_cmd(rqtl_path, input_file,
     rscript_path  = config.get("RSCRIPT", "Rscript")
     return  f"{rscript_path} { rqtl_path } " + " ".join(
         [f"--{key} {val}" for key, val in params.items()])
+
+
+def create_file(file_path):
+    """Utility function to create file given a file_path"""
+    try:
+        with open(file_path, "x",encoding="utf-8") as _file_handler:
+            return True, "File created at"
+    except FileExistsError:
+        return False, "File Already Exists"
+
