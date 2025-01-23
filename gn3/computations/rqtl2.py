@@ -92,4 +92,15 @@ def prepare_files(tmpdir):
     return workspace_dir, input_file, output_file, log_file
 
 
+def write_input_file(input_file, workspace_dir, data):
+    """
+    Write input data to a json file to be passed
+    as input to the rqtl2 script
+    """
+    with open(input_file,"w+", encoding="UTF-8") as file_handler:
+        # todo choose a better variable name
+        rqtl2_files = generate_rqtl2_files(data, workspace_dir)
+        json.dump(rqtl2_files, file_handler)
+
+
 
