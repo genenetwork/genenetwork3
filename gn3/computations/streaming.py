@@ -33,7 +33,7 @@ def run_process(cmd, output_file, run_id):
         return {"msg": "error occurred", "error": "Process failed",
                 "code": process.returncode, "run_id": run_id}
     except subprocess.CalledProcessError as error:
-        return {"msg": "error occurred",
+        return {"msg": "error occurred", "code":error.returncode,
                 "error": str(error), "run_id": run_id}
 
 
