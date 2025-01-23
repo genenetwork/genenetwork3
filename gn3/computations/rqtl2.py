@@ -2,8 +2,6 @@ import os
 import csv
 import uuid
 import json
-from pathlib import Path
-from typing import Dict
 
 def generate_rqtl2_files(data, workspace_dir):
     """Prepare data  and generate necessary CSV  files
@@ -101,6 +99,5 @@ def write_input_file(input_file, workspace_dir, data):
         # todo choose a better variable name
         rqtl2_files = generate_rqtl2_files(data, workspace_dir)
         json.dump(rqtl2_files, file_handler)
-
 
 
