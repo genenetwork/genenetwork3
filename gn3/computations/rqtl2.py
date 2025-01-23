@@ -3,6 +3,7 @@ import os
 import csv
 import uuid
 import json
+from pathlib import Path
 
 
 def generate_rqtl2_files(data, workspace_dir):
@@ -82,7 +83,7 @@ def create_file(file_path):
 def prepare_files(tmpdir):
     """Prepare necessary files and workspace dir  for computation."""
     workspace_dir = os.path.join(tmpdir, str(uuid.uuid4())) #
-    os.makedirs(workspace_dir)
+    Path(workspace_dir).mkdir(parents=False, exist_ok=True)
     input_file = os.path.join(workspace_dir, f"rqtl2-input-{uuid.uuid4()}.json")
     output_file = os.path.join(workspace_dir, f"rqtl2-output-{uuid.uuid4()}.json")
 
