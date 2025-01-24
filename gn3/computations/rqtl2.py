@@ -42,7 +42,8 @@ def write_to_csv(work_dir, file_name, data:list[dict],
         writer.writeheader()
         for row in  data:
             writer.writerow(row)
-        return file_path
+        # return the relative file to the workspace see rqtl2 docs
+        return file_name
 
 
 def validate_required_keys(required_keys:list, data:dict) -> tuple[bool, str]:
