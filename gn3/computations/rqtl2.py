@@ -20,14 +20,15 @@ def generate_rqtl2_files(data, workspace_dir):
     parsed_files = {}
     for file_name, data_key in file_to_name_map.items():
         if data_key in data:
-            file_path = write_to_csv(workspace_dir, f"{file_name}.csv", data[data_key])
+            file_path = write_to_csv(
+                workspace_dir, f"{file_name}.csv", data[data_key])
             if file_path:
                 parsed_files[file_name] = file_path
     return {**data, **parsed_files}
 
 
-def write_to_csv(work_dir, file_name, data:list[dict],
-                      headers= None, delimiter=","):
+def write_to_csv(work_dir, file_name, data: list[dict],
+                 headers=None, delimiter=","):
     """Functions to write data list  to csv file
     if headers is not provided use the keys for first boject.
     """
@@ -38,15 +39,15 @@ def write_to_csv(work_dir, file_name, data:list[dict],
     file_path = os.path.join(work_dir, file_name)
     with open(file_path, "w", encoding="utf-8") as file_handler:
         writer = csv.DictWriter(file_handler, fieldnames=headers,
-                               delimiter=delimiter)
+                                delimiter=delimiter)
         writer.writeheader()
-        for row in  data:
+        for row in data:
             writer.writerow(row)
         # return the relative file to the workspace see rqtl2 docs
         return file_name
 
 
-def validate_required_keys(required_keys:list, data:dict) -> tuple[bool, str]:
+def validate_required_keys(required_keys: list, data: dict) -> tuple[bool, str]:
     """Check for missing keys in data object"""
     missing_keys = [key for key in required_keys if key not in data]
     if missing_keys:
@@ -67,15 +68,15 @@ def compose_rqtl2_cmd(rqtl_path, input_file,
         "threshold": data.get("threshold", 1),
         "cores": config.get('MULTIPROCESSOR_PROCS', 1)
     }
-    rscript_path  = config.get("RSCRIPT", "Rscript")
-    return  f"{rscript_path} { rqtl_path } " + " ".join(
+    rscript_path = config.get("RSCRIPT", "Rscript")
+    return f"{rscript_path} { rqtl_path } " + " ".join(
         [f"--{key} {val}" for key, val in params.items()])
 
 
 def create_file(file_path):
     """Utility function to create file given a file_path"""
     try:
-        with open(file_path, "x",encoding="utf-8") as _file_handler:
+        with open(file_path, "x", encoding="utf-8") as _file_handler:
             return True, f"File created at {file_path}"
     except FileExistsError:
         return False, "File Already Exists"
@@ -83,10 +84,12 @@ def create_file(file_path):
 
 def prepare_files(tmpdir):
     """Prepare necessary files and workspace dir  for computation."""
-    workspace_dir = os.path.join(tmpdir, str(uuid.uuid4())) #
+    workspace_dir = os.path.join(tmpdir, str(uuid.uuid4()))
     Path(workspace_dir).mkdir(parents=False, exist_ok=True)
-    input_file = os.path.join(workspace_dir, f"rqtl2-input-{uuid.uuid4()}.json")
-    output_file = os.path.join(workspace_dir, f"rqtl2-output-{uuid.uuid4()}.json")
+    input_file = os.path.join(
+        workspace_dir, f"rqtl2-input-{uuid.uuid4()}.json")
+    output_file = os.path.join(
+        workspace_dir, f"rqtl2-output-{uuid.uuid4()}.json")
 
     # to ensure streaming api has access to file  even after computation ends
     # .. Create the log file outside the workspace_dir
@@ -95,12 +98,47 @@ def prepare_files(tmpdir):
         create_file(file_path)
     return workspace_dir, input_file, output_file, log_file
 
+
 def write_input_file(input_file, workspace_dir, data):
     """
     Write input data to a json file to be passed
     as input to the rqtl2 script
     """
-    with open(input_file,"w+", encoding="UTF-8") as file_handler:
+    with open(input_file, "w+", encoding="UTF-8") as file_handler:
         # todo choose a better variable name
         rqtl2_files = generate_rqtl2_files(data, workspace_dir)
         json.dump(rqtl2_files, file_handler)
+
+
+def read_output_file(output_path: str) -> dict:
+    """function to read output file json generated from rqtl2
+    see rqtl2_wrapper.R script for the expected output
+    """
+    with open(output_path, "r", encoding="utf-8") as file_handler:
+        results = json.load(file_handler)
+        return results
+
+
+def fetch_significance_results(file_path: str):
+    """
+    Processes the 'significance_file' from the given data object to extract
+    phenotypes and significance values.
+    thresholds  values are: (0.05, 0.01)
+    Args:
+        file_path (str): file_Path for the significance output
+
+    Returns:
+        tuple: A tuple containing
+            *  phenotypes (list): List of phenotypes
+            *  significances (dict): A dictionary where keys
+               ...are threshold values and values are lists
+               of significant results corresponding to each threshold.
+    """
+    with open(file_path, "r", encoding="utf-8") as file_handler:
+        reader = csv.reader(file_handler)
+        results = {}
+        phenotypes = next(reader)[1:]
+        for line in enumerate(reader):
+            threshold, significance = line[0], line[1:]
+            results[threshold] = significance
+        return (phenotypes, significance)
