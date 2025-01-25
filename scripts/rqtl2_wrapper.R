@@ -424,17 +424,20 @@ perm <- perform_permutation_test(cross, Pr, n_perm = NO_OF_PERMUTATION,perm_stra
 
 
 # get the permutation summary with a significance threshold
-get_lod_significance <- function(perm, threshold = c(0.2, 0.05)){
+get_lod_significance <- function(perm, threshold = c(0.01, 0.05)){
      cat("Getting the permutation summary with significance thresholds as ", threshold, "\n")
      summary(perm, alpha = threshold)
 }
 
-lod_significance <- get_lod_significance(perm)
+lod_significance <- get_lod_significance(perm, threshold =c(0.33, 0.05, 0.01))
+permutation_results_file = file.path(opt$directory, "permutation.csv")
+significance_results_file = file.path(opt$directory, "significance.csv")
+write.csv(lod_significance, significance_results_file)
+write.csv(perm, permutation_results_file)
+
 
 # step: get the lod peaks
 # TODO fix the threshold here
-
-
 cat("Fetching the lod peaks with threshold", opt$threshold, "\n")
 lod_peaks = find_peaks(
   scan_results,
@@ -501,12 +504,16 @@ for (chr in chr_names(cross)){
    } 
     meffects <- append(meffects, coeff_results)
 }
+
+
 output = list(lod_peaks = lod_peaks,
              scan_results =scan_results,
 	     genetic_probabilities = Pr,
 	     lod_significance = lod_significance,
 	     permutation_results = perm,
 	     lod_peaks = lod_peaks,
+	     permutation_file = permutation_results_file,
+	     significance_file = significance_results_file,
 	     chromosomes  = chr_names(cross),
 	     meffects = meffects,
 	     error_lod = error_lod,
