@@ -6,6 +6,7 @@ import pytest
 from gn3.db_utils import parse_db_url, database_connection
 
 @pytest.mark.unit_test
+@pytest.mark.skip("This is testing MySQLdb rather than GN3")
 @mock.patch("gn3.db_utils.mdb")
 @mock.patch("gn3.db_utils.parse_db_url")
 def test_database_connection(mock_db_parser, mock_sql):
