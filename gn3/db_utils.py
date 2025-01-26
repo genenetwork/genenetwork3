@@ -7,6 +7,8 @@ from typing import Any, Iterator, Protocol, Callable
 import xapian
 import MySQLdb as mdb
 
+from gn_libs.mysqldb import Connection, database_connection
+
 
 LOGGER = logging.getLogger(__file__)
 
@@ -66,27 +68,6 @@ def parse_db_url(sql_uri: str) -> dict:
         "database": parsed_db.path.strip("/").strip(),
         **__parse_db_opts__(parsed_db.query)
     }
-
-
-# pylint: disable=missing-class-docstring, missing-function-docstring, too-few-public-methods
-class Connection(Protocol):
-    """Type Annotation for MySQLdb's connection object"""
-    def cursor(self, *args, **kwargs) -> Any:
-        """A cursor in which queries may be performed"""
-
-
-@contextlib.contextmanager
-def database_connection(sql_uri: str, logger: logging.Logger = LOGGER) -> Iterator[Connection]:
-    """Connect to MySQL database."""
-    connection = mdb.connect(**parse_db_url(sql_uri))
-    try:
-        yield connection
-    except mdb.Error as _mbde:
-        logger.error("DB error encountered", exc_info=True)
-        connection.rollback()
-    finally:
-        connection.commit()
-        connection.close()
 
 
 @contextlib.contextmanager
