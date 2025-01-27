@@ -514,9 +514,14 @@ def xapian_compact(combined_index: pathlib.Path, indices: List[pathlib.Path]) ->
 @click.argument("xapian_directory")
 @click.argument("sql_uri")
 @click.argument("sparql_uri")
+@click.option("-v", "--virtuoso-ttl-directory",
+              type=pathlib.Path,
+              default=pathlib.Path("/var/lib/data/"),
+              show_default=True)
 def is_data_modified(xapian_directory: str,
                      sql_uri: str,
-                     sparql_uri: str) -> None:
+                     sparql_uri: str,
+                     virtuoso_ttl_directory: pathlib.Path) -> None:
     dir_ = pathlib.Path(xapian_directory)
     with locked_xapian_writable_database(dir_) as db, database_connection(sql_uri) as conn:
         checksums = "-1"
@@ -529,7 +534,7 @@ def is_data_modified(xapian_directory: str,
             ])
         # Return a zero exit status code when the data has changed;
         # otherwise exit with a 1 exit status code.
-        generif = pathlib.Path("/var/lib/data/")
+        generif = virtuoso_ttl_directory
         if (db.get_metadata("generif-checksum").decode() == md5hash_ttl_dir(generif) and
             db.get_metadata("checksums").decode() == checksums):
             sys.exit(1)
@@ -540,9 +545,14 @@ def is_data_modified(xapian_directory: str,
 @click.argument("xapian_directory")
 @click.argument("sql_uri")
 @click.argument("sparql_uri")
+@click.option("-v", "--virtuoso-ttl-directory",
+              type=pathlib.Path,
+              default=pathlib.Path("/var/lib/data/"),
+              show_default=True)
 # pylint: disable=missing-function-docstring
 def create_xapian_index(xapian_directory: str, sql_uri: str,
-                        sparql_uri: str) -> None:
+                        sparql_uri: str,
+                        virtuoso_ttl_directory: pathlib.Path) -> None:
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"),
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S %Z')
@@ -587,7 +597,7 @@ def create_xapian_index(xapian_directory: str, sql_uri: str,
                 logging.info("Writing generif checksums into index")
                 db.set_metadata(
                     "generif-checksum",
-                    md5hash_ttl_dir(pathlib.Path("/var/lib/data/")).encode())
+                    md5hash_ttl_dir(virtuoso_ttl_directory).encode())
         for child in combined_index.iterdir():
             shutil.move(child, xapian_directory)
     logging.info("Index built")
