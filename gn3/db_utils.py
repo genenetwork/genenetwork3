@@ -2,10 +2,9 @@
 import logging
 import contextlib
 from urllib.parse import urlparse
-from typing import Any, Iterator, Protocol, Callable
+from typing import Callable
 
 import xapian
-import MySQLdb as mdb
 
 from gn_libs.mysqldb import Connection, database_connection
 
@@ -46,6 +45,7 @@ def __parse_db_opts__(opts: str) -> dict:
         keyvals: tuple[tuple[str, ...], ...] = tuple(
             tuple(item.strip() for item in query.split("="))
             for query in queries)
+
         def __check_opt__(opt):
             assert opt in allowed_opts, (
                 f"Invalid database connection option ({opt}) provided.")
