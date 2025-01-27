@@ -7,17 +7,6 @@
    (channel
     (name guix-bioinformatics)
     (url "https://git.genenetwork.org/guix-bioinformatics"))
-   (channel
-    (name guix)
-    (url "https://git.savannah.gnu.org/git/guix.git")
-    (branch "master")
-    (commit "b0b988c41c9e0e591274495a1b2d6f27fcdae15a")
-    (introduction
-     (channel-introduction
-      (version 0)
-      (commit "9edb3f66fd807b096b48283debdcddccfea34bad")
-      (signer
-       "BBB0 2DDF 2CEA F6A8 0D1D  E643 A2A0 6DF2 A33A 54FA"))))
    ;; FIXME: guix-bioinformatics depends on guix-past. So, there
    ;; should be no reason to explicitly depend on guix-past. But, the
    ;; channel does not build otherwise. This is probably a guix bug.
