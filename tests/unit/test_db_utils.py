@@ -1,29 +1,7 @@
 """module contains test for db_utils"""
-from unittest import mock
-
 import pytest
 
-from gn3.db_utils import parse_db_url, database_connection
-
-@pytest.mark.unit_test
-@pytest.mark.skip("This is testing MySQLdb rather than GN3")
-@mock.patch("gn3.db_utils.mdb")
-@mock.patch("gn3.db_utils.parse_db_url")
-def test_database_connection(mock_db_parser, mock_sql):
-    """test for creating database connection"""
-    mock_db_parser.return_value = {
-        "host": "localhost",
-        "user": "guest",
-        "password": "4321",
-        "database": "users",
-        "port": 3306
-    }
-
-    mock_sql.Error = Exception
-    with database_connection("mysql://guest:4321@localhost/users") as _conn:
-        mock_sql.connect.assert_called_with(
-            db="users", user="guest", passwd="4321", host="localhost",
-            port=3306)
+from gn3.db_utils import parse_db_url
 
 
 @pytest.mark.unit_test
