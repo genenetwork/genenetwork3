@@ -6,6 +6,9 @@ from typing import Callable
 
 import xapian
 
+# XXXX: Replace instances that call db_utils.Connection or
+# db_utils.database_connection with a direct call to gn_libs.
+# pylint: disable=[W0611]
 from gn_libs.mysqldb import Connection, database_connection
 
 
