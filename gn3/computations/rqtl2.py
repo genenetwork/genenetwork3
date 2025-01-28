@@ -4,6 +4,8 @@ import csv
 import uuid
 import json
 from pathlib import Path
+from typing import List
+from typing import Dict
 
 
 def generate_rqtl2_files(data, workspace_dir):
@@ -169,3 +171,39 @@ def fetch_significance_results(file_path: str):
             threshold, significance = line[0], line[1:]
             results[threshold] = significance
         return (phenotypes, significance)
+
+
+def process_scan_results(qtl_file_path: str,
+                         gmap_file_path: str) -> List[Dict[str, str]]:
+    """Function to process genome scanning results and obtain marker_name, Lod score,
+    marker_position, and chromosome.
+    Args:
+        qtl_file_path (str): Path to the QTL scan results CSV file.
+        gmap_file_path (str): Path to the genetic map CSV file.
+
+    Returns:
+        List[Dict[str, str]]: A list of dictionaries containing the marker data.
+    """
+    gmap = {}
+    with open(gmap_file_path, "r", encoding="utf-8") as file_handler:
+        reader = csv.reader(file_handler)
+        next(reader)
+        for line in reader:
+            marker, chr_, position = line
+            gmap[marker] = {"chr": chr_, "position": position}
+
+    # Process QTL scan results and merge with the gmap data
+    results = []
+    with open(qtl_file_path, encoding="utf-8") as file_handler:
+        reader = csv.reader(file_handler)
+        next(reader)
+        for line in reader:
+            marker = line[0]
+            lod_score = line[1]
+            results.append({
+                "name": marker,
+                "lod_score": lod_score,
+                **gmap.get(marker, {})  # Add chromosome and position if available
+            })
+    return results
+
