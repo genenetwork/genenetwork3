@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import List
 from typing import Dict
-
+from typing import Any
 
 def generate_rqtl2_files(data, workspace_dir):
     """Prepare data  and generate necessary CSV  files
@@ -208,7 +208,7 @@ def process_scan_results(qtl_file_path: str,
     return results
 
 
-def process_qtl2_results(output_file: str) -> Dict[str, any]:
+def process_qtl2_results(output_file: str) -> Dict[str, Any]:
     """Function provides abstraction for processing all QTL2 mapping results.
 
     Args: * File path to to the output generated
