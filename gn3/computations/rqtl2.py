@@ -208,17 +208,16 @@ def process_scan_results(qtl_file_path: str,
     return results
 
 
-def process_qtl2_results(results: Dict[str, str]) -> Dict[str, any]:
+def process_qtl2_results(output_file: str) -> Dict[str, any]:
     """Function provides abstraction for processing all QTL2 mapping results.
 
-    Args:
-        results (Dict[str, str]): A dictionary containing file paths and
-          other related parameters.
+    Args: * File path to to the output generated
 
     Returns:
         Dict[str, any]: A dictionary containing both QTL
             and permutation results along with input data.
     """
+    results  = read_output_file(output_file)
     qtl_results = process_scan_results(results["scan_file"], results["gmap_file"])
     permutation_results = process_permutation(results)
 
@@ -227,5 +226,3 @@ def process_qtl2_results(results: Dict[str, str]) -> Dict[str, any]:
         "qtl_results": qtl_results,
         "permutation_results": permutation_results
     }
-
-
