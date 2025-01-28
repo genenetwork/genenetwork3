@@ -9,6 +9,7 @@ from gn3.computations.rqtl2 import compose_rqtl2_cmd
 from gn3.computations.rqtl2 import prepare_files
 from gn3.computations.rqtl2 import validate_required_keys
 from gn3.computations.rqtl2 import write_input_file
+from gn3.computations.rqtl2 import process_qtl2_results
 from gn3.computations.streaming import run_process
 rqtl2 = Blueprint("rqtl2", __name__)
 
@@ -39,7 +40,8 @@ def compute():
                                   output_file, workspace_dir,
                                   data, current_app.config)
     process_output = run_process(rqtl2_cmd.split(),log_file, run_id)
-    shutil.rmtree(workspace_dir, ignore_errors=True, onerror=None)
-    if process_output["code"]!=0:
+    if process_output["code"] != 0:
         return jsonify(process_output), 400
-    return jsonify(process_output)
+    results = process_qtl2_results(output_file)
+    shutil.rmtree(workspace_dir, ignore_errors=True, onerror=None)
+    return jsonify(results)
