@@ -6,7 +6,6 @@ library(rjson)
 library(stringi)
 library(optparse)
 
-# TODO add mapping function as a parameter:
 
 option_list <- list(
    make_option(c("-d", "--directory"), action = "store", default = NULL, type = "character", help="Temporary working directory: should also host the input file ."),   
@@ -186,7 +185,7 @@ MAP <- insert_pseudomarkers(cross$gmap, step= 1, stepwidth = "fixed", cores = NO
 
 # Step: calculate the genetic probabilities
 cat("Calculating the genetic probabilities\n")
-Pr = perform_genetic_pr(cross, map = MAP)
+Pr = perform_genetic_pr(cross)
 
 
 
@@ -321,6 +320,12 @@ if (cross$crosstype == "4way"){
 			       kinship = kinship,
                                method = SCAN_METHOD)
 }
+
+
+
+scan_file <- file.path(opt$directory, "scan_results.csv")
+write.csv(scan_results, scan_file)
+
 # function plot for the LOD scores from  performing the genome scan
 generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
   #' @description Plot LOD curves for a genome scan
@@ -469,6 +474,7 @@ get_qtl_effect <- function(chromosome,geno_prob,pheno,covar=NULL,LOCO= NULL){
 
 # take the first phenotype in the cross
 # grab phenotypes and covariates; ensure that covariates have names attribute
+
 pheno <- cross$pheno[,1]
 if (!is.null(cross$covar) && !is.null(cross$covar$sex)){
  covar <- match(cross$covar$sex, c("f", "m")) # make numeric
@@ -506,6 +512,8 @@ for (chr in chr_names(cross)){
 }
 
 
+
+gmap_file <- file.path(opt$directory, json_data$geno_map_file)
 output = list(lod_peaks = lod_peaks,
              scan_results =scan_results,
 	     genetic_probabilities = Pr,
@@ -514,9 +522,10 @@ output = list(lod_peaks = lod_peaks,
 	     lod_peaks = lod_peaks,
 	     permutation_file = permutation_results_file,
 	     significance_file = significance_results_file,
+	     scan_file = scan_file,
 	     chromosomes  = chr_names(cross),
-	     meffects = meffects,
 	     error_lod = error_lod,
+	     gmap_file = gmap_file,
 	     meffects_plots = meffects_plots,
 	     lod_plot_path =lod_plot_path,
 	     scan_method = SCAN_METHOD  
