@@ -100,7 +100,7 @@ generate_cross_object  <- function(control_file_path, json_data) {
       geno_file = json_data$geno_file,
       pheno_file = json_data$pheno_file,
       gmap_file = json_data$geno_map_file,
-      pmap_file = json_data$pheno_map_file,
+      pmap_file = json_data$physical_map_file,
       phenocovar_file = json_data$phenocovar_file,
       geno_codes = json_data$geno_codes,
       alleles = json_data$alleles,
