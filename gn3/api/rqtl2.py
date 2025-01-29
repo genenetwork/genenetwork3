@@ -23,9 +23,9 @@ def compute():
     if not valid:
         return jsonify({"Error" : error}), 400
     # Provide atleast one  of this data entries.
-    if "pheno_map_data" not in data and "geno_map_data" not in data:
+    if "physical_map_data" not in data and "geno_map_data" not in data:
         return jsonify({ "Error":"You need to Provide\
-        Either the Pheno map or Geno Map data"}), 400
+        Either the Physical map or Geno Map data of markers"}), 400
     run_id = request.args.get("id", "output")
     # prepare necessary files and dir for computation
     (workspace_dir, input_file,

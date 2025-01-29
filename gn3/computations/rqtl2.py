@@ -16,7 +16,7 @@ def generate_rqtl2_files(data, workspace_dir):
         "geno_file": "geno_data",
         "pheno_file": "pheno_data",
         "geno_map_file": "geno_map_data",
-        "pheno_map_file": "pheno_map_data",
+        "physical_map_file": "physical_map_data",
         "phenocovar_file": "phenocovar_data",
     }
     parsed_files = {}
