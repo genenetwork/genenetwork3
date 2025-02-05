@@ -19,9 +19,9 @@ SPARQL_ENDPOINT = os.environ.get(
     "SPARQL_ENDPOINT",
     "http://localhost:9082/sparql")
 
-# LMDB path
-LMDB_PATH = os.environ.get(
-    "LMDB_PATH", f"{os.environ.get('HOME')}/tmp/dataset")
+# LMDB paths
+LMDB_DATA_PATH = os.environ.get(
+    "LMDB_DATA_PATH", "/export5/lmdb-data-hashes")
 
 # SQL confs
 SQL_URI = os.environ.get(
