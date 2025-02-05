@@ -189,3 +189,4 @@ dmypy.json
 
 # utility scripts
 /run-dev.sh
+.aider*
