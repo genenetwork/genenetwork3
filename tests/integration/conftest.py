@@ -1,4 +1,5 @@
 """Module that holds fixtures for integration tests"""
+from pathlib import Path
 import pytest
 import MySQLdb
 
@@ -6,19 +7,25 @@ from gn3.app import create_app
 from gn3.chancy import random_string
 from gn3.db_utils import parse_db_url, database_connection
 
+
 @pytest.fixture(scope="session")
 def client():
     """Create a test client fixture for tests"""
     # Do some setup
-    app = create_app()
-    app.config.update({"TESTING": True})
-    app.testing = True
+    app = create_app({
+        "TESTING": True,
+        "LMDB_DATA_PATH": str(
+            Path(__file__).parent.parent /
+            Path("test_data/lmdb-test-data")
+        ),
+        "AUTH_SERVER_URL": "http://127.0.0.1:8081",
+    })
     yield app.test_client()
     # Do some teardown/cleanup
 
 
 @pytest.fixture(scope="session")
-def db_conn(client): # pylint: disable=[redefined-outer-name]
+def db_conn(client):  # pylint: disable=[redefined-outer-name]
     """Create a db connection fixture for tests"""
     # 01) Generate random string to append to all test db artifacts for the session
     live_db_uri = client.application.config["SQL_URI"]

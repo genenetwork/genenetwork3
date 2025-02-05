@@ -7,6 +7,7 @@ import pytest
 
 from gn3.app import create_app
 
+
 @pytest.fixture(scope="session")
 def fxtr_app():
     """Fixture: setup the test app"""
@@ -16,6 +17,11 @@ def fxtr_app():
             f'testdb_{datetime.now().strftime("%Y%m%dT%H%M%S")}')
         app = create_app({
             "TESTING": True,
+            "LMDB_DATA_PATH": str(
+                Path(__file__).parent.parent /
+                Path("test_data/lmdb-test-data")
+            ),
+            "AUTH_SERVER_URL": "http://127.0.0.1:8081",
             "OAUTH2_ACCESS_TOKEN_GENERATOR": "tests.unit.auth.test_token.gen_token"
         })
         app.testing = True
@@ -23,13 +29,15 @@ def fxtr_app():
         # Clean up after ourselves
         testdb.unlink(missing_ok=True)
 
+
 @pytest.fixture(scope="session")
-def client(fxtr_app): # pylint: disable=redefined-outer-name
+def client(fxtr_app):  # pylint: disable=redefined-outer-name
     """Create a test client fixture for tests"""
     with fxtr_app.app_context():
         yield fxtr_app.test_client()
 
+
 @pytest.fixture(scope="session")
-def fxtr_app_config(client): # pylint: disable=redefined-outer-name
+def fxtr_app_config(client):  # pylint: disable=redefined-outer-name
     """Return the test application's configuration object"""
     return client.application.config
