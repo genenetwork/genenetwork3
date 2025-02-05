@@ -514,6 +514,7 @@ for (chr in chr_names(cross)){
 
 
 gmap_file <- file.path(opt$directory, json_data$geno_map_file)
+pmap_file <- file.path(opt$directory, json_data$physical_map_file)
 output = list(lod_peaks = lod_peaks,
              scan_results =scan_results,
 	     genetic_probabilities = Pr,
@@ -526,6 +527,7 @@ output = list(lod_peaks = lod_peaks,
 	     chromosomes  = chr_names(cross),
 	     error_lod = error_lod,
 	     gmap_file = gmap_file,
+	     pmap_file = pmap_file, 
 	     meffects_plots = meffects_plots,
 	     lod_plot_path =lod_plot_path,
 	     scan_method = SCAN_METHOD  
