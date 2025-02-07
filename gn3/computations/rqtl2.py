@@ -167,10 +167,10 @@ def fetch_significance_results(file_path: str):
         reader = csv.reader(file_handler)
         results = {}
         phenotypes = next(reader)[1:]
-        for line in enumerate(reader):
+        for line in reader:
             threshold, significance = line[0], line[1:]
             results[threshold] = significance
-        return (phenotypes, significance)
+        return (phenotypes, results)
 
 
 def process_scan_results(qtl_file_path: str,
