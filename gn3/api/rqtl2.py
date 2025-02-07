@@ -12,11 +12,14 @@ from gn3.computations.rqtl2 import (compose_rqtl2_cmd,
                                     process_qtl2_results
                                     )
 from gn3.computations.streaming import run_process
+from gn3.computations.streaming import enable_streaming
+
 rqtl2 = Blueprint("rqtl2", __name__)
 
 
 @rqtl2.route("/compute", methods=["POST"])
-def compute():
+@enable_streaming
+def compute(log_file):
     """Endpoint for computing QTL analysis using R/QTL2"""
     data = request.json
     required_keys = ["crosstype", "geno_data","pheno_data", "geno_codes"]
@@ -30,7 +33,7 @@ def compute():
     run_id = request.args.get("id", "output")
     # prepare necessary files and dir for computation
     (workspace_dir, input_file,
-     output_file, log_file) = prepare_files(current_app.config.get("TMPDIR"))
+     output_file, _log2_file) = prepare_files(current_app.config.get("TMPDIR"))
     # write the input file with data required for creating the cross
     write_input_file(input_file, workspace_dir, data)
     # TODO : Implement a better way for fetching the file Path.
