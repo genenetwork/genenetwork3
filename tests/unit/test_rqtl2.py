@@ -73,7 +73,7 @@ def test_compose_rqtl2_cmd():
     input_file = "/tmp/575732e-691e-49e5-8d82-30c564927c95/input_file.json"
     output_file = "/tmp/575732e-691e-49e5-8d82-30c564927c95/output_file.json"
     directory = "/tmp/575732e-691e-49e5-8d82-30c564927c95"
-    expected_results = f"Rscript /rqtl2_wrapper.R --input_file {input_file} --directory {directory} --output_file {output_file} --nperm 12 --threshold 0.05 --cores 1"
+    expected_results = f"Rscript /rqtl2_wrapper.R --input_file {input_file} --directory {directory} --output_file {output_file} --nperm 12 --method LMM --threshold 0.05 --cores 1"
 
     # test for using default configs
     assert compose_rqtl2_cmd(rqtl_path="/rqtl2_wrapper.R",
@@ -82,12 +82,13 @@ def test_compose_rqtl2_cmd():
                              workspace_dir=directory,
                              data={
                                  "nperm": 12,
-                                 "threshold": 0.05
+                                 "threshold": 0.05,
+                                 "method" : "LMM"
                              },
                              config={}) == expected_results
 
-    # test for default permutation  and threshold and  custom configs
-    expected_results = f"/bin/rscript /rqtl2_wrapper.R --input_file {input_file} --directory {directory} --output_file {output_file} --nperm 0 --threshold 1 --cores 12"
+    # test for default permutation, method  and threshold and  custom configs
+    expected_results = f"/bin/rscript /rqtl2_wrapper.R --input_file {input_file} --directory {directory} --output_file {output_file} --nperm 0 --method HK --threshold 1 --cores 12"
     assert (compose_rqtl2_cmd(rqtl_path="/rqtl2_wrapper.R",
                               input_file=input_file,
                               output_file=output_file,

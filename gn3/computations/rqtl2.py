@@ -67,7 +67,7 @@ def compose_rqtl2_cmd(rqtl_path, input_file,
         "directory": workspace_dir,
         "output_file": output_file,
         "nperm": data.get("nperm", 0),
-        "method": data.get("method"),
+        "method": data.get("method", "HK"),
         "threshold": data.get("threshold", 1),
         "cores": config.get('MULTIPROCESSOR_PROCS', 1)
     }
