@@ -226,9 +226,9 @@ print(Xcovar)
 #  Function to calculate the kinship 
 get_kinship <- function(probability, method="LMM"){
 if (opt$method == "LMM"){
-    kinship = calc_kinship(genome_prob)
+    kinship = calc_kinship(probability)
 } else if (opt$method == "LOCO"){
-    kinship = calc_kinship(genome_prob, "loco")
+    kinship = calc_kinship(probability, "loco")
 }else {
  kinship = NULL
 }
