@@ -83,9 +83,10 @@ def compute(stream_output_file):
 
     if int(rqtl_kwargs["nperm"]) > 0:
         # pylint: disable=C0301
+        perm_output_file = f"PERM_{rqtl_cmd.get('output_file')}"
         (
             rqtl_output["perm_results"],
             rqtl_output["suggestive"],
             rqtl_output["significant"],
-        ) = process_perm_output(rqtl_cmd.get("output_file"))
+        ) = process_perm_output(perm_output_file)
     return jsonify(rqtl_output)
