@@ -133,16 +133,12 @@ def process_permutation(data):
     """
 
     perm_file = data.get("permutation_file")
-    perm_results = {}
     with open(perm_file, "r", encoding="utf-8") as file_handler:
         reader = csv.reader(file_handler)
         phenotypes = next(reader)[1:]
-        for line in reader:
-            permutation_id, *permutation_values = line
-            perm_results[permutation_id] = permutation_values
-
-    _, significance = fetch_significance_results(data.get("significance_file"))
-    return {
+        perm_results = {_id:float(val) for (_id,val)  in reader}
+        _, significance = fetch_significance_results(data.get("significance_file"))
+        return {
         "phenotypes": phenotypes,
         "perm_results": perm_results,
         "significance": significance,
