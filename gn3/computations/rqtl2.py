@@ -230,10 +230,9 @@ def process_qtl2_results(output_file: str) -> Dict[str, Any]:
     qtl_results = process_scan_results(results["scan_file"],
                                        results["pmap_file"],
                                        results["gmap_file"])
-    permutation_results = process_permutation(results)
-
+    permutation_results = process_permutation(results) if results["permutations"] > 0 else {}
     return {
-        **results,  # Include original input data
+        **results,
         "qtl_results": qtl_results,
         "permutation_results": permutation_results
     }

@@ -13,7 +13,7 @@ make_option(c("-i", "--input_file"), action="store", default=NULL, type='charact
  make_option(c("-o", "--output_file"), action="store", default=NULL, type='character', help="a file path  of where to write the output json results"),
    make_option(c("-c", "--cores"), type="integer", default=1, help="No of cores to use while making
   computation"),
-  make_option(c("-p", "--nperm"), type="integer", default= 1,  action="store_true", help="No  of permutations "), 
+  make_option(c("-p", "--nperm"), type="integer", default=0,  action="store_true", help="No  of permutations "), 
  make_option(c("-m", "--method"), action = "store", default = "HK", type = "character", help="Scan Mapping Method - HK (Haley Knott), LMM( Linear Mixed Model ), LOCO (Leave one Chromosome Out)"),
   make_option(c("--pstrata"), action="store_true", default=NULL, help="Use permutation strata"),
     make_option(c("-t", "--threshold"), type="integer", default= 1,  action="store_true", help="Minimum LOD score for a Peak")
@@ -398,7 +398,6 @@ perform_permutation_test <- function(cross,
   #' @param n_perm Number of permutation replicates.
   #' @param chr_lengths engths of the chromosomes;
   #' @return  object of class "scan1perm". 
-  cat("performing permutation test for the cross object with permutations", n_perm, "\n")
   return (scan1perm(
       genome_prob,
       cross$pheno,
@@ -424,21 +423,34 @@ perm_strata <- mat2strata(Xcovar)
 perm_strata <- NULL
 }
 
-# Step: Performing the permutation test
-perm <- perform_permutation_test(cross, Pr, n_perm = NO_OF_PERMUTATION,perm_strata = perm_strata, method = opt$method)
 
-
-# get the permutation summary with a significance threshold
-get_lod_significance <- function(perm, threshold = c(0.01, 0.05)){
-     cat("Getting the permutation summary with significance thresholds as ", threshold, "\n")
-     summary(perm, alpha = threshold)
-}
-
-lod_significance <- get_lod_significance(perm, threshold =c(0.63, 0.05, 0.01))
 permutation_results_file = file.path(opt$directory, "permutation.csv")
 significance_results_file = file.path(opt$directory, "significance.csv")
-write.csv(lod_significance, significance_results_file)
-write.csv(perm, permutation_results_file)
+
+# perform permutation 
+if (NO_OF_PERMUTATION > 0) {
+    cat("performing permutation test for the cross object with permutations  ", NO_OF_PERMUTATION, "\n")
+    perm <- perform_permutation_test(
+        cross, Pr,
+        n_perm = NO_OF_PERMUTATION, 
+        perm_strata = perm_strata, 
+        method = opt$method
+    )
+    # Function to get LOD significance thresholds
+    get_lod_significance <- function(perm, thresholds = c(0.01, 0.05, 0.63)) {
+        cat("Getting the permutation summary with significance thresholds:", thresholds, "\n")
+        summary(perm, alpha = thresholds)
+    }
+
+    # Compute LOD significance
+    lod_significance <- get_lod_significance(perm)
+
+    # Save results
+    write.csv(lod_significance, significance_results_file)
+    write.csv(perm, permutation_results_file)
+}
+
+
 
 
 # step: get the lod peaks
@@ -518,8 +530,6 @@ pmap_file <- file.path(opt$directory, json_data$physical_map_file)
 output = list(lod_peaks = lod_peaks,
              scan_results =scan_results,
 	     genetic_probabilities = Pr,
-	     lod_significance = lod_significance,
-	     permutation_results = perm,
 	     lod_peaks = lod_peaks,
 	     permutation_file = permutation_results_file,
 	     significance_file = significance_results_file,
@@ -530,6 +540,7 @@ output = list(lod_peaks = lod_peaks,
 	     pmap_file = pmap_file, 
 	     meffects_plots = meffects_plots,
 	     lod_plot_path =lod_plot_path,
+	     permutations = NO_OF_PERMUTATION,
 	     scan_method = SCAN_METHOD  
 	     )
 output_json_data <-toJSON(output)
