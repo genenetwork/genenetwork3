@@ -434,7 +434,7 @@ get_lod_significance <- function(perm, threshold = c(0.01, 0.05)){
      summary(perm, alpha = threshold)
 }
 
-lod_significance <- get_lod_significance(perm, threshold =c(0.33, 0.05, 0.01))
+lod_significance <- get_lod_significance(perm, threshold =c(0.63, 0.05, 0.01))
 permutation_results_file = file.path(opt$directory, "permutation.csv")
 significance_results_file = file.path(opt$directory, "significance.csv")
 write.csv(lod_significance, significance_results_file)
