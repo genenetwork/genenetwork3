@@ -52,11 +52,13 @@ def edit_wiki(comment_id: Optional[int], **kwargs):  # pylint: disable=[unused-a
     VALUES (%(Id)s, %(versionId)s, %(symbol)s, %(PubMed_ID)s, %(SpeciesID)s, %(comment)s, %(email)s, %(createtime)s, %(user_ip)s, %(weburl)s, %(initial)s, %(reason)s)
     """
     with db_utils.database_connection(current_app.config["SQL_URI"]) as conn:
-        cursor = conn.cursor()
+        cursor, next_version = conn.cursor(), 0
         if not comment_id:
             comment_id = wiki.get_next_comment_id(cursor)
             insert_dict["Id"] = comment_id
-        next_version = 0
+        else:
+            next_version = wiki.get_next_comment_version(cursor, comment_id)
+
         try:
             category_ids = wiki.get_categories_ids(
                 cursor, payload["categories"])
