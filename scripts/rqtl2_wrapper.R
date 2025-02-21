@@ -268,13 +268,14 @@ perform_genome_scan <- function(cross,
   if (method == "LMM") {
     # provide parameters for this
     cat("Performing scan1 using Linear mixed model\n")
+  
     out  <- scan1(
       genome_prob,
       cross$pheno,
       kinship = kinship,
-      addcovar = covar,
-      Xcovar = Xcovar,
-      intcovar = intcovar,
+      # addcovar = covar,
+      # Xcovar = Xcovar,
+      # intcovar = intcovar,
       model = model,
       cores = NO_OF_CORES
     )
@@ -284,10 +285,10 @@ perform_genome_scan <- function(cross,
       genome_prob,
       cross$pheno,
       kinship = kinship,
-      addcovar = covar,
-      intcovar = intcovar,
+      # addcovar = covar,
+      # intcovar = intcovar,
       model = model,
-      Xcovar = Xcovar,
+      # Xcovar = Xcovar,
       cores = NO_OF_CORES
     )
   }
