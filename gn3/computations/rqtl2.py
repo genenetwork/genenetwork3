@@ -71,7 +71,7 @@ def compose_rqtl2_cmd(rqtl_path, input_file,
         "threshold": data.get("threshold", 1),
         "cores": config.get('MULTIPROCESSOR_PROCS', 1)
     }
-    rscript_path = config.get("RSCRIPT", "Rscript")
+    rscript_path = config.get("RSCRIPT", os.environ.get("RSCRIPT", "Rscript"))
     return f"{rscript_path} { rqtl_path } " + " ".join(
         [f"--{key} {val}" for key, val in params.items()])
 
