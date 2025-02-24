@@ -327,49 +327,6 @@ if (cross$crosstype == "4way"){
 scan_file <- file.path(opt$directory, "scan_results.csv")
 write.csv(scan_results, scan_file)
 
-# function plot for the LOD scores from  performing the genome scan
-generate_lod_plot <- function(cross, scan_result, method, base_dir = ".") {
-  #' @description Plot LOD curves for a genome scan
-  #' @param the cross object
-  #' @param scan1 results
-  #' @param the method used to compute the scan1 results HK,LMM or LOCO
-  #' @param base_dir the path to write the generated plot
-  #' @return a string with the file path for the plot
-  cat("Generting the lod plot for the LOD scores\n")
-  color <- c("slateblue", "violetred", "green3")
-  par(mar = c(4.1, 4.1, 1.6, 1.1))
-  ymx <- maxlod(scan_result)
-  file_name = genRandomFileName(prefix = "RQTL_LOD_SCORE_", file_ext = ".png")
-  image_loc = file.path(base_dir , file_name)
-  png(image_loc,
-      width = 1000,
-      height = 600,
-      type = 'cairo-png')
-  plot(
-    scan_result,
-    cross$gmap,
-    lodcolumn = 1,
-    col = color[1],
-    main = colnames(cross$pheno)[1],
-    ylim = c(0, ymx * 1.02)
-  )
-  legend(
-    "topleft",
-    lwd = 2,
-    col = color[1],
-    method,
-    bg = "gray90",
-    lty = c(1, 1, 2)
-  )
-  dev.off()
-  return (image_loc)
-}
-
-
-lod_plot_path <- generate_lod_plot(cross, scan_results, "HK", base_dir=opt$directory)
-cat("Generated the lod plot at ", lod_plot_path, "\n")
-
-
 # function: perform  permutation tests for single-QTL method
 perform_permutation_test <- function(cross,
                                      genome_prob,
@@ -540,7 +497,6 @@ output = list(lod_peaks = lod_peaks,
 	     gmap_file = gmap_file,
 	     pmap_file = pmap_file, 
 	     meffects_plots = meffects_plots,
-	     lod_plot_path =lod_plot_path,
 	     permutations = NO_OF_PERMUTATION,
 	     scan_method = SCAN_METHOD  
 	     )
