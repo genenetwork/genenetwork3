@@ -36,8 +36,7 @@ def compute(log_file):
      output_file, _log2_file) = prepare_files(current_app.config.get("TMPDIR"))
     # write the input file with data required for creating the cross
     write_input_file(input_file, workspace_dir, data)
-    # TODO : Implement a better way for fetching the file Path.
-    rqtl_path =Path(__file__).absolute().parent.parent.parent.joinpath("scripts/rqtl2_wrapper.R")
+    rqtl_path = Path(current_app.root_path) / "scripts" / "rqtl2_wrapper.R"
     if not rqtl_path.is_file():
         return jsonify({"error" : f"The script {rqtl_path} does not exists"}), 400
     rqtl2_cmd = compose_rqtl2_cmd(rqtl_path, input_file,
