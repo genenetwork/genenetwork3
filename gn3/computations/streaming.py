@@ -5,6 +5,11 @@ from functools import wraps
 from flask import current_app, request
 
 
+def read_file(file_path):
+    """Add utility function to read files"""
+    with open(file_path, "r", encoding="UTF-8") as file_handler:
+        return file_handler.read()
+
 def run_process(cmd, log_file, run_id):
     """Function to execute an external process and
        capture the stdout in a file
@@ -30,14 +35,14 @@ def run_process(cmd, log_file, run_id):
             process.wait()
             return {"msg": "success" if process.returncode == 0 else "Process failed",
                     "run_id": run_id,
-                    "log_file": log_file,
+                    "log" :  read_file(log_file),
                     "code": process.returncode}
     except subprocess.CalledProcessError as error:
         return {"msg": "error occurred",
                 "code": error.returncode,
                 "error": str(error),
                 "run_id": run_id,
-                "log_file": log_file}
+                "log" : read_file(log_file)}
 
 
 def enable_streaming(func):
