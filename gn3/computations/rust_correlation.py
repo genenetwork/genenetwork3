@@ -3,10 +3,11 @@
 https://github.com/Alexanderlacuna/correlation_rust
 
 """
-import subprocess
-import json
-import csv
 import os
+import csv
+import json
+import traceback
+import subprocess
 
 from flask import current_app
 
@@ -67,7 +68,12 @@ def run_correlation(
             os.readlink(correlation_command)
             if os.path.islink(correlation_command)
             else correlation_command)
-        raise Exception(command_list, actual_command, cpe.stdout) from cpe# pylint: disable=[broad-exception-raised]
+        raise Exception(# pylint: disable=[broad-exception-raised]
+            command_list,
+            actual_command,
+            cpe.stdout,
+            traceback.format_exc()
+        ) from cpe
 
     return parse_correlation_output(output_file, corr_type, top_n)
 
