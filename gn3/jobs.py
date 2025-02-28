@@ -24,7 +24,7 @@ def job(redisconn: Redis, job_id: UUID) -> Either:
     if the_job:
         return Right({
             key: json.loads(value, object_hook=jed.custom_json_decoder)
-            for key, value in the_job.items()
+            for key, value in the_job.items()# type: ignore[union-attr]
         })
     return Left({
         "error": "NotFound",

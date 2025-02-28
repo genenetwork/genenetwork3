@@ -6,7 +6,7 @@ import gzip
 import json
 from functools import partial, reduce
 from pathlib import Path
-from typing import Callable
+from typing import Union, Callable
 import urllib.parse
 
 from flask import abort, Blueprint, current_app, jsonify, request
@@ -65,7 +65,10 @@ def field_processor_or(*field_processors: FieldProcessorFunction) -> FieldProces
                               for field_processor in field_processors]))
 
 
-def liftover(chain_file: Path, position: ChromosomalPosition) -> Maybe[ChromosomalPosition]:
+def liftover(
+        chain_file: Union[str, Path],
+        position: ChromosomalPosition
+) -> Maybe[ChromosomalPosition]:
     """Liftover chromosomal position using chain file."""
     # The chain file format is described at
     # https://genome.ucsc.edu/goldenPath/help/chain.html
@@ -91,7 +94,10 @@ def liftover(chain_file: Path, position: ChromosomalPosition) -> Maybe[Chromosom
     return Nothing
 
 
-def liftover_interval(chain_file: str, interval: ChromosomalInterval) -> ChromosomalInterval:
+def liftover_interval(
+        chain_file: Union[str, Path],
+        interval: ChromosomalInterval
+) -> ChromosomalInterval:
     """
     Liftover interval using chain file.
 
@@ -258,7 +264,7 @@ def parse_query(synteny_files_directory: Path, query: str):
                             xapian.Query(species_prefix + lifted_species),
                             chromosome_prefix,
                             range_prefixes.index("position"),
-                            partial(liftover_interval,
+                            partial(liftover_interval,# type: ignore[arg-type]
                                     synteny_files_directory / chain_file)))
         queryparser.add_boolean_prefix(
             shorthand,

@@ -6,6 +6,7 @@ from multiprocessing import Pool, cpu_count
 
 from typing import List
 from typing import Tuple
+from typing import Sequence
 from typing import Optional
 from typing import Callable
 from typing import Generator
@@ -52,8 +53,10 @@ def normalize_values(a_values: List, b_values: List) -> Generator:
             yield a_val, b_val
 
 
-def compute_corr_coeff_p_value(primary_values: List, target_values: List,
-                               corr_method: str) -> Tuple[float, float]:
+def compute_corr_coeff_p_value(
+        primary_values: Sequence,
+        target_values: Sequence,
+        corr_method: str) -> Tuple[float, float]:
     """Given array like inputs calculate the primary and target_value methods ->
 pearson,spearman and biweight mid correlation return value is rho and p_value
 

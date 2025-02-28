@@ -61,7 +61,7 @@ def get_user_membership(conn: Redis, user_id: str,
 
     """
     results = {"member": False, "admin": False}
-    for key, value in conn.hgetall('groups').items():
+    for key, value in conn.hgetall('groups').items():# type: ignore[union-attr]
         if key == group_id:
             group_info = json.loads(value)
             if user_id in group_info.get("admins"):
@@ -114,7 +114,7 @@ def get_groups_by_user_uid(user_uid: str, conn: Redis) -> Dict:
     """
     admin = []
     member = []
-    for group_uuid, group_info in conn.hgetall("groups").items():
+    for group_uuid, group_info in conn.hgetall("groups").items():# type: ignore[union-attr]
         group_info = json.loads(group_info)
         group_info["uuid"] = group_uuid
         if user_uid in group_info.get('admins'):
@@ -131,14 +131,14 @@ def get_user_info_by_key(key: str, value: str,
                          conn: Redis) -> Optional[Dict]:
     """Given a key, get a user's information if value is matched"""
     if key != "user_id":
-        for user_uuid, user_info in conn.hgetall("users").items():
+        for user_uuid, user_info in conn.hgetall("users").items():# type: ignore[union-attr]
             user_info = json.loads(user_info)
             if (key in user_info and user_info.get(key) == value):
                 user_info["user_id"] = user_uuid
                 return user_info
     elif key == "user_id":
         if user_info := conn.hget("users", value):
-            user_info = json.loads(user_info)
+            user_info = json.loads(user_info)# type: ignore[arg-type]
             user_info["user_id"] = value
             return user_info
     return None
