@@ -27,10 +27,11 @@ class RunTests(Command):
     def finalize_options(self):
         """Set final value of all the options once they are processed."""
         if self.type not in RunTests.test_types:
-            raise Exception(f"""
-            Invalid test type (self.type) requested!
-            Valid types are
-            {tuple(RunTests.test_types)}""")
+            raise Exception(# pylint: disable=[broad-exception-raised]
+                f"""
+                Invalid test type (self.type) requested!
+                Valid types are
+                {tuple(RunTests.test_types)}""")
 
         if self.type != "all":
             self.command = f"pytest -m {self.type}_test"
