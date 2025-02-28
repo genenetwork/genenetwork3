@@ -72,7 +72,7 @@ def run_correlation(
             command_list,
             actual_command,
             cpe.stdout,
-            traceback.format_exc()
+            traceback.format_exc().split()
         ) from cpe
 
     return parse_correlation_output(output_file, corr_type, top_n)
