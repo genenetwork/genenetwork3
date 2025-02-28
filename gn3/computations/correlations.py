@@ -196,7 +196,7 @@ def compute_all_sample_correlation(this_trait,
 
     """
     this_trait_samples = this_trait["trait_sample_data"]
-    with Pool(processes=(cpu_count() - 1)) as pool:
+    with Pool(processes=cpu_count() - 1) as pool:
         return sorted(
             (
                 corr for corr in

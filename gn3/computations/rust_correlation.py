@@ -53,7 +53,7 @@ def run_correlation(
         corr_type: str = "sample", top_n: int = 500):
     """entry function to call rust correlation"""
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=[too-many-arguments, too-many-positional-arguments]
     correlation_command = current_app.config["CORRELATION_COMMAND"] # make arg?
     (tmp_dir, tmp_file) = generate_input_files(dataset)
     (output_file, json_file) = generate_json_file(
@@ -67,7 +67,7 @@ def run_correlation(
             os.readlink(correlation_command)
             if os.path.islink(correlation_command)
             else correlation_command)
-        raise Exception(command_list, actual_command, cpe.stdout) from cpe
+        raise Exception(command_list, actual_command, cpe.stdout) from cpe# pylint: disable=[broad-exception-raised]
 
     return parse_correlation_output(output_file, corr_type, top_n)
 

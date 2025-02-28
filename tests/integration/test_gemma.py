@@ -63,10 +63,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_k_compute(self, mock_ipfs_cache,
-                       mock_redis,
-                       mock_path_exist, mock_json, mock_hash,
-                       mock_queue_cmd):
+    def test_k_compute(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/k-compute/<token>"""
         mock_ipfs_cache.return_value = ("/tmp/cache/"
                                         "QmQPeNsJPyVWPFDVHb"
@@ -106,9 +105,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_k_compute_loco(self, mock_ipfs_cache,
-                            mock_redis, mock_path_exist, mock_json,
-                            mock_hash, mock_queue_cmd):
+    def test_k_compute_loco(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/k-compute/loco/<chromosomes>/<token>"""
         mock_ipfs_cache.return_value = ("/tmp/cache/"
                                         "QmQPeNsJPyVWPFDVHb"
@@ -150,9 +149,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_gwa_compute(self, mock_ipfs_cache,
-                         mock_redis, mock_path_exist, mock_json,
-                         mock_hash, mock_queue_cmd):
+    def test_gwa_compute(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/gwa-compute/<k-inputfile>/<token>"""
         mock_ipfs_cache.return_value = ("/tmp/cache/"
                                         "QmQPeNsJPyVWPFDVHb"
@@ -201,9 +200,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_gwa_compute_with_covars(self, mock_ipfs_cache,
-                                     mock_redis, mock_path_exist,
-                                     mock_json, mock_hash, mock_queue_cmd):
+    def test_gwa_compute_with_covars(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/gwa-compute/covars/<k-inputfile>/<token>"""
         mock_ipfs_cache.return_value = ("/tmp/cache/"
                                         "QmQPeNsJPyVWPFDVHb"
@@ -255,9 +254,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_gwa_compute_with_loco_only(self, mock_ipfs_cache,
-                                        mock_redis, mock_path_exist,
-                                        mock_json, mock_hash, mock_queue_cmd):
+    def test_gwa_compute_with_loco_only(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/gwa-compute/<k-inputfile>/loco/maf/<maf>/<token>
 
         """
@@ -308,10 +307,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_gwa_compute_with_loco_covars(self, mock_ipfs_cache,
-                                          mock_redis, mock_path_exist,
-                                          mock_json, mock_hash,
-                                          mock_queue_cmd):
+    def test_gwa_compute_with_loco_covars(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/gwa-compute/<k-inputfile>/loco/covars/maf/<maf>/<token>
 
         """
@@ -363,10 +361,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_k_gwa_compute_without_loco_covars(self, mock_ipfs_cache,
-                                               mock_redis,
-                                               mock_path_exist, mock_json,
-                                               mock_hash, mock_queue_cmd):
+    def test_k_gwa_compute_without_loco_covars(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/k-gwa-compute/<token>
 
         """
@@ -419,10 +416,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_k_gwa_compute_with_covars_only(self, mock_ipfs_cache,
-                                            mock_redis, mock_path_exist,
-                                            mock_json, mock_hash,
-                                            mock_queue_cmd):
+    def test_k_gwa_compute_with_covars_only(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/k-gwa-compute/covars/<token>
 
         """
@@ -484,10 +480,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_k_gwa_compute_with_loco_only(self, mock_ipfs_cache,
-                                          mock_redis, mock_path_exist,
-                                          mock_json, mock_hash,
-                                          mock_queue_cmd):
+    def test_k_gwa_compute_with_loco_only(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /gemma/k-gwa-compute/loco/<chromosomes>/maf/<maf>/<token>
 
         """
@@ -550,10 +545,9 @@ class GemmaAPITest(unittest.TestCase):
     @mock.patch("gn3.api.gemma.assert_paths_exist")
     @mock.patch("gn3.api.gemma.redis.Redis")
     @mock.patch("gn3.api.gemma.cache_ipfs_file")
-    def test_k_gwa_compute_with_loco_and_covar(self, mock_ipfs_cache,
-                                               mock_redis,
-                                               mock_path_exist, mock_json,
-                                               mock_hash, mock_queue_cmd):
+    def test_k_gwa_compute_with_loco_and_covar(# pylint: disable=[too-many-positional-arguments]
+            self, mock_ipfs_cache, mock_redis, mock_path_exist, mock_json,
+            mock_hash, mock_queue_cmd):
         """Test /k-gwa-compute/covars/loco/<chromosomes>/maf/<maf>/<token>
 
         """

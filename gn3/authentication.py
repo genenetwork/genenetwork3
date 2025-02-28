@@ -94,7 +94,8 @@ def get_highest_user_access_role(
     access_role = {}
     response = requests.get(urljoin(gn_proxy_url,
                                     ("available?resource="
-                                     f"{resource_id}&user={user_id}")))
+                                     f"{resource_id}&user={user_id}")),
+                            timeout=500)
     for key, value in json.loads(response.content).items():
         access_role[key] = max(map(lambda role: role_mapping[role], value))
     return access_role

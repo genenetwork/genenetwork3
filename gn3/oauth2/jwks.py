@@ -12,7 +12,7 @@ from gn3.oauth2.errors import TokenValidationError
 def fetch_jwks(authserveruri: str, path: str = "auth/public-jwks") -> KeySet:
     """Fetch the JWKs from a particular URI"""
     try:
-        response = requests.get(urljoin(authserveruri, path))
+        response = requests.get(urljoin(authserveruri, path), timeout=300)
         if response.status_code == 200:
             return KeySet([
                 JsonWebKey.import_key(key) for key in response.json()["jwks"]])

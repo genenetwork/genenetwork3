@@ -328,7 +328,7 @@ def build_temporary_tissue_correlations_table(
 
     return temp_table_name
 
-def fetch_tissue_correlations(# pylint: disable=R0913
+def fetch_tissue_correlations(# pylint: disable=[R0913, too-many-arguments, too-many-positional-arguments]
         dataset: dict, trait_symbol: str, probeset_freeze_id: int, method: str,
         return_number: int, conn: Any) -> dict:
     """
@@ -529,7 +529,7 @@ def __build_query__(
             f"ORDER BY {db_type}.Id"),
         1)
 
-# pylint: disable=too-many-arguments
+# pylint: disable=[too-many-arguments, too-many-positional-arguments]
 def __fetch_data__(
         conn, sample_ids: tuple, db_name: str, db_type: str, method: str,
         temp_table: Optional[str]) -> Tuple[Tuple[Any], int]:

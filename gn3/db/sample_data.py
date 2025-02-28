@@ -302,8 +302,8 @@ def update_sample_data(
     if data_type == "mrna":
         strain_id, data_id, inbredset_id = get_mrna_sample_data_ids(
             conn=conn,
-            probeset_id=int(probeset_id),
-            dataset_name=dataset_name,
+            probeset_id=int(probeset_id),# pylint: disable=[possibly-used-before-assignment]
+            dataset_name=dataset_name,# pylint: disable=[possibly-used-before-assignment]
             strain_name=extract_strain_name(csv_header, original_data),
         )
         none_case_attrs = {
@@ -315,8 +315,8 @@ def update_sample_data(
     else:
         strain_id, data_id, inbredset_id = get_pheno_sample_data_ids(
             conn=conn,
-            publishxref_id=int(trait_name),
-            phenotype_id=phenotype_id,
+            publishxref_id=int(trait_name),# pylint: disable=[possibly-used-before-assignment]
+            phenotype_id=phenotype_id,# pylint: disable=[possibly-used-before-assignment]
             strain_name=extract_strain_name(csv_header, original_data),
         )
         none_case_attrs = {
@@ -422,8 +422,8 @@ def delete_sample_data(
     if data_type == "mrna":
         strain_id, data_id, inbredset_id = get_mrna_sample_data_ids(
             conn=conn,
-            probeset_id=int(probeset_id),
-            dataset_name=dataset_name,
+            probeset_id=int(probeset_id),# pylint: disable=[possibly-used-before-assignment]
+            dataset_name=dataset_name,# pylint: disable=[possibly-used-before-assignment]
             strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs: Dict[str, Any] = {
@@ -435,8 +435,8 @@ def delete_sample_data(
     else:
         strain_id, data_id, inbredset_id = get_pheno_sample_data_ids(
             conn=conn,
-            publishxref_id=int(trait_name),
-            phenotype_id=phenotype_id,
+            publishxref_id=int(trait_name),# pylint: disable=[possibly-used-before-assignment]
+            phenotype_id=phenotype_id,# pylint: disable=[possibly-used-before-assignment]
             strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs = {
@@ -528,8 +528,8 @@ def insert_sample_data(
     if data_type == "mrna":
         strain_id, data_id, inbredset_id = get_mrna_sample_data_ids(
             conn=conn,
-            probeset_id=int(probeset_id),
-            dataset_name=dataset_name,
+            probeset_id=int(probeset_id),# pylint: disable=[possibly-used-before-assignment]
+            dataset_name=dataset_name,# pylint: disable=[possibly-used-before-assignment]
             strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs = {
@@ -541,8 +541,8 @@ def insert_sample_data(
     else:
         strain_id, data_id, inbredset_id = get_pheno_sample_data_ids(
             conn=conn,
-            publishxref_id=int(trait_name),
-            phenotype_id=phenotype_id,
+            publishxref_id=int(trait_name),# pylint: disable=[possibly-used-before-assignment]
+            phenotype_id=phenotype_id,# pylint: disable=[possibly-used-before-assignment]
             strain_name=extract_strain_name(csv_header, data),
         )
         none_case_attrs = {

@@ -120,7 +120,7 @@ class TestGenMenu(unittest.TestCase):
         with db_mock.cursor() as conn:
             with conn.cursor() as cursor:
                 for item in ["x", ("result"), ["result"], [1]]:
-                    cursor.fetchone.return_value = (item)
+                    cursor.fetchone.return_value = item
                 self.assertTrue(phenotypes_exist(db_mock, "test"))
 
     @pytest.mark.unit_test
@@ -140,7 +140,7 @@ class TestGenMenu(unittest.TestCase):
         db_mock = mock.MagicMock()
         with db_mock.cursor() as cursor:
             for item in ["x", ("result"), ["result"], [1]]:
-                cursor.fetchone.return_value = (item)
+                cursor.fetchone.return_value = item
                 self.assertTrue(phenotypes_exist(db_mock, "test"))
 
     @pytest.mark.unit_test

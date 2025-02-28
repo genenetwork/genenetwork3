@@ -59,7 +59,8 @@ def rdf_setup():
 
             # Make sure this graph does not exist before running anything
             requests.delete(
-                SPARQL_CONF["sparql_crud_auth_uri"], params=params, auth=auth
+                SPARQL_CONF["sparql_crud_auth_uri"], params=params, auth=auth,
+                timeout=300
             )
 
             # Open the file in binary mode and send the request
@@ -69,9 +70,11 @@ def rdf_setup():
                     params=params,
                     auth=auth,
                     data=file,
+                    timeout=300
                 )
             yield response
             requests.delete(
-                SPARQL_CONF["sparql_crud_auth_uri"], params=params, auth=auth
+                SPARQL_CONF["sparql_crud_auth_uri"], params=params, auth=auth,
+                timeout=300
             )
             pid.terminate()

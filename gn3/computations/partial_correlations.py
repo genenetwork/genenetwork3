@@ -209,7 +209,7 @@ def good_dataset_samples_indexes(
         samples_from_file.index(good) for good in
         set(samples).intersection(set(samples_from_file))))
 
-def partial_correlations_fast(# pylint: disable=[R0913, R0914]
+def partial_correlations_fast(# pylint: disable=[R0913, R0914, too-many-positional-arguments]
         samples, primary_vals, control_vals, database_filename,
         fetched_correlations, method: str, correlation_type: str) -> Generator:
     """
@@ -334,7 +334,7 @@ def compute_partial(
     This implementation reworks the child function `compute_partial` which will
     then be used in the place of `determinPartialsByR`.
     """
-    with Pool(processes=(cpu_count() - 1)) as pool:
+    with Pool(processes=cpu_count() - 1) as pool:
         return (
             result for result in (
                 pool.starmap(
@@ -345,7 +345,7 @@ def compute_partial(
                      for target in targets)))
         if result is not None)
 
-def partial_correlations_normal(# pylint: disable=R0913
+def partial_correlations_normal(# pylint: disable=[R0913, too-many-positional-arguments]
         primary_vals, control_vals, input_trait_gene_id, trait_database,
         data_start_pos: int, db_type: str, method: str) -> Generator:
     """
@@ -381,7 +381,7 @@ def partial_correlations_normal(# pylint: disable=R0913
 
     return all_correlations
 
-def partial_corrs(# pylint: disable=[R0913]
+def partial_corrs(# pylint: disable=[R0913, too-many-positional-arguments]
         conn, samples, primary_vals, control_vals, return_number, species,
         input_trait_geneid, input_trait_symbol, tissue_probeset_freeze_id,
         method, dataset, database_filename):
@@ -667,7 +667,7 @@ def check_for_common_errors(# pylint: disable=[R0914]
 
     return non_error_result
 
-def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911]
+def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911 too-many-positional-arguments]
         conn: Any, primary_trait_name: str,
         control_trait_names: Tuple[str, ...], method: str,
         criteria: int, target_db_name: str) -> dict:

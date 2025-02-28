@@ -78,7 +78,8 @@ def required_access(
                 # this section fetches the resource ID from the auth server
                 urljoin(current_app.config["AUTH_SERVER_URL"],
                         "auth/resource/populations/resource-id"
-                        f"/{__species_id__(conn)}/{inbredset_id}"))
+                        f"/{__species_id__(conn)}/{inbredset_id}"),
+                timeout=300)
             if result.status_code == 200:
                 resource_id = result.json()["resource-id"]
                 auth = requests.post(
@@ -87,7 +88,8 @@ def required_access(
                     urljoin(current_app.config["AUTH_SERVER_URL"],
                             "auth/resource/authorisation"),
                     json={"resource-ids": [resource_id]},
-                    headers={"Authorization": f"Bearer {token['access_token']}"})
+                    headers={"Authorization": f"Bearer {token['access_token']}"},
+                    timeout=300)
                 if auth.status_code == 200:
                     privs = tuple(priv["privilege_id"]
                                   for role in auth.json()[resource_id]["roles"]

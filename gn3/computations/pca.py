@@ -133,7 +133,7 @@ def generate_pca_temp_traits(
 
     """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=[too-many-arguments, too-many-positional-arguments]
 
     pca_trait_dict = {}
 

@@ -155,8 +155,8 @@ def fetch_id_lossy_search(query, db_name, max_results):
 
     try:
         response = requests.get(f"http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db={db_name}&retmode=json&retmax={max_results}&term={query}",
-                                headers={"content-type": "application/json"}
-                                )
+                                headers={"content-type": "application/json"},
+                                timeout=300)
         return response["esearchresult"]["idlist"]
 
     except requests.exceptions.RequestException as error:
@@ -174,7 +174,7 @@ def search_pubmed_lossy(pubmed_id, db_name):
     - dict: Records fetched based on PubMed ID.
     """
     url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={db_name}&id={",".join(pubmed_id)}&retmode=json'
-    response = requests.get(url)
+    response = requests.get(url, timeout=300)
     response.raise_for_status()
     data = response.json()
     if db_name.lower() == "pmc":

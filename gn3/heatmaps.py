@@ -292,7 +292,7 @@ def process_traits_data_for_heatmap(data, trait_names, chromosome_names):
         for chr_name in chromosome_names]
     return hdata
 
-def clustered_heatmap(
+def clustered_heatmap(# pylint: disable=[too-many-positional-arguments]
         data: Sequence[Sequence[float]], clustering_data: Sequence[float],
         x_axis,#: Dict[Union[str, int], Union[str, Sequence[str]]],
         y_axis: Dict[str, Union[str, Sequence[str]]],
@@ -335,7 +335,7 @@ def clustered_heatmap(
         fig.add_trace(
             heatmap,
             row=((i + 2) if vertical else 1),
-            col=(1 if vertical else (i + 2)))
+            col=(1 if vertical else i + 2))
 
     axes_layouts = {
         "{axis}axis{count}".format( # pylint: disable=[C0209]

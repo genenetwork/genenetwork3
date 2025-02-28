@@ -57,9 +57,8 @@ def validate_required_keys(required_keys: list, data: dict) -> tuple[bool, str]:
     return True, ""
 
 
-def compose_rqtl2_cmd(rqtl_path, input_file,
-                      output_file, workspace_dir,
-                      data, config):
+def compose_rqtl2_cmd(# pylint: disable=[too-many-positional-arguments]
+        rqtl_path, input_file, output_file, workspace_dir, data, config):
     """Compose the command for running the R/QTL2 analysis."""
     # pylint: disable=R0913
     params = {

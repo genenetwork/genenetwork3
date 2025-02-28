@@ -35,7 +35,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 
 def download_file(url: str, dest: pathlib.Path):
     """Saves the contents of url in dest"""
-    with requests.get(url, stream=True) as resp:
+    with requests.get(url, stream=True, timeout=300) as resp:
         resp.raise_for_status()
         with open(dest, "wb") as downloaded_file:
             for chunk in resp.iter_content(chunk_size=8192):

@@ -172,7 +172,7 @@ def view_history(id_):
             "history": history,
         })
     if history.get("error"):
-        raise Exception(history.get("error_description"))
+        raise Exception(history.get("error_description")) # pylint: disable=[broad-exception-raised]
     return history
 
 

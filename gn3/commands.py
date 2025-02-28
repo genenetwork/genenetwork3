@@ -84,7 +84,7 @@ def compose_pcorrs_command(
             return "pearsons"
         if "spearmans" in mthd:
             return "spearmans"
-        raise Exception(f"Invalid method '{method}'")
+        raise Exception(f"Invalid method '{method}'")# pylint: disable=[broad-exception-raised]
 
     prefix_cmd = (
         f"{sys.executable}", "-m", "scripts.partial_correlations",
@@ -98,7 +98,7 @@ def compose_pcorrs_command(
             kwargs.get("target_database") is None
             and kwargs.get("target_traits") is not None):
         return compose_pcorrs_command_for_selected_traits(prefix_cmd, **kwargs)
-    raise Exception("Invalid state: I don't know what command to generate!")
+    raise Exception("Invalid state: I don't know what command to generate!")# pylint: disable=[broad-exception-raised]
 
 def queue_cmd(conn: Redis,
               job_queue: str,

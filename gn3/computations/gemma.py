@@ -41,12 +41,13 @@ def generate_pheno_txt_file(trait_filename: str,
 
 
 # pylint: disable=R0913
-def generate_gemma_cmd(gemma_cmd: str,
-                       output_dir: str,
-                       token: str,
-                       gemma_kwargs: Dict,
-                       gemma_wrapper_kwargs: Optional[Dict] = None,
-                       chromosomes: Optional[str] = None) -> Dict:
+def generate_gemma_cmd(# pylint: disable=[too-many-positional-arguments]
+        gemma_cmd: str,
+        output_dir: str,
+        token: str,
+        gemma_kwargs: Dict,
+        gemma_wrapper_kwargs: Optional[Dict] = None,
+        chromosomes: Optional[str] = None) -> Dict:
     """Compute k values"""
     _hash = get_hash_of_files(
         [v for k, v in gemma_kwargs.items() if k in ["g", "p", "a", "c"]])

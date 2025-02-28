@@ -14,10 +14,12 @@ def gen_dropdown_json(conn):
     groups = get_groups(conn, tuple(row[0] for row in species))
     types = get_types(conn, groups)
     datasets = get_datasets(conn, types)
-    return dict(species=species,
-                groups=groups,
-                types=types,
-                datasets=datasets)
+    return {
+        "species": species,
+        "groups": groups,
+        "types": types,
+        "datasets": datasets
+    }
 
 def get_groups(conn, species_names: Tuple[str, ...]):
     """Build groups list"""
