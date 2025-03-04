@@ -10,7 +10,7 @@ from urllib.parse import quote
 from gn3.llms.client import GeneNetworkQAClient
 
 
-BASE_URL = 'https://genenetwork.fahamuai.com/api/tasks'
+BASE_URL = 'http://balg-qa.genenetwork.org/api/tasks'
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
