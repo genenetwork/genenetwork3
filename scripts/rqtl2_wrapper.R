@@ -160,6 +160,7 @@ perform_genetic_pr <- function(cross, cores = NO_OF_CORES, step = 1, map = NULL,
 
 # Insert pseudomarkers to the genetic map
 cat("Inserting pseudomarkers to the genetic map with step 1 and stepwidth fixed.\n")
+
 MAP <- insert_pseudomarkers(cross$gmap, step = 1, stepwidth = "fixed", cores = NO_OF_CORES)
 
 # Calculate genetic probabilities
@@ -307,12 +308,39 @@ get_qtl_effect <- function(chromosome, geno_prob, pheno, covar = NULL, LOCO = NU
 gmap_file <- file.path(opt$directory, json_data$geno_map_file)
 pmap_file <- file.path(opt$directory, json_data$physical_map_file)
 
+
+
+
+
+# Construct the Map object from cross with columns (Marker, chr, cM, Mb)
+gmap <- cross$gmap  # Genetic map in cM
+pmap <- cross$pmap  # Physical map in Mb
+# Convert lists to data frames
+gmap_df <- data.frame(
+  marker = unlist(lapply(gmap, names)), 
+  chr = rep(names(gmap), sapply(gmap, length)),  # Add chromosome info
+  CM = unlist(gmap), 
+  stringsAsFactors = FALSE
+)
+
+pmap_df <- data.frame(
+  marker = unlist(lapply(pmap, names)), 
+  chr = rep(names(pmap), sapply(pmap, length)),  # Add chromosome info
+  MB = unlist(pmap), 
+  stringsAsFactors = FALSE
+)
+# Merge using full outer join (by marker and chromosome)
+merged_map <- merge(gmap_df, pmap_df, by = c("marker", "chr"), all = TRUE)
+map_file <- file.path(opt$directory, "map.csv")
+write.csv(merged_map, map_file, row.names = FALSE)
+
 output <- list(
   permutation_file = permutation_results_file,
   significance_file = significance_results_file,
   scan_file = scan_file,
   gmap_file = gmap_file,
   pmap_file = pmap_file,
+  map_file  = map_file,
   permutations = NO_OF_PERMUTATION,
   scan_method = SCAN_METHOD
 )
