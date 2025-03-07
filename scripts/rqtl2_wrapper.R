@@ -267,3 +267,58 @@ if (NO_OF_PERMUTATION > 0) {
   cat("Performing permutation test for the cross object with", NO_OF_PERMUTATION, "permutations.\n")
   perm <- perform_permutation_test(cross, Pr, n_perm = NO_OF_PERMUTATION, perm_strata = perm_strata, 
                                    method = opt$method)
+  
+  # Function to get LOD significance thresholds
+  get_lod_significance <- function(perm, thresholds = c(0.01, 0.05, 0.63)) {
+    cat("Getting the permutation summary with significance thresholds:", thresholds, "\n")
+    summary(perm, alpha = thresholds)
+  }
+  
+  # Compute LOD significance
+  lod_significance <- get_lod_significance(perm)
+  
+  # Save results
+  write.csv(lod_significance, significance_results_file)
+  write.csv(perm, permutation_results_file)
+}
+
+
+
+# Function to get QTL effects
+get_qtl_effect <- function(chromosome, geno_prob, pheno, covar = NULL, LOCO = NULL) {
+  cat("Finding the QTL effect for chromosome", chromosome, "\n")
+  chr_Pr <- geno_prob[, chromosome]
+  if (!is.null(chr_Pr)) {
+    if (!is.null(LOCO)) {
+      cat("Finding QTL effect for chromosome", chromosome, "with LOCO.\n")
+      kinship <- calc_kinship(chr_Pr, "loco")[[chromosome]]
+      return(scan1coef(chr_Pr, pheno, kinship, addcovar = covar))
+    } else {
+      return(scan1coef(chr_Pr, pheno, addcovar = covar))
+    }
+  }
+  return(NULL)
+}
+
+# Get QTL effects for each chromosome
+# TODO
+
+# Prepare output data
+gmap_file <- file.path(opt$directory, json_data$geno_map_file)
+pmap_file <- file.path(opt$directory, json_data$physical_map_file)
+
+output <- list(
+  permutation_file = permutation_results_file,
+  significance_file = significance_results_file,
+  scan_file = scan_file,
+  gmap_file = gmap_file,
+  pmap_file = pmap_file,
+  permutations = NO_OF_PERMUTATION,
+  scan_method = SCAN_METHOD
+)
+
+# Write output to JSON file
+output_json_data <- toJSON(output)
+cat("The output file path generated is", OUTPUT_FILE_PATH, "\n")
+cat("Writing to the output file.\n")
+write(output_json_data, file = OUTPUT_FILE_PATH)
