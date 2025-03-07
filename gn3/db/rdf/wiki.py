@@ -42,6 +42,10 @@ def __sanitize_result(result: dict) -> dict:
     if not result:
         return {}
     categories = result.get("categories")
+    if (version := result.get("version")) and isinstance(version, str):
+        result["version"] = int(version)
+    if (wiki_id := result.get("id")) and isinstance(version, str):
+        result["id"] = int(wiki_id)
     if isinstance(categories, str):
         result["categories"] = [categories] if categories else []
     result["categories"] = sorted(result["categories"])
@@ -80,7 +84,7 @@ CONSTRUCT {
              gnt:belongsToCategory ?category ;
              gnt:hasVersion ?max ;
              dct:created ?created ;
-             dct:identifier ?id_ .
+             dct:identifier ?id .
 } FROM $graph WHERE {
     ?comment rdfs:label ?text_ ;
              gnt:symbol ?symbol ;
@@ -89,12 +93,12 @@ CONSTRUCT {
              dct:created ?createTime .
     FILTER ( LCASE(STR(?symbol)) = LCASE("$symbol") ) .
     {
-        SELECT (MAX(?vers) AS ?max) ?id_ WHERE {
+        SELECT (MAX(?vers) AS ?max_) ?id_ WHERE {
             ?comment dct:identifier ?id_ ;
                      dct:hasVersion ?vers .
         }
     }
-    ?comment dct:hasVersion ?max .
+    ?comment dct:hasVersion ?max_ .
     OPTIONAL { ?comment gnt:reason ?reason_ } .
     OPTIONAL {
         ?comment gnt:belongsToSpecies ?speciesId .
@@ -107,6 +111,8 @@ CONSTRUCT {
     OPTIONAL { ?comment gnt:belongsToCategory ?category_ } .
     BIND (str(?createTime) AS ?created) .
     BIND (str(?text_) AS ?text) .
+    BIND (str(?max_) AS ?max) .
+    BIND (str(?id_) AS ?id) .
     BIND (STR(COALESCE(?pmid_, "")) AS ?pmid) .
     BIND (COALESCE(?reason_, "") AS ?reason) .
     BIND (STR(COALESCE(?weburl_, "")) AS ?weburl) .
@@ -155,7 +161,7 @@ CONSTRUCT {
              rdfs:label ?text_ ;
              gnt:symbol ?symbol ;
              dct:created ?createTime ;
-             dct:hasVersion ?version ;
+             dct:hasVersion ?version_ ;
              dct:identifier $comment_id .
     OPTIONAL { ?comment gnt:reason ?reason_ } .
     OPTIONAL {
@@ -168,6 +174,7 @@ CONSTRUCT {
     OPTIONAL { ?comment foaf:mbox ?email_ . } .
     OPTIONAL { ?comment gnt:belongsToCategory ?category_ . } .
     BIND (str(?text_) AS ?text) .
+    BIND (str(?version_) AS ?version) .
     BIND (str(?createTime) AS ?created) .
     BIND (STR(COALESCE(?pmid_, "")) AS ?pmid) .
     BIND (COALESCE(?reason_, "") AS ?reason) .
