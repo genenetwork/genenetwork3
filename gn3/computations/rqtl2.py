@@ -169,40 +169,30 @@ def fetch_significance_results(file_path: str):
         return (phenotypes, results)
 
 
-def process_scan_results(qtl_file_path: str,
-                         pmap_file_path: str,
-                         gmap_file_path: str) -> List[Dict[str, Any]]:
+def process_scan_results(qtl_file_path: str, map_file_path: str) -> List[Dict[str, Any]]:
     """Function to process genome scanning results and obtain marker_name, Lod score,
     marker_position, and chromosome.
     Args:
         qtl_file_path (str): Path to the QTL scan results CSV file.
-        pmap_file_path (str): Path to the physical map CSV file.
-        gmap_file_path (str): Path to the genetic map CSV file.
+        map_file_path (str): Path to the map file from the script.
 
     Returns:
         List[Dict[str, str]]: A list of dictionaries containing the marker data.
     """
-    gmap = {}
+    map_data = {}
     # read the genetic map
-    with open(gmap_file_path, "r", encoding="utf-8") as file_handler:
+    with open(map_file_path, "r", encoding="utf-8") as file_handler:
         reader = csv.reader(file_handler)
         next(reader)
         for line in reader:
-            marker, chr_, position = line
-            gmap[marker] = {"chr": chr_, "cM": float(position), "Mb" : 0}
-
-   # read the physcical map
-    with open(pmap_file_path, "r", encoding="utf-8") as file_handler:
-        reader = csv.reader(file_handler)
-        next(reader)
-        for line in reader:
-            marker, chr_, position = line
-            if marker in gmap:
-                gmap[marker]["Mb"] = float(position)
+            marker, chr_, cm_, mb_ = line
+            cm: float | None = float(cm_) if cm_ and cm_ != "NA" else None
+            mb: float | None = float(mb_) if mb_ and mb_ != "NA" else None
+            map_data[marker] = {"chr": chr_, "cM": cm, "Mb": mb}
 
     # Process QTL scan results and merge the positional data
     results = []
-    with open(qtl_file_path, encoding="utf-8") as file_handler:
+    with open(qtl_file_path, "r", encoding="utf-8") as file_handler:
         reader = csv.reader(file_handler)
         next(reader)
         for line in reader:
@@ -211,7 +201,7 @@ def process_scan_results(qtl_file_path: str,
             results.append({
                 "name": marker,
                 "lod_score": float(lod_score),
-                **gmap.get(marker, {})  # Add chromosome and positions if available
+                **map_data.get(marker, {})  # Add chromosome and positions if available
             })
     return results
 
@@ -227,8 +217,7 @@ def process_qtl2_results(output_file: str) -> Dict[str, Any]:
     """
     results  = read_output_file(output_file)
     qtl_results = process_scan_results(results["scan_file"],
-                                       results["pmap_file"],
-                                       results["gmap_file"])
+                                       results["map_file"])
     permutation_results = process_permutation(results) if results["permutations"] > 0 else {}
     return {
         **results,
