@@ -101,7 +101,7 @@ def get_categories(cursor) -> Dict[str, int]:
 
 def get_species(cursor) -> Dict[str, str]:
     """Get all species"""
-    cursor.execute("SELECT Name, SpeciesName from Species")
+    cursor.execute("SELECT Name, SpeciesName from Species ORDER BY Species.Id")
     raw_species = cursor.fetchall()
     dict_cats = dict(raw_species)
     return dict_cats
