@@ -50,7 +50,7 @@ class GeneNetworkQAClient(Session):
         super().__init__()
         self.headers.update(
             {"Authorization": "Bearer " + api_key})
-        self.base_url = "http://balg-qa.genenetwork.org/api/tasks"
+        self.base_url = "https://balg-qa.genenetwork.org/api/tasks"
         self.answer_url = f"{self.base_url}/answers"
         self.feedback_url = f"{self.base_url}/feedback"
         self.query = ""
