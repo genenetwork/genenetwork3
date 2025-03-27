@@ -18,6 +18,8 @@ def generate_rqtl2_files(data, workspace_dir):
         "geno_map_file": "geno_map_data",
         "physical_map_file": "physical_map_data",
         "phenocovar_file": "phenocovar_data",
+        "founder_geno_file" : "founder_geno_data",
+        "covar_file" : "covar_data"
     }
     parsed_files = {}
     for file_name, data_key in file_to_name_map.items():
