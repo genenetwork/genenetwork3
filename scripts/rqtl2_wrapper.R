@@ -72,7 +72,6 @@ genRandomFileName <- function(prefix, string_size = 9, file_ext = ".txt") {
 # Generate control file path
 control_file_path <- file.path(opt$directory, genRandomFileName(prefix = "control", file_ext = ".json"))
 cat("Generated the control file path at", control_file_path, "\n")
-
 # Read and parse the input file
 cat("Reading and parsing the input file.\n")
 json_data <- fromJSON(file = INPUT_FILE_PATH)
@@ -181,7 +180,9 @@ error_lod <- do.call("cbind", error_lod)
 # Get phenotypes and covariates
 cat("Getting the phenotypes and covariates.\n")
 pheno <- cross$pheno
-covar <- match(cross$covar$sex, c("f", "m")) # make numeric
+# covar <- match(cross$covar$sex, c("f", "m")) # make numeric
+# TODO rework on this
+covar <- NULL
 if (!is.null(covar)) {
   names(covar) <- rownames(cross$covar)
 }
