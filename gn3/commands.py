@@ -158,7 +158,8 @@ def run_sample_corr_cmd(method, this_trait_data, target_dataset_data):
 def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
     try:
-        parsed_cmd = json.loads(__pk__("Attempting to parse command", cmd))
+        current_app.logger.debug("Attempting to parse command: ==> %s <==", cmd)
+        parsed_cmd = json.loads(cmd)
     except json.decoder.JSONDecodeError as jderr:
         parsed_cmd = shlex.split(cmd)
 
