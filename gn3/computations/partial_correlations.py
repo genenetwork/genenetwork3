@@ -854,12 +854,13 @@ def partial_correlations_with_target_traits(
         __merge(
             target_traits[target_name],
             compute_trait_info(
-            check_res["primary_values"], check_res["fixed_control_values"],
-            (export_trait_data(
-                target_data,
-                samplelist=check_res["common_primary_control_samples"]),
-             target_name),
-            method))
+                check_res["primary_values"],
+                check_res["fixed_control_values"],
+                (export_trait_data(
+                    target_data,
+                    samplelist=check_res["common_primary_control_samples"]),
+                 target_name),
+                method))
         for target_name, target_data in target_traits_data.items())
 
     return {
