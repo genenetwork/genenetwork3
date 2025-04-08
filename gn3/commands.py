@@ -176,12 +176,20 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) ->
 
 def run_async_cmd(
         conn: Redis, job_queue: str, cmd: Union[str, Sequence[str]],
-        email: Optional[str] = None, env: Optional[dict] = None) -> str:
+        email: Optional[str] = None, log_level: str = "info",
+        env: Optional[dict] = None) -> str:
     """A utility function to call `gn3.commands.queue_cmd` function and run the
     worker in the `one-shot` mode."""
     cmd_id = queue_cmd(conn, job_queue, cmd, email, env)
+    worker_command = [
+        sys.executable,
+        "-m", "sheepdog.worker",
+        "--queue-name", job_queue,
+        "--log-level", log_level
+    ]
+    logging.debug("Launching the worker: %s", worker_command)
     subprocess.Popen( # pylint: disable=[consider-using-with]
-        [sys.executable, "-m", "sheepdog.worker", "--queue-name", job_queue])
+        worker_command)
     return cmd_id
 
 

@@ -2,6 +2,7 @@
 import os
 import sys
 import time
+import logging
 import argparse
 
 import redis
@@ -10,6 +11,10 @@ import redis.connection
 # Enable importing from one dir up: put as first to override any other globally
 # accessible GN3
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+logging.basicConfig(
+    format=("%(asctime)s — %(filename)s:%(lineno)s — %(levelname)s: "
+            "CommandWorker: %(message)s"))
+logger = logging.getLogger(__name__)
 
 def update_status(conn, cmd_id, status):
     """Helper to update command status"""
@@ -44,6 +49,7 @@ def run_jobs(conn, queue_name):
     if bool(cmd_id):
         cmd = conn.hget(name=cmd_id, key="cmd")
         if cmd and (conn.hget(cmd_id, "status") == b"queued"):
+            logger.debug(f"Updating status for job '{cmd_id}' to 'running'")
             update_status(conn, cmd_id, "running")
             result = run_cmd(
                 cmd.decode("utf-8"), env=conn.hget(name=cmd_id, key="env"))
@@ -68,17 +74,29 @@ def parse_cli_arguments():
     parser.add_argument(
         "--queue-name", default="GN3::job-queue", type=str,
         help="The redis list that holds the unique command ids")
+    parser.add_argument(
+        "--log-level", default="info", type=str,
+        choices=("debug", "info", "warning", "error", "critical"),
+        help="What level to output the logs at.")
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_cli_arguments()
+    logger.setLevel(args.log_level.upper())
+    logger.debug("Worker Script: Initialising worker")
     with redis.Redis() as redis_conn:
         if not args.daemon:
+            logger.info("Worker Script: Running worker in one-shot mode.")
             run_jobs(redis_conn, args.queue_name)
+            logger.debug("Job completed!")
         else:
+            logger.debug("Worker Script: Running worker in daemon-mode.")
             sleep_time = make_incremental_backoff()
             while True:  # Daemon that keeps running forever:
                 if run_jobs(redis_conn, args.queue_name):
+                    logger.debug("Ran a job. Pausing for a while...")
                     time.sleep(sleep_time("reset"))
                     continue
                 time.sleep(sleep_time("increment", sleep_time("return_current")))
+
+    logger.info("Worker exiting …")
