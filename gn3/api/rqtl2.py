@@ -49,4 +49,7 @@ def compute(log_file):
         return jsonify(process_output), 400
     results = process_qtl2_results(output_file)
     shutil.rmtree(workspace_dir, ignore_errors=True, onerror=None)
+    # append this at end of computation to the log file to mark end of gn3 computation
+    with open(log_file, "ab+") as file_handler:
+        file_handler.write("Done with GN3 Computation".encode("utf-8"))
     return jsonify(results)
