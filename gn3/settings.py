@@ -7,6 +7,13 @@ application settings.
 import os
 import tempfile
 
+### APPLICATION_ENVIRONMENT: can be something like
+### production, staging, development, tux02-prod, tux04-staging, etc.
+### Useful to distinguish resources for different containers if you run multiple
+## containers on the same host e.g. distinguish keys on a redis instance for
+## different containers.
+APPLICATION_ENVIRONMENT = ""
+
 DATA_DIR = ""
 GEMMA_WRAPPER_CMD = os.environ.get("GEMMA_WRAPPER", "gemma-wrapper")
 CACHEDIR = ""
