@@ -18,7 +18,7 @@ from typing import Union
 from typing import Sequence
 from uuid import uuid4
 
-from flask import current_app
+from flask import Flask, current_app
 from redis.client import Redis  # Used only in type hinting
 
 from pymonad.either import Either, Left, Right
@@ -173,6 +173,16 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) ->
         (# We do not always run this within an app context
             current_app.logger.debug if current_app else logging.debug)(out)
     return {"code": results.returncode, "output": out}
+
+
+def compute_job_queue(app: Flask) -> str:
+    """Use the app configurations to compute the job queue"""
+    app_env = app.config["APPLICATION_ENVIRONMENT"]
+    job_queue = app.config["REDIS_JOB_QUEUE"]
+    if bool(app_env):
+        return f"{app_env}::{job_queue}"
+    return job_queue
+
 
 def run_async_cmd(
         conn: Redis, job_queue: str, cmd: Union[str, Sequence[str]],
