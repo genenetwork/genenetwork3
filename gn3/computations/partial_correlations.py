@@ -99,7 +99,7 @@ def fix_samples(
         primary_samples,
         tuple(primary_trait_data["data"][sample]["value"]
               for sample in primary_samples),
-        control_vals_vars[0],
+        (control_vals_vars[0],),
         tuple(primary_trait_data["data"][sample]["variance"]
               for sample in primary_samples),
         control_vals_vars[1])
