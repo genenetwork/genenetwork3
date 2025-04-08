@@ -159,7 +159,7 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) ->
     """Run CMD and return the CMD's status code and output as a dict"""
     try:
         parsed_cmd = json.loads(cmd)
-    except json.decoder.JSONDecodeError as jderr:
+    except json.decoder.JSONDecodeError as _jderr:
         parsed_cmd = shlex.split(cmd)
 
     parsed_env = (json.loads(env) if env is not None else None)
