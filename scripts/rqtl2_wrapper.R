@@ -32,6 +32,8 @@ NO_OF_CORES <- opt$cores
 SCAN_METHOD <- opt$method
 NO_OF_PERMUTATION <- opt$nperm
 
+NO_OF_CORES <- 20
+
 # Validate input and output file paths
 validate_file_paths <- function(opt) {
   if (is.null(opt$directory) || !dir.exists(opt$directory)) {
