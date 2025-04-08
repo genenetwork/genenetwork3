@@ -837,7 +837,7 @@ def partial_correlations_with_target_traits(
         return check_res
 
     target_traits = {
-        trait["name"]: trait
+        trait["trait_name"]: trait
         for trait in traits_info(conn, threshold, target_trait_names)}
     target_traits_data = traits_data(conn, tuple(target_traits.values()))
 
