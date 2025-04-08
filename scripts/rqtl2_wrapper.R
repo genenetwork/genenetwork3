@@ -71,6 +71,7 @@ genRandomFileName <- function(prefix, string_size = 9, file_ext = ".txt") {
 
 # Generate control file path
 control_file_path <- file.path(opt$directory, genRandomFileName(prefix = "control", file_ext = ".json"))
+
 cat("Generated the control file path at", control_file_path, "\n")
 # Read and parse the input file
 cat("Reading and parsing the input file.\n")
@@ -115,7 +116,6 @@ generate_cross_object <- function(control_file_path, json_data) {
     geno_codes = json_data$geno_codes,
     alleles = json_data$alleles,
     na.strings = json_data$na.strings,
-    geno_transposed = json_data$geno_transposed,
     sex_file = json_data$sex_file,
     founder_geno_file = json_data$founder_geno_file,
     covar_file = json_data$covar_file,
@@ -125,7 +125,9 @@ generate_cross_object <- function(control_file_path, json_data) {
     crossinfo_covar = json_data$crossinfo_covar,
     crossinfo_codes = json_data$crossinfo_codes,
     xchr = json_data$xchr,
-    overwrite = TRUE
+    overwrite = TRUE,
+    founder_geno_transposed = json_data$founder_geno_transposed,
+    geno_transposed = json_data$geno_transposed
   )
 }
 
@@ -135,6 +137,7 @@ generate_cross_object(control_file_path, json_data)
 
 # Read the cross object
 cat("Reading the cross object from", control_file_path, "\n")
+
 cross <- read_cross2(control_file_path, quiet = FALSE)
 
 # Check the integrity of the cross object
