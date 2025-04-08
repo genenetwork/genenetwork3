@@ -36,7 +36,7 @@ def make_incremental_backoff(init_val: float=0.1, maximum: int=420):
 
     return __increment_or_reset__
 
-def run_jobs(conn, queue_name: str = "GN3::job-queue"):
+def run_jobs(conn, queue_name):
     """Process the redis using a redis connection, CONN"""
     # pylint: disable=E0401, C0415
     from gn3.commands import run_cmd
@@ -65,17 +65,20 @@ def parse_cli_arguments():
         help=(
             "Run process as a daemon instead of the default 'one-shot' "
             "process"))
+    parser.add_argument(
+        "--queue-name", default="GN3::job-queue", type=str,
+        help="The redis list that holds the unique command ids")
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_cli_arguments()
     with redis.Redis() as redis_conn:
         if not args.daemon:
-            run_jobs(redis_conn)
+            run_jobs(redis_conn, args.queue_name)
         else:
             sleep_time = make_incremental_backoff()
             while True:  # Daemon that keeps running forever:
-                if run_jobs(redis_conn):
+                if run_jobs(redis_conn, args.queue_name):
                     time.sleep(sleep_time("reset"))
                     continue
                 time.sleep(sleep_time("increment", sleep_time("return_current")))
