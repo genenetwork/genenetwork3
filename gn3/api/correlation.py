@@ -1,5 +1,6 @@
 """Endpoints for running correlations"""
 import sys
+import logging
 from functools import reduce
 
 import redis
@@ -138,10 +139,12 @@ def partial_correlation():
                     trait_fullname(trait) for trait in args["target_traits"]))
 
         queueing_results = run_async_cmd(
-                conn=conn,
-                cmd=command,
-                job_queue=compute_job_queue(current_app),
-                env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})
+            conn=conn,
+            cmd=command,
+            job_queue=compute_job_queue(current_app),
+            env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI},
+            log_level=logging.getLevelName(
+                current_app.logger.getEffectiveLevel()).lower())
         return build_response({
             "status": "success",
             "results": queueing_results,
