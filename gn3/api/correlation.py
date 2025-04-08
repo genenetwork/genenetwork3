@@ -12,10 +12,11 @@ from gn3.settings import SQL_URI
 from gn3.db_utils import database_connection
 from gn3.commands import run_sample_corr_cmd
 from gn3.responses.pcorrs_responses import build_response
-from gn3.commands import run_async_cmd, compose_pcorrs_command
 from gn3.computations.correlations import map_shared_keys_to_values
 from gn3.computations.correlations import compute_tissue_correlation
 from gn3.computations.correlations import compute_all_lit_correlation
+from gn3.commands import (
+    run_async_cmd, compute_job_queue, compose_pcorrs_command)
 
 correlation = Blueprint("correlation", __name__)
 
@@ -139,7 +140,7 @@ def partial_correlation():
         queueing_results = run_async_cmd(
                 conn=conn,
                 cmd=command,
-                job_queue=current_app.config.get("REDIS_JOB_QUEUE"),
+                job_queue=compute_job_queue(current_app),
                 env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI})
         return build_response({
             "status": "success",
