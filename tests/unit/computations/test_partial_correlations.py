@@ -159,8 +159,8 @@ class TestPartialCorrelations(TestCase):
                                    "variance": None}}},
                 dictified_control_samples),
             (("BXD2",), (7.80944,),
-             (7.51879, 7.77141, 8.39265, 8.17443, 8.30401, 7.80944, 8.39265,
-              8.17443, 8.30401, 7.80944, 7.51879, 7.77141, 7.80944),
+             ((7.51879, 7.77141, 8.39265, 8.17443, 8.30401, 7.80944, 8.39265,
+               8.17443, 8.30401, 7.80944, 7.51879, 7.77141, 7.80944),),
              (None,),
              (None, None, None, None, None, None, None, None, None, None, None,
               None, None)))
