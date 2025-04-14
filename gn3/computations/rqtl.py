@@ -69,6 +69,7 @@ def process_rqtl_mapping(file_name: str) -> List:
     # awkwardness with removing quotes with [1:-1]
     outdir = os.path.join(get_tmpdir(),"gn3")
     with open(os.path.join(outdir,file_name),"r",encoding="utf-8") as the_file:
+        column_count = len(the_file.readline().strip().split(","))
         for line in the_file:
             line_items = line.split(",")
             if line_items[1][1:-1] == "chr" or not line_items:
@@ -88,6 +89,16 @@ def process_rqtl_mapping(file_name: str) -> List:
                 "Mb": float(line_items[2]),
                 "lod_score": float(line_items[3]),
             }
+            # If 4-way, get extra effect columns
+            if column_count > 4:
+                this_marker['mean1'] = line_items[4][1:-1].split(' ± ')[0]
+                this_marker['se1'] = line_items[4][1:-1].split(' ± ')[1]
+                this_marker['mean2'] = line_items[5][1:-1].split(' ± ')[0]
+                this_marker['se2'] = line_items[5][1:-1].split(' ± ')[1]
+                this_marker['mean3'] = line_items[6][1:-1].split(' ± ')[0]
+                this_marker['se3'] = line_items[6][1:-1].split(' ± ')[1]
+                this_marker['mean4'] = line_items[7][1:-1].split(' ± ')[0]
+                this_marker['se4'] = line_items[7][1:-1].split(' ± ')[1]
             marker_obs.append(this_marker)
 
     return marker_obs
