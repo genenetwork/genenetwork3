@@ -49,7 +49,7 @@ def run_jobs(conn, queue_name):
     if bool(cmd_id):
         cmd = conn.hget(name=cmd_id, key="cmd")
         if cmd and (conn.hget(cmd_id, "status") == b"queued"):
-            logger.debug(f"Updating status for job '{cmd_id}' to 'running'")
+            logger.debug("Updating status for job '%s' to 'running'", cmd_id)
             update_status(conn, cmd_id, "running")
             result = run_cmd(
                 cmd.decode("utf-8"), env=conn.hget(name=cmd_id, key="env"))
