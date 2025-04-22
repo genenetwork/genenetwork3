@@ -14,6 +14,7 @@ from gn3.db.rdf.wiki import (
     get_comment_history,
     update_wiki_comment,
     get_rif_entries_by_symbol,
+    delete_wiki_entries_by_id,
 )
 
 
@@ -179,3 +180,43 @@ def get_ncbi_rif_entries(symbol: str):
         payload.headers["Content-Type"] = "application/ld+json"
         return payload, status_code
     return jsonify(data), status_code
+
+
+@wiki_blueprint.route("/delete", methods=["POST"], defaults={'comment_id': None})
+@wiki_blueprint.route("/<int:comment_id>/delete", methods=["POST"])
+@require_token
+def delete_wiki(comment_id: Optional[int] = None):
+    """Delete a wiki entry by its comment_id from both SQL and RDF."""
+    if comment_id is None:
+        return jsonify(error="comment_id is required for deletion."), 400
+
+    with (db_utils.database_connection(current_app.config["SQL_URI"]) as conn,
+          conn.cursor() as cursor):
+        try:
+            # Delete from SQL
+            delete_query = "DELETE FROM GeneRIF WHERE Id = %s"
+            current_app.logger.debug(
+                f"Running query: {delete_query} with Id={comment_id}")
+            cursor.execute(delete_query, (comment_id,))
+            if cursor.rowcount == 0:
+                return jsonify(error="No wiki entry found with the provided comment_id."), 404
+
+            # Delete from RDF
+            try:
+                delete_wiki_entries_by_id(
+                    wiki_id=comment_id,
+                    sparql_user=current_app.config["SPARQL_USER"],
+                    sparql_password=current_app.config["SPARQL_PASSWORD"],
+                    sparql_auth_uri=current_app.config["SPARQL_AUTH_URI"],
+                    graph="<http://genenetwork.org>"
+                )
+            except Exception as rdf_exc:
+                current_app.logger.error(f"RDF deletion failed: {rdf_exc}")
+                conn.rollback()
+                return jsonify(error="Failed to delete wiki entry from RDF store."), 500
+            return jsonify({"success": "Wiki entry deleted successfully."}), 200
+
+        except Exception as exc:
+            conn.rollback()
+            current_app.logger.error(f"Error deleting wiki entry: {exc}")
+            return jsonify(error="Error deleting wiki entry, most likely due to DB error!"), 500
