@@ -30,6 +30,7 @@ from gn3.db.rdf.wiki import (
     get_comment_history,
     update_wiki_comment,
     get_rif_entries_by_symbol,
+    delete_wiki_entries_by_id,
 )
 
 GRAPH = "<http://cd-test.genenetwork.org>"
@@ -413,3 +414,35 @@ def test_get_rif_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
     assert len(LPL_RIF_ENTRIES["data"]) == len(entries["data"])
     for result, expected in zip(LPL_RIF_ENTRIES["data"], entries["data"]):
         TestCase().assertDictEqual(result, expected)
+
+
+@pytest.mark.rdf
+def test_delete_wiki_entries_by_id(rdf_setup):
+    """Test deleting a given RIF Wiki entry"""
+    sparql_conf = SPARQL_CONF
+    delete_wiki_entries_by_id(
+        230,
+        sparql_user=sparql_conf["sparql_user"],
+        sparql_password=sparql_conf["sparql_password"],
+        sparql_auth_uri=sparql_conf["sparql_auth_uri"],
+        graph=GRAPH)
+    entries = get_comment_history(
+        comment_id=230,
+        sparql_uri=sparql_conf["sparql_endpoint"],
+        graph=GRAPH,
+    )
+    assert len(entries["data"]) == 0
+
+    # Deleting a non-existent entry has no effect
+    delete_wiki_entries_by_id(
+        199999,
+        sparql_user=sparql_conf["sparql_user"],
+        sparql_password=sparql_conf["sparql_password"],
+        sparql_auth_uri=sparql_conf["sparql_auth_uri"],
+        graph=GRAPH)
+    entries = get_comment_history(
+        comment_id=230,
+        sparql_uri=sparql_conf["sparql_endpoint"],
+        graph=GRAPH,
+    )
+    assert len(entries["data"]) == 0
