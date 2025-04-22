@@ -328,3 +328,31 @@ FROM $graph WHERE {
         )
     results["data"] = data
     return results
+
+
+def delete_wiki_entries_by_id(
+    wiki_id: int,
+    sparql_user: str,
+    sparql_password: str,
+    sparql_auth_uri: str,
+    graph: str = "<http://genenetwork.org>",
+) -> str:
+    """Delete all wiki entries associated with a given ID."""
+    query = Template(
+        """
+$prefix
+
+DELETE WHERE {
+    GRAPH $graph {
+        ?comment dct:identifier \"$wiki_id\"^^xsd:integer .
+        ?comment ?p ?o .
+    }
+}
+"""
+    ).substitute(prefix=RDF_PREFIXES, graph=graph, wiki_id=wiki_id)
+    return update_rdf(
+        query=query,
+        sparql_user=sparql_user,
+        sparql_password=sparql_password,
+        sparql_auth_uri=sparql_auth_uri,
+    )
