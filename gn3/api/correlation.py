@@ -90,6 +90,7 @@ def compute_tissue_corr(corr_method="pearson"):
 
     return jsonify(results)
 
+
 @correlation.route("/partial", methods=["POST"])
 def partial_correlation():
     """API endpoint for partial correlations."""
@@ -113,9 +114,9 @@ def partial_correlation():
     args = request.get_json()
     with_target_db = args.get("with_target_db", True)
     request_errors = __errors__(
-            args, ("primary_trait", "control_traits",
-                   ("target_db" if with_target_db else "target_traits"),
-                   "method"))
+        args, ("primary_trait", "control_traits",
+               ("target_db" if with_target_db else "target_traits"),
+               "method"))
     if request_errors:
         return build_response({
             "status": "error",
@@ -129,7 +130,7 @@ def partial_correlation():
                 tuple(
                     trait_fullname(trait) for trait in args["control_traits"]),
                 args["method"], target_database=args["target_db"],
-                criteria = int(args.get("criteria", 500)))
+                criteria=int(args.get("criteria", 500)))
         else:
             command = compose_pcorrs_command(
                 trait_fullname(args["primary_trait"]),
