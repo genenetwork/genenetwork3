@@ -417,7 +417,7 @@ def test_get_rif_entries_by_symbol(rdf_setup):  # pylint: disable=W0613,W0621
 
 
 @pytest.mark.rdf
-def test_delete_wiki_entries_by_id(rdf_setup):
+def test_delete_wiki_entries_by_id(rdf_setup):  # pylint: disable=W0613,W0621
     """Test deleting a given RIF Wiki entry"""
     sparql_conf = SPARQL_CONF
     delete_wiki_entries_by_id(
