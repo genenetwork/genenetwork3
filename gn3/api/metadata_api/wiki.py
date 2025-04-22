@@ -210,12 +210,13 @@ def delete_wiki(comment_id: Optional[int] = None):
                     sparql_auth_uri=current_app.config["SPARQL_AUTH_URI"],
                     graph="<http://genenetwork.org>"
                 )
+            # pylint: disable=W0718
             except Exception as rdf_exc:
                 current_app.logger.error(f"RDF deletion failed: {rdf_exc}")
                 conn.rollback()
                 return jsonify(error="Failed to delete wiki entry from RDF store."), 500
             return jsonify({"success": "Wiki entry deleted successfully."}), 200
-
+        # pylint: disable=W0718
         except Exception as exc:
             conn.rollback()
             current_app.logger.error(f"Error deleting wiki entry: {exc}")
