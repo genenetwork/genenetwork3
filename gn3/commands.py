@@ -47,6 +47,7 @@ def compose_gemma_cmd(gemma_wrapper_cmd: str = "gemma-wrapper",
         cmd += " ".join([f"{arg}" for arg in gemma_args])
     return cmd
 
+
 def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
                      rqtl_wrapper_kwargs: Dict,
                      rqtl_wrapper_bool_kwargs: list) -> str:
@@ -63,11 +64,13 @@ def compose_rqtl_cmd(rqtl_wrapper_cmd: str,
 
     return cmd
 
+
 def compose_pcorrs_command_for_selected_traits(
         prefix_cmd: Tuple[str, ...], target_traits: Tuple[str, ...]) -> Tuple[
             str, ...]:
     """Build command for partial correlations against selected traits."""
     return prefix_cmd + ("against-traits", ",".join(target_traits))
+
 
 def compose_pcorrs_command_for_database(
         prefix_cmd: Tuple[str, ...], target_database: str,
@@ -75,6 +78,7 @@ def compose_pcorrs_command_for_database(
     """Build command for partial correlations against an entire dataset."""
     return prefix_cmd + (
         "against-db", f"{target_database}", f"--criteria={criteria}")
+
 
 def compose_pcorrs_command(
         primary_trait: str, control_traits: Tuple[str, ...], method: str,
@@ -86,7 +90,8 @@ def compose_pcorrs_command(
             return "pearsons"
         if "spearmans" in mthd:
             return "spearmans"
-        raise Exception(f"Invalid method '{method}'")# pylint: disable=[broad-exception-raised]
+        raise Exception(
+            f"Invalid method '{method}'")  # pylint: disable=[broad-exception-raised]
 
     prefix_cmd = (
         f"{sys.executable}", "-m", "scripts.partial_correlations",
@@ -100,7 +105,9 @@ def compose_pcorrs_command(
             kwargs.get("target_database") is None
             and kwargs.get("target_traits") is not None):
         return compose_pcorrs_command_for_selected_traits(prefix_cmd, **kwargs)
-    raise Exception("Invalid state: I don't know what command to generate!")# pylint: disable=[broad-exception-raised]
+    raise Exception(
+        "Invalid state: I don't know what command to generate!")  # pylint: disable=[broad-exception-raised]
+
 
 def queue_cmd(conn: Redis,
               job_queue: str,
@@ -134,6 +141,7 @@ Returns the name of the specific redis hash for the specific task.
         conn.hset(name=unique_id, key="env", value=json.dumps(env))
     return unique_id
 
+
 def run_sample_corr_cmd(method, this_trait_data, target_dataset_data):
     "Run the sample correlations in an external process, returning the results."
     with tempfile.TemporaryDirectory() as tempdir:
@@ -156,6 +164,7 @@ def run_sample_corr_cmd(method, this_trait_data, target_dataset_data):
 
     return correlation_results
 
+
 def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) -> Dict:
     """Run CMD and return the CMD's status code and output as a dict"""
     try:
@@ -171,7 +180,7 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) ->
     out = str(results.stdout, 'utf-8')
     if results.returncode not in success_codes:  # Error!
         out = str(results.stderr, 'utf-8')
-        (# We do not always run this within an app context
+        (  # We do not always run this within an app context
             current_app.logger.debug if current_app else logging.debug)(out)
     return {"code": results.returncode, "output": out}
 
@@ -201,7 +210,7 @@ def run_async_cmd(
         "--log-level", log_level
     ]
     logging.debug("Launching the worker: %s", worker_command)
-    subprocess.Popen( # pylint: disable=[consider-using-with]
+    subprocess.Popen(  # pylint: disable=[consider-using-with]
         worker_command)
     return cmd_id
 
