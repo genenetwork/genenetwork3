@@ -10,6 +10,7 @@ import tempfile
 import subprocess
 
 from datetime import datetime
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -186,10 +187,12 @@ def compute_job_queue(app: Flask) -> str:
 
 def run_async_cmd(
         conn: Redis, job_queue: str, cmd: Union[str, Sequence[str]],
-        email: Optional[str] = None, log_level: str = "info",
-        env: Optional[dict] = None) -> str:
+        options: Optional[Dict[str, Any]] = None,
+        log_level: str = "info") -> str:
     """A utility function to call `gn3.commands.queue_cmd` function and run the
     worker in the `one-shot` mode."""
+    email = options.get("email") if options else None
+    env = options.get("env") if options else None
     cmd_id = queue_cmd(conn, job_queue, cmd, email, env)
     worker_command = [
         sys.executable,
