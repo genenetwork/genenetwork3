@@ -142,7 +142,9 @@ def partial_correlation():
             conn=conn,
             cmd=command,
             job_queue=compute_job_queue(current_app),
-            env = {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI},
+            options={
+                "env": {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI},
+            },
             log_level=logging.getLevelName(
                 current_app.logger.getEffectiveLevel()).lower())
         return build_response({
