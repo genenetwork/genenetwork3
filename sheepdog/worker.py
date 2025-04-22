@@ -10,24 +10,27 @@ import redis.connection
 
 # Enable importing from one dir up: put as first to override any other globally
 # accessible GN3
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
 logging.basicConfig(
     format=("%(asctime)s — %(filename)s:%(lineno)s — %(levelname)s: "
             "CommandWorker: %(message)s"))
 logger = logging.getLogger(__name__)
 
+
 def update_status(conn, cmd_id, status):
     """Helper to update command status"""
     conn.hset(name=f"{cmd_id}", key="status", value=f"{status}")
 
-def make_incremental_backoff(init_val: float=0.1, maximum: int=420):
+
+def make_incremental_backoff(init_val: float = 0.1, maximum: int = 420):
     """
     Returns a closure that can be used to increment the returned value up to
     `maximum` or reset it to `init_val`.
     """
     current = init_val
 
-    def __increment_or_reset__(command: str, value: float=0.1):
+    def __increment_or_reset__(command: str, value: float = 0.1):
         nonlocal current
         if command == "reset":
             current = init_val
@@ -40,6 +43,7 @@ def make_incremental_backoff(init_val: float=0.1, maximum: int=420):
         return current
 
     return __increment_or_reset__
+
 
 def run_jobs(conn, queue_name):
     """Process the redis using a redis connection, CONN"""
@@ -62,6 +66,7 @@ def run_jobs(conn, queue_name):
         return cmd_id
     return None
 
+
 def parse_cli_arguments():
     """Parse the command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -80,6 +85,7 @@ def parse_cli_arguments():
         help="What level to output the logs at.")
     return parser.parse_args()
 
+
 if __name__ == "__main__":
     args = parse_cli_arguments()
     logger.setLevel(args.log_level.upper())
@@ -97,6 +103,7 @@ if __name__ == "__main__":
                     logger.debug("Ran a job. Pausing for a while...")
                     time.sleep(sleep_time("reset"))
                     continue
-                time.sleep(sleep_time("increment", sleep_time("return_current")))
+                time.sleep(sleep_time(
+                    "increment", sleep_time("return_current")))
 
     logger.info("Worker exiting …")
