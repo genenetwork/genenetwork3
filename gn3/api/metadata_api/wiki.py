@@ -185,11 +185,10 @@ def get_ncbi_rif_entries(symbol: str):
 @wiki_blueprint.route("/delete", methods=["POST"], defaults={'comment_id': None})
 @wiki_blueprint.route("/<int:comment_id>/delete", methods=["POST"])
 @require_token
-def delete_wiki(comment_id: Optional[int] = None):
+def delete_wiki(comment_id: Optional[int] = None, **kwargs):  # pylint: disable=[unused-argument]
     """Delete a wiki entry by its comment_id from both SQL and RDF."""
     if comment_id is None:
         return jsonify(error="comment_id is required for deletion."), 400
-
     with (db_utils.database_connection(current_app.config["SQL_URI"]) as conn,
           conn.cursor() as cursor):
         try:
