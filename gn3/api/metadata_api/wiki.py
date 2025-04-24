@@ -198,9 +198,6 @@ def delete_wiki(comment_id: Optional[int] = None):
             current_app.logger.debug(
                 f"Running query: {delete_query} with Id={comment_id}")
             cursor.execute(delete_query, (comment_id,))
-            if cursor.rowcount == 0:
-                return jsonify(error="No wiki entry found with the provided comment_id."), 404
-
             # Delete from RDF
             try:
                 delete_wiki_entries_by_id(
