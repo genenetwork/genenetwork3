@@ -225,7 +225,7 @@ dct:created "$created"^^xsd:datetime .
         comment_triple += f"{name} foaf:mbox <{insert_dict['email']}> .\n"
     if insert_dict["initial"]:
         comment_triple += f"{name} gnt:initial \"{insert_dict['initial']}\" .\n"
-    if insert_dict["species"]:
+    if insert_dict["species"] and insert_dict["species"].lower() != "no specific species":
         comment_triple += f"{name} gnt:belongsToSpecies ?speciesId .\n"
         using = Template(
             """ USING $graph WHERE { ?speciesId gnt:shortName "$species" . } """
