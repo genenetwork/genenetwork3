@@ -22,12 +22,20 @@ def _decode_dict(result: dict):
 def get_latest_comment(connection, comment_id: int) -> int:
     """ Latest comment is one with the highest versionId """
     cursor = connection.cursor(DictCursor)
-    query = """ SELECT versionId AS version, symbol, PubMed_ID AS pubmed_ids, sp.Name AS species,
-        comment, email, weburl, initial, reason
-        FROM `GeneRIF` gr
-		INNER JOIN Species sp USING(SpeciesId)
-		WHERE gr.Id = %s
-		ORDER BY versionId DESC LIMIT 1;
+    query = """SELECT versionId AS version,
+       symbol,
+       PubMed_ID AS pubmed_ids,
+       COALESCE(sp.Name, 'no specific species') AS species,
+       comment,
+       email,
+       weburl,
+       initial,
+       reason
+FROM `GeneRIF` gr
+LEFT JOIN Species sp USING(SpeciesId)
+WHERE gr.Id = %s
+ORDER BY versionId DESC
+LIMIT 1;
     """
     cursor.execute(query, (str(comment_id),))
     result = _decode_dict(cursor.fetchone())
