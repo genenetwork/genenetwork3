@@ -48,6 +48,8 @@ def get_latest_comment(connection, comment_id: int) -> int:
 
 def get_species_id(cursor, species_name: str) -> int:
     """Find species id given species `Name`"""
+    if species_name.lower() == "no specific species":
+        return 0
     cursor.execute(
         "SELECT SpeciesID from Species  WHERE Name = %s", (species_name,))
     species_ids = cursor.fetchall()
