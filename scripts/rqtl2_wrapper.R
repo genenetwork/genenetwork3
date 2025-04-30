@@ -169,7 +169,7 @@ MAP <- insert_pseudomarkers(cross$gmap, step = 1, stepwidth = "fixed", cores = N
 
 # Calculate genetic probabilities
 cat("Calculating the genetic probabilities.\n")
-Pr <- perform_genetic_pr(cross)
+Pr <- perform_genetic_pr(cross, cores=0)
 
 # Calculate allele probabilities for 4-way cross
 if (cross$crosstype == "4way") {
