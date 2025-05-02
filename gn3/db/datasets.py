@@ -79,6 +79,21 @@ def retrieve_mrna_group_name(connection: Any, probeset_id: int, dataset_name: st
             return res[0]
         return None
 
+def retrieve_group_id(connection: Any, group_name: str):
+    """
+    Given the group name, retrieve the group ID
+    """
+    query = (
+        "SELECT iset.Id "
+        "FROM InbredSet AS iset "
+        "WHERE iset.Name = %(group_name)s")
+    with connection.cursor() as cursor:
+        cursor.execute(query, {"group_name": group_name})
+        res = cursor.fetchone()
+        if res:
+            return res[0]
+        return None
+
 def retrieve_phenotype_group_name(connection: Any, dataset_id: int):
     """
     Given the dataset id (PublishFreeze.Id in the database), retrieve the name

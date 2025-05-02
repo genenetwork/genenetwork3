@@ -118,18 +118,28 @@ WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
         return "\n".join(trait_csv)
 
 def get_pheno_sample_data(
-    conn: Any, trait_name: int, phenotype_id: int
+    conn: Any, trait_name: int, phenotype_id: int, group_id: str = None
 ) -> Dict:
     """Fetch a phenotype (Publish in the DB) trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
-        cursor.execute("""
-SELECT st.Name, ifnull(pd.value, 'x'), ifnull(ps.error, 'x'), ifnull(ns.count, 'x')
-FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
-     JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
-     LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
-     LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
-WHERE px.Id = %s AND px.PhenotypeId = %s
-ORDER BY st.Name""", (trait_name, phenotype_id))
+        if group_id:
+            cursor.execute("""
+    SELECT st.Name, ifnull(pd.value, 'x'), ifnull(ps.error, 'x'), ifnull(ns.count, 'x')
+    FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
+        JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
+        LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
+        LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
+    WHERE px.Id = %s AND px.InbredSetId = %s
+    ORDER BY st.Name""", (trait_name, group_id))
+        else:
+            cursor.execute("""
+    SELECT st.Name, ifnull(pd.value, 'x'), ifnull(ps.error, 'x'), ifnull(ns.count, 'x')
+    FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
+        JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
+        LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
+        LEFT JOIN NStrain ns ON ns.DataId = pd.Id AND ns.StrainId = pd.StrainId
+    WHERE px.Id = %s AND px.PhenotypeId = %s
+    ORDER BY st.Name""", (trait_name, phenotype_id))
 
         sample_data = {}
         for data in cursor.fetchall():
