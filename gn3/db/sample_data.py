@@ -59,20 +59,32 @@ def __extract_actions(
     return result
 
 def get_mrna_sample_data(
-    conn: Any, probeset_id: str, dataset_name: str
+    conn: Any, probeset_id: int, dataset_name: str, probeset_name: str = None
 ) -> Dict:
     """Fetch a mRNA Assay (ProbeSet in the DB) trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
-        cursor.execute("""
-SELECT st.Name, ifnull(psd.value, 'x'), ifnull(psse.error, 'x'), ifnull(ns.count, 'x')
-FROM ProbeSetFreeze psf
-    JOIN ProbeSetXRef psx ON psx.ProbeSetFreezeId = psf.Id
-    JOIN ProbeSet ps ON ps.Id = psx.ProbeSetId
-    JOIN ProbeSetData psd ON psd.Id = psx.DataId
-    JOIN Strain st ON psd.StrainId = st.Id
-    LEFT JOIN ProbeSetSE psse ON psse.DataId = psd.Id AND psse.StrainId = psd.StrainId
-    LEFT JOIN NStrain ns ON ns.DataId = psd.Id AND ns.StrainId = psd.StrainId
-WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
+        if probeset_name:
+            cursor.execute("""
+    SELECT st.Name, ifnull(psd.value, 'x'), ifnull(psse.error, 'x'), ifnull(ns.count, 'x')
+    FROM ProbeSetFreeze psf
+        JOIN ProbeSetXRef psx ON psx.ProbeSetFreezeId = psf.Id
+        JOIN ProbeSet ps ON ps.Id = psx.ProbeSetId
+        JOIN ProbeSetData psd ON psd.Id = psx.DataId
+        JOIN Strain st ON psd.StrainId = st.Id
+        LEFT JOIN ProbeSetSE psse ON psse.DataId = psd.Id AND psse.StrainId = psd.StrainId
+        LEFT JOIN NStrain ns ON ns.DataId = psd.Id AND ns.StrainId = psd.StrainId
+    WHERE ps.Name = %s AND psf.Name= %s""", (probeset_name, dataset_name))
+        else:
+            cursor.execute("""
+    SELECT st.Name, ifnull(psd.value, 'x'), ifnull(psse.error, 'x'), ifnull(ns.count, 'x')
+    FROM ProbeSetFreeze psf
+        JOIN ProbeSetXRef psx ON psx.ProbeSetFreezeId = psf.Id
+        JOIN ProbeSet ps ON ps.Id = psx.ProbeSetId
+        JOIN ProbeSetData psd ON psd.Id = psx.DataId
+        JOIN Strain st ON psd.StrainId = st.Id
+        LEFT JOIN ProbeSetSE psse ON psse.DataId = psd.Id AND psse.StrainId = psd.StrainId
+        LEFT JOIN NStrain ns ON ns.DataId = psd.Id AND ns.StrainId = psd.StrainId
+    WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
 
         sample_data = {}
         for data in cursor.fetchall():
@@ -118,13 +130,13 @@ WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
         return "\n".join(trait_csv)
 
 def get_pheno_sample_data(
-    conn: Any, trait_name: int, phenotype_id: int, group_id: str = None
+    conn: Any, trait_name: int, phenotype_id: int, group_id: int = None
 ) -> Dict:
     """Fetch a phenotype (Publish in the DB) trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
         if group_id:
             cursor.execute("""
-    SELECT st.Name, ifnull(pd.value, 'x'), ifnull(ps.error, 'x'), ifnull(ns.count, 'x')
+    SELECT st.Name, ifnull(ROUND(pd.value, 2), 'x'), ifnull(ROUND(ps.error, 3), 'x'), ifnull(ns.count, 'x')
     FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
         JOIN PublishData pd ON pd.Id = px.DataId JOIN Strain st ON pd.StrainId = st.Id
         LEFT JOIN PublishSE ps ON ps.DataId = pd.Id AND ps.StrainId = pd.StrainId
