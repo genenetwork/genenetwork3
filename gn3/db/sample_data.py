@@ -606,3 +606,122 @@ def insert_sample_data(
         return count
     except Exception as _e:
         raise MySQLdb.Error(_e) from _e
+
+def batch_update_sample_data(
+    conn: Any, diff_data: Dict
+):
+    def __fetch_data_id(conn, db_type, trait_id, dataset_name):
+        with conn.cursor() as cursor:
+            if db_type == "Publish":
+                cursor.execute(
+                    (
+                        f"SELECT {db_type}XRef.DataId "
+                        f"FROM {db_type}XRef, {db_type}Freeze "
+                        f"WHERE {db_type}XRef.InbredSetId = {db_type}Freeze.InbredSetId AND "
+                        f"{db_type}XRef.Id = %s AND "
+                        f"{db_type}Freeze.Name = %s"
+                    ), (trait_id, dataset_name)
+                )
+            elif db_type == "ProbeSet":
+                cursor.execute(
+                    (
+                        f"SELECT {db_type}XRef.DataId "
+                        f"FROM {db_type}XRef, {db_type}, {db_type}Freeze "
+                        f"WHERE {db_type}XRef.InbredSetId = {db_type}Freeze.InbredSetId AND "
+                        f"{db_type}XRef.ProbeSetId = {db_type}.Id AND "
+                        f"{db_type}.Name = %s AND "
+                        f"{db_type}Freeze.Name = %s"
+                    ), (trait_id, dataset_name)
+                )
+            return cursor.fetchone()[0]
+
+    def __fetch_strain_id(cursor, strain_name):
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT Id FROM Strain WHERE Name = %s", (strain_name,)
+            )
+            return cursor.fetchone()[0]
+
+    def __update_query(conn, db_type, data_id, strain_id, diffs):
+        with conn.cursor() as cursor:
+            if 'value' in diffs:
+                cursor.execute(
+                    (
+                        f"UPDATE {db_type}Data "
+                        f"SET value = %s "
+                        f"WHERE Id = %s AND StrainId = %s"
+                    ), (diffs['value']['Current'], data_id, strain_id)
+                )
+            if 'error' in diffs:
+                cursor.execute(
+                    (
+                        f"UPDATE {db_type}SE "
+                        f"SET error = %s "
+                        f"WHERE DataId = %s AND StrainId = %s"
+                    ), (diffs['error']['Current'], data_id, strain_id)
+                )
+
+        conn.commit()
+
+    def __insert_query(conn, db_type, data_id, strain_id, diffs):
+        with conn.cursor() as cursor:
+            if 'value' in diffs:
+                cursor.execute(
+                    (
+                        f"INSERT INTO {db_type}Data (Id, StrainId, value)"
+                        f"VALUES (%s, %s, %s)"
+                    ), (data_id, strain_id, diffs['value'])
+                )
+            if 'error' in diffs:
+                cursor.execute(
+                    (
+                        f"INSERT INTO {db_type}SE (DataId, StrainId, error)"
+                        f"VALUES (%s, %s, %s)"
+                    ), (data_id, strain_id, diffs['error'])
+                )
+
+        conn.commit()
+
+    def __delete_query(conn, db_type, data_id, strain_id, diffs):
+        with conn.cursor() as cursor:
+            if 'value' in diffs:
+                cursor.execute(
+                    (
+                        f"DELETE FROM {db_type}Data "
+                        f"WHERE Id = %s AND StrainId = %s"
+                    ), (data_id, strain_id)
+                )
+            if 'error' in diffs:
+                cursor.execute(
+                    (
+                        f"DELETE FROM {db_type}SE "
+                        f"WHERE DataId = %s AND StrainId = %s"
+                    ), (data_id, strain_id)
+                )
+
+        conn.commit()
+
+    def __update_data(conn, db_type, data_id, diffs, update_type):
+        for strain in diffs:
+            strain_id = __fetch_strain_id(conn, strain)
+            if update_type == "update":
+                __update_query(conn, db_type, data_id, strain_id, diffs[strain])
+            elif update_type == "insert":
+                __insert_query(conn, db_type, data_id, strain_id, diffs[strain])
+            elif update_type == "delete":
+                __delete_query(conn, db_type, data_id, strain_id, diffs[strain])
+
+    for key in diff_data:
+        dataset, trait = key.split(":")
+        if "Publish" in dataset:
+            db_type = "Publish"
+        else:
+            db_type = "ProbeSet"
+
+        data_id = __fetch_data_id(conn, db_type, trait, dataset)
+
+        __update_data(conn, db_type, data_id, diff_data[key]['Modifications'], 'update')
+        __update_data(conn, db_type, data_id, diff_data[key]['Additions'], 'insert')
+        __update_data(conn, db_type, data_id, diff_data[key]['Deletions'], 'delete')
+
+    return diff_data
