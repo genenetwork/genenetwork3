@@ -60,17 +60,15 @@ def search(auth_token=None):
     if not fahamu_token:
         raise LLMError(
             "Request failed: an LLM authorisation token  is required ", query)
-    user_id = get_user_id(auth_token)
     database_setup()
     with db.connection(current_app.config["LLM_DB_PATH"]) as conn:
         cursor = conn.cursor()
         previous_answer_query = """
         SELECT user_id, task_id, query, results FROM history
-            WHERE created_at > DATE('now', '-1 day') AND
-                user_id = ? AND
+            WHERE created_at > DATE('now', '-21 day') AND
                 query = ?
             ORDER BY created_at DESC LIMIT 1 """
-        res = cursor.execute(previous_answer_query, (user_id, query))
+        res = cursor.execute(previous_answer_query, (query,))
         previous_result = res.fetchone()
         if previous_result:
             _, _, _, response = previous_result
@@ -84,6 +82,7 @@ def search(auth_token=None):
             "answer": answer,
             "references": refs
         }
+        user_id = get_user_id(auth_token)
         cursor.execute(
             """INSERT INTO history(user_id, task_id, query, results)
             VALUES(?, ?, ?, ?)
