@@ -1,8 +1,10 @@
 """Api endpoints for gnqa"""
 import json
 import string
+import uuid
 from datetime import datetime
 from typing import Optional
+from functools import wraps
 
 from flask import Blueprint
 from flask import current_app
@@ -60,9 +62,32 @@ def clean_query(query:str) -> str:
     str_query = query.lower().strip(strip_chars)
     return str_query
 
+
+def is_verified_anonymous_user(request):
+    # validate metadata from gn2 api(cors, and signed by gn2)
+    # verify metadata that should be sent from gn2
+    return False
+
+
+def with_gnqna_fallback(view_func):
+    """Allow fallback to GNQNA user if token auth fails."""
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        response = view_func(*args, **kwargs)
+        # Token check failed (400 from require_token)
+        if isinstance(response, tuple) and len(response) == 2 and response[1] == 400:
+            if is_valid_anonymous_user(request):
+                # Retry with anonymous access
+                return view_func(*args, **{**kwargs, "auth_token": None, "valid_anony": True})
+
+        return response
+    return wrapper
+
+
 @gnqa.route("/search", methods=["GET"])
+@with_gnqna_fallback
 @require_token
-def search(auth_token=None):
+def search(auth_token=None, valid_anony=False):
     """Api  endpoint for searching queries in fahamu Api"""
     query = request.args.get("query", "")
     if not query:
@@ -95,7 +120,7 @@ def search(auth_token=None):
             "answer": answer,
             "references": refs
         }
-        user_id = get_user_id(auth_token)
+        user_id = str(uuid.uuid4()) if valid_anony else get_user_id(auth_token)
         cursor.execute(
             """INSERT INTO history(user_id, task_id, query, results)
             VALUES(?, ?, ?, ?)
