@@ -660,6 +660,14 @@ def batch_update_sample_data(
                         f"WHERE DataId = %s AND StrainId = %s"
                     ), (diffs['error']['Current'], data_id, strain_id)
                 )
+            if 'n_cases' in diffs:
+                cursor.execute(
+                    (
+                        f"UPDATE NStrain "
+                        f"SET count = %s "
+                        f"WHERE DataId = %s AND StrainId = %s"
+                    ), (diffs['n_cases']['Current'], data_id, strain_id)
+                )
 
         conn.commit()
 
@@ -679,6 +687,13 @@ def batch_update_sample_data(
                         f"VALUES (%s, %s, %s)"
                     ), (data_id, strain_id, diffs['error'])
                 )
+            if 'n_cases' in diffs:
+                cursor.execute(
+                    (
+                        f"INSERT INTO NStrain (DataId, StrainId, count)"
+                        f"VALUES (%s, %s, %s)"
+                    ), (data_id, strain_id, diffs['n_cases'])
+                )
 
         conn.commit()
 
@@ -695,6 +710,13 @@ def batch_update_sample_data(
                 cursor.execute(
                     (
                         f"DELETE FROM {db_type}SE "
+                        f"WHERE DataId = %s AND StrainId = %s"
+                    ), (data_id, strain_id)
+                )
+            if 'n_cases' in diffs:
+                cursor.execute(
+                    (
+                        f"DELETE FROM NStrain "
                         f"WHERE DataId = %s AND StrainId = %s"
                     ), (data_id, strain_id)
                 )
