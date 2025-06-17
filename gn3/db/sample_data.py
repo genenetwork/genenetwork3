@@ -610,6 +610,7 @@ def insert_sample_data(
 def batch_update_sample_data(
     conn: Any, diff_data: Dict
 ):
+    """Given sample data diffs, execute all relevant update/insert/delete queries"""
     def __fetch_data_id(conn, db_type, trait_id, dataset_name):
         with conn.cursor() as cursor:
             if db_type == "Publish":
@@ -635,7 +636,7 @@ def batch_update_sample_data(
                 )
             return cursor.fetchone()[0]
 
-    def __fetch_strain_id(cursor, strain_name):
+    def __fetch_strain_id(conn, strain_name):
         with conn.cursor() as cursor:
             cursor.execute(
                 "SELECT Id FROM Strain WHERE Name = %s", (strain_name,)
@@ -648,24 +649,24 @@ def batch_update_sample_data(
                 cursor.execute(
                     (
                         f"UPDATE {db_type}Data "
-                        f"SET value = %s "
-                        f"WHERE Id = %s AND StrainId = %s"
+                        "SET value = %s "
+                        "WHERE Id = %s AND StrainId = %s"
                     ), (diffs['value']['Current'], data_id, strain_id)
                 )
             if 'error' in diffs:
                 cursor.execute(
                     (
                         f"UPDATE {db_type}SE "
-                        f"SET error = %s "
-                        f"WHERE DataId = %s AND StrainId = %s"
+                        "SET error = %s "
+                        "WHERE DataId = %s AND StrainId = %s"
                     ), (diffs['error']['Current'], data_id, strain_id)
                 )
             if 'n_cases' in diffs:
                 cursor.execute(
                     (
-                        f"UPDATE NStrain "
-                        f"SET count = %s "
-                        f"WHERE DataId = %s AND StrainId = %s"
+                        "UPDATE NStrain "
+                        "SET count = %s "
+                        "WHERE DataId = %s AND StrainId = %s"
                     ), (diffs['n_cases']['Current'], data_id, strain_id)
                 )
 
@@ -677,21 +678,21 @@ def batch_update_sample_data(
                 cursor.execute(
                     (
                         f"INSERT INTO {db_type}Data (Id, StrainId, value)"
-                        f"VALUES (%s, %s, %s)"
+                        "VALUES (%s, %s, %s)"
                     ), (data_id, strain_id, diffs['value'])
                 )
             if 'error' in diffs:
                 cursor.execute(
                     (
                         f"INSERT INTO {db_type}SE (DataId, StrainId, error)"
-                        f"VALUES (%s, %s, %s)"
+                        "VALUES (%s, %s, %s)"
                     ), (data_id, strain_id, diffs['error'])
                 )
             if 'n_cases' in diffs:
                 cursor.execute(
                     (
-                        f"INSERT INTO NStrain (DataId, StrainId, count)"
-                        f"VALUES (%s, %s, %s)"
+                        "INSERT INTO NStrain (DataId, StrainId, count)"
+                        "VALUES (%s, %s, %s)"
                     ), (data_id, strain_id, diffs['n_cases'])
                 )
 
@@ -703,21 +704,21 @@ def batch_update_sample_data(
                 cursor.execute(
                     (
                         f"DELETE FROM {db_type}Data "
-                        f"WHERE Id = %s AND StrainId = %s"
+                        "WHERE Id = %s AND StrainId = %s"
                     ), (data_id, strain_id)
                 )
             if 'error' in diffs:
                 cursor.execute(
                     (
                         f"DELETE FROM {db_type}SE "
-                        f"WHERE DataId = %s AND StrainId = %s"
+                        "WHERE DataId = %s AND StrainId = %s"
                     ), (data_id, strain_id)
                 )
             if 'n_cases' in diffs:
                 cursor.execute(
                     (
-                        f"DELETE FROM NStrain "
-                        f"WHERE DataId = %s AND StrainId = %s"
+                        "DELETE FROM NStrain "
+                        "WHERE DataId = %s AND StrainId = %s"
                     ), (data_id, strain_id)
                 )
 
