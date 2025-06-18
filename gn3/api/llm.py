@@ -1,7 +1,10 @@
 """Api endpoints for gnqa"""
 import json
+import string
+import uuid
 from datetime import datetime
 from typing import Optional
+from functools import wraps
 
 from flask import Blueprint
 from flask import current_app
@@ -49,9 +52,42 @@ def database_setup():
         cursor.execute(RATING_TABLE_CREATE_QUERY)
 
 
+def clean_query(query:str) -> str:
+    """This function cleans up query  removing
+    punctuation  and whitepace and transform to
+    lowercase
+    clean_query("!hello test.") -> "hello test"
+    """
+    strip_chars = string.punctuation + string.whitespace
+    str_query = query.lower().strip(strip_chars)
+    return str_query
+
+
+def is_verified_anonymous_user(request):
+    # validate metadata from gn2 api(cors, and signed by gn2)
+    # verify metadata that should be sent from gn2
+    return False
+
+
+def with_gnqna_fallback(view_func):
+    """Allow fallback to GNQNA user if token auth fails."""
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        response = view_func(*args, **kwargs)
+        # Token check failed (400 from require_token)
+        if isinstance(response, tuple) and len(response) == 2 and response[1] == 400:
+            if is_valid_anonymous_user(request):
+                # Retry with anonymous access
+                return view_func(*args, **{**kwargs, "auth_token": None, "valid_anony": True})
+
+        return response
+    return wrapper
+
+
 @gnqa.route("/search", methods=["GET"])
+@with_gnqna_fallback
 @require_token
-def search(auth_token=None):
+def search(auth_token=None, valid_anony=False):
     """Api  endpoint for searching queries in fahamu Api"""
     query = request.args.get("query", "")
     if not query:
@@ -60,20 +96,20 @@ def search(auth_token=None):
     if not fahamu_token:
         raise LLMError(
             "Request failed: an LLM authorisation token  is required ", query)
-    user_id = get_user_id(auth_token)
     database_setup()
     with db.connection(current_app.config["LLM_DB_PATH"]) as conn:
         cursor = conn.cursor()
         previous_answer_query = """
         SELECT user_id, task_id, query, results FROM history
-            WHERE created_at > DATE('now', '-1 day') AND
-                user_id = ? AND
+            WHERE created_at > DATE('now', '-21 day') AND
                 query = ?
             ORDER BY created_at DESC LIMIT 1 """
-        res = cursor.execute(previous_answer_query, (user_id, query))
+        res = cursor.execute(previous_answer_query, (clean_query(query),))
         previous_result = res.fetchone()
         if previous_result:
             _, _, _, response = previous_result
+            response = json.loads(response)
+            response["query"] = query
             return response
 
         task_id, answer, refs = get_gnqa(
@@ -84,11 +120,12 @@ def search(auth_token=None):
             "answer": answer,
             "references": refs
         }
+        user_id = str(uuid.uuid4()) if valid_anony else get_user_id(auth_token)
         cursor.execute(
             """INSERT INTO history(user_id, task_id, query, results)
             VALUES(?, ?, ?, ?)
             """, (user_id, str(task_id["task_id"]),
-                  query,
+                  clean_query(query),
                   json.dumps(response))
         )
         return response
