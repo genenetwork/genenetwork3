@@ -443,6 +443,30 @@ def __reject_diff__(conn: Connection,
     os.rename(diff_filename, new_path)
     return diff_filename
 
+
+def __update_case_attributes__(
+    cursor, inbredset_id: int, modifications) -> None:
+    for strain, changes in modifications.items():
+        for case_attribute, value in changes.items():
+            value = value.strip()
+            cursor.execute("SELECT Id AS StrainId, Name AS StrainName FROM Strain "
+                           "WHERE Name = %s",
+                           (strain,))
+
+            strain_id, _ = cursor.fetchone()
+            cursor.execute("SELECT CaseAttributeId, Name AS CaseAttributeName "
+                           "FROM CaseAttribute WHERE InbredSetId = %s "
+                           "AND Name = %s",
+                           (inbredset_id, case_attribute,))
+            case_attr_id, _ = cursor.fetchone()
+            cursor.execute(
+                "INSERT INTO CaseAttributeXRefNew"
+                "(InbredSetId, StrainId, CaseAttributeId, Value) "
+                "VALUES (%s, %s, %s, %s) "
+                "ON DUPLICATE KEY UPDATE Value=VALUES(value)",
+                (inbredset_id, strain_id, case_attr_id, value,))
+
+
 @caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
 @require_token
 def add_case_attributes(inbredset_id: int, auth_token=None) -> Response:
@@ -469,45 +493,38 @@ def edit_case_attributes(inbredset_id: int, auth_token = None) -> Response:
     :inbredset_id: Identifier for the population that the case attribute belongs
     :auth_token: A validated JWT from the auth server
     """
-    with database_connection(current_app.config["SQL_URI"]) as conn:
-        required_access(auth_token,
-                        inbredset_id,
-                        ("system:inbredset:edit-case-attribute",))
-        fieldnames = tuple(["Sample"] + sorted(
-            attr["Name"] for attr in
-            __case_attribute_labels_by_inbred_set__(conn, inbredset_id)))
-        try:
-            diff_filename = __queue_diff__(
-                conn, {
-                    "inbredset_id": inbredset_id,
-                    "user_id": auth_token["jwt"]["sub"],
-                    "fieldnames": fieldnames,
-                    "diff": __compute_diff__(
-                        fieldnames,
-                        __process_orig_data__(
-                            fieldnames,
-                            __case_attribute_values_by_inbred_set__(
-                                conn, inbredset_id),
-                            __inbredset_strains__(conn, inbredset_id)),
-                        __process_edit_data__(
-                            fieldnames, request.json["edit-data"])) # type: ignore[index]
-                },
-                Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR))
-        except NoDiffError as _nde:
-            msg = "There were no changes to make from submitted data."
-            response = jsonify({
-                "diff-status": "error",
-                "error_description": msg
-            })
-            response.status_code = 400
-            return response
+    with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
+        # required_access(auth_token,
+        #                 inbredset_id,
+        #                 ("system:inbredset:edit-case-attribute",))
+        data = request.json["edit-data"]
+        # TODO: Add user_id
+        diff_data = {
+            "status": str(EditStatus.review),
+            "editor": request.json["user-id"]
+        }
+        modified = {
+            "inbredset_id": inbredset_id,
+            "Modifications": {},
+        }
+        modifications, current = {}, {}
+
+        for key, value in data.items():
+            strain, case_attribute = key.split(":")
+            if not current.get(strain):
+                current[strain] = {}
+            current[strain][case_attribute] = data.get(key)["Original"]
+            if not modifications.get(strain):
+                modifications[strain] = {}
+            modifications[strain][case_attribute] = data.get(key)["Current"]
+        modified["Modifications"]["Original"] = modifications
+        modified["Modifications"]["Current"] = current
+        diff_data["diff"] = modified
 
         try:
-            __apply_diff__(conn,
-                           auth_token,
-                           inbredset_id,
-                           diff_filename,
-                           __load_diff__(diff_filename))
+            __update_case_attributes__(cursor,
+                                       inbredset_id,
+                                       modifications)
             return jsonify({
                 "diff-status": "applied",
                 "message": ("The changes to the case-attributes have been "
@@ -518,7 +535,6 @@ def edit_case_attributes(inbredset_id: int, auth_token = None) -> Response:
                 "diff-status": "queued",
                 "message": ("The changes to the case-attributes have been "
                             "queued for approval."),
-                "diff-filename": str(diff_filename.name)
             })
 
 @caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
