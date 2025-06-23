@@ -4,6 +4,7 @@ import csv
 import json
 import uuid
 import tempfile
+from dataclasses import dataclass
 from typing import Union
 from enum import Enum, auto
 from pathlib import Path
@@ -32,6 +33,14 @@ from gn3.oauth2.errors import AuthorisationError
 caseattr = Blueprint("case-attribute", __name__)
 
 CATTR_DIFFS_DIR = "case-attribute-diffs"
+
+
+@dataclass
+class CaseAttributeEdit:
+    inbredset_id: int
+    user_id: str
+    diff: dict
+
 
 class NoDiffError(ValueError):
     """Raised if there is no difference between the old and new data."""
