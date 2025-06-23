@@ -4,6 +4,8 @@ import csv
 import json
 import uuid
 import tempfile
+import lmdb
+import pickle
 from dataclasses import dataclass
 from typing import Union
 from enum import Enum, auto
@@ -110,6 +112,47 @@ def required_access(
 
     raise AuthorisationError(
         f"User does not have the privileges {access_levels}")
+
+
+def __queue_edits__(cursor, directory: Path, edit: CaseAttributeEdit) -> set:
+    """Queues a case attribute edit for review by inserting it into
+    the audit table and storing its review ID in an LMDB database.
+
+    Args:
+        cursor: A database cursor for executing SQL queries.
+        directory (Path): The base directory path for the LMDB database.
+        edit (CaseAttributeEdit): A dataclass containing the edit details, including
+            inbredset_id, user_id, and diff (the changes to be reviewed).
+
+    Returns:
+        set: A set of review IDs, including the newly added edit's ID, stored in the
+            LMDB database for the specified inbredset_id.
+
+    Notes:
+        - Inserts the edit into the `caseattributes_audit` table with status set to
+          `EditStatus.review`.
+        - Uses LMDB to store review IDs under the key b"review" for the given
+          inbredset_id.
+        - The LMDB map_size is set to 8 MB.
+        - The JSON diff data is serialized using a custom `CAJSONEncoder`.
+    """
+    cursor.execute(
+        "INSERT INTO "
+        "caseattributes_audit(status, editor, json_diff_data) "
+        "VALUES (%s, %s, %s) "
+        "ON DUPLICATE KEY UPDATE status=%s",
+        (str(EditStatus.review),
+         edit.user_id, json.dumps(edit.diff, cls=CAJSONEncoder), str(EditStatus.review),))
+    env = lmdb.open(f"{directory}/case-attributes/{edit.inbredset_id}",
+                    map_size=8_000_000)  # 1 MB
+    with env.begin() as txn:
+        review_ids = set()
+        if reviews := txn.get(b"review"):
+            review_ids = pickle.loads(reviews)
+        review_ids.add(cursor.lastrowid)
+        txn.put(b"review", pickle.dumps(review_ids))
+        return review_ids
+
 
 def __inbredset_group__(conn, inbredset_id):
     """Return InbredSet group's top-level details."""
