@@ -1,6 +1,7 @@
 """Module that contains functions for editing case-attribute data"""
 from typing import Any, Optional, Tuple
 from dataclasses import dataclass
+from enum import Enum, auto
 
 import json
 import MySQLdb
@@ -21,6 +22,17 @@ class CaseAttributeEdit:
     inbredset_id: int
     user_id: str
     changes: dict
+
+
+class EditStatus(Enum):
+    """Enumeration for the status of the edits."""
+    review = auto()   # pylint: disable=[invalid-name]
+    approved = auto()  # pylint: disable=[invalid-name]
+    rejected = auto()  # pylint: disable=[invalid-name]
+
+    def __str__(self):
+        """Print out human-readable form."""
+        return self.name
 
 
 def get_case_attributes(conn) -> Optional[Tuple]:

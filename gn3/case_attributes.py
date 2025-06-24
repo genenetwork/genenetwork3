@@ -7,7 +7,7 @@ import tempfile
 import lmdb
 import pickle
 from typing import Union
-from enum import Enum, auto
+
 from pathlib import Path
 from functools import reduce
 from datetime import datetime
@@ -15,7 +15,7 @@ from urllib.parse import urljoin
 
 import requests
 from MySQLdb.cursors import DictCursor
-from gn3.db.case_attributes import CaseAttributeEdit
+from gn3.db.case_attributes import CaseAttributeEdit, EditStatus
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
     jsonify,
@@ -44,15 +44,6 @@ class NoDiffError(ValueError):
         super().__init__(
             self, "No difference between existing data and sent data.")
 
-class EditStatus(Enum):
-    """Enumeration for the status of the edits."""
-    review = auto()   # pylint: disable=[invalid-name]
-    approved = auto() # pylint: disable=[invalid-name]
-    rejected = auto() # pylint: disable=[invalid-name]
-
-    def __str__(self):
-        """Print out human-readable form."""
-        return self.name
 
 class CAJSONEncoder(json.JSONEncoder):
     """Encoder for CaseAttribute-specific data"""
