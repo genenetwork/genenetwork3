@@ -1,9 +1,13 @@
 """Module that contains functions for editing case-attribute data"""
+from pathlib import Path
 from typing import Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum, auto
 
+import os
 import json
+import pickle
+import lmdb
 import MySQLdb
 
 
@@ -33,6 +37,46 @@ class EditStatus(Enum):
     def __str__(self):
         """Print out human-readable form."""
         return self.name
+
+
+def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> int:
+    """Queues a case attribute edit for review by inserting it into
+    the audit table and storing its review ID in an LMDB database.
+
+    Args:
+        cursor: A database cursor for executing SQL queries.
+        directory (Path): The base directory path for the LMDB database.
+        edit (CaseAttributeEdit): A dataclass containing the edit details, including
+            inbredset_id, user_id, and changes.
+
+    Returns:
+        int: An id the particular case-attribute that was updated.
+
+    Notes:
+        - Inserts the edit into the `caseattributes_audit` table with status set to
+          `EditStatus.review`.
+        - Uses LMDB to store review IDs under the key b"review" for the given
+          inbredset_id.
+        - The LMDB map_size is set to 8 MB.
+    """
+    cursor.execute(
+        "INSERT INTO "
+        "caseattributes_audit(status, editor, json_diff_data) "
+        "VALUES (%s, %s, %s) "
+        "ON DUPLICATE KEY UPDATE status=%s",
+        (str(EditStatus.review),
+         edit.user_id, json.dumps(edit.changes), str(EditStatus.review),))
+    directory = f"{directory}/case-attributes/{edit.inbredset_id}"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    env = lmdb.open(directory, map_size=8_000_000)  # 1 MB
+    with env.begin(write=True) as txn:
+        review_ids = set()
+        if reviews := txn.get(b"review"):
+            review_ids = pickle.loads(reviews)
+        review_ids.add(cursor.lastrowid)
+        txn.put(b"review", pickle.dumps(review_ids))
+        return review_ids
 
 
 def get_case_attributes(conn) -> Optional[Tuple]:
