@@ -1,8 +1,26 @@
 """Module that contains functions for editing case-attribute data"""
 from typing import Any, Optional, Tuple
+from dataclasses import dataclass
 
 import json
 import MySQLdb
+
+
+@dataclass
+class CaseAttributeEdit:
+    """Represents an edit operation for case attributes in the database.
+
+    Attributes:
+        inbredset_id (int): The ID of the inbred set associated with
+        the edit.
+        user_id (str): The ID of the user performing the edit.
+        changes (dict): A dictionary containing the changes to be
+    applied to the case attributes.
+
+    """
+    inbredset_id: int
+    user_id: str
+    changes: dict
 
 
 def get_case_attributes(conn) -> Optional[Tuple]:
