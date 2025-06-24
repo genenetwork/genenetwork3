@@ -6,7 +6,6 @@ import uuid
 import tempfile
 import lmdb
 import pickle
-from dataclasses import dataclass
 from typing import Union
 from enum import Enum, auto
 from pathlib import Path
@@ -16,6 +15,7 @@ from urllib.parse import urljoin
 
 import requests
 from MySQLdb.cursors import DictCursor
+from gn3.db.case_attributes import CaseAttributeEdit
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
     jsonify,
@@ -35,13 +35,6 @@ from gn3.oauth2.errors import AuthorisationError
 caseattr = Blueprint("case-attribute", __name__)
 
 CATTR_DIFFS_DIR = "case-attribute-diffs"
-
-
-@dataclass
-class CaseAttributeEdit:
-    inbredset_id: int
-    user_id: str
-    diff: dict
 
 
 class NoDiffError(ValueError):
