@@ -39,7 +39,7 @@ class EditStatus(Enum):
         return self.name
 
 
-def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> int:
+def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int]:
     """Queues a case attribute edit for review by inserting it into
     the audit table and storing its review ID in an LMDB database.
 
@@ -74,6 +74,7 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> int:
         review_ids = set()
         if reviews := txn.get(b"review"):
             review_ids = pickle.loads(reviews)
-        review_ids.add(cursor.lastrowid)
+        _id = cursor.lastrowid
+        review_ids.add(_id)
         txn.put(b"review", pickle.dumps(review_ids))
-        return review_ids
+        return _id
