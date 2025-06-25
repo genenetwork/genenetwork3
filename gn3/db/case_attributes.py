@@ -79,13 +79,6 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> int:
         return review_ids
 
 
-def get_case_attributes(conn) -> Optional[Tuple]:
-    """Get all the case attributes from the database."""
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT Id, Name, Description FROM CaseAttribute")
-        return cursor.fetchall()
-
-
 def get_unreviewed_diffs(conn: Any) -> Optional[tuple]:
     """Fetch all case attributes in GN"""
     with conn.cursor() as cursor:
