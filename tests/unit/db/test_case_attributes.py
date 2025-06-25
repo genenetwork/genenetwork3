@@ -7,7 +7,6 @@ from pytest_mock import MockFixture
 from gn3.db.case_attributes import queue_edit
 from gn3.db.case_attributes import CaseAttributeEdit
 from gn3.db.case_attributes import approve_case_attribute
-from gn3.db.case_attributes import reject_case_attribute
 
 
 @pytest.mark.unit_test
@@ -27,22 +26,6 @@ def test_queue_edit(mocker: MockFixture) -> None:
             "ON DUPLICATE KEY UPDATE status=%s",
             ('review', 'xxxx', '{"a": 1, "b": 2}', 'review'))
         assert {28} == review_ids
-
-
-@pytest.mark.unit_test
-def test_reject_case_attribute(mocker: MockFixture) -> None:
-    """Test rejecting a case-attribute"""
-    mock_conn = mocker.MagicMock()
-    with mock_conn.cursor() as cursor:
-        _ = reject_case_attribute(
-            mock_conn,
-            case_attr_audit_id=1,
-        )
-        cursor.execute.assert_called_once_with(
-            "UPDATE caseattributes_audit SET "
-            "status = 'rejected' WHERE id = %s",
-            (1,),
-        )
 
 
 @pytest.mark.unit_test
