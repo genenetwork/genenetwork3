@@ -5,7 +5,10 @@ import tempfile
 import os
 from pytest_mock import MockFixture
 from gn3.db.case_attributes import queue_edit
-from gn3.db.case_attributes import CaseAttributeEdit
+from gn3.db.case_attributes import (
+    CaseAttributeEdit,
+    EditStatus
+)
 
 
 @pytest.mark.unit_test
@@ -14,8 +17,9 @@ def test_queue_edit(mocker: MockFixture) -> None:
     with mock_conn.cursor() as cursor:
         type(cursor).lastrowid = 28
         TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
-        review_ids = queue_edit(
+        caseattr_id = queue_edit(
             cursor,
+            status=EditStatus.review
             directory=TMPDIR,
             edit=CaseAttributeEdit(inbredset_id=1, user_id="xxxx", changes={"a": 1, "b": 2}))
         cursor.execute.assert_called_once_with(
