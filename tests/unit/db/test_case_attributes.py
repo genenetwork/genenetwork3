@@ -7,7 +7,6 @@ from pytest_mock import MockFixture
 from gn3.db.case_attributes import queue_edit
 from gn3.db.case_attributes import CaseAttributeEdit
 from gn3.db.case_attributes import get_unreviewed_diffs
-from gn3.db.case_attributes import get_case_attributes
 from gn3.db.case_attributes import insert_case_attribute_audit
 from gn3.db.case_attributes import approve_case_attribute
 from gn3.db.case_attributes import reject_case_attribute
@@ -30,31 +29,6 @@ def test_queue_edit(mocker: MockFixture) -> None:
             "ON DUPLICATE KEY UPDATE status=%s",
             ('review', 'xxxx', '{"a": 1, "b": 2}', 'review'))
         assert {28} == review_ids
-
-
-@pytest.mark.unit_test
-def test_get_case_attributes(mocker: MockFixture) -> None:
-    """Test that all the case attributes are fetched correctly"""
-    mock_conn = mocker.MagicMock()
-    with mock_conn.cursor() as cursor:
-        cursor.fetchall.return_value = (
-            (1, "Condition", None),
-            (2, "Tissue", None),
-            (3, "Age", "Cum sociis natoque penatibus et magnis dis"),
-            (4, "Condition", "Description A"),
-            (5, "Condition", "Description B"),
-        )
-        results = get_case_attributes(mock_conn)
-        cursor.execute.assert_called_once_with(
-            "SELECT Id, Name, Description FROM CaseAttribute"
-        )
-        assert results == (
-            (1, "Condition", None),
-            (2, "Tissue", None),
-            (3, "Age", "Cum sociis natoque penatibus et magnis dis"),
-            (4, "Condition", "Description A"),
-            (5, "Condition", "Description B"),
-        )
 
 
 @pytest.mark.unit_test
