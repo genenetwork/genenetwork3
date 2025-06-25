@@ -6,7 +6,6 @@ import os
 from pytest_mock import MockFixture
 from gn3.db.case_attributes import queue_edit
 from gn3.db.case_attributes import CaseAttributeEdit
-from gn3.db.case_attributes import get_unreviewed_diffs
 from gn3.db.case_attributes import insert_case_attribute_audit
 from gn3.db.case_attributes import approve_case_attribute
 from gn3.db.case_attributes import reject_case_attribute
@@ -29,20 +28,6 @@ def test_queue_edit(mocker: MockFixture) -> None:
             "ON DUPLICATE KEY UPDATE status=%s",
             ('review', 'xxxx', '{"a": 1, "b": 2}', 'review'))
         assert {28} == review_ids
-
-
-@pytest.mark.unit_test
-def test_get_unreviewed_diffs(mocker: MockFixture) -> None:
-    """Test that the correct query is called when fetching unreviewed
-    case-attributes diff"""
-    mock_conn = mocker.MagicMock()
-    with mock_conn.cursor() as cursor:
-        _ = get_unreviewed_diffs(mock_conn)
-        cursor.fetchall.return_value = ((1, "editor", "diff_data_1"),)
-        cursor.execute.assert_called_once_with(
-            "SELECT id, editor, json_diff_data FROM "
-            "caseattributes_audit WHERE status = 'review'"
-        )
 
 
 @pytest.mark.unit_test
