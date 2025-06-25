@@ -11,6 +11,17 @@ import lmdb
 import MySQLdb
 
 
+class EditStatus(Enum):
+    """Enumeration for the status of the edits."""
+    review = auto()   # pylint: disable=[invalid-name]
+    approved = auto()  # pylint: disable=[invalid-name]
+    rejected = auto()  # pylint: disable=[invalid-name]
+
+    def __str__(self):
+        """Print out human-readable form."""
+        return self.name
+
+
 @dataclass
 class CaseAttributeEdit:
     """Represents an edit operation for case attributes in the database.
@@ -24,19 +35,9 @@ class CaseAttributeEdit:
 
     """
     inbredset_id: int
+    status: EditStatus
     user_id: str
     changes: dict
-
-
-class EditStatus(Enum):
-    """Enumeration for the status of the edits."""
-    review = auto()   # pylint: disable=[invalid-name]
-    approved = auto()  # pylint: disable=[invalid-name]
-    rejected = auto()  # pylint: disable=[invalid-name]
-
-    def __str__(self):
-        """Print out human-readable form."""
-        return self.name
 
 
 def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int]:
@@ -47,7 +48,7 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int
         cursor: A database cursor for executing SQL queries.
         directory (Path): The base directory path for the LMDB database.
         edit (CaseAttributeEdit): A dataclass containing the edit details, including
-            inbredset_id, user_id, and changes.
+            inbredset_id, status, user_id, and changes.
 
     Returns:
         int: An id the particular case-attribute that was updated.
@@ -64,8 +65,8 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int
         "caseattributes_audit(status, editor, json_diff_data) "
         "VALUES (%s, %s, %s) "
         "ON DUPLICATE KEY UPDATE status=%s",
-        (str(EditStatus.review),
-         edit.user_id, json.dumps(edit.changes), str(EditStatus.review),))
+        (str(edit.status), edit.user_id,
+         json.dumps(edit.changes), str(EditStatus.review),))
     directory = f"{directory}/case-attributes/{edit.inbredset_id}"
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -78,3 +79,30 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int
         review_ids.add(_id)
         txn.put(b"review", pickle.dumps(review_ids))
         return _id
+
+
+
+def update_case_attribute_table(cursor, edit: CaseAttributeEdit) -> int:
+    # Check for ID in LMDB.  If it exists:
+    # 1. Update the case_attributes in mysql
+    # 2. Update the review list, remove from lmdb, and create a new approved set.
+    # 3.
+    for strain, changes in modifications.items():
+        for case_attribute, value in changes.items():
+            value = value.strip()
+            cursor.execute("SELECT Id AS StrainId, Name AS StrainName FROM Strain "
+                           "WHERE Name = %s",
+                           (strain,))
+
+            strain_id, _ = cursor.fetchone()
+            cursor.execute("SELECT CaseAttributeId, Name AS CaseAttributeName "
+                           "FROM CaseAttribute WHERE InbredSetId = %s "
+                           "AND Name = %s",
+                           (inbredset_id, case_attribute,))
+            case_attr_id, _ = cursor.fetchone()
+            cursor.execute(
+                "INSERT INTO CaseAttributeXRefNew"
+                "(InbredSetId, StrainId, CaseAttributeId, Value) "
+                "VALUES (%s, %s, %s, %s) "
+                "ON DUPLICATE KEY UPDATE Value=VALUES(value)",
+                (inbredset_id, strain_id, case_attr_id, value,))
