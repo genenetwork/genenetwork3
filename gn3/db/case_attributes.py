@@ -79,23 +79,6 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> int:
         return review_ids
 
 
-def reject_case_attribute(conn: Any, case_attr_audit_id: int) -> int:
-    """Given the id of the json_diff in the case_attribute_audit table, reject
-    it"""
-    rowcount = 0
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "UPDATE caseattributes_audit SET "
-                "status = 'rejected' WHERE id = %s",
-                (case_attr_audit_id,),
-            )
-            rowcount = cursor.rowcount
-    except Exception as _e:
-        raise MySQLdb.Error(_e) from _e
-    return rowcount
-
-
 def approve_case_attribute(conn: Any, case_attr_audit_id: int) -> int:
     """Given the id of the json_diff in the case_attribute_audit table,
     approve it
