@@ -24,4 +24,4 @@ def test_queue_edit(mocker: MockFixture) -> None:
             "VALUES (%s, %s, %s) "
             "ON DUPLICATE KEY UPDATE status=%s",
             ('review', 'xxxx', '{"a": 1, "b": 2}', 'review'))
-        assert {28} == review_ids
+        assert 28 == caseattr_id
