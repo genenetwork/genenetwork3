@@ -29,7 +29,7 @@ from gn3.api.sampledata import sampledata
 from gn3.api.llm import gnqa
 from gn3.api.rqtl2 import rqtl2
 from gn3.api.streaming import streaming
-from gn3.case_attributes import caseattr
+from gn3.api.case_attributes import caseattr
 from gn3.api.lmdb_sample_data import lmdb_sample_data
 
 
