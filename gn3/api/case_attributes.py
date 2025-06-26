@@ -468,9 +468,6 @@ def __reject_diff__(conn: Connection,
     return diff_filename
 
 
-
-
-
 @caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
 @require_token
 def add_case_attributes(inbredset_id: int, auth_token=None) -> Response:
@@ -500,15 +497,10 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
     :auth_token: A validated JWT from the auth server
     """
     with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
-        # required_access(auth_token,
-        #                 inbredset_id,
-        #                 ("system:inbredset:edit-case-attribute",))
+        required_access(auth_token,
+                        inbredset_id,
+                        ("system:inbredset:edit-case-attribute",))
         data = request.json["edit-data"]
-        # TODO: Add user_id
-        diff_data = {
-            "status": str(EditStatus.review),
-            "editor": request.json["user-id"]
-        }
         modified = {
             "inbredset_id": inbredset_id,
             "Modifications": {},
@@ -525,17 +517,33 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
             modifications[strain][case_attribute] = data.get(key)["Current"]
         modified["Modifications"]["Original"] = modifications
         modified["Modifications"]["Current"] = current
-        diff_data["diff"] = modified
-
+        edit = CaseAttributeEdit(
+            inbredset_id=inbredset_id,
+            status=EditStatus.review,
+            user_id=auth_token["jwt"]["sub"],
+            changes=modified
+        )
+        _id = queue_edit(cursor=cursor,
+                         directory=current_app.config["LMDB_DATA_PATH"],
+                         edit=edit)
         try:
-            __update_case_attributes__(cursor,
-                                       inbredset_id,
-                                       modifications)
-            return jsonify({
-                "diff-status": "applied",
-                "message": ("The changes to the case-attributes have been "
-                            "applied successfully.")
-            })
+            required_access(auth_token,
+                            inbredset_id,
+                            ("system:inbredset:edit-case-attribute",
+                             "system:inbredset:apply-case-attribute-edit"))
+            edit.status = EditStatus.approved
+            match update_case_attributes(cursor=cursor, change_id=_id, edit=edit):
+                case True:
+                    return jsonify({
+                        "diff-status": "applied",
+                        "message": ("The changes to the case-attributes have been "
+                                    "applied successfully.")
+                    })
+                case _:
+                    return jsonify({
+                        "diff-status": "no changes to be applied",
+                        "message": ("There were no changes to be made ")
+                    })
         except AuthorisationError as _auth_err:
             return jsonify({
                 "diff-status": "queued",
