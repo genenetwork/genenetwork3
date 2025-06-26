@@ -468,24 +468,6 @@ def __reject_diff__(conn: Connection,
     return diff_filename
 
 
-@caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
-@require_token
-def add_case_attributes(inbredset_id: int, auth_token=None) -> Response:
-    """Add a new case attribute for `InbredSetId`."""
-    required_access(
-        auth_token, inbredset_id, ("system:inbredset:create-case-attribute",))
-    with database_connection(current_app.config["SQL_URI"]) as conn:  # pylint: disable=[unused-variable]
-        raise NotImplementedError
-
-
-@caseattr.route("/<int:inbredset_id>/delete", methods=["POST"])
-@require_token
-def delete_case_attributes(inbredset_id: int, auth_token=None) -> Response:
-    """Delete a case attribute from `InbredSetId`."""
-    required_access(
-        auth_token, inbredset_id, ("system:inbredset:delete-case-attribute",))
-    with database_connection(current_app.config["SQL_URI"]) as conn:  # pylint: disable=[unused-variable]
-        raise NotImplementedError
 
 
 @caseattr.route("/<int:inbredset_id>/edit", methods=["POST"])
