@@ -468,27 +468,7 @@ def __reject_diff__(conn: Connection,
     return diff_filename
 
 
-def __update_case_attributes__(
-        cursor, inbredset_id: int, modifications) -> None:
-    for strain, changes in modifications.items():
-        for case_attribute, value in changes.items():
-            value = value.strip()
-            cursor.execute("SELECT Id AS StrainId, Name AS StrainName FROM Strain "
-                           "WHERE Name = %s",
-                           (strain,))
 
-            strain_id, _ = cursor.fetchone()
-            cursor.execute("SELECT CaseAttributeId, Name AS CaseAttributeName "
-                           "FROM CaseAttribute WHERE InbredSetId = %s "
-                           "AND Name = %s",
-                           (inbredset_id, case_attribute,))
-            case_attr_id, _ = cursor.fetchone()
-            cursor.execute(
-                "INSERT INTO CaseAttributeXRefNew"
-                "(InbredSetId, StrainId, CaseAttributeId, Value) "
-                "VALUES (%s, %s, %s, %s) "
-                "ON DUPLICATE KEY UPDATE Value=VALUES(value)",
-                (inbredset_id, strain_id, case_attr_id, value,))
 
 
 @caseattr.route("/<int:inbredset_id>/add", methods=["POST"])
