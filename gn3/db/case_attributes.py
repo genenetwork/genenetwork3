@@ -92,6 +92,7 @@ def update_case_attribute(cursor, directory: Path,
        edit.changes.get("Modifications").get("Current"):
         modifications = edit.changes.get("Modifications").get("Current")
     if not modifications:
+        env.close()
         return False
     for strain, changes in modifications.items():
         for case_attribute, value in changes.items():
@@ -127,3 +128,47 @@ def update_case_attribute(cursor, directory: Path,
                 txn.put(b"review", pickle.dumps(review_ids))
                 txn.put(b"approved", pickle.dumps(approved_ids))
                 return True
+
+
+def __fetch_case_attrs_changes__(cursor, change_ids: tuple) -> list:
+    placeholders = ','.join(['%s'] * len(change_ids))
+    cursor.execute(
+        "SELECT editor, json_diff_data, time_stamp "
+        f"FROM caseattributes_audit WHERE id IN ({placeholders})"
+        "ORDER BY time_stamp DESC",
+        change_ids
+    )
+    results = cursor.fetchall()
+    for el in results:
+        el["json_diff_data"] = json.loads(el["json_diff_data"])
+    return results
+
+
+def get_changes(cursor, inbredset_id: int, directory: Path) -> dict:
+    directory = f"{directory}/case-attributes/{inbredset_id}"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    review_ids, approved_ids, rejected_ids = set(), set(), set()
+    env = lmdb.open(directory, map_size=8_000_000)  # 1 MB
+    with env.begin(write=False) as txn:
+        if reviews := txn.get(b"review"):
+            review_ids = pickle.loads(reviews)
+        if approvals := txn.get(b"approved"):
+            approved_ids = pickle.loads(approvals)
+        if rejections := txn.get(b"rejected"):
+            rejected_ids = pickle.loads(rejections)
+    reviews, approvals, rejections = {}, {}, {}
+    if review_ids:
+        reviews = dict(zip(review_ids,
+                           __fetch_case_attrs_changes__(cursor, tuple(review_ids))))
+    if approved_ids:
+        approvals = dict(zip(approved_ids,
+                             __fetch_case_attrs_changes__(cursor, tuple(approved_ids))))
+    if rejected_ids:
+        rejections = dict(zip(rejected_ids,
+                              __fetch_case_attrs_changes__(cursor, tuple(rejected_ids))))
+    return {
+        "reviews": reviews,
+        "approvals": approvals,
+        "rejections": rejections
+    }
