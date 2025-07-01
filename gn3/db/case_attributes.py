@@ -4,7 +4,6 @@ from typing import Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 
-import os
 import json
 import pickle
 import lmdb
@@ -52,13 +51,6 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int
 
     Returns:
         int: An id the particular case-attribute that was updated.
-
-    Notes:
-        - Inserts the edit into the `caseattributes_audit` table with status set to
-          `EditStatus.review`.
-        - Uses LMDB to store review IDs under the key b"review" for the given
-          inbredset_id.
-        - The LMDB map_size is set to 8 MB.
     """
     cursor.execute(
         "INSERT INTO "
@@ -67,10 +59,8 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int
         "ON DUPLICATE KEY UPDATE status=%s",
         (str(edit.status), edit.user_id,
          json.dumps(edit.changes), str(EditStatus.review),))
-    directory = f"{directory}/case-attributes/{edit.inbredset_id}"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    env = lmdb.open(directory, map_size=8_000_000)  # 1 MB
+    directory.mkdir(parents=True, exist_ok=True)
+    env = lmdb.open(directory.as_posix(), map_size=8_000_000)  # 1 MB
     with env.begin(write=True) as txn:
         review_ids = set()
         if reviews := txn.get(b"review"):
@@ -143,16 +133,8 @@ def view_change(cursor, change_id: int) -> dict:
 
     Returns:
         dict: The deserialized JSON diff data as a dictionary if the
-              record exists and contains valid JSON; otherwise, an empty dictionary.
-
-    Notes:
-        - The function assumes `change_id` is a valid integer
-          corresponding to a record in `caseattributes_audit`.
-        - The `json_diff_data` column is expected to contain a valid
-          JSON string or None.
-        - Uses parameterized queries to prevent SQL injection.
-        - The second column returned by `fetchone()` is
-          ignored (denoted by `_`).
+              record exists and contains valid JSON; otherwise, an
+              empty dictionary.
 
     Raises:
         json.JSONDecodeError: If the `json_diff_data` cannot be
@@ -175,21 +157,18 @@ def view_change(cursor, change_id: int) -> dict:
     return {}
 
 
-def get_changes(cursor, inbredset_id: int, directory: Path) -> dict:
-    """Retrieves case attribute changes for a given inbred set,
-    categorized by review status.
+def get_changes(cursor, directory: Path) -> dict:
+    """Retrieves case attribute changes for given lmdb data in
+    directory categorized by review status.
 
-    Fetches change IDs from an LMDB database for the specified
-    `inbredset_id`, categorized as review, approved, or
-    rejected. Queries the `caseattributes_audit` table to retrieve
-    details for these changes using the internal
+    Fetches change IDs from an LMDB database, categorized as review,
+    approved, or rejected. Queries the `caseattributes_audit` table to
+    retrieve details for these changes using the internal
     `__fetch_case_attrs_changes__` function.  Returns a dictionary
     with change details grouped by status.
 
     Args:
         - cursor: A MySQLdb cursor for executing SQL queries.
-        - inbredset_id (int): The ID of the inbred set to filter
-          changes.
         - directory (Path): The base directory path for the LMDB
           database.
 
@@ -201,20 +180,6 @@ def get_changes(cursor, inbredset_id: int, directory: Path) -> dict:
             'time_stamp'). Empty dictionaries are returned for
             categories with no changes.
 
-    Notes:
-        - Creates an LMDB environment in a subdirectory
-          `case-attributes/{inbredset_id}` if it doesn't exist, with a
-          map size of 8 MB.
-        - Uses LMDB to store sets of change IDs under keys 'review',
-          'approved', and 'rejected'.
-        - The `__fetch_case_attrs_changes__` function is called for
-          each non-empty set of change IDs to retrieve details from
-          the `caseattributes_audit` table.
-        - If no change IDs exist for a category, an empty dictionary
-          is returned for that category.
-        - Assumes `inbredset_id` is a valid integer and the LMDB
-          database is properly formatted.
-
     Raises:
         json.JSONDecodeError: If any `json_diff_data` in the audit
             table cannot be deserialized by
@@ -223,11 +188,10 @@ def get_changes(cursor, inbredset_id: int, directory: Path) -> dict:
             cannot be deserialized.
 
     """
-    directory = f"{directory}/case-attributes/{inbredset_id}"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    directory.mkdir(parents=True, exist_ok=True)
     review_ids, approved_ids, rejected_ids = set(), set(), set()
-    env = lmdb.open(directory, map_size=8_000_000)  # 1 MB
+    directory.mkdir(parents=True, exist_ok=True)
+    env = lmdb.open(directory.as_posix(), map_size=8_000_000)  # 1 MB
     with env.begin(write=False) as txn:
         if reviews := txn.get(b"review"):
             review_ids = pickle.loads(reviews)
@@ -313,7 +277,8 @@ def apply_change(cursor, change_type: EditStatus, change_id: int, directory: Pat
 
     """
     review_ids, approved_ids, rejected_ids = set(), set(), set()
-    env = lmdb.open(directory, map_size=8_000_000)  # 1 MB
+    directory.mkdir(parents=True, exist_ok=True)
+    env = lmdb.open(directory.as_posix(), map_size=8_000_000)  # 1 MB
     with env.begin(write=True) as txn:
         if reviews := txn.get(b"review"):
             review_ids = pickle.loads(reviews)

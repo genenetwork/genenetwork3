@@ -22,7 +22,7 @@ def test_queue_edit(mocker: MockFixture) -> None:
     mock_conn = mocker.MagicMock()
     with mock_conn.cursor() as cursor:
         type(cursor).lastrowid = 28
-        tmpdir = os.environ.get("TMPDIR", tempfile.gettempdir())
+        tmpdir = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
         caseattr_id = queue_edit(
             cursor,
             directory=tmpdir,

@@ -1,5 +1,6 @@
 """Implement case-attribute manipulations."""
 from typing import Union
+from pathlib import Path
 
 from functools import reduce
 from urllib.parse import urljoin
@@ -181,21 +182,22 @@ def inbredset_case_attribute_values(inbredset_id: int) -> Response:
         return jsonify(__case_attribute_values_by_inbred_set__(conn, inbredset_id))
 
 
+# pylint: disable=[too-many-locals]
 @caseattr.route("/<int:inbredset_id>/edit", methods=["POST"])
 @require_token
-def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
+def edit_case_attributes(inbredset_id: int, auth_token=None) -> tuple[Response, int]:
     """Edit the case attributes for `InbredSetId` based on data received.
 
     :inbredset_id: Identifier for the population that the case attribute belongs
     :auth_token: A validated JWT from the auth server
     """
     with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
-        data = request.json["edit-data"]
+        data = request.json["edit-data"]  # type: ignore
         modified = {
             "inbredset_id": inbredset_id,
             "Modifications": {},
         }
-        original, current = {}, {}
+        original, current = {}, {}  # type: ignore
 
         for key, value in data.items():
             strain, case_attribute = key.split(":")
@@ -205,16 +207,18 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
             if not original.get(strain):
                 original[strain] = {}
             original[strain][case_attribute] = value["Original"]
-        modified["Modifications"]["Original"] = original
-        modified["Modifications"]["Current"] = current
+        modified["Modifications"]["Original"] = original  # type: ignore
+        modified["Modifications"]["Current"] = current  # type: ignore
         edit = CaseAttributeEdit(
             inbredset_id=inbredset_id,
             status=EditStatus.review,
             user_id=auth_token["jwt"]["sub"],
             changes=modified
         )
+        directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                     "case-attributes" / str(inbredset_id))
         _id = queue_edit(cursor=cursor,
-                         directory=current_app.config["LMDB_DATA_PATH"],
+                         directory=directory,
                          edit=edit)
         try:
             required_access(auth_token,
@@ -223,31 +227,31 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
                              "system:inbredset:apply-case-attribute-edit"))
             match apply_change(
                     cursor, change_type=EditStatus.approved,
-                    change_id=_id,
-                    directory=current_app.config["LMDB_DATA_PATH"]
+                    change_id=_id,  # type: ignore
+                    directory=directory
             ):
                 case True:
                     return jsonify({
                         "diff-status": "applied",
                         "message": ("The changes to the case-attributes have been "
                                     "applied successfully.")
-                    })
+                    }), 201
                 case _:
                     return jsonify({
                         "diff-status": "no changes to be applied",
                         "message": ("There were no changes to be made ")
-                    })
+                    }), 200
         except AuthorisationError as _auth_err:
             return jsonify({
                 "diff-status": "queued",
                 "message": ("The changes to the case-attributes have been "
                             "queued for approval."),
-            }), 401
+            }), 201
 
 
 @caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
 @require_token
-def list_diffs(inbredset_id: int, auth_token=None) -> Response:
+def list_diffs(inbredset_id: int, auth_token=None) -> tuple[Response, int]:
     """List any changes that have not been approved/rejected."""
     try:
         required_access(auth_token,
@@ -256,9 +260,9 @@ def list_diffs(inbredset_id: int, auth_token=None) -> Response:
                          "system:inbredset:apply-case-attribute-edit"))
         with (database_connection(current_app.config["SQL_URI"]) as conn,
               conn.cursor(cursorclass=DictCursor) as cursor):
-            changes = get_changes(cursor, inbredset_id=inbredset_id,
-                                  directory=current_app.config["LMDB_DATA_PATH"])
-            current_app.logger.error(changes)
+            directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                         "case-attributes" / str(inbredset_id))
+            changes = get_changes(cursor, directory=directory)
             return jsonify(
                 changes
             ), 200
@@ -270,27 +274,32 @@ def list_diffs(inbredset_id: int, auth_token=None) -> Response:
 
 @caseattr.route("/<int:inbredset_id>/approve/<int:change_id>", methods=["POST"])
 @require_token
-def approve_case_attributes_diff(inbredset_id: int, change_id: int, auth_token=None) -> Response:
+def approve_case_attributes_diff(
+        inbredset_id: int,
+        change_id: int, auth_token=None
+) -> tuple[Response, int]:
     """Approve the changes to the case attributes in the diff."""
     try:
         required_access(auth_token,
                         inbredset_id,
-                        ("system:inbredset:edit-case-attribute"))
-        with database_connection(current_app.config["SQL_URI"]) as conn, \
-                conn.cursor() as cursor:
+                        ("system:inbredset:edit-case-attribute",))
+        with (database_connection(current_app.config["SQL_URI"]) as conn,
+              conn.cursor() as cursor):
+            directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                         "case-attributes" / str(inbredset_id))
             match apply_change(cursor, change_type=EditStatus.rejected,
                                change_id=change_id,
-                               directory=current_app.config["LMDB_DATA_PATH"]):
+                               directory=directory):
                 case True:
                     return jsonify({
                         "diff-status": "rejected",
                         "message": (f"Successfully approved # {change_id}")
-                    })
+                    }), 201
                 case _:
                     return jsonify({
                         "diff-status": "queued",
                         "message": (f"Was not able to successfully approve # {change_id}")
-                    })
+                    }), 200
     except AuthorisationError as __auth_err:
         return jsonify({
             "diff-status": "queued",
@@ -300,7 +309,9 @@ def approve_case_attributes_diff(inbredset_id: int, change_id: int, auth_token=N
 
 @caseattr.route("/<int:inbredset_id>/reject/<int:change_id>", methods=["POST"])
 @require_token
-def reject_case_attributes_diff(inbredset_id: int, change_id: int, auth_token=None) -> Response:
+def reject_case_attributes_diff(
+        inbredset_id: int, change_id: int, auth_token=None
+) -> tuple[Response, int]:
     """Reject the changes to the case attributes in the diff."""
     try:
         required_access(auth_token,
@@ -309,20 +320,22 @@ def reject_case_attributes_diff(inbredset_id: int, change_id: int, auth_token=No
                          "system:inbredset:apply-case-attribute-edit"))
         with database_connection(current_app.config["SQL_URI"]) as conn, \
                 conn.cursor() as cursor:
+            directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                         "case-attributes" / str(inbredset_id))
             match apply_change(cursor, change_type=EditStatus.rejected,
                                change_id=change_id,
-                               directory=current_app.config["LMDB_DATA_PATH"]):
+                               directory=directory):
                 case True:
                     return jsonify({
                         "diff-status": "rejected",
                         "message": ("The changes to the case-attributes have been "
                                     "rejected.")
-                    })
+                    }), 201
                 case _:
                     return jsonify({
                         "diff-status": "queued",
                         "message": ("Failed to reject changes")
-                    })
+                    }), 200
     except AuthorisationError as __auth_err:
         return jsonify({
             "message": ("You don't have the right privileges to edit this resource.")
@@ -331,7 +344,7 @@ def reject_case_attributes_diff(inbredset_id: int, change_id: int, auth_token=No
 
 @caseattr.route("/<int:inbredset_id>/diff/<int:change_id>/view", methods=["GET"])
 @require_token
-def view_diff(inbredset_id: int, change_id: int, auth_token=None) -> Response:
+def view_diff(inbredset_id: int, change_id: int, auth_token=None) -> tuple[Response, int]:
     """View a diff."""
     try:
         required_access(
@@ -340,7 +353,7 @@ def view_diff(inbredset_id: int, change_id: int, auth_token=None) -> Response:
               conn.cursor(cursorclass=DictCursor) as cursor):
             return jsonify(
                 view_change(cursor, change_id)
-            )
+            ), 200
     except AuthorisationError as __auth_err:
         return jsonify({
             "message": ("You don't have the right privileges to view the diffs.")
