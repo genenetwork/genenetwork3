@@ -21,10 +21,10 @@ def test_queue_edit(mocker: MockFixture) -> None:
     mock_conn = mocker.MagicMock()
     with mock_conn.cursor() as cursor:
         type(cursor).lastrowid = 28
-        TMPDIR = os.environ.get("TMPDIR", tempfile.gettempdir())
+        tmpdir = os.environ.get("TMPDIR", tempfile.gettempdir())
         caseattr_id = queue_edit(
             cursor,
-            directory=TMPDIR,
+            directory=tmpdir,
             edit=CaseAttributeEdit(
                 inbredset_id=1, status=EditStatus.review,
                 user_id="xxxx", changes={"a": 1, "b": 2}
@@ -60,41 +60,41 @@ def test_view_change(mocker: MockFixture) -> None:
             }
         }
     }
-    CHANGE_ID = 28
+    change_id = 28
     mock_cursor, mock_conn = mocker.MagicMock(), mocker.MagicMock()
     mock_conn.cursor.return_value = mock_cursor
     mock_cursor.fetchone.return_value = (json.dumps(sample_json_diff), None)
-    assert view_change(mock_cursor, CHANGE_ID) == sample_json_diff
+    assert view_change(mock_cursor, change_id) == sample_json_diff
     mock_cursor.execute.assert_called_once_with(
         "SELECT json_diff_data FROM caseattributes_audit WHERE id = %s",
-        (CHANGE_ID,))
+        (change_id,))
     mock_cursor.fetchone.assert_called_once()
 
 
 @pytest.mark.unit_test
 def test_view_change_invalid_json(mocker: MockFixture) -> None:
     """Test invalid json when view_change is called"""
-    CHANGE_ID = 28
+    change_id = 28
     mock_cursor, mock_conn = mocker.MagicMock(), mocker.MagicMock()
     mock_conn.cursor.return_value = mock_cursor
     mock_cursor.fetchone.return_value = ("invalid_json_string", None)
     with pytest.raises(json.JSONDecodeError):
-        view_change(mock_cursor, CHANGE_ID)
+        view_change(mock_cursor, change_id)
     mock_cursor.execute.assert_called_once_with(
         "SELECT json_diff_data FROM caseattributes_audit WHERE id = %s",
-        (CHANGE_ID,))
+        (change_id,))
 
 
 @pytest.mark.unit_test
 def test_view_change_no_data(mocker: MockFixture) -> None:
     "Test no result when view_change is called"
-    CHANGE_ID = 28
+    change_id = 28
     mock_cursor, mock_conn = mocker.MagicMock(), mocker.MagicMock()
     mock_cursor.fetchone.return_value = (None, None)
-    assert view_change(mock_cursor, CHANGE_ID) == {}
+    assert view_change(mock_cursor, change_id) == {}
     mock_cursor.execute.assert_called_once_with(
         "SELECT json_diff_data FROM caseattributes_audit WHERE id = %s",
-        (CHANGE_ID,))
+        (change_id,))
 
 
 @pytest.mark.unit_test
@@ -106,12 +106,12 @@ def test_apply_change_approved(mocker: MockFixture) -> None:
     mock_env, mock_txn = mocker.MagicMock(), mocker.MagicMock()
     mock_lmdb.open.return_value = mock_env
     mock_env.begin.return_value.__enter__.return_value = mock_txn
-    CHANGE_ID, review_ids = 1, {1, 2, 3}
+    change_id, review_ids = 1, {1, 2, 3}
     mock_txn.get.side_effect = (
         pickle.dumps(review_ids),  # b"review" key
         None,                      # b"approved" key
     )
-    TMPDIR = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
+    tmpdir = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
     mock_cursor.fetchone.return_value = (json.dumps({
         "inbredset_id": 1,
         "Modifications": {
@@ -133,21 +133,22 @@ def test_apply_change_approved(mocker: MockFixture) -> None:
             ("Epoch", 101), ("SeqCvge", 102)]
     ]
     assert apply_change(mock_cursor, EditStatus.approved,
-                        CHANGE_ID, TMPDIR) is True
+                        change_id, tmpdir) is True
     assert mock_cursor.execute.call_count == 4
     mock_cursor.execute.assert_has_calls([
         mocker.call(
             "SELECT json_diff_data FROM caseattributes_audit WHERE id = %s",
-            (CHANGE_ID,)),
+            (change_id,)),
         mocker.call(
             "SELECT Name, Id FROM Strain WHERE Name IN (%s, %s, %s, %s, %s)",
             ("B6D2F1", "BXD100", "BXD101", "BXD102", "BXD108")),
         mocker.call(
-            "SELECT Name, CaseAttributeId FROM CaseAttribute WHERE InbredSetId = %s AND Name IN (%s, %s)",
+            "SELECT Name, CaseAttributeId FROM CaseAttribute "
+            "WHERE InbredSetId = %s AND Name IN (%s, %s)",
             (1, "SeqCvge", "Epoch")),
         mocker.call(
             "UPDATE caseattributes_audit SET status = %s WHERE id = %s",
-            ("approved", CHANGE_ID))
+            ("approved", change_id))
     ])
     mock_cursor.executemany.assert_called_once_with(
         "INSERT INTO CaseAttributeXRefNew (InbredSetId, StrainId, CaseAttributeId, Value) "
@@ -172,20 +173,20 @@ def test_apply_change_rejected(mocker: MockFixture) -> None:
     mock_env, mock_txn = mocker.MagicMock(), mocker.MagicMock()
     mock_lmdb.open.return_value = mock_env
     mock_env.begin.return_value.__enter__.return_value = mock_txn
-    TMPDIR = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
-    CHANGE_ID, review_ids = 3, {1, 2, 3}
+    tmpdir = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
+    change_id, review_ids = 3, {1, 2, 3}
     mock_txn.get.side_effect = [
         pickle.dumps(review_ids),  # review_ids
         None  # rejected_ids (initially empty)
     ]
 
     assert apply_change(mock_cursor, EditStatus.rejected,
-                        CHANGE_ID, TMPDIR) is True
+                        change_id, tmpdir) is True
 
     # Verify SQL query call sequence
     mock_cursor.execute.assert_called_once_with(
         "UPDATE caseattributes_audit SET status = %s WHERE id = %s",
-        (str(EditStatus.rejected), CHANGE_ID))
+        (str(EditStatus.rejected), change_id))
     mock_cursor.executemany.assert_not_called()
 
     # Verify LMDB operations
@@ -206,11 +207,11 @@ def test_apply_change_non_existent_change_id(mocker: MockFixture) -> None:
     mock_lmdb.open.return_value = mock_env
     mock_conn.cursor.return_value = mock_cursor
     mock_env.begin.return_value.__enter__.return_value = mock_txn
-    CHANGE_ID, review_ids = 28, {1, 2, 3}
+    change_id, review_ids = 28, {1, 2, 3}
     mock_txn.get.side_effect = [
         pickle.dumps(review_ids),  # b"review" key
         None,                      # b"approved" key
     ]
-    TMPDIR = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
+    tmpdir = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
     assert apply_change(mock_cursor, EditStatus.approved,
-                        CHANGE_ID, TMPDIR) is False
+                        change_id, tmpdir) is False
