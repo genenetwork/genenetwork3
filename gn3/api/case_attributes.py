@@ -18,6 +18,9 @@ from gn3.db.case_attributes import (
     CaseAttributeEdit,
     EditStatus,
     view_change,
+    queue_edit,
+    apply_change,
+    get_changes)
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
     jsonify,
@@ -188,7 +191,6 @@ def inbredset_case_attribute_values(inbredset_id: int) -> Response:
         return jsonify(__case_attribute_values_by_inbred_set__(conn, inbredset_id))
 
 
-
 @caseattr.route("/<int:inbredset_id>/edit", methods=["POST"])
 @require_token
 def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
@@ -198,25 +200,22 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
     :auth_token: A validated JWT from the auth server
     """
     with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
-        required_access(auth_token,
-                        inbredset_id,
-                        ("system:inbredset:edit-case-attribute",))
         data = request.json["edit-data"]
         modified = {
             "inbredset_id": inbredset_id,
             "Modifications": {},
         }
-        modifications, current = {}, {}
+        original, current = {}, {}
 
         for key, value in data.items():
             strain, case_attribute = key.split(":")
             if not current.get(strain):
                 current[strain] = {}
-            current[strain][case_attribute] = data.get(key)["Original"]
-            if not modifications.get(strain):
-                modifications[strain] = {}
-            modifications[strain][case_attribute] = data.get(key)["Current"]
-        modified["Modifications"]["Original"] = modifications
+            current[strain][case_attribute] = data.get(key)["Current"]
+            if not original.get(strain):
+                original[strain] = {}
+            original[strain][case_attribute] = data.get(key)["Original"]
+        modified["Modifications"]["Original"] = original
         modified["Modifications"]["Current"] = current
         edit = CaseAttributeEdit(
             inbredset_id=inbredset_id,
@@ -256,91 +255,78 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
 @caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
 def list_diffs(inbredset_id: int) -> Response:
     """List any changes that have not been approved/rejected."""
-    Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR).mkdir(
-        parents=True, exist_ok=True)
-
-    def __generate_diff_files__(diffs):
-        diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
-        review_files = set(afile.name for afile in diff_dir.iterdir()
-                           if ("-rejected" not in afile.name
-                               and "-approved" not in afile.name))
-        for diff in diffs:
-            the_diff = diff["json_diff_data"]
-            diff_filepath = Path(
-                diff_dir,
-                f"{the_diff['inbredset_id']}:::{the_diff['user_id']}:::"
-                f"{the_diff['created'].isoformat()}.json")
-            if diff_filepath not in review_files:
-                with open(diff_filepath, "w", encoding="utf-8") as dfile:
-                    dfile.write(json.dumps(
-                        {**the_diff, "db_id": diff["id"]},
-                        cls=CAJSONEncoder))
-
     with (database_connection(current_app.config["SQL_URI"]) as conn,
           conn.cursor(cursorclass=DictCursor) as cursor):
-        cursor.execute(
-            "SELECT * FROM caseattributes_audit WHERE status='review'")
-        diffs = tuple({
-            **row,
-            "json_diff_data": {
-                **__parse_diff_json__(row["json_diff_data"]),
-                "db_id": row["id"],
-                "created": row["time_stamp"],
-                "user_id": uuid.UUID(row["editor"])
-            }
-        } for row in cursor.fetchall())
-
-    __generate_diff_files__(diffs)
-    resp = make_response(json.dumps(
-        tuple({
-            **diff,
-            "filename": (
-                f"{diff['json_diff_data']['inbredset_id']}:::"
-                f"{diff['json_diff_data']['user_id']}:::"
-                f"{diff['time_stamp'].isoformat()}")
-        } for diff in diffs
-            if diff["json_diff_data"].get("inbredset_id") == inbredset_id),
-        cls=CAJSONEncoder))
-    resp.headers["Content-Type"] = "application/json"
-    return resp
+        changes = get_changes(cursor, inbredset_id=inbredset_id,
+                              directory=current_app.config["LMDB_DATA_PATH"])
+        current_app.logger.error(changes)
+        return jsonify(
+            changes
+        ), 200
 
 
-@caseattr.route("/approve/<path:filename>", methods=["POST"])
+@caseattr.route("/approve/<int:change_id>", methods=["POST"])
 @require_token
 def approve_case_attributes_diff(filename: str, auth_token=None) -> Response:
     """Approve the changes to the case attributes in the diff."""
-    diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
-    diff_filename = Path(diff_dir, filename)
-    the_diff = __load_diff__(diff_filename)
-    with database_connection(current_app.config["SQL_URI"]) as conn:
-        __apply_diff__(conn, auth_token,
-                       the_diff["inbredset_id"], diff_filename, the_diff)
+    try:
+        required_access(auth_token,
+                        inbredset_id,
+                        ("system:inbredset:edit-case-attribute",
+                         "system:inbredset:apply-case-attribute-edit"))
+        with database_connection(current_app.config["SQL_URI"]) as conn, \
+                conn.cursor() as cursor:
+            match apply_change(cursor, change_type=EditStatus.rejected,
+                               directory=directory):
+                case True:
+                    return jsonify({
+                        "diff-status": "rejected",
+                        "message": (f"Successfully approved # {change_id}")
+                    })
+                case _:
+                    return jsonify({
+                        "diff-status": "queued",
+                        "message": (f"Was not able to successfully approve # {change_id}")
+                    })
+    except AuthorisationError as __auth_err:
         return jsonify({
-            "message": "Applied the diff successfully.",
-            "diff_filename": diff_filename.name
+            "diff-status": "queued",
+            "message": ("You don't have the right privileges to edit this resource.")
         })
 
 
-@caseattr.route("/reject/<path:filename>", methods=["POST"])
+@caseattr.route("/reject/<int:change_id>", methods=["POST"])
 @require_token
 def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
     """Reject the changes to the case attributes in the diff."""
-    diff_dir = Path(current_app.config["TMPDIR"], CATTR_DIFFS_DIR)
-    diff_filename = Path(diff_dir, filename)
-    the_diff = __load_diff__(diff_filename)
-    with database_connection(current_app.config["SQL_URI"]) as conn:
-        __reject_diff__(conn,
-                        auth_token,
-                        the_diff["inbredset_id"],
-                        diff_filename,
-                        the_diff)
+    try:
+        required_access(auth_token,
+                        inbredset_id,
+                        ("system:inbredset:edit-case-attribute",
+                         "system:inbredset:apply-case-attribute-edit"))
+        with database_connection(current_app.config["SQL_URI"]) as conn, \
+                conn.cursor() as cursor:
+            match apply_change(cursor, change_type=EditStatus.rejected,
+                               directory=directory):
+                case True:
+                    return jsonify({
+                        "diff-status": "rejected",
+                        "message": ("The changes to the case-attributes have been "
+                                    "rejected.")
+                    })
+                case _:
+                    return jsonify({
+                        "diff-status": "queued",
+                        "message": ("Failed to reject changes")
+                    })
+    except AuthorisationError as __auth_err:
         return jsonify({
-            "message": "Rejected diff successfully",
-            "diff_filename": diff_filename.name
+            "diff-status": "queued",
+            "message": ("You don't have the right privileges to edit this resource.")
         })
 
 
-@caseattr.route("/<int:inbredset_id>/diff/<int:diff_id>/view", methods=["GET"])
+@caseattr.route("/<int:change_id>/diff/view", methods=["GET"])
 @require_token
 def view_diff(inbredset_id: int, diff_id: int, auth_token=None) -> Response:
     """View a diff."""
@@ -348,33 +334,8 @@ def view_diff(inbredset_id: int, diff_id: int, auth_token=None) -> Response:
           conn.cursor(cursorclass=DictCursor) as cursor):
         required_access(
             auth_token, inbredset_id, ("system:inbredset:view-case-attribute",))
-        cursor.execute(
-            "SELECT * FROM caseattributes_audit WHERE id=%s",
-            (diff_id,))
-        diff = cursor.fetchone()
-        if diff:
-            json_diff_data = __parse_diff_json__(diff["json_diff_data"])
-            if json_diff_data["inbredset_id"] != inbredset_id:
-                return jsonify({
-                    "error": "Not Found",
-                    "error_description": (
-                        "Could not find diff with the given ID for the "
-                        "InbredSet chosen.")
-                })
-            return jsonify({
-                **diff,
-                "json_diff_data": {
-                    **json_diff_data,
-                    "db_id": diff["id"],
-                    "created": diff["time_stamp"].isoformat(),
-                    "user_id": uuid.UUID(diff["editor"])
-                }
-            })
-        return jsonify({
-            "error": "Not Found",
-            "error_description": "Could not find diff with the given ID."
-        })
-    return jsonify({
-        "error": "Code Error",
-        "error_description": "The code should never run this."
-    }), 500
+        with (database_connection(current_app.config["SQL_URI"]) as conn,
+              conn.cursor() as cursor):
+            return jsonify(
+                view_change(cursor, change_id)
+            )
