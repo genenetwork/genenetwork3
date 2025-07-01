@@ -255,14 +255,23 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
 @caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
 def list_diffs(inbredset_id: int) -> Response:
     """List any changes that have not been approved/rejected."""
-    with (database_connection(current_app.config["SQL_URI"]) as conn,
-          conn.cursor(cursorclass=DictCursor) as cursor):
-        changes = get_changes(cursor, inbredset_id=inbredset_id,
-                              directory=current_app.config["LMDB_DATA_PATH"])
-        current_app.logger.error(changes)
-        return jsonify(
-            changes
-        ), 200
+    try:
+        required_access(auth_token,
+                        inbredset_id,
+                        ("system:inbredset:edit-case-attribute",
+                         "system:inbredset:apply-case-attribute-edit"))
+        with (database_connection(current_app.config["SQL_URI"]) as conn,
+              conn.cursor(cursorclass=DictCursor) as cursor):
+            changes = get_changes(cursor, inbredset_id=inbredset_id,
+                                  directory=current_app.config["LMDB_DATA_PATH"])
+            current_app.logger.error(changes)
+            return jsonify(
+                changes
+            ), 200
+    except AuthorisationError as _auth_err:
+        return jsonify({
+            "message": ("You are not authorised to list diffs."),
+        })
 
 
 @caseattr.route("/approve/<int:change_id>", methods=["POST"])
@@ -272,8 +281,7 @@ def approve_case_attributes_diff(filename: str, auth_token=None) -> Response:
     try:
         required_access(auth_token,
                         inbredset_id,
-                        ("system:inbredset:edit-case-attribute",
-                         "system:inbredset:apply-case-attribute-edit"))
+                        ("system:inbredset:edit-case-attribute"))
         with database_connection(current_app.config["SQL_URI"]) as conn, \
                 conn.cursor() as cursor:
             match apply_change(cursor, change_type=EditStatus.rejected,
@@ -321,7 +329,6 @@ def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
                     })
     except AuthorisationError as __auth_err:
         return jsonify({
-            "diff-status": "queued",
             "message": ("You don't have the right privileges to edit this resource.")
         })
 
