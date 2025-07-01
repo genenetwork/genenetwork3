@@ -6,13 +6,6 @@ from urllib.parse import urljoin
 
 import requests
 from MySQLdb.cursors import DictCursor
-from gn3.db.case_attributes import (
-    CaseAttributeEdit,
-    EditStatus,
-    view_change,
-    queue_edit,
-    apply_change,
-    get_changes)
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
     jsonify,
@@ -20,6 +13,13 @@ from flask import (
     Response,
     Blueprint,
     current_app)
+from gn3.db.case_attributes import (
+    CaseAttributeEdit,
+    EditStatus,
+    view_change,
+    queue_edit,
+    apply_change,
+    get_changes)
 
 
 from gn3.db_utils import Connection, database_connection
@@ -246,7 +246,8 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
 
 
 @caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
-def list_diffs(inbredset_id: int) -> Response:
+@require_token
+def list_diffs(inbredset_id: int, auth_token=None) -> Response:
     """List any changes that have not been approved/rejected."""
     try:
         required_access(auth_token,
@@ -267,9 +268,9 @@ def list_diffs(inbredset_id: int) -> Response:
         }), 401
 
 
-@caseattr.route("/approve/<int:change_id>", methods=["POST"])
+@caseattr.route("/<int:inbredset_id>/approve/<int:change_id>", methods=["POST"])
 @require_token
-def approve_case_attributes_diff(filename: str, auth_token=None) -> Response:
+def approve_case_attributes_diff(inbredset_id: int, change_id: int, auth_token=None) -> Response:
     """Approve the changes to the case attributes in the diff."""
     try:
         required_access(auth_token,
@@ -278,6 +279,7 @@ def approve_case_attributes_diff(filename: str, auth_token=None) -> Response:
         with database_connection(current_app.config["SQL_URI"]) as conn, \
                 conn.cursor() as cursor:
             match apply_change(cursor, change_type=EditStatus.rejected,
+                               change_id=change_id,
                                directory=current_app.config["LMDB_DATA_PATH"]):
                 case True:
                     return jsonify({
@@ -296,9 +298,9 @@ def approve_case_attributes_diff(filename: str, auth_token=None) -> Response:
         }), 401
 
 
-@caseattr.route("/reject/<int:change_id>", methods=["POST"])
+@caseattr.route("/<int:inbredset_id>/reject/<int:change_id>", methods=["POST"])
 @require_token
-def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
+def reject_case_attributes_diff(inbredset_id: int, change_id: int, auth_token=None) -> Response:
     """Reject the changes to the case attributes in the diff."""
     try:
         required_access(auth_token,
@@ -308,6 +310,7 @@ def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
         with database_connection(current_app.config["SQL_URI"]) as conn, \
                 conn.cursor() as cursor:
             match apply_change(cursor, change_type=EditStatus.rejected,
+                               change_id=change_id,
                                directory=current_app.config["LMDB_DATA_PATH"]):
                 case True:
                     return jsonify({
@@ -326,9 +329,9 @@ def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
         }), 401
 
 
-@caseattr.route("/<int:change_id>/diff/view", methods=["GET"])
+@caseattr.route("/<int:inbredset_id>/diff/<int:change_id>/view", methods=["GET"])
 @require_token
-def view_diff(inbredset_id: int, diff_id: int, auth_token=None) -> Response:
+def view_diff(inbredset_id: int, change_id: int, auth_token=None) -> Response:
     """View a diff."""
     try:
         required_access(

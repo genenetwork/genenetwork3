@@ -1,11 +1,11 @@
 """Test cases for gn3.db.case_attributes.py"""
 
-import pytest
 import pickle
 import tempfile
 import os
 import json
 from pathlib import Path
+import pytest
 from pytest_mock import MockFixture
 from gn3.db.case_attributes import queue_edit
 from gn3.db.case_attributes import (
@@ -18,6 +18,7 @@ from gn3.db.case_attributes import (
 
 @pytest.mark.unit_test
 def test_queue_edit(mocker: MockFixture) -> None:
+    """Test queueing an edit."""
     mock_conn = mocker.MagicMock()
     with mock_conn.cursor() as cursor:
         type(cursor).lastrowid = 28
@@ -90,6 +91,7 @@ def test_view_change_no_data(mocker: MockFixture) -> None:
     "Test no result when view_change is called"
     change_id = 28
     mock_cursor, mock_conn = mocker.MagicMock(), mocker.MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
     mock_cursor.fetchone.return_value = (None, None)
     assert view_change(mock_cursor, change_id) == {}
     mock_cursor.execute.assert_called_once_with(
