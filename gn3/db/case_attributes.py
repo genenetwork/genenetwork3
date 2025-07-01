@@ -144,6 +144,20 @@ def __fetch_case_attrs_changes__(cursor, change_ids: tuple) -> list:
     return results
 
 
+def view_change(cursor, change_id: int) -> dict:
+    cursor.execute(
+        "SELECT json_diff_data "
+        "FROM caseattributes_audit "
+        "WHERE id = %s",
+        (change_id,)
+    )
+    json_diff_data, _ = cursor.fetchone()
+    if json_diff_data:
+        json_diff_data = json.loads(json_diff_data)
+        return json_diff_data
+    return {}
+
+
 def get_changes(cursor, inbredset_id: int, directory: Path) -> dict:
     directory = f"{directory}/case-attributes/{inbredset_id}"
     if not os.path.exists(directory):
