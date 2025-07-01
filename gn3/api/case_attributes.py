@@ -337,12 +337,15 @@ def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
 @require_token
 def view_diff(inbredset_id: int, diff_id: int, auth_token=None) -> Response:
     """View a diff."""
-    with (database_connection(current_app.config["SQL_URI"]) as conn,
-          conn.cursor(cursorclass=DictCursor) as cursor):
+    try:
         required_access(
             auth_token, inbredset_id, ("system:inbredset:view-case-attribute",))
         with (database_connection(current_app.config["SQL_URI"]) as conn,
-              conn.cursor() as cursor):
+              conn.cursor(cursorclass=DictCursor) as cursor):
             return jsonify(
                 view_change(cursor, change_id)
             )
+    except AuthorisationError as __auth_err:
+        return jsonify({
+            "message": ("You don't have the right privileges to view the diffs.")
+        })
