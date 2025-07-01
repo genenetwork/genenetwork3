@@ -224,7 +224,7 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
             match apply_change(
                     cursor, change_type=EditStatus.approved,
                     change_id=_id,
-                    directory=directory
+                    directory=current_app.config["LMDB_DATA_PATH"]
             ):
                 case True:
                     return jsonify({
@@ -278,7 +278,7 @@ def approve_case_attributes_diff(filename: str, auth_token=None) -> Response:
         with database_connection(current_app.config["SQL_URI"]) as conn, \
                 conn.cursor() as cursor:
             match apply_change(cursor, change_type=EditStatus.rejected,
-                               directory=directory):
+                               directory=current_app.config["LMDB_DATA_PATH"]):
                 case True:
                     return jsonify({
                         "diff-status": "rejected",
@@ -308,7 +308,7 @@ def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
         with database_connection(current_app.config["SQL_URI"]) as conn, \
                 conn.cursor() as cursor:
             match apply_change(cursor, change_type=EditStatus.rejected,
-                               directory=directory):
+                               directory=current_app.config["LMDB_DATA_PATH"]):
                 case True:
                     return jsonify({
                         "diff-status": "rejected",
