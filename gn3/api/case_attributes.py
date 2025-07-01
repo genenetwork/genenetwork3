@@ -249,7 +249,7 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
                 "diff-status": "queued",
                 "message": ("The changes to the case-attributes have been "
                             "queued for approval."),
-            })
+            }), 401
 
 
 @caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
@@ -271,7 +271,7 @@ def list_diffs(inbredset_id: int) -> Response:
     except AuthorisationError as _auth_err:
         return jsonify({
             "message": ("You are not authorised to list diffs."),
-        })
+        }), 401
 
 
 @caseattr.route("/approve/<int:change_id>", methods=["POST"])
@@ -300,7 +300,7 @@ def approve_case_attributes_diff(filename: str, auth_token=None) -> Response:
         return jsonify({
             "diff-status": "queued",
             "message": ("You don't have the right privileges to edit this resource.")
-        })
+        }), 401
 
 
 @caseattr.route("/reject/<int:change_id>", methods=["POST"])
@@ -330,7 +330,7 @@ def reject_case_attributes_diff(filename: str, auth_token=None) -> Response:
     except AuthorisationError as __auth_err:
         return jsonify({
             "message": ("You don't have the right privileges to edit this resource.")
-        })
+        }), 401
 
 
 @caseattr.route("/<int:change_id>/diff/view", methods=["GET"])
@@ -348,4 +348,4 @@ def view_diff(inbredset_id: int, diff_id: int, auth_token=None) -> Response:
     except AuthorisationError as __auth_err:
         return jsonify({
             "message": ("You don't have the right privileges to view the diffs.")
-        })
+        }), 401
