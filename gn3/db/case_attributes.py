@@ -123,7 +123,7 @@ def update_case_attribute(cursor, directory: Path,
                     review_ids = pickle.loads(reviews)
                 if approvals := txn.get(b"approved"):
                     approved_ids = pickle.loads(approvals)
-                review_ids.remove(change_id)
+                review_ids.discard(change_id)
                 approved_ids.add(change_id)
                 txn.put(b"review", pickle.dumps(review_ids))
                 txn.put(b"approved", pickle.dumps(approved_ids))
@@ -186,3 +186,100 @@ def get_changes(cursor, inbredset_id: int, directory: Path) -> dict:
         "approvals": approvals,
         "rejections": rejections
     }
+
+
+def apply_change(cursor, change_type: EditStatus, change_id: int, directory: Path) -> bool:
+    review_ids, approved_ids, rejected_ids = set(), set(), set()
+    env = lmdb.open(directory, map_size=8_000_000)  # 1 MB
+    with env.begin(write=True) as txn:
+        if reviews := txn.get(b"review"):
+            review_ids = pickle.loads(reviews)
+        if change_id not in review_ids:
+            return False
+        match change_type:
+            case EditStatus.rejected:
+                cursor.execute(
+                    "UPDATE caseattributes_audit "
+                    "SET status = %s "
+                    "WHERE id = %s",
+                    (str(change_type), change_id))
+                review_ids.discard(change_id)
+                rejected_ids.add(change_id)
+                txn.put(b"review", pickle.dumps(review_ids))
+                txn.put(b"rejected", pickle.dumps(rejected_ids))
+                return True
+            case EditStatus.approved:
+                cursor.execute(
+                    "SELECT json_diff_data "
+                    "FROM caseattributes_audit WHERE "
+                    "id = %s",
+                    (change_id,)
+                )
+                json_diff_data, _ = cursor.fetchone()
+                json_diff_data = json.loads(json_diff_data)
+                inbredset_id = json_diff_data.get("inbredset_id")
+                modifications = json_diff_data.get(
+                    "Modifications", {}).get("Current", {})
+                strains = tuple(modifications.keys())
+                case_attrs = set()
+                for data in modifications.values():
+                    case_attrs.update(data.keys())
+
+                # Bulk fetch strain ids
+                strain_id_map = {}
+                if strains:
+                    cursor.execute(
+                        "SELECT Name, Id FROM Strain WHERE Name IN "
+                        f"({', '.join(['%s'] * len(strains))})",
+                        strains
+                    )
+                    for name, strain_id in cursor.fetchall():
+                        strain_id_map[name] = strain_id
+
+                # Bulk fetch case attr ids
+                caseattr_id_map = {}
+                if case_attrs:
+                    cursor.execute(
+                        "SELECT Name, CaseAttributeId FROM CaseAttribute "
+                        "WHERE InbredSetId = %s AND Name IN "
+                        f"({', '.join(['%s'] * len(case_attrs))})",
+                        (inbredset_id, *case_attrs)
+                    )
+                    for name, caseattr_id in cursor.fetchall():
+                        caseattr_id_map[name] = caseattr_id
+
+                # Bulk insert data
+                insert_data = []
+                for strain, data in modifications.items():
+                    strain_id = strain_id_map.get(strain)
+                    for case_attr, value in data.items():
+                        insert_data.append({
+                            "inbredset_id": inbredset_id,
+                            "strain_id": strain_id,
+                            "caseattr_id": caseattr_id_map.get(case_attr),
+                            "value": value,
+                        })
+                if insert_data:
+                    cursor.executemany(
+                        "INSERT INTO CaseAttributeXRefNew "
+                        "(InbredSetId, StrainId, CaseAttributeId, Value) "
+                        "VALUES (%(inbredset_id)s, %(strain_id)s, %(caseattr_id)s, %(value)s) "
+                        "ON DUPLICATE KEY UPDATE Value = VALUES(Value)",
+                        insert_data
+                    )
+
+                # Update LMDB and audit table
+                cursor.execute(
+                    "UPDATE caseattributes_audit "
+                    "SET status = %s "
+                    "WHERE id = %s",
+                    (str(change_type), change_id))
+                if approvals := txn.get(b"approved"):
+                    approved_ids = pickle.loads(approvals)
+                review_ids.discard(change_id)
+                approved_ids.add(change_id)
+                txn.put(b"review", pickle.dumps(review_ids))
+                txn.put(b"approvals", pickle.dumps(approved_ids))
+                return True
+            case _:
+                raise ValueError
