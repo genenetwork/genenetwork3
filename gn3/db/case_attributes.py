@@ -81,55 +81,6 @@ def queue_edit(cursor, directory: Path, edit: CaseAttributeEdit) -> Optional[int
         return _id
 
 
-def update_case_attribute(cursor, directory: Path,
-                          change_id: int, edit: CaseAttributeEdit) -> bool:
-    directory = f"{directory}/case-attributes/{edit.inbredset_id}"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    env = lmdb.open(directory, map_size=8_000_000)  # 1 MB
-    modifications = dict()
-    if edit.changes.get("Modifications") and \
-       edit.changes.get("Modifications").get("Current"):
-        modifications = edit.changes.get("Modifications").get("Current")
-    if not modifications:
-        env.close()
-        return False
-    for strain, changes in modifications.items():
-        for case_attribute, value in changes.items():
-            value = str(value).strip()
-            cursor.execute("SELECT Id AS StrainId, Name AS StrainName FROM Strain "
-                           "WHERE Name = %s",
-                           (strain,))
-
-            strain_id, _ = cursor.fetchone()
-            cursor.execute("SELECT CaseAttributeId, Name AS CaseAttributeName "
-                           "FROM CaseAttribute WHERE InbredSetId = %s "
-                           "AND Name = %s",
-                           (edit.inbredset_id, case_attribute,))
-            case_attr_id, _ = cursor.fetchone()
-            cursor.execute(
-                "INSERT INTO CaseAttributeXRefNew"
-                "(InbredSetId, StrainId, CaseAttributeId, Value) "
-                "VALUES (%s, %s, %s, %s) "
-                "ON DUPLICATE KEY UPDATE Value=VALUES(value)",
-                (edit.inbredset_id, strain_id, case_attr_id, value,))
-            cursor.execute(
-                "UPDATE caseattributes_audit SET "
-                "status = %s WHERE id = %s",
-                (str(edit.status), change_id,))
-            with env.begin(write=True) as txn:
-                review_ids, approved_ids = set(), set()
-                if reviews := txn.get(b"review"):
-                    review_ids = pickle.loads(reviews)
-                if approvals := txn.get(b"approved"):
-                    approved_ids = pickle.loads(approvals)
-                review_ids.discard(change_id)
-                approved_ids.add(change_id)
-                txn.put(b"review", pickle.dumps(review_ids))
-                txn.put(b"approved", pickle.dumps(approved_ids))
-    return True
-
-
 def __fetch_case_attrs_changes__(cursor, change_ids: tuple) -> list:
     placeholders = ','.join(['%s'] * len(change_ids))
     cursor.execute(
