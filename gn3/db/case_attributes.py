@@ -127,7 +127,7 @@ def update_case_attribute(cursor, directory: Path,
                 approved_ids.add(change_id)
                 txn.put(b"review", pickle.dumps(review_ids))
                 txn.put(b"approved", pickle.dumps(approved_ids))
-                return True
+    return True
 
 
 def __fetch_case_attrs_changes__(cursor, change_ids: tuple) -> list:
