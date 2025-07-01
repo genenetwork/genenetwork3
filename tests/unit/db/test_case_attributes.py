@@ -4,12 +4,14 @@ import pytest
 import pickle
 import tempfile
 import os
+import json
 from pathlib import Path
 from pytest_mock import MockFixture
 from gn3.db.case_attributes import queue_edit
 from gn3.db.case_attributes import (
     CaseAttributeEdit,
     EditStatus,
+    view_change,
     update_case_attribute
 )
 
@@ -125,3 +127,62 @@ def test_update_case_attribute_no_modifications(mocker: MockFixture) -> None:
     )
     change_id = 28
     assert not update_case_attribute(mock_cursor, TMPDIR, change_id, edit)
+
+
+@pytest.mark.unit_test
+def test_view_change(mocker: MockFixture) -> None:
+    """Test view_change function."""
+    sample_json_diff = {
+        "inbredset_id": 1,
+        "Modifications": {
+            "Original": {
+                "B6D2F1": {"Epoch": "10au"},
+                "BXD100": {"Epoch": "3b"},
+                "BXD101": {"SeqCvge": "29"},
+                "BXD102": {"Epoch": "3b"},
+                "BXD108": {"SeqCvge": ""}
+            },
+            "Current": {
+                "B6D2F1": {"Epoch": "10"},
+                "BXD100": {"Epoch": "3"},
+                "BXD101": {"SeqCvge": "2"},
+                "BXD102": {"Epoch": "3"},
+                "BXD108": {"SeqCvge": "oo"}
+            }
+        }
+    }
+    CHANGE_ID = 28
+    mock_cursor, mock_conn = mocker.MagicMock(), mocker.MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_cursor.fetchone.return_value = (json.dumps(sample_json_diff), None)
+    assert view_change(mock_cursor, CHANGE_ID) == sample_json_diff
+    mock_cursor.execute.assert_called_once_with(
+        "SELECT json_diff_data FROM caseattributes_audit WHERE id = %s",
+        (CHANGE_ID,))
+    mock_cursor.fetchone.assert_called_once()
+
+
+@pytest.mark.unit_test
+def test_view_change_invalid_json(mocker: MockFixture) -> None:
+    """Test invalid json when view_change is called"""
+    CHANGE_ID = 28
+    mock_cursor, mock_conn = mocker.MagicMock(), mocker.MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_cursor.fetchone.return_value = ("invalid_json_string", None)
+    with pytest.raises(json.JSONDecodeError):
+        view_change(mock_cursor, CHANGE_ID)
+    mock_cursor.execute.assert_called_once_with(
+        "SELECT json_diff_data FROM caseattributes_audit WHERE id = %s",
+        (CHANGE_ID,))
+
+
+@pytest.mark.unit_test
+def test_view_change_no_data(mocker: MockFixture) -> None:
+    "Test no result when view_change is called"
+    CHANGE_ID = 28
+    mock_cursor, mock_conn = mocker.MagicMock(), mocker.MagicMock()
+    mock_cursor.fetchone.return_value = (None, None)
+    assert view_change(mock_cursor, CHANGE_ID) == {}
+    mock_cursor.execute.assert_called_once_with(
+        "SELECT json_diff_data FROM caseattributes_audit WHERE id = %s",
+        (CHANGE_ID,))

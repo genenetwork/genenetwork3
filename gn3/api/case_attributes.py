@@ -17,7 +17,7 @@ from MySQLdb.cursors import DictCursor
 from gn3.db.case_attributes import (
     CaseAttributeEdit,
     EditStatus,
-    queue_edit)
+    view_change,
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
     jsonify,
