@@ -1,6 +1,6 @@
 """Module that contains functions for editing case-attribute data"""
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 
@@ -8,7 +8,6 @@ import os
 import json
 import pickle
 import lmdb
-import MySQLdb
 
 
 class EditStatus(Enum):
