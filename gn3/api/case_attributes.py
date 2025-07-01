@@ -201,10 +201,10 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
             strain, case_attribute = key.split(":")
             if not current.get(strain):
                 current[strain] = {}
-            current[strain][case_attribute] = data.get(key)["Current"]
+            current[strain][case_attribute] = value["Current"]
             if not original.get(strain):
                 original[strain] = {}
-            original[strain][case_attribute] = data.get(key)["Original"]
+            original[strain][case_attribute] = value["Original"]
         modified["Modifications"]["Original"] = original
         modified["Modifications"]["Current"] = current
         edit = CaseAttributeEdit(
