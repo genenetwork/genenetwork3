@@ -221,7 +221,11 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> Response:
                             inbredset_id,
                             ("system:inbredset:edit-case-attribute",
                              "system:inbredset:apply-case-attribute-edit"))
-            match apply_change(cursor, change_type=EditStatus.approved, directory=directory):
+            match apply_change(
+                    cursor, change_type=EditStatus.approved,
+                    change_id=_id,
+                    directory=directory
+            ):
                 case True:
                     return jsonify({
                         "diff-status": "applied",
