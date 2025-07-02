@@ -279,7 +279,7 @@ def test_get_changes(mocker: MockFixture) -> None:
         "change-type": "review",
         "count": {
             "reviews": 2,
-            "approval": 2,
+            "approvals": 2,
             "rejections": 4
         },
         "data": {
