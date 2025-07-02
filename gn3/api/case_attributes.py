@@ -317,21 +317,3 @@ def reject_case_attributes_diff(
         return jsonify({
             "message": ("You don't have the right privileges to edit this resource.")
         }), 401
-
-
-@caseattr.route("/<int:inbredset_id>/diff/<int:change_id>/view", methods=["GET"])
-@require_token
-def view_diff(inbredset_id: int, change_id: int, auth_token=None) -> tuple[Response, int]:
-    """View a diff."""
-    try:
-        required_access(
-            auth_token, inbredset_id, ("system:inbredset:view-case-attribute",))
-        with (database_connection(current_app.config["SQL_URI"]) as conn,
-              conn.cursor(cursorclass=DictCursor) as cursor):
-            return jsonify(
-                view_change(cursor, change_id)
-            ), 200
-    except AuthorisationError as __auth_err:
-        return jsonify({
-            "message": ("You don't have the right privileges to view the diffs.")
-        }), 401
