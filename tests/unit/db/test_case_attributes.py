@@ -12,6 +12,7 @@ from gn3.db.case_attributes import (
     CaseAttributeEdit,
     EditStatus,
     apply_change,
+    get_changes,
     view_change
 )
 
@@ -217,3 +218,109 @@ def test_apply_change_non_existent_change_id(mocker: MockFixture) -> None:
     tmpdir = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
     assert apply_change(mock_cursor, EditStatus.approved,
                         change_id, tmpdir) is False
+
+
+@pytest.mark.unit_test
+def test_get_changes(mocker: MockFixture) -> None:
+    """Test that reviews are correctly fetched"""
+    mock_fetch_case_attrs_changes = mocker.patch(
+        "gn3.db.case_attributes.__fetch_case_attrs_changes__"
+    )
+    mock_fetch_case_attrs_changes.return_value = [
+        {
+            "editor": "user1",
+            "json_diff_data": {
+                "inbredset_id": 1,
+                "Modifications": {
+                    "Original": {
+                        "B6D2F1": {"Epoch": "10au"},
+                        "BXD100": {"Epoch": "3b"},
+                        "BXD101": {"SeqCvge": "29"},
+                        "BXD102": {"Epoch": "3b"},
+                        "BXD108": {"SeqCvge": ""}
+                    },
+                    "Current": {
+                        "B6D2F1": {"Epoch": "10"},
+                        "BXD100": {"Epoch": "3"},
+                        "BXD101": {"SeqCvge": "2"},
+                        "BXD102": {"Epoch": "3"},
+                        "BXD108": {"SeqCvge": "oo"}
+                    }
+                }
+            },
+            "time_stamp": "2025-07-01 12:00:00"
+        },
+        {
+            "editor": "user2",
+            "json_diff_data": {
+                "inbredset_id": 1,
+                "Modifications": {
+                    "Original": {"BXD200": {"Epoch": "5a"}},
+                    "Current": {"BXD200": {"Epoch": "5"}}
+                }
+            },
+            "time_stamp": "2025-07-01 12:01:00"
+        }
+    ]
+    mock_lmdb = mocker.patch("gn3.db.case_attributes.lmdb")
+    mock_env, mock_txn = mocker.MagicMock(), mocker.MagicMock()
+    mock_lmdb.open.return_value = mock_env
+    mock_env.begin.return_value.__enter__.return_value = mock_txn
+    review_ids, approved_ids, rejected_ids = {1, 4}, {2, 3}, {5, 6, 7, 10}
+    mock_txn.get.side_effect = (
+        pickle.dumps(review_ids),    # b"review" key
+        pickle.dumps(approved_ids),  # b"approved" key
+        pickle.dumps(rejected_ids)   # b"rejected" key
+    )
+    result = get_changes(cursor=mocker.MagicMock(),
+                         change_type=EditStatus.review,
+                         directory=Path("/tmp"))
+    expected = {
+        "change-type": "review",
+        "count": {
+            "reviews": 2,
+            "approval": 2,
+            "rejections": 4
+        },
+        "data": {
+            1: {
+                "editor": "user1",
+                "json_diff_data": {
+                    "inbredset_id": 1,
+                    "Modifications": {
+                        "Original": {
+                            "B6D2F1": {"Epoch": "10au"},
+                            "BXD100": {"Epoch": "3b"},
+                            "BXD101": {"SeqCvge": "29"},
+                            "BXD102": {"Epoch": "3b"},
+                            "BXD108": {"SeqCvge": ""}
+                        },
+                        "Current": {
+                            "B6D2F1": {"Epoch": "10"},
+                            "BXD100": {"Epoch": "3"},
+                            "BXD101": {"SeqCvge": "2"},
+                            "BXD102": {"Epoch": "3"},
+                            "BXD108": {"SeqCvge": "oo"}
+                        }
+                    }
+                },
+                "time_stamp": "2025-07-01 12:00:00"
+            },
+            4: {
+                'editor': 'user2',
+                'json_diff_data': {
+                    'inbredset_id': 1,
+                    'Modifications': {
+                        'Original': {
+                            'BXD200': {'Epoch': '5a'}
+                        },
+                        'Current': {
+                            'BXD200': {'Epoch': '5'}
+                        }
+                    }
+                },
+                "time_stamp": "2025-07-01 12:01:00"
+            }
+        }
+    }
+    assert result == expected
