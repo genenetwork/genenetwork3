@@ -302,8 +302,10 @@ def apply_change(cursor, change_type: EditStatus, change_id: int, directory: Pat
                     "SET status = %s "
                     "WHERE id = %s",
                     (str(change_type), change_id))
-                review_ids.discard(change_id)
+                if rejections := txn.get(b"rejected"):
+                    rejected_ids = pickle.loads(rejections)
                 rejected_ids.add(change_id)
+                review_ids.discard(change_id)
                 txn.put(b"review", pickle.dumps(review_ids))
                 txn.put(b"rejected", pickle.dumps(rejected_ids))
                 return True
@@ -375,10 +377,10 @@ def apply_change(cursor, change_type: EditStatus, change_id: int, directory: Pat
                     (str(change_type), change_id))
                 if approvals := txn.get(b"approved"):
                     approved_ids = pickle.loads(approvals)
-                    review_ids.discard(change_id)
-                    approved_ids.add(change_id)
-                    txn.put(b"review", pickle.dumps(review_ids))
-                    txn.put(b"approvals", pickle.dumps(approved_ids))
+                approved_ids.add(change_id)
+                review_ids.discard(change_id)
+                txn.put(b"review", pickle.dumps(review_ids))
+                txn.put(b"approved", pickle.dumps(approved_ids))
                 return True
             case _:
                 raise ValueError
