@@ -106,6 +106,8 @@ def __fetch_case_attrs_changes__(cursor, change_ids: tuple) -> list:
             causing a database error.
 
     """
+    if not change_ids:
+        return {}
     placeholders = ','.join(['%s'] * len(change_ids))
     cursor.execute(
         "SELECT editor, json_diff_data, time_stamp "
