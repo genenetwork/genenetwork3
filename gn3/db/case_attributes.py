@@ -159,35 +159,33 @@ def view_change(cursor, change_id: int) -> dict:
     return {}
 
 
-def get_changes(cursor, directory: Path) -> dict:
+def get_changes(cursor, change_type: EditStatus, directory: Path) -> dict:
     """Retrieves case attribute changes for given lmdb data in
     directory categorized by review status.
 
-    Fetches change IDs from an LMDB database, categorized as review,
-    approved, or rejected. Queries the `caseattributes_audit` table to
-    retrieve details for these changes using the internal
-    `__fetch_case_attrs_changes__` function.  Returns a dictionary
-    with change details grouped by status.
+    Fetches change IDs from an LMDB database, categorized into the
+    "data" key based on the EditStatus
 
     Args:
         - cursor: A MySQLdb cursor for executing SQL queries.
+        - change_type (EditStatus): The status of changes to retrieve
+          ('review', 'approved', or 'rejected').
         - directory (Path): The base directory path for the LMDB
           database.
 
     Returns:
-        dict: A dictionary with three keys: 'reviews', 'approvals',
-            and 'rejections'. Each key maps to a dictionary where keys
-            are change IDs (int) and values are change details
-            (dictionaries with 'editor', 'json_diff_data', and
-            'time_stamp'). Empty dictionaries are returned for
-            categories with no changes.
+        dict: A dictionary with two keys:
+            -'count': A dictionary with counts of 'reviews',
+                    'approvals' and 'rejections'.
+            - 'data': contains the json diff data of the modified data
 
     Raises:
         json.JSONDecodeError: If any `json_diff_data` in the audit
             table cannot be deserialized by
             `__fetch_case_attrs_changes__`.
         TypeError: If `inbredset_id` is not an integer or if LMDB data
-            cannot be deserialized.
+            cannot be deserialized.  Also raised when an invalid change_id
+            is used.
 
     """
     directory.mkdir(parents=True, exist_ok=True)
@@ -201,20 +199,31 @@ def get_changes(cursor, directory: Path) -> dict:
             approved_ids = pickle.loads(approvals)
         if rejections := txn.get(b"rejected"):
             rejected_ids = pickle.loads(rejections)
-    reviews, approvals, rejections = {}, {}, {}
-    if review_ids:
-        reviews = dict(zip(review_ids,
-                           __fetch_case_attrs_changes__(cursor, tuple(review_ids))))
-    if approved_ids:
-        approvals = dict(zip(approved_ids,
-                             __fetch_case_attrs_changes__(cursor, tuple(approved_ids))))
-    if rejected_ids:
-        rejections = dict(zip(rejected_ids,
-                              __fetch_case_attrs_changes__(cursor, tuple(rejected_ids))))
+    changes = {}
+    match change_type:
+        case EditStatus.review:
+            changes = dict(
+                zip(review_ids,
+                    __fetch_case_attrs_changes__(cursor, tuple(review_ids)))
+            )
+        case EditStatus.approved:
+            changes = dict(
+                zip(approved_ids,
+                    __fetch_case_attrs_changes__(cursor, tuple(approved_ids)))
+            )
+        case EditStatus.rejected:
+            changes = dict(zip(rejected_ids,
+                               __fetch_case_attrs_changes__(cursor, tuple(rejected_ids))))
+        case _:
+            raise TypeError
     return {
-        "reviews": reviews,
-        "approvals": approvals,
-        "rejections": rejections
+        "change-type": str(change_type),
+        "count": {
+            "reviews": len(review_ids),
+            "approval": len(approved_ids),
+            "rejections": len(rejected_ids)
+        },
+        "data": changes
     }
 
 
