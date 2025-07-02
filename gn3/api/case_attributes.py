@@ -233,27 +233,20 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> tuple[Response, 
             }), 201
 
 
-@caseattr.route("/<int:inbredset_id>/diff/list", methods=["GET"])
-@require_token
-def list_diffs(inbredset_id: int, auth_token=None) -> tuple[Response, int]:
-    """List any changes that have not been approved/rejected."""
-    try:
-        required_access(auth_token,
-                        inbredset_id,
-                        ("system:inbredset:edit-case-attribute",
-                         "system:inbredset:apply-case-attribute-edit"))
-        with (database_connection(current_app.config["SQL_URI"]) as conn,
-              conn.cursor(cursorclass=DictCursor) as cursor):
-            directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
-                         "case-attributes" / str(inbredset_id))
-            changes = get_changes(cursor, directory=directory)
-            return jsonify(
-                changes
-            ), 200
-    except AuthorisationError as _auth_err:
-        return jsonify({
-            "message": ("You are not authorised to list diffs."),
-        }), 401
+@caseattr.route("/<int:inbredset_id>/diffs/<string:change_type>", methods=["GET"])
+def list_diffs(inbredset_id: int, change_type: str) -> tuple[Response, int]:
+    """List any changes that have been made by change_type."""
+    with (database_connection(current_app.config["SQL_URI"]) as conn,
+          conn.cursor(cursorclass=DictCursor) as cursor):
+        directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                     "case-attributes" / str(inbredset_id))
+        return jsonify(
+            get_changes(
+                cursor=cursor,
+                change_type=EditStatus[change_type],
+                directory=directory
+            )
+        ), 200
 
 
 @caseattr.route("/<int:inbredset_id>/approve/<int:change_id>", methods=["POST"])
