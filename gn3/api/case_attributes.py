@@ -233,7 +233,7 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> tuple[Response, 
             }), 201
 
 
-@caseattr.route("/<int:inbredset_id>/diffs/<string:change_type>", methods=["GET"])
+@caseattr.route("/<int:inbredset_id>/diffs/<string:change_type>/list", methods=["GET"])
 def list_diffs(inbredset_id: int, change_type: str) -> tuple[Response, int]:
     """List any changes that have been made by change_type."""
     with (database_connection(current_app.config["SQL_URI"]) as conn,
