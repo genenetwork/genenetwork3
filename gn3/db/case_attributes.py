@@ -220,7 +220,7 @@ def get_changes(cursor, change_type: EditStatus, directory: Path) -> dict:
         "change-type": str(change_type),
         "count": {
             "reviews": len(review_ids),
-            "approval": len(approved_ids),
+            "approvals": len(approved_ids),
             "rejections": len(rejected_ids)
         },
         "data": changes
