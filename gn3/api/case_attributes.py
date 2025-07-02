@@ -193,27 +193,11 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> tuple[Response, 
     """
     with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
         data = request.json["edit-data"]  # type: ignore
-        modified = {
-            "inbredset_id": inbredset_id,
-            "Modifications": {},
-        }
-        original, current = {}, {}  # type: ignore
-
-        for key, value in data.items():
-            strain, case_attribute = key.split(":")
-            if not current.get(strain):
-                current[strain] = {}
-            current[strain][case_attribute] = value["Current"]
-            if not original.get(strain):
-                original[strain] = {}
-            original[strain][case_attribute] = value["Original"]
-        modified["Modifications"]["Original"] = original  # type: ignore
-        modified["Modifications"]["Current"] = current  # type: ignore
         edit = CaseAttributeEdit(
             inbredset_id=inbredset_id,
             status=EditStatus.review,
             user_id=auth_token["jwt"]["sub"],
-            changes=modified
+            changes=data
         )
         directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
                      "case-attributes" / str(inbredset_id))
