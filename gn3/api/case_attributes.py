@@ -201,36 +201,14 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> tuple[Response, 
         )
         directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
                      "case-attributes" / str(inbredset_id))
-        _id = queue_edit(cursor=cursor,
-                         directory=directory,
-                         edit=edit)
-        try:
-            required_access(auth_token,
-                            inbredset_id,
-                            ("system:inbredset:edit-case-attribute",
-                             "system:inbredset:apply-case-attribute-edit"))
-            match apply_change(
-                    cursor, change_type=EditStatus.approved,
-                    change_id=_id,  # type: ignore
-                    directory=directory
-            ):
-                case True:
-                    return jsonify({
-                        "diff-status": "applied",
-                        "message": ("The changes to the case-attributes have been "
-                                    "applied successfully.")
-                    }), 201
-                case _:
-                    return jsonify({
-                        "diff-status": "no changes to be applied",
-                        "message": ("There were no changes to be made ")
-                    }), 200
-        except AuthorisationError as _auth_err:
-            return jsonify({
-                "diff-status": "queued",
-                "message": ("The changes to the case-attributes have been "
-                            "queued for approval."),
-            }), 201
+        queue_edit(cursor=cursor,
+                   directory=directory,
+                   edit=edit)
+        return jsonify({
+            "diff-status": "queued",
+            "message": ("The changes to the case-attributes have been "
+                        "queued for approval."),
+        }), 201
 
 
 @caseattr.route("/<int:inbredset_id>/diffs/<string:change_type>/list", methods=["GET"])
@@ -264,12 +242,12 @@ def approve_case_attributes_diff(
               conn.cursor() as cursor):
             directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
                          "case-attributes" / str(inbredset_id))
-            match apply_change(cursor, change_type=EditStatus.rejected,
+            match apply_change(cursor, change_type=EditStatus.approved,
                                change_id=change_id,
                                directory=directory):
                 case True:
                     return jsonify({
-                        "diff-status": "rejected",
+                        "diff-status": "approved",
                         "message": (f"Successfully approved # {change_id}")
                     }), 201
                 case _:
