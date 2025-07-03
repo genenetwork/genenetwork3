@@ -316,7 +316,10 @@ def apply_change(cursor, change_type: EditStatus, change_id: int, directory: Pat
                     "id = %s",
                     (change_id,)
                 )
-                json_diff_data, _ = cursor.fetchone()
+                result = cursor.fetchone()
+                if result is None:
+                    return False
+                json_diff_data = result[0]
                 json_diff_data = json.loads(json_diff_data)
                 inbredset_id = json_diff_data.get("inbredset_id")
                 modifications = json_diff_data.get(
