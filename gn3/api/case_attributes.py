@@ -17,7 +17,6 @@ from flask import (
 from gn3.db.case_attributes import (
     CaseAttributeEdit,
     EditStatus,
-    view_change,
     queue_edit,
     apply_change,
     get_changes)
