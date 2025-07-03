@@ -227,7 +227,7 @@ def get_changes(cursor, change_type: EditStatus, directory: Path) -> dict:
     }
 
 
-# pylint: disable=[too-many-locals]
+# pylint: disable=[too-many-locals, too-many-branches]
 def apply_change(cursor, change_type: EditStatus, change_id: int, directory: Path) -> bool:
     """Applies or rejects a case attribute change and updates its
     status in the audit table and LMDB.
