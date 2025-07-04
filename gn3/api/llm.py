@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS history(
     ) WITHOUT ROWID
 """
 
+
 RATING_TABLE_CREATE_QUERY = """
 CREATE TABLE IF NOT EXISTS Rating(
     user_id TEXT NOT NULL,
@@ -64,11 +65,12 @@ def clean_query(query:str) -> str:
     return str_query
 
 
-def is_verified_anonymous_user(request):
+def is_verified_anonymous_user(request_metadata):
     """This function should verify autheniticity of metadate from gn2 """
-    anony_id = request.headers.get("Anonymous-Id") #should verify this + metadata signature
-    user_status = request.headers.get("Anonymous-Status", "")
-    _user_signed_metadata = request.headers.get("Anony-Metadata", "") # verify this for integrity
+    anony_id = request_metadata.headers.get("Anonymous-Id") #should verify this + metadata signature
+    user_status = request_metadata.headers.get("Anonymous-Status", "")
+    _user_signed_metadata = (
+        request_metadata.headers.get("Anony-Metadata", "")) # TODO~ verify this for integrity
     return bool(anony_id) and user_status.lower() == "verified"
 
 
@@ -83,7 +85,7 @@ def with_gnqna_fallback(view_func):
                 len(response) == 2 and
                 response[1] == 400
             )
-            if is_bad_token_response and is_valid_anonymous_user(request):
+            if is_bad_token_response and is_verified_anonymous_user(request):
                 return view_func(*args, **{**kwargs, "auth_token": None, "valid_anony": True})
             return response
         except DecodeError:
