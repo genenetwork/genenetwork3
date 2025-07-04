@@ -59,7 +59,7 @@ def __extract_actions(
     return result
 
 def get_mrna_sample_data(
-    conn: Any, probeset_id: int, dataset_name: str, probeset_name: str = None
+    conn: Any, probeset_id: int, dataset_name: str, probeset_name: str = None  # type: ignore
 ) -> Dict:
     """Fetch a mRNA Assay (ProbeSet in the DB) trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
@@ -130,7 +130,7 @@ WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
         return "\n".join(trait_csv)
 
 def get_pheno_sample_data(
-    conn: Any, trait_name: int, phenotype_id: int, group_id: int = None
+    conn: Any, trait_name: int, phenotype_id: int, group_id: int = None  # type: ignore
 ) -> Dict:
     """Fetch a phenotype (Publish in the DB) trait's sample data and return it as a dict"""
     with conn.cursor() as cursor:
