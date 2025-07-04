@@ -75,24 +75,32 @@ def is_verified_anonymous_user(request_metadata):
 
 
 def with_gnqna_fallback(view_func):
-    """Allow fallback to GNQNA user if token auth fails."""
+    """Allow fallback to GNQNA user if token auth fails or token is malformed."""
     @wraps(view_func)
     def wrapper(*args, **kwargs):
+        def call_with_anonymous_fallback():
+            return view_func.__wrapped__(*args,
+                   **{**kwargs, "auth_token": None, "valid_anony": True})
+
         try:
             response = view_func(*args, **kwargs)
-            is_bad_token_response = (
+
+            is_invalid_token = (
                 isinstance(response, tuple) and
                 len(response) == 2 and
                 response[1] == 400
             )
-            if is_bad_token_response and is_verified_anonymous_user(request):
-                return view_func(*args, **{**kwargs, "auth_token": None, "valid_anony": True})
+
+            if is_invalid_token and is_verified_anonymous_user(request):
+                return call_with_anonymous_fallback()
+
             return response
-        except DecodeError:
+
+        except (DecodeError, ValueError): # occurs when trying to parse the token or auth results
             if is_verified_anonymous_user(request):
-                original_func = view_func.__wrapped__
-                return original_func(*args, **{**kwargs, "auth_token": None, "valid_anony": True})
-            raise  # re-raise if anonymous access isn't allowed
+                return call_with_anonymous_fallback()
+            return view_func.__wrapped__(*args, **kwargs)
+
     return wrapper
 
 
