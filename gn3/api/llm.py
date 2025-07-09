@@ -1,17 +1,13 @@
 """Api endpoints for gnqa"""
 import json
-import string
-import uuid
 from datetime import datetime
 from typing import Optional
-from functools import wraps
 
 from flask import Blueprint
 from flask import current_app
 from flask import jsonify
 from flask import request
 
-from authlib.jose.errors import DecodeError
 from gn3.llms.process import get_gnqa
 from gn3.llms.errors import LLMError
 
@@ -31,7 +27,6 @@ CREATE TABLE IF NOT EXISTS history(
     PRIMARY KEY(task_id)
     ) WITHOUT ROWID
 """
-
 
 RATING_TABLE_CREATE_QUERY = """
 CREATE TABLE IF NOT EXISTS Rating(
@@ -54,60 +49,9 @@ def database_setup():
         cursor.execute(RATING_TABLE_CREATE_QUERY)
 
 
-def clean_query(query:str) -> str:
-    """This function cleans up query  removing
-    punctuation  and whitepace and transform to
-    lowercase
-    clean_query("!hello test.") -> "hello test"
-    """
-    strip_chars = string.punctuation + string.whitespace
-    str_query = query.lower().strip(strip_chars)
-    return str_query
-
-
-def is_verified_anonymous_user(request_metadata):
-    """This function should verify autheniticity of metadate from gn2 """
-    anony_id = request_metadata.headers.get("Anonymous-Id") #should verify this + metadata signature
-    user_status = request_metadata.headers.get("Anonymous-Status", "")
-    _user_signed_metadata = (
-        request_metadata.headers.get("Anony-Metadata", "")) # TODO~ verify this for integrity
-    return bool(anony_id) and user_status.lower() == "verified"
-
-
-def with_gnqna_fallback(view_func):
-    """Allow fallback to GNQNA user if token auth fails or token is malformed."""
-    @wraps(view_func)
-    def wrapper(*args, **kwargs):
-        def call_with_anonymous_fallback():
-            return view_func.__wrapped__(*args,
-                   **{**kwargs, "auth_token": None, "valid_anony": True})
-
-        try:
-            response = view_func(*args, **kwargs)
-
-            is_invalid_token = (
-                isinstance(response, tuple) and
-                len(response) == 2 and
-                response[1] == 400
-            )
-
-            if is_invalid_token and is_verified_anonymous_user(request):
-                return call_with_anonymous_fallback()
-
-            return response
-
-        except (DecodeError, ValueError): # occurs when trying to parse the token or auth results
-            if is_verified_anonymous_user(request):
-                return call_with_anonymous_fallback()
-            return view_func.__wrapped__(*args, **kwargs)
-
-    return wrapper
-
-
 @gnqa.route("/search", methods=["GET"])
-@with_gnqna_fallback
 @require_token
-def search(auth_token=None, valid_anony=False):
+def search(auth_token=None):
     """Api  endpoint for searching queries in fahamu Api"""
     query = request.args.get("query", "")
     if not query:
@@ -116,20 +60,20 @@ def search(auth_token=None, valid_anony=False):
     if not fahamu_token:
         raise LLMError(
             "Request failed: an LLM authorisation token  is required ", query)
+    user_id = get_user_id(auth_token)
     database_setup()
     with db.connection(current_app.config["LLM_DB_PATH"]) as conn:
         cursor = conn.cursor()
         previous_answer_query = """
         SELECT user_id, task_id, query, results FROM history
-            WHERE created_at > DATE('now', '-21 day') AND
+            WHERE created_at > DATE('now', '-1 day') AND
+                user_id = ? AND
                 query = ?
             ORDER BY created_at DESC LIMIT 1 """
-        res = cursor.execute(previous_answer_query, (clean_query(query),))
+        res = cursor.execute(previous_answer_query, (user_id, query))
         previous_result = res.fetchone()
         if previous_result:
             _, _, _, response = previous_result
-            response = json.loads(response)
-            response["query"] = query
             return response
 
         task_id, answer, refs = get_gnqa(
@@ -140,12 +84,11 @@ def search(auth_token=None, valid_anony=False):
             "answer": answer,
             "references": refs
         }
-        user_id = str(uuid.uuid4()) if valid_anony else get_user_id(auth_token)
         cursor.execute(
             """INSERT INTO history(user_id, task_id, query, results)
             VALUES(?, ?, ?, ?)
             """, (user_id, str(task_id["task_id"]),
-                  clean_query(query),
+                  query,
                   json.dumps(response))
         )
         return response
