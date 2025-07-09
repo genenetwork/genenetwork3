@@ -1,6 +1,5 @@
 """Api endpoints for gnqa"""
 import json
-import string
 from datetime import datetime
 from typing import Optional
 
@@ -50,16 +49,6 @@ def database_setup():
         cursor.execute(RATING_TABLE_CREATE_QUERY)
 
 
-def clean_query(query:str) -> str:
-    """This function cleans up query  removing
-    punctuation  and whitepace and transform to
-    lowercase
-    clean_query("!hello test.") -> "hello test"
-    """
-    strip_chars = string.punctuation + string.whitespace
-    str_query = query.lower().strip(strip_chars)
-    return str_query
-
 @gnqa.route("/search", methods=["GET"])
 @require_token
 def search(auth_token=None):
@@ -79,7 +68,7 @@ def search(auth_token=None):
             WHERE created_at > DATE('now', '-21 day') AND
                 query = ?
             ORDER BY created_at DESC LIMIT 1 """
-        res = cursor.execute(previous_answer_query, (clean_query(query),))
+        res = cursor.execute(previous_answer_query, (query,))
         previous_result = res.fetchone()
         if previous_result:
             _, _, _, response = previous_result
@@ -98,7 +87,7 @@ def search(auth_token=None):
             """INSERT INTO history(user_id, task_id, query, results)
             VALUES(?, ?, ?, ?)
             """, (user_id, str(task_id["task_id"]),
-                  clean_query(query),
+                  query,
                   json.dumps(response))
         )
         return response
