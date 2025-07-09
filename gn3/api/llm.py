@@ -83,8 +83,6 @@ def search(auth_token=None):
         previous_result = res.fetchone()
         if previous_result:
             _, _, _, response = previous_result
-            response = json.loads(response)
-            response["query"] = query
             return response
 
         task_id, answer, refs = get_gnqa(
