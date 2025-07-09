@@ -11,7 +11,6 @@ from flask import current_app
 from flask import jsonify
 from flask import request
 
-from authlib.jose.errors import DecodeError
 from gn3.llms.process import get_gnqa
 from gn3.llms.errors import LLMError
 
@@ -65,31 +64,23 @@ def clean_query(query:str) -> str:
 
 
 def is_verified_anonymous_user(request):
-    """This function should verify autheniticity of metadate from gn2 """
-    anony_id = request.headers.get("anonymous_id") #should verify this + metadata signature
-    user_status = request.headers.get("anonymous_status", "")
-    _user_signed_metadata = request.headers.get("anony_metadata", "") # verify this for integrity
-    return bool(anony_id) and user_status.lower() == "verified"
+    # validate metadata from gn2 api(cors, and signed by gn2)
+    # verify metadata that should be sent from gn2
+    return False
+
 
 def with_gnqna_fallback(view_func):
     """Allow fallback to GNQNA user if token auth fails."""
     @wraps(view_func)
     def wrapper(*args, **kwargs):
-        try:
-            response = view_func(*args, **kwargs)
-            is_bad_token_response = (
-                isinstance(response, tuple) and
-                len(response) == 2 and
-                response[1] == 400
-            )
-            if is_bad_token_response and is_valid_anonymous_user(request):
+        response = view_func(*args, **kwargs)
+        # Token check failed (400 from require_token)
+        if isinstance(response, tuple) and len(response) == 2 and response[1] == 400:
+            if is_valid_anonymous_user(request):
+                # Retry with anonymous access
                 return view_func(*args, **{**kwargs, "auth_token": None, "valid_anony": True})
-            return response
-        except DecodeError:
-            if is_verified_anonymous_user(request):
-                original_func = view_func.__wrapped__
-                return original_func(*args, **{**kwargs, "auth_token": None, "valid_anony": True})
-            raise  # re-raise if anonymous access isn't allowed
+
+        return response
     return wrapper
 
 
