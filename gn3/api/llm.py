@@ -66,11 +66,10 @@ def clean_query(query:str) -> str:
 
 def is_verified_anonymous_user(request):
     """This function should verify autheniticity of metadate from gn2 """
-    anony_id = request.headers.get("Anonymous-Id") #should verify this + metadata signature
-    user_status = request.headers.get("Anonymous-Status", "")
-    _user_signed_metadata = request.headers.get("Anony-Metadata", "") # verify this for integrity
+    anony_id = request.headers.get("anonymous_id") #should verify this + metadata signature
+    user_status = request.headers.get("anonymous_status", "")
+    _user_signed_metadata = request.headers.get("anony_metadata", "") # verify this for integrity
     return bool(anony_id) and user_status.lower() == "verified"
-
 
 def with_gnqna_fallback(view_func):
     """Allow fallback to GNQNA user if token auth fails."""
