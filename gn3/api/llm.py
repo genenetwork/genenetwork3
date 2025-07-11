@@ -200,10 +200,6 @@ def search(auth_token=None, valid_anony=False):
         raise LLMError(
             "Request failed: an LLM authorisation token  is required ", query)
     database_setup()
-    # check if is valid anon
-    # if valid_anony:
-    check_rate_limiter(request, current_app.config["LLM_DB_PATH"]) #Will raise error if not
-    # else verified user allowed
     with db.connection(current_app.config["LLM_DB_PATH"]) as conn:
         cursor = conn.cursor()
         previous_answer_query = """
