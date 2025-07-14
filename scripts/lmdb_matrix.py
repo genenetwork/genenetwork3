@@ -1,3 +1,17 @@
+"""This scripts reads and store genotype files to an LMDB store.
+Similarly, it can be use to read this data.
+
+Example:
+
+guix shell python-click python-lmdb python-wrapper python-numpy -- \
+     python lmdb_matrix.py import-genotype \
+     <path-to-genotype-file> <path-to-lmdb-store>
+
+guix shell python-click python-lmdb python-wrapper python-numpy -- \
+     python lmdb_matrix.py print-current-matrix \
+     <path-to-lmdb-store>
+
+"""
 import os
 import lmdb
 import json
