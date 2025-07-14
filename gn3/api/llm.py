@@ -128,16 +128,14 @@ def is_valid_address(ip_string) -> bool :
         return False
 
 
-def check_rate_limiter(request_metadata, db_path, tokens_lifespan=1440, default_tokens=4):
+def check_rate_limiter(ip_address, db_path,  query, tokens_lifespan=1440, default_tokens=4):
     """
     Checks if an anonymous user has a valid token within the given lifespan.
     If expired or not found, creates or resets the token bucket.
-    `tokens_lifespan` is in seconds.  24*60
+    `tokens_lifespan` is in seconds.  1440 seconds.
     default_token set to 4 requests per hour.
     """
     # Extract IP address /identifier
-    user_metadata = json.loads(request_metadata.headers.get("Anony-Metadata", {}))
-    ip_address = user_metadata.get("ip_address")
     if not ip_address or not is_valid_address(ip_address):
         raise ValueError("Please provide a valid IP address")
     now = datetime.utcnow()
@@ -168,7 +166,7 @@ def check_rate_limiter(request_metadata, db_path, tokens_lifespan=1440, default_
                     return True
                 else:
                     raise LLMError("Rate limit exceeded. Please try again later.",
-                                   request_metadata.args.get("query"))
+                                   query)
             else:
                 # Token expired — reset ~probably reset this after 200 status
                 cursor.execute("""
@@ -217,7 +215,10 @@ def search(auth_token=None, valid_anony=False):
 
         if valid_anony:
             # rate limit anonymous verified users
-            check_rate_limiter(request, current_app.config["LLM_DB_PATH"])
+            user_metadata = json.loads(request.headers.get("Anony-Metadata", {}))
+            check_rate_limiter(user_metadata.get("ip_address", ""),
+                               current_app.config["LLM_DB_PATH"],
+                               request.args.get("query", ""))
 
         task_id, answer, refs = get_gnqa(
             query, fahamu_token, current_app.config.get("DATA_DIR"))
