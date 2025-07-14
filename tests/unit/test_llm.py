@@ -4,6 +4,7 @@ import pytest
 from gn3.llms.process import fetch_pubmed
 from gn3.llms.process import parse_context
 from gn3.llms.process import format_bibliography_info
+from gn3.api.llm  import clean_query
 
 
 @pytest.mark.unit_test
@@ -104,3 +105,11 @@ def test_fetching_pubmed_info(monkeypatch):
 
     assert (fetch_pubmed(data, "/pubmed.json",  "data/")
             == expected_results)
+
+
+@pytest.mark.unit_test
+def test_clean_query():
+    """Test function for cleaning up query"""
+    assert clean_query("!what is genetics.") == "what is genetics"
+    assert clean_query("hello test?") == "hello test"
+    assert clean_query("  hello test with space?") == "hello test with space"
