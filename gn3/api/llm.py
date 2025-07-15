@@ -80,12 +80,12 @@ def clean_query(query:str) -> str:
     return str_query
 
 
-def is_verified_anonymous_user(request_metadata):
+def is_verified_anonymous_user(header_metadata):
     """This function should verify autheniticity of metadate from gn2 """
-    anony_id = request_metadata.headers.get("Anonymous-Id") #should verify this + metadata signature
-    user_status = request_metadata.headers.get("Anonymous-Status", "")
+    anony_id = header_metadata.get("Anonymous-Id") #should verify this + metadata signature
+    user_status = header_metadata.get("Anonymous-Status", "")
     _user_signed_metadata = (
-        request_metadata.headers.get("Anony-Metadata", "")) # TODO~ verify this for integrity
+        header_metadata.get("Anony-Metadata", "")) # TODO~ verify this for integrity with tokens
     return bool(anony_id) and user_status.lower() == "verified"
 
 def with_gnqna_fallback(view_func):
@@ -105,13 +105,13 @@ def with_gnqna_fallback(view_func):
                 response[1] == 400
             )
 
-            if is_invalid_token and is_verified_anonymous_user(request):
+            if is_invalid_token and is_verified_anonymous_user(dict(request.headers)):
                 return call_with_anonymous_fallback()
 
             return response
 
         except (DecodeError, ValueError): # occurs when trying to parse the token or auth results
-            if is_verified_anonymous_user(request):
+            if is_verified_anonymous_user(dict(request.headers)):
                 return call_with_anonymous_fallback()
             return view_func.__wrapped__(*args, **kwargs)
 
