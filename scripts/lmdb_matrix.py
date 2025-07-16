@@ -362,6 +362,33 @@ def genotype_db_get(db: lmdb.Environment) -> GenotypeMatrix:
         )
 
 
+def get_genotype_files(directory: str) -> list[tuple[str, int]]:
+    geno_files = [
+        (_file.as_posix(), _file.stat().st_size)
+        for _file in Path(directory).glob("*.geno") if _file.is_file()]
+    return sorted(geno_files, key=lambda x: x[1])
+
+
+def __import_directory(directory: str, lmdb_path: str):
+    for genofile, file_size in get_genotype_files(directory):
+        genofile = Path(genofile)
+        size_mb = file_size / (1024 ** 2)
+        lmdb_store = (Path(lmdb_path) / genofile.stem).as_posix()
+        print(f"Processing file: {genofile.name}")
+        with create_database(lmdb_store) as db:
+            genotype_db_put(
+                db=db, genotype=read_genotype_file(genofile.as_posix()))
+        print(f"\nSuccessfuly created: [{size_mb:.2f} MB] {genofile.stem}")
+
+
+@click.command(help="Import the genotype directory")
+@click.argument("genotype_directory")
+@click.argument("lmdb_path")
+def import_directory(genotype_directory: str, lmdb_path: str):
+    "Import a genotype directory into genotype_database path"
+    __import_directory(directory=genotype_directory, lmdb_path=lmdb_path)
+
+
 @click.command(help="Import the genotype file")
 @click.argument("geno_file")
 @click.argument("genotype_database")
@@ -389,7 +416,7 @@ def cli():
 
 cli.add_command(print_current_matrix)
 cli.add_command(import_genotype)
-
+cli.add_command(import_directory)
 
 if __name__ == "__main__":
     cli()
