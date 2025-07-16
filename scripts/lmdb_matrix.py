@@ -12,6 +12,9 @@ guix shell python-click python-lmdb python-wrapper python-numpy -- \
      <path-to-lmdb-store>
 
 """
+from pathlib import Path
+from subprocess import check_output
+
 import lmdb
 import json
 import click
@@ -26,6 +29,52 @@ class GenotypeMatrix:
     matrix: np.ndarray
     metadata: dict
     file_info: dict
+
+
+def count_trailing_newlines(file_path):
+    with open(file_path, 'rb') as stream:
+        stream.seek(0, 2)  # Move to the end of the file
+        file_size = stream.tell()
+        if file_size == 0:
+            return 0
+        chunk_size = 1024  # Read in small chunks
+        empty_lines = 0
+        _buffer = b""
+
+        # Read chunks from the end backward
+        while stream.tell() > 0:
+            # Don't read beyond start
+            chunk_size = min(chunk_size, stream.tell())
+            stream.seek(-chunk_size, 1)  # Move backward
+            chunk = stream.read(chunk_size) + _buffer
+            stream.seek(-chunk_size, 1)  # Move back to start of chunk
+            # Decode chunk to text
+            try:
+                chunk_text = chunk.decode('utf-8', errors='ignore')
+            except UnicodeDecodeError:
+                # If decoding fails, keep some bytes for the next
+                # chunk Keep last 16 bytes to avoid splitting
+                # characters
+                _buffer = chunk[-16:]
+                continue
+
+            # Split into lines from the end
+            lines = chunk_text.splitlines()
+
+            # Count empty lines from the end
+            for line in reversed(lines):
+                if line.strip() != "":
+                    return empty_lines
+                empty_lines += 1
+            if stream.tell() == 0:
+                return empty_lines
+        return empty_lines
+
+
+def wc(filename):
+    """Get total file count of a file"""
+    return int(check_output(["wc", "-l", filename]).split()[0]) - \
+        count_trailing_newlines(filename)
 
 
 def get_genotype_metadata(genotype_file: str) -> tuple[dict, dict]:
@@ -119,23 +168,14 @@ def get_genotype_dimensions(genotype_file: str) -> tuple[int, int]:
     with open(genotype_file, "r") as stream:
         while True:
             line = stream.readline()
+            counter += 1
             match line:
-                case "":
-                    counter += 1
-                case _ if line.startswith("#") or line.startswith("@"):
-                    counter += 1
+                case "" | _ if line.startswith(("#", "@")):
+                    continue
                 case _:
                     rows = line.split()
                     break
-    with open(genotype_file, "rb") as f:
-        lines = 0
-        buf_size = 1024 * 1024
-        read_f = f.raw.read
-        buf = read_f(buf_size).strip()
-        while buf:
-            lines += buf.count(b"\n")
-            buf = read_f(buf_size)
-        return (lines - counter, len(rows))
+    return wc(genotype_file) - counter, len(rows)
 
 
 def read_genotype_headers(genotype_file: str) -> list[str]:
@@ -248,16 +288,20 @@ def read_genotype_file(genotype_file: str) -> GenotypeMatrix:
     unknown = metadata.get("unk")
     locus, chromosomes = [], []
     i = 0
+    sentinel = True
     with open(genotype_file, "r") as stream:
         while True:
             if i == nrows:
                 break
-            line = stream.readline()
-            if line.startswith("#") or line.startswith("@") or line == "" \
-               or line.startswith(metadata_columns[0]):
+            line = stream.readline().split()
+            meta, data = [], []
+            if line and line[0] in metadata_columns:
+                # Skip the metadata column
+                line = stream.readline().split()
+                sentinel = False
+            if len(line) == 0 or (line[0].startswith("#") and sentinel) \
+               or line[0].startswith("@"):
                 continue
-            line = line.strip().split()
-
             meta, data = line[:len(metadata_columns)
                               ], line[len(metadata_columns):]
             for j, el in enumerate(data):
