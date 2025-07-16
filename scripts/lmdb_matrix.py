@@ -12,7 +12,6 @@ guix shell python-click python-lmdb python-wrapper python-numpy -- \
      <path-to-lmdb-store>
 
 """
-import os
 import lmdb
 import json
 import click
