@@ -317,7 +317,12 @@ def read_genotype_file(genotype_file: str) -> GenotypeMatrix:
                     case _ if unknown == el:
                         matrix[i, j] = 3
                     case _:
-                        raise ValueError
+                        # KLUDGE: It's not clear how to handle float
+                        # types in a geno file
+                        # E.g. HSNIH-Palmer_true.geno which has float
+                        # values such as:  0.997.  Ideally maybe:
+                        # raise ValueError
+                        continue
             i += 1
             __map = dict(zip(metadata_columns, meta))
             for key in metadata_columns:
