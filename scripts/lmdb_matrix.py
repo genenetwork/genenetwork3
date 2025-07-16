@@ -333,7 +333,7 @@ def read_genotype_file(genotype_file: str) -> GenotypeMatrix:
 
 def create_database(db_path: str) -> lmdb.Environment:
     """Create or open an LMDB environment."""
-    return lmdb.open(db_path, map_size=100 * 1024 * 1024, create=True)
+    return lmdb.open(db_path, map_size=100 * 1024 * 1024 * 1024, create=True)
 
 
 def genotype_db_put(db: lmdb.Environment, genotype: GenotypeMatrix) -> bool:
