@@ -170,7 +170,7 @@ def get_genotype_dimensions(genotype_file: str) -> tuple[int, int]:
             line = stream.readline()
             counter += 1
             match line:
-                case "" | _ if line.startswith(("#", "@")):
+                case "" | _ if line.startswith(("#", "@", "\n")):
                     continue
                 case _:
                     rows = line.split()
