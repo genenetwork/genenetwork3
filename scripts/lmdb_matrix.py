@@ -304,6 +304,13 @@ def read_genotype_file(genotype_file: str) -> GenotypeMatrix:
                 continue
             meta, data = line[:len(metadata_columns)
                               ], line[len(metadata_columns):]
+            # KLUDGE: It's not clear whether chromosome rows that
+            # start with a '#' should be a comment or not.  For some
+            # there's a mismatch between (E.g. B6D2F2_mm8) the size of
+            # the data values and ncols.  For now, skip them.
+            if len(data) != ncols:
+                i += 1
+                continue
             for j, el in enumerate(data):
                 match el:
                     case _ if el.isdigit():
