@@ -384,8 +384,8 @@ def get_genotype_files(directory: str) -> list[tuple[str, int]]:
 def __import_directory(directory: str, lmdb_path: str):
     """Import all the genotype files from a given directory into
     LMDB."""
-    for genofile, file_size in get_genotype_files(directory):
-        genofile = Path(genofile)
+    for file_, file_size in get_genotype_files(directory):
+        genofile = Path(file_)
         size_mb = file_size / (1024 ** 2)
         lmdb_store = (Path(lmdb_path) / genofile.stem).as_posix()
         print(f"Processing file: {genofile.name}")
