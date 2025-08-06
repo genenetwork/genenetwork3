@@ -148,7 +148,7 @@ def test_apply_change_approved(mocker: MockFixture) -> None:
         mocker.call(
             "SELECT Name, CaseAttributeId FROM CaseAttribute "
             "WHERE InbredSetId = %s AND Name IN (%s, %s)",
-            (1, "SeqCvge", "Epoch")),
+            (1, "Epoch", "SeqCvge")),
         mocker.call(
             "UPDATE caseattributes_audit SET status = %s WHERE id = %s",
             ("approved", change_id))
