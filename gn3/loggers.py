@@ -10,6 +10,13 @@ def loglevel(app):
     """'Compute' the LOGLEVEL from the application."""
     return logging.DEBUG if app.config.get("DEBUG", False) else logging.WARNING
 
+
+def setup_modules_logging(level, modules):
+    for module in modules:
+        _logger = logging.getLogger(logger_name)
+        _logger.setLevel(loglevel)
+
+
 def setup_app_handlers(app):
     """Setup the logging handlers for the application `app`."""
     # ========== Setup handlers ==========
