@@ -13,8 +13,8 @@ def loglevel(app):
 
 def setup_modules_logging(level, modules):
     for module in modules:
-        _logger = logging.getLogger(logger_name)
-        _logger.setLevel(loglevel)
+        _logger = logging.getLogger(module)
+        _logger.setLevel(level)
 
 
 def setup_app_handlers(app):
