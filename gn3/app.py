@@ -11,7 +11,7 @@ from typing import Union
 from flask import Flask
 from flask_cors import CORS  # type: ignore
 
-from gn3.loggers import loglevel, setup_app_handlers, setup_modules_logging
+from gn3.loggers import loglevel, setup_app_logging, setup_modules_logging
 from gn3.api.gemma import gemma
 from gn3.api.rqtl import rqtl
 from gn3.api.general import general
@@ -82,7 +82,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
         app.config.from_envvar("GN3_SECRETS")
     # END: SECRETS
     verify_app_config(app)
-    setup_app_handlers(app)
+    setup_app_logging(app)
     setup_modules_logging(loglevel(app), ("gn_libs.mysqldb",))
     # DO NOT log anything before this point
     logging.info("Guix Profile: '%s'.", os.environ.get("GUIX_PROFILE"))
