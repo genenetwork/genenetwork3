@@ -4,6 +4,11 @@ import sys
 import logging
 from logging import StreamHandler
 
+logging.basicConfig(
+    format=("%(asctime)s — %(filename)s:%(lineno)s — %(levelname)s "
+            "(%(thread)d:%(threadName)s): %(message)s")
+)
+
 # ========== Setup formatters ==========
 # ========== END: Setup formatters ==========
 
