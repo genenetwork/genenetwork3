@@ -24,7 +24,7 @@ def generate_input_files(dataset: list[str],
     tmp_file = os.path.join(tmp_dir, f"{random_string(10)}.txt")
     with open(tmp_file, "w", encoding="utf-8") as op_file:
         writer = csv.writer(
-            op_file, delimiter=",", dialect="unix", quotechar="",
+            op_file, delimiter=",", dialect="unix",
             quoting=csv.QUOTE_NONE, escapechar="\\")
         writer.writerows(dataset)
 
