@@ -13,7 +13,6 @@ setup(author='Bonface M. K.',
       description=('GeneNetwork3 REST API for data '
                    'science and machine learning'),
       install_requires=[
-          "bcrypt>=3.1.7",
           "click",
           "Flask>=1.1.2",
           "mypy>=0.790",
