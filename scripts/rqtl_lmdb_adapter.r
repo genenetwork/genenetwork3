@@ -1,4 +1,4 @@
-# how to run Rscript: rqtl_lmdb_adapter.R  LMDB_PATH    
+# how to run Rscript rqtl_lmdb_adapter.R  LMDB_PATH
                                         # This script reads genotype dumped in lmdb and does rqtl2 computation.
 # reference developer guide:                                         # creating the cross  see dev
 #  https://kbroman.org/qtl2/assets/vignettes/developer_guide.html
@@ -7,17 +7,16 @@ library("thor")
 read_lmdb_cross <- function(lmdb_file_path) {
 env <- thor::mdb_env(lmdb_file_path, maxdbs = 2, readonly = FALSE) #readonly should be TRUE not sure why it fails if true apparently need to access lock file weird?/
 txn <- env$begin(write = FALSE)
-cross_info <- txn$get("metadata") # get the metadata 
-metadata <- fromJSON(cross_info, simplify = TRUE) 
+metadata <- fromJSON(txn$get("metadata"), simplify = TRUE) 
 nrows <- metadata$nrows
 ncols <- metadata$ncols
-                                        # add this metadata collected from  cross files
+                                        # add this metadata collected from  cross information files ! TODO to be added to be metadata objects?
 cross_metadata_bytes = txn$get("cross_metadata")
 cross_metadata <- fromJSON(cross_metadata_bytes, simplify=TRUE)
 
 matrix_bytes   <- txn$get("matrix")
-txn$commit() # commit the transaction 
-env$close()  # close the db
+txn$commit()
+env$close()
 
 matrix_values  <- readBin(matrix_bytes,
                           what = integer(),
