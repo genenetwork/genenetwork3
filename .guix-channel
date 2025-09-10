@@ -12,7 +12,7 @@
    ;; channel does not build otherwise. This is probably a guix bug.
    (channel
     (name guix-past)
-    (url "https://gitlab.inria.fr/guix-hpc/guix-past")
+    (url "https://codeberg.org/guix-science/guix-past")
     (introduction
      (channel-introduction
       (version 0)
