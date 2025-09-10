@@ -18,6 +18,7 @@ def loglevel(app):
 
 
 def setup_modules_logging(level, modules):
+    """Configure logging levels for a list of modules."""
     for module in modules:
         _logger = logging.getLogger(module)
         _logger.setLevel(level)

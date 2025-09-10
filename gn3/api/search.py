@@ -40,6 +40,7 @@ def combine_queries(operator: int, *queries: xapian.Query) -> xapian.Query:
     return reduce(partial(xapian.Query, operator), queries)
 
 
+# pylint: disable=R0903
 class FieldProcessor(xapian.FieldProcessor):
     """
     Field processor for use in a xapian query parser.
