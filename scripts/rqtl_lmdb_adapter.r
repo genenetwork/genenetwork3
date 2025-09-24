@@ -3,7 +3,8 @@
 # reference developer guide:                                         # creating the cross  see dev
 #  https://kbroman.org/qtl2/assets/vignettes/developer_guide.html
 library("rjson")
-library("thor") 
+library("thor")
+
 read_lmdb_cross <- function(lmdb_file_path) {
 env <- thor::mdb_env(lmdb_file_path, maxdbs = 2, readonly = FALSE) #readonly should be TRUE not sure why it fails if true apparently need to access lock file weird?/
 txn <- env$begin(write = FALSE)
@@ -15,8 +16,6 @@ cross_metadata_bytes = txn$get("cross_metadata")
 cross_metadata <- fromJSON(cross_metadata_bytes, simplify=TRUE)
 
 matrix_bytes   <- txn$get("matrix")
-txn$commit()
-env$close()
 
 matrix_values  <- readBin(matrix_bytes,
                           what = integer(),
@@ -28,6 +27,37 @@ geno <- genotype_matrix <- matrix(matrix_values,
                           nrow = nrows,
                           ncol = ncols,
                           byrow = TRUE)
+
+                                        # code to reconstruct the phenotype matrix
+pheno_bytes <- txn$get("pheno_matrix")
+pheno_metadata_bytes  <- txn$get("pheno_metadata")
+txn$commit()
+env$close()
+pheno_metadata <- fromJSON(pheno_metadata_bytes, simplify=TRUE)
+pheno_rows  <- pheno_metadata$rows
+pheno_columns <- pheno_metadata$columns
+pheno_matrix_values  <- readBin(pheno_bytes,
+                          what = double(),
+                          #size = 1,
+                          n = pheno_rows * pheno_columns, 
+                          signed = TRUE,
+                          endian = "little")
+                                        # we can write this to a csv file and compare to that from python
+# no sure if we can have negative values.
+pheno_matrix <- matrix(pheno_matrix_values,
+                      nrow=pheno_rows,
+                      ncol=pheno_columns,
+                      byrow=TRUE
+                      )
+
+pheno_matrix <- t(pheno_matrix) # transpose   TODO!  Add transposed flag as metadata 
+print(dim(pheno_matrix))
+pheno_dataframe <- as.data.frame(pheno_matrix) # NOTE dont need to do this remove while doing refactoring
+
+                                        # get col_names in r
+colnames(pheno_dataframe) <- as.list(pheno_metadata$traits)   # to rigid change to something else generic
+rownames(pheno_dataframe) <- as.list(pheno_metadata$strains ) # to rigid change to something else generic like rowname               
+
 
 # get the individuals from the metadata 
 individuals  = metadata$individuals
@@ -197,10 +227,12 @@ split_geno <- function(geno, map, individuals) {
 
 geno_split <- split_geno(geno, map, metadata$individuals)
                                         # TODO: READ the phenotype file from lmdb database
-
                                         # TODO replace with dumped phenotypes lmdb dataset
 # fetch from lmdb     
-pheno <- read.csv("/home/kabui/data/genotype_files/bxd/bxd_pheno.csv",sep = ",",  row.names = 1, check.names = FALSE,skip=3)
+## pheno <- read.csv("/home/kabui/data/genotype_files/bxd/bxd_pheno.csv",sep = ",",  row.names = 1, check.names = FALSE,skip=3)
+pheno <- pheno_dataframe
+#print(dim(pheno))
+#print(colnames(pheno_dataframe))
 
 if (!all(colnames(geno) %in% rownames(pheno))) {
   warning("Some individuals in genotype matrix are missing from phenotype file")
@@ -241,7 +273,8 @@ parse_founder_geno <- function(marker_chr_map,  founder_matrix){
    return(founder_geno_list)
 }
 
-pheno <- as.matrix(pheno[colnames(geno), , drop = FALSE]) # required as matrix
+
+pheno <- as.matrix(pheno[colnames(geno), , drop = FALSE]) # required as matrix ??? big question
 geno <- geno_split
                                         # get founder_geno data if in metadata
 if (!is.null(metadata$founder_geno) && !is.null(metadata$marker_chr_map)) {
@@ -254,7 +287,6 @@ if (!is.null(metadata$founder_geno) && !is.null(metadata$marker_chr_map)) {
 # check for the sex chromosomes    
                                         # key design should the alleles  be encoded as string as final version int from user
 is_x_chr <- unlist(lapply(names(gmap), function(chr) chr == "X"))
-
 # : is_female check    
 is_female <- NULL #  missing assume all TRUE 
 if (is.null(is_female)) {
@@ -263,14 +295,17 @@ if (is.null(is_female)) {
     names(is_female) <- rownames(geno[[1]])
 }
     
-parse_cross_info <- function(cross_info_list) {
+parse_cross_info <- function(cross_info_list, cross_vals) {
                                         # example [{ "BXD1": {"id" :"id" , cross_direction: BxD}} ]
-                                        # TODO refactor this since some cross type might have more columns
-    
+                                        # TODO refactor this since some cross type might have more columns 
   crossinfo <- do.call(rbind, lapply(cross_info_list, as.data.frame))
   crossinfo$id <- as.character(crossinfo$id)
   crossinfo$cross_direction <- as.character(crossinfo$cross_direction)
-  crossinfo$cross_direction <- ifelse(crossinfo$cross_direction == "BxD", 0L, 1L) # hack for bxd to work
+                                        # cross representation
+                                        # {EXAMPLE BXD: 1 }
+  cross_direction_repr = cross_vals[[1]]
+  alternative = as.integer(ifelse(cross_vals[[2]] == 1,  0, 1))
+  crossinfo$cross_direction <- ifelse(crossinfo$cross_direction == cross_direction_repr, as.integer(cross_vals[[2]]), alternative)
   cross_info <- as.matrix(crossinfo["cross_direction"])
   storage.mode(cross_info) <- "integer"
   rownames(cross_info) <- crossinfo$id
@@ -278,7 +313,10 @@ parse_cross_info <- function(cross_info_list) {
   return(cross_info)
 }
 
-cross_info <- parse_cross_info(cross_metadata$cross_info)     # see dev guide
+cross_info <- parse_cross_info(cross_metadata$cross_info_metadata$cross_direction,
+                               cross_metadata$cross_info_metadata$cross_val
+                               ) #bad naming just make it cross_info
+
 metadata[["alleles"]] = cross_metadata$alleles # alleles list 
 metadata[["crosstype"]] = cross_metadata$crosstype # example of this f2
 cross <- list(
@@ -298,10 +336,6 @@ cross <- list(
 }
                                         # test for rqtl2 computation
 
-# use argument  parsing for this.
-
-                                        # example "/home/kabui/test_lmdb_data"
-                                        # db is requirement as args
 
 
 library(qtl2)
@@ -311,6 +345,7 @@ if (length(args)==0) {
 }  else {
     LMDB_DB_PATH = args[1]
 }
+
 cross <- read_lmdb_cross(LMDB_DB_PATH)
 summary(cross)
 cat("Is this cross okay", check_cross2(cross), "\n")
