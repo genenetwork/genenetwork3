@@ -340,11 +340,39 @@ cross <- list(
 
 library(qtl2)
 args = commandArgs(trailingOnly=TRUE)
+
 if (length(args)==0) {
     stop("At least one argument for the db path is required")
 }  else {
     LMDB_DB_PATH = args[1]
 }
+
+
+run_benchmark <- function(lmdb_path, cross_file, times=100){
+    library(microbenchmark)
+    library(qtl2)
+   microbenchmark(
+     read_lmdb_cross(lmdb_path),
+     read_cross2(cross_file, quiet = TRUE), # "/home/kabui/rscripts/bxd/bxd/bxd.json"
+     times=times 
+)    
+}
+
+run_profiler <- function(lmdb_path){
+    library(profvis)
+    p <- profvis({
+    expr=read_lmdb_cross(lmdb_path)
+   })
+
+ htmlwidgets::saveWidget(p, "./profiler/profile.html")
+ browseURL("./profiler/profile.html", browser="brave")
+
+}
+
+
+run_profiler(LMDB_DB_PATH)
+run_benchmark(LMDB_DB_PATH,"/home/kabui/rscripts/bxd/bxd/bxd.json" , 10)
+
 
 cross <- read_lmdb_cross(LMDB_DB_PATH)
 summary(cross)

@@ -1,7 +1,7 @@
 """
 This script processes and dumps cross metadata to lmdb.
 Example:
-guix shell python-click python-lmdb python-wrapper  python-pyyaml
+guix shell python-click python-lmdb python-wrapper   python-pyyaml
 python python  dump_metadata.py  dump-cross [LMDB_PATH] [CROSS_FILE_PATH] --file-format  yaml/json
 or
 python  dump_metadata.py  dump-cross "./test_lmdb_data" "./cross_file.json" 
