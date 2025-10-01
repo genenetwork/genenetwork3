@@ -9,16 +9,16 @@ python  dump_phenos_matrix.py  dump-phenotypes "mysql://webqtlout:webqtlout@loca
 # to print the phenotype matrix and metadata
 python  dump_phenos_matrix.py   print-phenotype-matrix    "/home/kabui/test_lmdb_data"
 """
+from numpy.testing import assert_array_equal
+import numpy as np
+import lmdb
+import mysql.connector
+from urllib.parse import urlparse
+from pprint import pprint
+from collections import defaultdict
+from collections import OrderedDict
 import click
 import json
-from collections import OrderedDict
-from collections import defaultdict
-from pprint import pprint
-from urllib.parse import urlparse
-import mysql.connector
-import lmdb
-import numpy as np
-from numpy.testing import assert_array_equal
 
 
 def make_db_connection(sql_uri, port=3306):
@@ -102,7 +102,6 @@ ORDER BY
         for (trait_id, strain_name, value) in results:
             # TODO  store the trait_ids as strings not ints
             datasets[trait_id][strain_name] = value
-            # datasets[trait_id].append({strain_name: value})
             strains.add(strain_name)
         return (strains, datasets)
 
@@ -124,7 +123,7 @@ def parse_phenotypes(data: dict, strains: list, missing_default="X"):
 
 
 def generate_strain_rows(data):
-    # get the values here
+    """generate strain rows from strain dict """
     # target  [INNER loop] [OUTER loop]
 
     return [list(map(to_float, [strain_value for strain_name, strain_value in strain_dict.items()]))
@@ -177,7 +176,6 @@ def dump_phenotypes(sql_uri: str, lmdb_path: str):
         with db.begin(write=True) as txn:
             txn.put(b"pheno_matrix", matrix_bytes)
             txn.put(b"pheno_metadata", json.dumps(metadata).encode("utf-8"))
-
     return matrix
 
 
@@ -194,8 +192,6 @@ def print_phenotype_matrix(lmdb_path):
             pheno_matrix_bytes = txn.get(b"pheno_matrix")
             pheno_metadata = txn.get(b"pheno_metadata").decode("utf-8")
             pheno_metadata = json.loads(pheno_metadata)
-            # TODO! probably add the phenotype name as part of the metadata
-            # TODO add col names  and row names which are traits and strains respectively.
             rows, columns, dtype = (
                 pheno_metadata["rows"],
                 pheno_metadata["columns"],
@@ -205,8 +201,7 @@ def print_phenotype_matrix(lmdb_path):
                 rows, columns)
             print(f"A Summary of the pheno  rows:{rows} and  cols:{columns}")
             pprint(pheno_matrix)
-            # pprint the metadata here
-            return pheno_matrix  # return this for testing
+            return pheno_matrix
 
 
 @click.command(help="Sanity check if the original matrix is same as reconstructed_matrix")
@@ -245,5 +240,3 @@ cli.add_command(sanity_check)
 
 if __name__ == "__main__":
     cli()
-
-# TODO ! CHECK if the db_name in the table
