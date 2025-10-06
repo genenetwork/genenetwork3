@@ -26,7 +26,7 @@ setup(author='Bonface M. K.',
           "scipy>=1.6.0",
           "plotly>=4.14.3",
           "pyld",
-          "flask-cors>=3.0.9",
+          "flask-cors", # with the `>=3.0.9` specification, it breaks the build
           # "xapian-bindings" # this line breaks `guix shell …` for some reason
       ],
       include_package_data=True,
