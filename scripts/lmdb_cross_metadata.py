@@ -31,6 +31,30 @@ def read_metadata(file_path: str, file_format: str = "") -> dict:
     if "cross_info" in results:
         results["cross_info_metadata"] = process_cross_info(
             results["cross_info"])
+    # expects this to be relative to the cross file
+    directory_path = Path(file_path).parent
+    if "phenocovar" in results:
+        results["phenocovar"] = parse_covariates(
+            os.path.join(directory_path, results["phenocovar"]))
+    if "covar" in results:
+        results["covar"] = parse_covariates(
+            os.path.join(directory_path, results["covar"]))
+    return results
+
+
+def skip_comments(file_object, comment_prefix="#"):
+    """A generator that filters out line starting with a certain prefix"""
+    for line in file_object:
+        if not line.strip().startswith(comment_prefix):
+            yield line.strip()
+
+
+def parse_covariates(csv_file) -> dict:
+    """Function to parse csv covariates file """
+    with open(csv_file, "r") as file_handler:
+        results = [{k: v for k, v in row.items()}
+                   for row in csv.DictReader(skip_comments(file_handler), skipinitialspace=True)
+                   ]
         return results
 
 
