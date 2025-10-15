@@ -1,7 +1,7 @@
 """Entry point from spinning up flask"""
-
 import os
 import sys
+import json
 import logging
 from pathlib import Path
 
@@ -63,7 +63,9 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     """Create a new flask object"""
     app = Flask(__name__)
     # Load default configuration
-    app.config.from_object("gn3.settings")
+    app.config.from_file(
+        Path(__file__).absolute().parent.joinpath("settings.json"),
+        load=json.load)
 
     # Load environment configuration
     if "GN3_CONF" in os.environ:

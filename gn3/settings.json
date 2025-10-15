@@ -1,0 +1,59 @@
+{
+    "==": "================ FLASK SETTINGS ================",
+    "--": "-- Base --",
+    "SECRET_KEY": "password",
+    "APPLICATION_ENVIRONMENT": "",
+
+    "--": "-- Flask-CORS --",
+    "CORS_ORIGINS": "*",
+    "CORS_HEADERS": [
+        "Content-Type",
+        "Authorization",
+        "Access-Control-Allow-Credentials"
+    ],
+    "==": "================================================",
+
+
+    "==": "================ Filesystem Paths SETTINGS ================",
+    "TMPDIR": "/tmp",
+    "DATA_DIR": "",
+    "CACHEDIR": "",
+    "LMDB_DATA_PATH": "/var/lib/lmdb",
+    "XAPIAN_DB_PATH": "xapian",
+    "LLM_DB_PATH": "",
+    "GENOTYPE_FILES": "/var/lib/genenetwork/genotype-files/genotype",
+    "TEXTDIR": "/gnshare/gn/web/ProbeSetFreeze_DataMatrix",
+    "_comment_TEXTDIR": "The configuration variable `TEXTDIR` points to a directory containing text files used for certain processes. On tux01 this path is '/home/gn1/production/gnshare/gn/web/ProbeSetFreeze_DataMatrix'.",
+    "==": "================================================",
+
+
+    "==": "================ Connection URIs ================",
+    "REDIS_URI": "redis://localhost:6379/0",
+    "SQL_URI": "mysql://user:password@host/db",
+    "SPARQL_ENDPOINT": "http://localhost:9082/sparql",
+    "AUTH_SERVER_URL": "",
+    "==": "================================================",
+
+
+    "==": "================ CLI Commands ================",
+    "GEMMA_WRAPPER_CMD": "gemma-wrapper",
+    "WGCNA_RSCRIPT": "wgcna_analysis.R",
+    "REAPER_COMMAND": "qtlreaper",
+    "CORRELATION_COMMAND": "correlation_rust",
+    "==": "================================================",
+
+
+    "==": "================ Service-Specific Settings ================",
+    "--": "-- Redis --",
+    "REDIS_JOB_QUEUE": "GN3::job-queue",
+
+    "--": "-- Fahamu --",
+    "FAHAMU_AUTH_TOKEN": "",
+    "==": "================================================",
+
+
+    "==": "================ Application-Specific Settings ================",
+    "ROUND_TO": 10,
+    "MULTIPROCESSOR_PROCS": 6,
+    "==": "================================================"
+}
