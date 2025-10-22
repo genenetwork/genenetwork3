@@ -134,7 +134,6 @@ class TestWgcna(TestCase):
             wgcna_cmd, "Rscript scripts/wgcna.r /tmp/wgcna.json")
 
     @pytest.mark.unit_test
-    @mock.patch("gn3.computations.wgcna.TMPDIR", "/tmp")
     @mock.patch("gn3.computations.wgcna.uuid.uuid4")
     def test_create_json_file(self, file_name_generator):
         """test for writing the data to a csv file"""
