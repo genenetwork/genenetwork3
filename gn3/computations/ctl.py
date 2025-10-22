@@ -6,13 +6,11 @@ from gn3.computations.wgcna import dump_wgcna_data
 from gn3.computations.wgcna import compose_wgcna_cmd
 from gn3.computations.wgcna import process_image
 
-from gn3.settings import TMPDIR
 
-
-def call_ctl_script(data):
+def call_ctl_script(data, tmpdir):
     """function to call ctl script"""
-    data["imgDir"] = TMPDIR
-    temp_file_name = dump_wgcna_data(data)
+    data["imgDir"] = tmpdir
+    temp_file_name = dump_wgcna_data(data, tmpdir)
     cmd = compose_wgcna_cmd("ctl_analysis.R", temp_file_name)
 
     cmd_results = run_cmd(cmd)

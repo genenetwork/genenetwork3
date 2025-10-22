@@ -9,7 +9,6 @@ from flask import Blueprint
 from flask import request
 from flask import current_app
 
-from gn3.settings import SQL_URI
 from gn3.db_utils import database_connection
 from gn3.commands import run_sample_corr_cmd
 from gn3.responses.pcorrs_responses import build_response
@@ -144,7 +143,10 @@ def partial_correlation():
             cmd=command,
             job_queue=compute_job_queue(current_app),
             options={
-                "env": {"PYTHONPATH": ":".join(sys.path), "SQL_URI": SQL_URI},
+                "env": {
+                    "PYTHONPATH": ":".join(sys.path),
+                    "SQL_URI": current_app.config["SQL_URI"]
+                },
             },
             log_level=logging.getLevelName(
                 current_app.logger.getEffectiveLevel()).lower())

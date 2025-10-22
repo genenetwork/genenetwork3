@@ -17,7 +17,9 @@ def run_wgcna():
 
     wgcna_script = current_app.config["WGCNA_RSCRIPT"]
 
-    results = call_wgcna_script(wgcna_script, wgcna_data)
+    results = call_wgcna_script(wgcna_script,
+                                wgcna_data,
+                                current_app.config["TMPDIR"])
 
     if results.get("data") is None:
         return jsonify(results), 401

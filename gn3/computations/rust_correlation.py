@@ -13,11 +13,10 @@ from flask import current_app
 
 from gn3.computations.qtlreaper import create_output_directory
 from gn3.chancy import random_string
-from gn3.settings import TMPDIR
 
 
-def generate_input_files(dataset: list[str],
-                         output_dir: str = TMPDIR) -> tuple[str, str]:
+def generate_input_files(
+        dataset: list[str], output_dir: str) -> tuple[str, str]:
     """function generates outputfiles and inputfiles"""
     tmp_dir = f"{output_dir}/correlation"
     create_output_directory(tmp_dir)
@@ -50,17 +49,23 @@ def generate_json_file(
 
 
 def run_correlation(
-        dataset, trait_vals: str, method: str, delimiter: str,
-        corr_type: str = "sample", top_n: int = 500):
+        dataset,
+        trait_vals: str,
+        method: str,
+        delimiter: str,
+        tmpdir: str,
+        corr_type: str = "sample",
+        top_n: int = 500
+):
     """entry function to call rust correlation"""
 
     # pylint: disable=[too-many-arguments, too-many-positional-arguments]
     correlation_command = current_app.config["CORRELATION_COMMAND"] # make arg?
-    (tmp_dir, tmp_file) = generate_input_files(dataset)
+    (tmp_dir, tmp_file) = generate_input_files(dataset, tmpdir)
     (output_file, json_file) = generate_json_file(
         tmp_dir=tmp_dir, tmp_file=tmp_file, method=method, delimiter=delimiter,
         x_vals=trait_vals)
-    command_list = [correlation_command, json_file, TMPDIR]
+    command_list = [correlation_command, json_file, tmpdir]
     try:
         subprocess.run(command_list, check=True, capture_output=True)
     except subprocess.CalledProcessError as cpe:

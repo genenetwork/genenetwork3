@@ -85,9 +85,9 @@ class TestWgcna(TestCase):
             mock_img.return_value = b"AFDSFNBSDGJJHH"
 
             results = call_wgcna_script(
-                "Rscript/GUIX_PATH/scripts/r_file.R", request_data)
+                "Rscript/GUIX_PATH/scripts/r_file.R", request_data, "/tmp")
 
-            mock_dumping_data.assert_called_once_with(request_data)
+            mock_dumping_data.assert_called_once_with(request_data, "/tmp")
 
             mock_compose_wgcna.assert_called_once_with(
                 "Rscript/GUIX_PATH/scripts/r_file.R",
@@ -119,7 +119,7 @@ class TestWgcna(TestCase):
 
             mock_run_cmd.return_value = expected_error
             self.assertEqual(call_wgcna_script(
-                "input_file.R", ""), expected_error)
+                "input_file.R", "", "/tmp"), expected_error)
 
     @pytest.mark.skip(
         "This test assumes that the system will always be invoked from the root"
@@ -166,8 +166,7 @@ class TestWgcna(TestCase):
 
             file_name_generator.return_value = "facb73ff-7eef-4053-b6ea-e91d3a22a00c"
 
-            results = dump_wgcna_data(
-                expected_input)
+            results = dump_wgcna_data(expected_input, "/tmp")
 
             file_handler.assert_called_once_with(
                 "/tmp/facb73ff-7eef-4053-b6ea-e91d3a22a00c.json", 'w', encoding='utf-8')

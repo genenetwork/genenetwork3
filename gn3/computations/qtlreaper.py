@@ -7,7 +7,6 @@ import subprocess
 from typing import Union
 
 from gn3.chancy import random_string
-from gn3.settings import TMPDIR
 
 def generate_traits_file(samples, trait_values, traits_filename):
     """
@@ -41,10 +40,12 @@ def create_output_directory(path: str):
 # pylint: disable=[too-many-arguments, too-many-positional-arguments]
 def run_reaper(
         reaper_cmd: str,
-        genotype_filename: str, traits_filename: str,
+        genotype_filename: str,
+        traits_filename: str,
+        output_dir: str,
         other_options: tuple = ("--n_permutations", "1000"),
-        separate_nperm_output: bool = False,
-        output_dir: str = TMPDIR):
+        separate_nperm_output: bool = False
+):
     """
     Run the QTLReaper command to compute the QTLs.
 

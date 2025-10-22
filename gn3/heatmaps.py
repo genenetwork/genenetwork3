@@ -145,6 +145,7 @@ def build_heatmap(
         app.config['REAPER_COMMAND'],
         genotype_filename,
         traits_filename,
+        output_dir=app.config["TMPDIR"],
         separate_nperm_output=True
     )
 

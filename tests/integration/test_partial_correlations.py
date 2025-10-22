@@ -221,4 +221,4 @@ def test_part_corr_api_with_mix_of_existing_and_non_existing_control_traits(
     criteria = 10
     with pytest.warns(UserWarning):
         partial_correlations_with_target_db(
-            db_conn, primary, controls, method, criteria, target)
+            db_conn, primary, controls, method, criteria, target, "/tmp")

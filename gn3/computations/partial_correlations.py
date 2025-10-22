@@ -16,7 +16,6 @@ import pandas
 import pingouin
 from scipy.stats import pearsonr, spearmanr
 
-from gn3.settings import TEXTDIR
 from gn3.chancy import random_string
 from gn3.function_helpers import  compose
 from gn3.data_helpers import parse_csv_line
@@ -668,9 +667,14 @@ def check_for_common_errors(# pylint: disable=[R0914]
     return non_error_result
 
 def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911 too-many-positional-arguments]
-        conn: Any, primary_trait_name: str,
-        control_trait_names: Tuple[str, ...], method: str,
-        criteria: int, target_db_name: str) -> dict:
+        conn: Any,
+        primary_trait_name: str,
+        control_trait_names: Tuple[str, ...],
+        method: str,
+        criteria: int,
+        target_db_name: str,
+        textdir: str
+) -> dict:
     """
     This is the 'ochestration' function for the partial-correlation feature.
 
@@ -755,7 +759,7 @@ def partial_correlations_with_target_db(# pylint: disable=[R0913, R0914, R0911 t
         threshold,
         conn)
 
-    database_filename = get_filename(conn, target_db_name, TEXTDIR)
+    database_filename = get_filename(conn, target_db_name, textdir)
     all_correlations = partial_corrs(
         conn, check_res["common_primary_control_samples"],
         check_res["fixed_primary_values"], check_res["fixed_control_values"],

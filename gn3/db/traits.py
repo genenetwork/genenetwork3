@@ -3,7 +3,6 @@ import os
 from functools import reduce
 from typing import Any, Dict, Sequence
 
-from gn3.settings import TMPDIR
 from gn3.chancy import random_string
 from gn3.function_helpers import compose
 from gn3.db.datasets import retrieve_trait_dataset
@@ -690,7 +689,7 @@ def retrieve_trait_data(trait: dict, conn: Any, samplelist: Sequence[str] = tupl
     return {}
 
 
-def generate_traits_filename(base_path: str = TMPDIR):
+def generate_traits_filename(base_path: str):
     """Generate a unique filename for use with generated traits files."""
     return (
         f"{os.path.abspath(base_path)}/traits_test_file_{random_string(10)}.txt")

@@ -2,7 +2,7 @@
 
 from flask import Blueprint
 from flask import request
-from flask import jsonify
+from flask import jsonify, current_app
 
 from gn3.computations.ctl import call_ctl_script
 
@@ -18,7 +18,8 @@ def run_ctl():
     """
     ctl_data = request.json
 
-    (cmd_results, response) = call_ctl_script(ctl_data)
+    (cmd_results, response) = call_ctl_script(
+        ctl_data, current_app.config["TMPDIR"])
     return (jsonify({
         "results": response
     }), 200) if response is not None else (jsonify({"error": str(cmd_results)}), 401)
