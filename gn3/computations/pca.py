@@ -13,7 +13,7 @@ import redis
 
 from typing_extensions import TypeAlias
 
-fArray: TypeAlias = list[float]
+fArray: TypeAlias = list[float] # pylint: disable=[invalid-name]
 
 
 def compute_pca(array: list[fArray]) -> dict[str, Any]:

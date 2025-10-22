@@ -44,5 +44,5 @@ setup(author='Bonface M. K.',
           "pytest-mock"
       ],
       cmdclass={
-          "run_tests": RunTests ## testing
+          "run_tests": RunTests # type: ignore[dict-item]
       })
