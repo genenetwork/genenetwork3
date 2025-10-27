@@ -1,9 +1,11 @@
 """Menu generation code for the data in the dropdowns in the index page."""
-
+import logging
 from typing import Tuple
 from functools import reduce
 
 from gn3.db.species import get_all_species
+
+logger = logging.getLogger(__name__)
 
 def gen_dropdown_json(conn):
     """
@@ -37,6 +39,7 @@ def get_groups(conn, species_names: Tuple[str, ...]):
             "IFNULL(InbredSet.Family, InbredSet.FullName) ASC, "
             "InbredSet.FullName ASC, "
             "InbredSet.MenuOrderId ASC")
+        logger.debug("'get_groups' QUERY: %s, %s", query, species_names)
         cursor.execute(query, tuple(species_names))
         results = cursor.fetchall()
 

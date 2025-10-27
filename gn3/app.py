@@ -85,7 +85,8 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     # END: SECRETS
     verify_app_config(app)
     setup_app_logging(app)
-    setup_modules_logging(loglevel(app), ("gn_libs.mysqldb",))
+    setup_modules_logging(loglevel(app), ("gn3.db.menu",
+                                          "gn_libs.mysqldb"))
     # DO NOT log anything before this point
     logging.info("Guix Profile: '%s'.", os.environ.get("GUIX_PROFILE"))
     logging.info("Python Executable: '%s'.", sys.executable)
