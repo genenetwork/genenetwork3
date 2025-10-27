@@ -1,7 +1,7 @@
 """Script to run partial correlations"""
-
 import json
 import traceback
+from pathlib import Path
 from argparse import ArgumentParser
 
 from gn3.db_utils import database_connection
@@ -48,7 +48,8 @@ def pcorrs_against_traits(dbconn, args):
 
 def pcorrs_against_db(dbconn, args):
     """Run partial correlations agaist the entire dataset provided."""
-    return partial_correlations_with_target_db(dbconn, **process_db_args(args))
+    return partial_correlations_with_target_db(
+        dbconn, **process_db_args(args), textdir=args.textdir)
 
 def run_pcorrs(dbconn, args):
     """Run the selected partial correlations function."""
@@ -89,6 +90,11 @@ def against_db_parser(parent_parser):
         "--criteria",
         help="Number of results to return",
         type=int, default=500)
+    parser.add_argument(
+        "--textdir",
+        help="Directory to read text files from",
+        type=Path,
+        default=Path("/tmp/"))
     parser.set_defaults(func=pcorrs_against_db)
     return parent_parser
 

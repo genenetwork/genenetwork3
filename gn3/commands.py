@@ -77,7 +77,8 @@ def compose_pcorrs_command_for_database(
         criteria: int = 500) -> Tuple[str, ...]:
     """Build command for partial correlations against an entire dataset."""
     return prefix_cmd + (
-        "against-db", f"{target_database}", f"--criteria={criteria}")
+        "against-db", f"{target_database}", "--criteria", str(criteria),
+        "--textdir", current_app.config["TEXTDIR"])
 
 
 def compose_pcorrs_command(
