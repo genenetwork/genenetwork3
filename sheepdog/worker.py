@@ -8,6 +8,8 @@ import argparse
 import redis
 import redis.connection
 
+from gn3.loggers import setup_modules_logging
+
 # Enable importing from one dir up: put as first to override any other globally
 # accessible GN3
 sys.path.insert(0, os.path.abspath(
@@ -90,6 +92,9 @@ if __name__ == "__main__":
     args = parse_cli_arguments()
     logger.setLevel(args.log_level.upper())
     logger.debug("Worker Script: Initialising worker")
+    setup_modules_logging(
+        logging.getLevelName(logger.getEffectiveLevel()),
+        ("gn3.commands",))
     with redis.Redis() as redis_conn:
         if not args.daemon:
             logger.info("Worker Script: Running worker in one-shot mode.")

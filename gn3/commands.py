@@ -28,6 +28,8 @@ from gn3.debug import __pk__
 from gn3.chancy import random_string
 from gn3.exceptions import RedisConnectionError
 
+logger = logging.getLogger(__name__)
+
 
 def compose_gemma_cmd(gemma_wrapper_cmd: str = "gemma-wrapper",
                       gemma_wrapper_kwargs: Optional[Dict] = None,
@@ -183,8 +185,7 @@ def run_cmd(cmd: str, success_codes: Tuple = (0,), env: Optional[str] = None) ->
     out = str(results.stdout, 'utf-8')
     if results.returncode not in success_codes:  # Error!
         out = str(results.stderr, 'utf-8')
-        (  # We do not always run this within an app context
-            current_app.logger.debug if current_app else logging.debug)(out)
+        logger.debug("Command output: %s", out)
     return {"code": results.returncode, "output": out}
 
 
