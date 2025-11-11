@@ -5,26 +5,4 @@
   (channel
    (name guix-bioinformatics)
    (url "https://git.genenetwork.org/guix-bioinformatics")
-   (branch "master"))
-  ;; FIXME: guix-bioinformatics depends on guix-past. So, there
-  ;; should be no reason to explicitly depend on guix-past. But, the
-  ;; channel does not build otherwise. This is probably a guix bug.
-  (channel
-   (name guix-past)
-   (url "https://codeberg.org/guix-science/guix-past")
-   (introduction
-    (channel-introduction
-     (version 0)
-     (commit "c3bc94ee752ec545e39c1b8a29f739405767b51c")
-     (signer
-      "3CE4 6455 8A84 FDC6 9DB4  0CFB 090B 1199 3D9A EBB5"))))
-  (channel
-   (name guix-rust-past-crates)
-   (url "https://codeberg.org/guix/guix-rust-past-crates.git")
-   (branch "trunk")
-   (introduction
-    (channel-introduction
-     (version 0)
-     (commit "b8b7ffbd1cec9f56f93fae4da3a74163bbc9c570")
-     (signer
-      "F4C2 D1DF 3FDE EA63 D1D3 0776 ACC6 6D09 CA52 8292"))))))
+   (branch "master"))))
