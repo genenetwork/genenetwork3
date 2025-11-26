@@ -3,6 +3,8 @@ import os
 import sys
 import logging
 from logging import StreamHandler
+from gn_libs.http_logging import SilentHTTPHandler
+
 
 logging.basicConfig(
     format=("%(asctime)s — %(filename)s:%(lineno)s — %(levelname)s "
@@ -26,10 +28,17 @@ def setup_modules_logging(level, modules):
 
 def __add_default_handlers__(app):
     """Add some default handlers, if running in dev environment."""
+    node = "production" if app.config.get("DEBUG") else "CD"
+    sheepdog_port = app.config.get("SHEEPDOG_PORT", 5050)
+    http_handler = SilentHTTPHandler(
+        endpoint = f"http://localhost:{sheepdog_port}/emit/{node}/genenetwork3"
+    )
     stderr_handler = StreamHandler(stream=sys.stderr)
     app.logger.addHandler(stderr_handler)
+    app.logger.addHandler(http_handler)
     root_logger = logging.getLogger()
     root_logger.addHandler(stderr_handler)
+    root_logger.addHandler(http_handler)
     root_logger.setLevel(loglevel(app))
 
 
