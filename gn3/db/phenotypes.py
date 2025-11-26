@@ -1,15 +1,15 @@
 # pylint: disable=[R0902, R0903]
 """This contains all the necessary functions that access the phenotypes from
 the db"""
-from typing import Optional
+from typing import Optional, Any, Dict
 from dataclasses import dataclass
 
 from MySQLdb.cursors import DictCursor
 
 from gn3.db_utils import Connection as DBConnection
 
+from .datasets import retrieve_group_id
 from .query_tools import mapping_to_query_columns
-
 
 @dataclass(frozen=True)
 class Phenotype:
@@ -195,3 +195,44 @@ def update_cross_reference(conn, dataset_id, trait_name, data:dict) -> int:
                 **data
             })
         return cursor.rowcount
+
+def batch_update_descriptions(
+    conn: Any, diff_data: Dict
+):
+    """Given sample data diffs, execute all relevant update/insert/delete queries"""
+
+    # If PubMed_ID exists update the
+    # Post_publication_description; otherwise update the
+    # Pre_publication_description
+    update_query = """
+        UPDATE Phenotype
+        JOIN PublishXRef ON PublishXRef.PhenotypeId = Phenotype.Id
+        LEFT JOIN Publication pub ON PublishXRef.PublicationId = pub.Id
+        SET
+          Phenotype.Post_publication_description =
+            CASE WHEN pub.PubMed_ID IS NOT NULL AND pub.PubMed_ID <> 0
+                 THEN %(new_desc)s
+                 ELSE Phenotype.Post_publication_description END,
+          Phenotype.Pre_publication_description =
+            CASE WHEN pub.PubMed_ID IS NULL OR pub.PubMed_ID = 0
+                 THEN %(new_desc)s
+                 ELSE Phenotype.Pre_publication_description END
+        WHERE PublishXRef.InbredSetId=%(dataset_id)s
+          AND PublishXRef.Id=%(trait_id)s
+    """
+
+    for group_trait, changes in diff_data.items():
+        group_name, trait_id = group_trait.split(":")
+        group_id = retrieve_group_id(conn, group_name)
+
+        with conn.cursor() as cursor:
+            # Pass the new description twice: one for the post column CASE
+            # and one for the pre column CASE, followed by dataset and trait
+            # identifiers.
+            cursor.execute(update_query, {
+                "new_desc": changes['Current'],
+                "dataset_id": group_id,
+                "trait_id": trait_id,
+            })
+
+    return diff_data
