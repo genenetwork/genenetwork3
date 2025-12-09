@@ -28,7 +28,7 @@ def setup_modules_logging(level, modules):
 
 def __add_default_handlers__(app):
     """Add some default handlers, if running in dev environment."""
-    node = "production" if app.config.get("DEBUG") else "CD"
+    node = "CD" if "auth-cd" in app.config.get("AUTH_SERVER_URL") else "Production"
     sheepdog_port = app.config.get("SHEEPDOG_PORT", 5050)
     http_handler = SilentHTTPHandler(
         endpoint = f"http://localhost:{sheepdog_port}/emit/{node}/genenetwork3"
