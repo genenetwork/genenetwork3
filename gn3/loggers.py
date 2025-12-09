@@ -44,8 +44,14 @@ def __add_default_handlers__(app):
 
 def __add_gunicorn_handlers__(app):
     """Set up logging for the WSGI environment with GUnicorn"""
+    node = "CD" if "auth-cd" in app.config.get("AUTH_SERVER_URL") else "Production"
+    sheepdog_port = app.config.get("SHEEPDOG_PORT", 5050)
+    http_handler = SilentHTTPHandler(
+        endpoint = f"http://localhost:{sheepdog_port}/emit/{node}/genenetwork3"
+    )
     logger = logging.getLogger("gunicorn.error")
     app.logger.handlers = logger.handlers
+    app.logger.addHandler(http_handler)
     app.logger.setLevel(logger.level)
     return app
 
