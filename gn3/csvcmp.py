@@ -49,6 +49,64 @@ def remove_insignificant_edits(diff_data, epsilon=0.001):
     return diff_data
 
 
+def reclassify_csv_diffs(diff_data: dict) -> dict:
+    """Reclassify CSV diffs to properly distinguish additions from modifications.
+
+    The csvdiff tool treats all changes as modifications, but we need to
+    reclassify them based on whether the original/current values are "missing" data.
+
+    Missing data patterns for CSV rows like "H2907,x,x,x":
+    - Empty string
+    - All fields after strain name are 'x'
+    """
+    modifications = diff_data.get("Modifications", [])
+    additions = diff_data.get("Additions", [])
+    deletions = diff_data.get("Deletions", [])
+
+    modifications_to_reclassify = []
+
+    def is_missing_data(row_str):
+        """Check if a CSV row represents missing data."""
+        if not row_str or row_str == "":
+            return True
+        # Parse CSV row: strain_name,value,SE,count
+        parts = row_str.split(',')
+        # If all parts after the first are 'x', it's missing data
+        if len(parts) > 1 and all(p.strip() == 'x' for p in parts[1:]):
+            return True
+        return False
+
+    for idx, mod in enumerate(modifications):
+        if not isinstance(mod, dict):
+            continue
+
+        original = mod.get("Original", "")
+        current = mod.get("Current", "")
+
+        original_is_missing = is_missing_data(original)
+        current_is_missing = is_missing_data(current)
+
+        if original_is_missing and not current_is_missing:
+            # Original was missing, current has data
+            additions.append(current)
+            modifications_to_reclassify.append(idx)
+        elif not original_is_missing and current_is_missing:
+            # Original had data, current is missing
+            deletions.append(original)
+            modifications_to_reclassify.append(idx)
+
+    # Remove reclassified items from modifications (in reverse order to preserve indices)
+    for idx in reversed(modifications_to_reclassify):
+        modifications.pop(idx)
+
+    # Update the diff_data with reclassified items
+    diff_data["Modifications"] = modifications
+    diff_data["Additions"] = additions
+    diff_data["Deletions"] = deletions
+
+    return diff_data
+
+
 def clean_csv_text(csv_text: str) -> str:
     """Remove extra white space elements in all elements of the CSV file"""
     _csv_text = []
@@ -93,6 +151,8 @@ def csv_diff(base_csv, delta_csv, tmp_dir="/tmp") -> dict:
         _r = json.loads(_r.get("output", ""))
         if any(_r.values()):
             _r["Columns"] = max(base_csv_header, delta_csv_header)
+            # Reclassify diffs to properly distinguish additions from deletions
+            _r = reclassify_csv_diffs(_r)
     else:
         _r = {}
 
