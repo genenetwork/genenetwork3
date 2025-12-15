@@ -114,6 +114,7 @@ phenotypes_query = SQLQuery(
      "PublishXRef.additive",
      "InbredSet.InbredSetCode AS inbredsetcode",
      "PublishXRef.mean",
+     "PublishXRef.NSamples AS nsamples",
      "Geno.Chr as geno_chr",
      "Geno.Mb as geno_mb"],
     ["Species",
@@ -295,6 +296,7 @@ add_mb = lambda doc, mb: doc.add_value(2, xapian.sortable_serialise(mb))
 add_peakmb = lambda doc, peakmb: doc.add_value(3, xapian.sortable_serialise(peakmb))
 add_additive = lambda doc, additive: doc.add_value(4, xapian.sortable_serialise(additive))
 add_year = lambda doc, year: doc.add_value(5, xapian.sortable_serialise(float(year)))
+add_nsamples = lambda doc, nsamples: doc.add_value(6, xapian.sortable_serialise(nsamples))
 
 
 
@@ -378,6 +380,7 @@ def index_phenotypes(xapian_build_directory: pathlib.Path, chunk_index: int) -> 
             trait["geno_mb"].bind(partial(add_peakmb, doc))
             trait["additive"].bind(partial(add_additive, doc))
             trait["year"].bind(partial(add_year, doc))
+            trait["nsamples"].bind(partial(add_nsamples, doc))
 
             # Index free text.
             for key in ["description", "authors", "dataset"]:
