@@ -1,5 +1,5 @@
 (define-module (genenetwork3-package)
-  #:use-module ((gn packages genenetwork)
+  #:use-module ((gn-machines genenetwork)
                 #:select (genenetwork3) #:prefix gn:)
   #:use-module ((gnu packages check) #:select (python-pylint))
   #:use-module ((gnu packages python-check) #:select (python-mypy))
