@@ -212,7 +212,7 @@ pytest
 To specify unit-tests:
 
 ```bash
-pytest -k unit_test
+pytest -m unit_test
 ```
 
 Running pylint:
