@@ -213,7 +213,7 @@ def run_async_cmd(
         "--queue-name", job_queue,
         "--log-level", log_level
     ]
-    logging.debug("Launching the worker: %s", worker_command)
+    logger.debug("Launching the worker: %s", worker_command)
     subprocess.Popen(  # pylint: disable=[consider-using-with]
         worker_command)
     return cmd_id
