@@ -1,4 +1,5 @@
 """Endpoints for running correlations"""
+import os
 import sys
 import logging
 from functools import reduce
@@ -144,6 +145,7 @@ def partial_correlation():
             job_queue=compute_job_queue(current_app),
             options={
                 "env": {
+                    **os.environ,
                     "PYTHONPATH": ":".join(sys.path),
                     "SQL_URI": current_app.config["SQL_URI"]
                 },
