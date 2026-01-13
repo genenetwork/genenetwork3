@@ -91,11 +91,14 @@ CONSTRUCT {
         current_app.config.get("SPARQL_ENDPOINT"),
         options = {"graph": False}
     )
+    __id = Path(__result.get("id", "")).stem
+    if ":" in __id:
+        __id = __id.split(":")[-1]
     return __result | retrieve_metadata(
         (Path(
             current_app.config.get("DATA_DIR")
         ) / "gn-docs/general/datasets" /
-            Path(__result.get("id", "")).stem).as_posix()
+            __id).as_posix()
     )
 
 
