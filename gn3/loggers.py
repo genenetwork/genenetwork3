@@ -11,8 +11,6 @@ logging.basicConfig(
             "(%(thread)d:%(threadName)s): %(message)s")
 )
 
-# ========== Setup formatters ==========
-# ========== END: Setup formatters ==========
 
 def loglevel(app):
     """'Compute' the LOGLEVEL from the application."""
