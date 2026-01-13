@@ -50,6 +50,7 @@ BASE_CONTEXT = {
 }
 
 DATASET_CONTEXT = {
+    "id": "@id",
     "accessRights": "dct:accessRights",
     "accessionId": "dct:identifier",
     "acknowledgement": "gnt:hasAcknowledgement",
@@ -177,18 +178,27 @@ def sparql_query(query: str, endpoint: str, format_type="json-ld") -> dict:
     return sparql.queryAndConvert()["results"]["bindings"]  # type: ignore
 
 
-def query_frame_and_compact(query: str, context: dict, endpoint: str) -> dict:
+def query_frame_and_compact(
+        query: str, context: dict,
+        endpoint: str, options: dict | None = None
+) -> dict:
     """Frame and then compact the results given a context"""
+    if options is None:
+        options = {"graph": True}
     results = sparql_query(query, endpoint)
     return jsonld.compact(
-        jsonld.frame(results, context), context, options={"graph": True}
+        jsonld.frame(results, context), context, options=options
     )
 
 
-def query_and_compact(query: str, context: dict, endpoint: str) -> dict:
+def query_and_compact(
+        query: str, context: dict, endpoint: str, options: dict | None = None
+) -> dict:
     """Compact the results given a context"""
+    if options is None:
+        options = {"graph": True}
     results = sparql_query(query, endpoint)
-    return jsonld.compact(results, context, options={"graph": True})
+    return jsonld.compact(results, context, options=options)
 
 
 def query_and_frame(query: str, context: dict, endpoint: str) -> dict:

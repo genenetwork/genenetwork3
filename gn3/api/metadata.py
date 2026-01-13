@@ -88,7 +88,8 @@ CONSTRUCT {
     }
     __result = query_frame_and_compact(
         _query, _context,
-        current_app.config.get("SPARQL_ENDPOINT")
+        current_app.config.get("SPARQL_ENDPOINT"),
+        options = {"graph": False}
     )
     return __result | retrieve_metadata(
         (Path(
