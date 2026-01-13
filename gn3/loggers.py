@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 from logging import StreamHandler
-from gn_libs.http_logging import SilentHTTPHandler
+from gn_libs.http_logging import SilentHTTPHandler  # type: ignore
 
 
 logging.basicConfig(
