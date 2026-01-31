@@ -8,7 +8,7 @@ xapian index. This xapian index is later used in providing search
 through the web interface.
 
 """
-from dataclasses import dataclass
+
 from collections import deque, namedtuple, Counter
 import contextlib
 import time
@@ -17,7 +17,7 @@ from functools import partial
 import itertools
 import json
 import logging
-from multiprocessing import Lock, Manager, Process, managers
+from multiprocessing import Lock, Process
 import os
 import pathlib
 import resource
@@ -26,7 +26,7 @@ import shutil
 import sys
 import hashlib
 import tempfile
-from typing import Callable, Dict, Generator, Hashable, Iterable, List
+from typing import Callable, Generator, Hashable, Iterable, List, Tuple, Any
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 import MySQLdb
@@ -36,7 +36,7 @@ from pymonad.tools import curry
 import xapian
 
 from gn3.db_utils import database_connection
-from gn3.monads import query_sql
+from gn3.monads import query_sql, MonadicDict
 
 DOCUMENTS_PER_CHUNK = 100_000
 # Running the script in prod consumers ~1GB per process when handling 100_000 Documents per chunk.
@@ -209,35 +209,83 @@ def locked_xapian_writable_database(path: pathlib.Path) -> xapian.WritableDataba
         db.close()
 
 
-def build_rdf_cache(sparql_uri: str, query: str, remove_common_words: bool = False):
-    cache = {}
+def build_monadic_dict(dic: dict) -> MonadicDict:
+    """Recursively build a monadicdict, only handles list and dicts"""
+
+    def handle_list(original_list: list) -> List[Any]:
+        new_list = []
+        for item in original_list:
+            new_item = item
+            if isinstance(item, list):
+                new_item = handle_list(item)
+            elif isinstance(item, dict):
+                new_item = build_monadic_dict(item)
+            new_list.append(Just(new_item))
+        return new_list
+
+    res = MonadicDict()
+    for key, value in dic.items():
+        if isinstance(value, dict):
+            res[key] = Just(build_monadic_dict(value))
+        elif isinstance(value, list):
+            res[key] = Just(handle_list(value))
+        else:
+            res[key] = Just(value)
+    return res
+
+
+def get_count_and_cache_from_rdf_bindings(
+    bindings: list,
+) -> Tuple[Counter, MonadicDict]:
+    cache = MonadicDict()
+    count: Counter[str] = Counter()
+    words_regex = re.compile(r"\w+")
+    for entry in bindings:
+        species_name = entry.bind(lambda x: x["speciesName"]).bind(lambda x: x["value"])
+        symbol_name = entry.bind(lambda x: x["symbolName"]).bind(lambda x: x["value"])
+        value = entry.bind(lambda x: x["comment"]).bind(lambda x: x["value"])
+        entry_key = Maybe.apply(curry(2, lambda a, b: (a, b))).to_arguments(species_name, symbol_name)
+        Maybe.apply(curry(1, lambda k: cache.update({k: value}))).to_arguments(entry_key)
+        stripped_words = value.map(lambda x: " ".join(words_regex.findall(x)).lower().strip())
+        Maybe.apply(curry(1, lambda x: count.update(Counter(x.split())))).to_arguments(stripped_words)
+    return count, cache
+
+
+def reduce_index_size_using_freq(count: Counter, cache: MonadicDict) -> MonadicDict:
+    words_to_drop = set()
+    for word, cnt in count.most_common(1000):
+        if len(word) < 4 or cnt > 3000:
+            words_to_drop.add(word)
+    smaller_cache = MonadicDict()
+    for entry in cache:
+        new_value = cache["entry"].bind(
+            lambda x: " ".join(
+                set(word for word in x.lower().split() if word not in words_to_drop)
+            )
+        )
+        smaller_cache[entry] = new_value
+    return smaller_cache
+
+
+def build_rdf_cache(
+    sparql_uri: str, query: str, remove_common_words: bool = False
+) -> Maybe[MonadicDict]:
     sparql = SPARQLWrapper(sparql_uri)
     sparql.setReturnFormat(JSON)
     sparql.setQuery(query)
     results = sparql.queryAndConvert()
     if not isinstance(results, dict):
         raise TypeError(f"Expected results to be a dict but found {type(results)}")
-    bindings = results["results"]["bindings"]
-    count: Counter[str] = Counter()
-    words_regex = re.compile(r"\w+")
-    for entry in bindings :
-        x = (entry["speciesName"]["value"], entry["symbolName"]["value"],)
-        value = entry["comment"]["value"]
-        value = " ".join(words_regex.findall(value)) # remove punctuation
-        cache[x] = value
-        count.update(Counter(value.lower().strip().split()))
+    monadic_results = build_monadic_dict(results)
+    results_value: Maybe[MonadicDict] = monadic_results["results"]
+    bindings: Maybe[list] = results_value.bind(lambda x: x["bindings"])
+    count_n_cache = bindings.map(get_count_and_cache_from_rdf_bindings)
 
     if not remove_common_words:
-        return cache
-
-    words_to_drop = set()
-    for word, cnt in count.most_common(1000):
-        if len(word) < 4 or cnt > 3000:
-            words_to_drop.add(word)
-    smaller_cache = {}
-    for entry, value in cache.items():
-        new_value = set(word for word in value.lower().split() if word not in words_to_drop)
-        smaller_cache[entry] = " ".join(new_value)
+        return count_n_cache.map(lambda x: x[1])
+    smaller_cache = count_n_cache.map(
+        lambda x: reduce_index_size_using_freq(x[0], x[1])
+    )
     return smaller_cache
 
 
@@ -273,11 +321,9 @@ def index_text(text: str) -> None:
     termgenerator.increase_termpos()
 
 @curry(3)
-def index_from_dictionary(keys: Hashable, prefix: str, dictionary: dict):
-    entry = dictionary.get(keys)
-    if not entry:
-        return
-    termgenerator.index_text_without_positions(entry, 0, prefix)
+def index_from_dictionary(keys: Hashable, prefix: str, dictionary: MonadicDict):
+    entry = dictionary[keys]
+    entry.bind(lambda x: termgenerator.index_text_without_positions(x, 0, prefix))
 
 
 index_text_without_positions = lambda text: termgenerator.index_text_without_positions(text)
@@ -306,8 +352,8 @@ add_nsamples = lambda doc, nsamples: doc.add_value(6, xapian.sortable_serialise(
 # to child. Specifically, we use this global variable.
 # This is copy-on-write so make sure child processes don't modify this data
 mysql_data: Iterable
-rif_cache: Iterable
-wiki_cache: Iterable
+rif_cache: Maybe[Iterable]
+wiki_cache: Maybe[Iterable]
 
 # We use this lock to ensure that only one process writes its Xapian
 # index to disk at a time.
@@ -347,16 +393,16 @@ def index_genes(xapian_build_directory: pathlib.Path, chunk_index: int) -> None:
             trait["geno_chr"].bind(index_peakchr)
 
             Maybe.apply(index_from_dictionary).to_arguments(
-                    Just((trait["species"].value, trait["symbol"].value)),
-                    Just("XRF"),
-                    Just(rif_cache)
-                    )
+                Just((trait["species"].value, trait["symbol"].value)),
+                Just("XRF"),
+                rif_cache,
+            )
 
             Maybe.apply(index_from_dictionary).to_arguments(
-                    Just((trait["species"].value, trait["symbol"].value)),
-                    Just("XWK"),
-                    Just(wiki_cache)
-                    )
+                Just((trait["species"].value, trait["symbol"].value)),
+                Just("XWK"),
+                wiki_cache,
+            )
 
             doc.set_data(json.dumps(trait.data))
             (Maybe.apply(curry(2, lambda name, dataset: f"{name}:{dataset}"))
