@@ -66,19 +66,19 @@ def get_phenotype(trait_spec: str):  # pylint: disable=too-many-locals
             data = {}
 
             for idx, strain in enumerate(strains):
+                entry = {}
+
                 value = values[idx]
-                py_value = None if np.isnan(value) else float(value)
+                if not np.isnan(value):
+                    entry["value"] = float(value)
+                    # you cannot have SE without a value enforcing this here
+                    if se_values is not None:
+                        se_val = se_values[idx]
+                        if not np.isnan(se_val):
+                            entry["SE"] = float(se_val)
 
-                if se_values is not None:
-                    se_val = se_values[idx]
-                    py_se = None if np.isnan(se_val) else float(se_val)
-                else:
-                    py_se = None
-
-                data[strain] = {
-                    "value": py_value,
-                    "se": py_se
-                }
+                if entry:
+                    data[strain] = entry
             return jsonify(data)
 
 
