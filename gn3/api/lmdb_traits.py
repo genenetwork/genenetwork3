@@ -16,7 +16,7 @@ from flask import Blueprint, current_app, jsonify
 lmdb_traits = Blueprint("lmdb_traits", __name__)
 
 
-@lmdb_traits.route("/traits/<path:trait_spec>", methods=["GET"])
+@lmdb_traits.route("/traits/<path:trait_spec>.json", methods=["GET"])
 def get_phenotype(trait_spec: str):  # pylint: disable=too-many-locals
     """Fetch phenotype data.
 
