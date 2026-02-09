@@ -506,7 +506,7 @@ def dump_all_datasets_cmd(
             # Dump this dataset
             prepare_and_dump(dataset_name, sql_uri, lmdb_path)
             success_count += 1
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.error("  → Failed to dump %s: %s", dataset_name, e, exc_info=True)
             fail_count += 1
 
