@@ -1,4 +1,5 @@
 """API endpoints for LMDB-based correlation."""
+import os
 import time
 from flask import Blueprint, jsonify, request, current_app
 
@@ -10,6 +11,51 @@ from gn3.computations.lmdb_correlation import (
 
 
 lmdb_corr = Blueprint("lmdb_corr", __name__)
+
+
+@lmdb_corr.route("/lmdb_status/<string:dataset_name>", methods=["GET"])
+def check_lmdb_status(dataset_name: str):
+    """Check if LMDB dataset exists and is available.
+    
+    This endpoint allows GN2 (or other clients) to check if a dataset
+    is available in LMDB format before attempting correlation.
+    
+    Args:
+        dataset_name: Name of dataset (e.g., "HC_M2_0606_P")
+    
+    Returns:
+        {
+            "available": true,
+            "dataset_name": "HC_M2_0606_P",
+            "lmdb_path": "/path/to/lmdb"
+        }
+    """
+    lmdb_base = current_app.config.get("LMDB_DATA_PATH")
+    if not lmdb_base:
+        return jsonify(
+            available=False,
+            dataset_name=dataset_name,
+            error="LMDB_DATA_PATH not configured"
+        ), 503
+    
+    lmdb_path = os.path.join(lmdb_base, dataset_name)
+    
+    # Check if LMDB files exist
+    has_data = os.path.exists(os.path.join(lmdb_path, "data.mdb"))
+    has_lock = os.path.exists(os.path.join(lmdb_path, "lock.mdb"))
+    
+    if has_data and has_lock:
+        return jsonify(
+            available=True,
+            dataset_name=dataset_name,
+            lmdb_path=lmdb_path
+        )
+    else:
+        return jsonify(
+            available=False,
+            dataset_name=dataset_name,
+            lmdb_path=lmdb_path if os.path.isdir(lmdb_path) else None
+        )
 
 
 @lmdb_corr.route("/lmdb_corr", methods=["POST"])
