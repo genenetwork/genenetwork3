@@ -163,7 +163,6 @@ def run_lmdb_correlation(data: CorrelationInput, tmpdir: str = "/tmp") -> dict:
         LMDBCorrelationError: If computation fails
     """
     # Get and validate paths
-    # breakpoint()  # Removed - was causing hang
     lmdb_path = get_lmdb_path(data.dataset_name)
     validate_dataset(lmdb_path)
 
@@ -171,7 +170,7 @@ def run_lmdb_correlation(data: CorrelationInput, tmpdir: str = "/tmp") -> dict:
     validate_input(data)
 
     # Get correlation command
-    cmd = current_app.config.get("CORRELATION_COMMAND") # assert this is actually executable
+    cmd = current_app.config.get("CORRELATION_COMMAND")
     if not cmd:
         raise LMDBCorrelationError("CORRELATION_COMMAND not configured")
 
