@@ -112,6 +112,7 @@ def create_json_config(
         "file_path": lmdb_path,
         "x_vals": data.trait_vals,
         "strains": data.strains,
+        "file_type": "lmdb",
         "sample_values": "input_trait",
         "method": data.method,
         "file_delimiter": ",",
