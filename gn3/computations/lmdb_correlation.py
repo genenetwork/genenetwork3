@@ -32,13 +32,13 @@ class CorrelationInput:
 
 def get_lmdb_path(dataset_name: str) -> str:
     """Construct full LMDB path from dataset name.
-    
+
     Args:
         dataset_name: Name of dataset (e.g., "HC_M2_0606_P")
-    
+
     Returns:
         Full path to LMDB directory
-    
+
     Raises:
         LMDBCorrelationError: If LMDB_DATA_PATH not configured
     """
@@ -50,28 +50,30 @@ def get_lmdb_path(dataset_name: str) -> str:
 
 def validate_dataset(lmdb_path: str) -> None:
     """Validate that LMDB dataset exists and is valid.
-    
+
     Args:
         lmdb_path: Full path to LMDB directory
-    
+
     Raises:
         LMDBCorrelationError: If dataset doesn't exist or is invalid
     """
     if not os.path.isdir(lmdb_path):
         raise LMDBCorrelationError(f"Dataset not found: {lmdb_path}")
-    
+
     required_files = ["data.mdb", "lock.mdb"]
-    missing = [f for f in required_files if not os.path.exists(os.path.join(lmdb_path, f))]
+    missing = [f for f in required_files if not os.path.exists(
+        os.path.join(lmdb_path, f))]
     if missing:
-        raise LMDBCorrelationError(f"Invalid LMDB dataset, missing: {', '.join(missing)}")
+        raise LMDBCorrelationError(
+            f"Invalid LMDB dataset, missing: {', '.join(missing)}")
 
 
 def validate_input(data: CorrelationInput) -> None:
     """Validate correlation input data.
-    
+
     Args:
         data: CorrelationInput to validate
-    
+
     Raises:
         LMDBCorrelationError: If validation fails
     """
@@ -80,10 +82,10 @@ def validate_input(data: CorrelationInput) -> None:
             f"Array length mismatch: {len(data.strains)} strains but "
             f"{len(data.trait_vals)} values"
         )
-    
+
     if not all(isinstance(s, str) for s in data.strains):
         raise LMDBCorrelationError("All strains must be strings")
-    
+
     if data.method not in ("pearson", "spearman"):
         raise LMDBCorrelationError(f"Invalid method: {data.method}")
 
@@ -94,12 +96,12 @@ def create_json_config(
     data: CorrelationInput
 ) -> tuple[str, str]:
     """Create JSON configuration for Rust correlation.
-    
+
     Args:
         tmp_dir: Temporary directory for files
         lmdb_path: Path to LMDB dataset
         data: Correlation input data
-    
+
     Returns:
         Tuple of (output_file_path, json_config_path)
     """
@@ -125,11 +127,11 @@ def create_json_config(
 
 def parse_results(output_file: str, top_n: int) -> dict:
     """Parse correlation results from output file.
-    
+
     Args:
         output_file: Path to output file
         top_n: Maximum number of results to return
-    
+
     Returns:
         Dictionary of correlation results
     """
@@ -149,40 +151,58 @@ def parse_results(output_file: str, top_n: int) -> dict:
 
 def run_lmdb_correlation(data: CorrelationInput, tmpdir: str = "/tmp") -> dict:
     """Run correlation using LMDB dataset.
-    
+
     Args:
         data: CorrelationInput with all parameters
         tmpdir: Temporary directory for output files
-    
+
     Returns:
         Dictionary of correlation results
-    
+
     Raises:
         LMDBCorrelationError: If computation fails
     """
     # Get and validate paths
+    # breakpoint()  # Removed - was causing hang
     lmdb_path = get_lmdb_path(data.dataset_name)
     validate_dataset(lmdb_path)
-    
+
     # Validate input
     validate_input(data)
-    
+
     # Get correlation command
-    cmd = current_app.config.get("CORRELATION_COMMAND")
+    cmd = current_app.config.get("CORRELATION_COMMAND") # assert this is actually executable
     if not cmd:
         raise LMDBCorrelationError("CORRELATION_COMMAND not configured")
-    
+
     # Create temp directory and config
     tmp_dir = f"{tmpdir}/correlation"
     create_output_directory(tmp_dir)
-    
+
     output_file, json_file = create_json_config(tmp_dir, lmdb_path, data)
+
+    # Log the JSON config for debugging
+    with open(json_file, 'r') as f:
+        current_app.logger.info(f"JSON config: {f.read()}")
     
     # Run correlation
     try:
-        subprocess.run([cmd, json_file, tmpdir], check=True, capture_output=True)
+        current_app.logger.info(f"Running: {cmd} {json_file} {tmpdir}")
+        
+        result = subprocess.run([cmd, json_file, tmpdir],
+                               check=True, capture_output=True, text=True,
+                               timeout=300)  # 5 minute timeout
+        current_app.logger.info(f"Correlation completed successfully")
+    except subprocess.TimeoutExpired as e:
+        raise LMDBCorrelationError(
+            f"Correlation timed out after 300 seconds") from e
     except subprocess.CalledProcessError as e:
-        raise LMDBCorrelationError(f"Correlation failed: {e.stderr.decode()}") from e
-    
+        current_app.logger.error(f"Correlation failed: {e.stderr}")
+        raise LMDBCorrelationError(
+            f"Correlation failed: {e.stderr}") from e
+    except FileNotFoundError as e:
+        raise LMDBCorrelationError(
+            f"Correlation command not found: {cmd}") from e
+
     # Parse and return results
     return parse_results(output_file, data.top_n)
