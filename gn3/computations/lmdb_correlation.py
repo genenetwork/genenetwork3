@@ -181,28 +181,13 @@ def run_lmdb_correlation(data: CorrelationInput, tmpdir: str = "/tmp") -> dict:
 
     output_file, json_file = create_json_config(tmp_dir, lmdb_path, data)
 
-    # Log the JSON config for debugging
-    with open(json_file, 'r') as f:
-        current_app.logger.info(f"JSON config: {f.read()}")
-    
-    # Run correlation
+    # Run correlation - same pattern as rust_correlation.py
+    command_list = [cmd, json_file, tmpdir]
     try:
-        current_app.logger.info(f"Running: {cmd} {json_file} {tmpdir}")
-        
-        result = subprocess.run([cmd, json_file, tmpdir],
-                               check=True, capture_output=True, text=True,
-                               timeout=300)  # 5 minute timeout
-        current_app.logger.info(f"Correlation completed successfully")
-    except subprocess.TimeoutExpired as e:
-        raise LMDBCorrelationError(
-            f"Correlation timed out after 300 seconds") from e
+        subprocess.run(command_list, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
-        current_app.logger.error(f"Correlation failed: {e.stderr}")
         raise LMDBCorrelationError(
-            f"Correlation failed: {e.stderr}") from e
-    except FileNotFoundError as e:
-        raise LMDBCorrelationError(
-            f"Correlation command not found: {cmd}") from e
+            f"Correlation failed: {e.stderr.decode()}") from e
 
     # Parse and return results
     return parse_results(output_file, data.top_n)
