@@ -1,13 +1,16 @@
 """API for fetching metadata using an API"""
-import time
+import logging
 
 from string import Template
 from pathlib import Path
 
-from authlib.jose import jwt
-from flask import Blueprint
-from flask import request
-from flask import current_app
+from urllib.parse import urljoin
+
+from pymonad.either import Left, Right
+from flask import request, Blueprint, current_app
+
+from gn_libs import monadic_requests as mrequests
+from gn_libs.privileges.checks import can_edit
 
 
 from gn3.oauth2.errors import AuthorisationError
@@ -24,6 +27,9 @@ from gn3.db.rdf import (
 )
 
 from gn3.api.metadata_api import wiki
+
+
+logger = logging.getLogger(__name__)
 
 
 metadata = Blueprint("metadata", __name__)
@@ -183,60 +189,101 @@ def view_history(id_):
 @metadata.route("/datasets/edit", methods=["POST"])
 def edit_dataset():
     """Edit a given dataset"""
-    # Fetch the public key
-    key = ""
-    with open(
-            current_app.config.get("AUTH_SERVER_SSL_PUBLIC_KEY"), "rb"
-    ) as _f:
-        key = _f.read()
 
-    # Decode the token
-    payload = jwt.decode(
-        request.headers.get("Authorization").split()[-1],  # the jwt token
-        key  # the auth-server public key
-    )
+    ## TODO : ===== Buggy authorisation check =====
+    ## ===== Notes for @bonfacem/@alexm =====
+    # === The auth code following these notes is wrong. Instead of that, do the
+    # === following:
+    # ===
+    # === 1) Identify the RESOURCE-ID for the resource you are editing
+    # ===   a) If this is metadata on specific data, figure out the resource the
+    # ===      data is attached to - you can do this using the
+    # ===      `/auth/data/authorisation` endpoint e.g.
+    # ===        curl -H "Content-Type: application/json" \
+    # ===             -H "Authorization: Bearer <token>" \
+    # ===              -XPOST "http://localhost:8081/auth/data/authorisation" \
+    # ===              -d '{"traits": ["HC_M2_0606_P::1434280_at"]}'
+    # ===   b) If the metadata is not attached to specific data, then skip this
+    # ===      part and go to part 2
+    # === 2) request auth server for the user's privileges on:
+    # ===   a) This resource
+    # ===      - if it fulfils 1) a) above
+    # ===      - use the `/auth/resource/<RESOURCE-ID>/roles` endpoint
+    # ===   b) The Genenetwork system
+    # ===      - This is always checked regardless of results in step 1 above
+    # ===      - use the `/auth/system/roles` endpoint.
+    # === 3) Retrieve privileges from the results of step 2 above
+    # === 4) Check for appropriate privileges
+    # ===
+    # === I have assumed that this only runs for system-wide metadata and
+    # === implemented the "stand-in" check below in place of what was originally
+    # === here. Please verify whether this is correct, and fix if it is not.
+    # =====
+    ## END : ===== Buggy authorisation check =====
+    def __do_edit__(user_details):
+        gn_docs = Path(current_app.config["DATA_DIR"], "gn-docs")
+        # This maps the form elements to the actual path in the git
+        # repository
+        map_ = {
+            "description": "summary.rtf",
+            "tissueInfo": "tissue.rtf",
+            "specifics": "specifics.rtf",
+            "caseInfo": "cases.rtf",
+            "platformInfo": "platform.rtf",
+            "processingInfo": "processing.rtf",
+            "notes": "notes.rtf",
+            "experimentDesignInfo": "experiment-design.rtf",
+            "acknowledgement": "acknowledgement.rtf",
+            "citation": "citation.rtf",
+            "experimentType": "experiment-type.rtf",
+            "contributors": "contributors.rtf"
+        }
+        output = Path(
+            gn_docs,
+            "general/datasets/",
+            request.form.get("id").split("/")[-1],
+            f"{map_.get(request.form.get('section'))}"
+        )
+        match request.form.get("type"):
+            case "dcat:Dataset":
+                author = f"{user_details['name']} <{user_details['email']}>"
+                return save_metadata(
+                    git_dir=gn_docs,
+                    output=output,
+                    author=author,
+                    content=request.form.get("editor"),
+                    msg=request.form.get("edit-summary")
+                ).either(
+                    lambda error: ({"error": error}, 500),
+                    lambda x: ("Edit successfull", 201)
+                )
 
-    # Validation:
-    if payload.get("exp") - int(time.time()) > 300:
-        raise AuthorisationError("Expired Token")
-    if "group:resource:edit-resource" not in payload.get("roles", []):
-        raise AuthorisationError("Insufficient Edit Privileges")
-    gn_docs = Path(current_app.config["DATA_DIR"], "gn-docs")
-    # This maps the form elements to the actual path in the git
-    # repository
-    map_ = {
-        "description": "summary.rtf",
-        "tissueInfo": "tissue.rtf",
-        "specifics": "specifics.rtf",
-        "caseInfo": "cases.rtf",
-        "platformInfo": "platform.rtf",
-        "processingInfo": "processing.rtf",
-        "notes": "notes.rtf",
-        "experimentDesignInfo": "experiment-design.rtf",
-        "acknowledgement": "acknowledgement.rtf",
-        "citation": "citation.rtf",
-        "experimentType": "experiment-type.rtf",
-        "contributors": "contributors.rtf"
+    def __handle_error__(error):
+        raise AuthorisationError(error)
+
+    logger.debug("BEARER TOKEN: %s", request.headers.get("Authorization"))
+    headers = {
+        "Authorization": request.headers.get("Authorization")
     }
-    output = Path(
-        gn_docs,
-        "general/datasets/",
-        request.form.get("id").split("/")[-1],
-        f"{map_.get(request.form.get('section'))}"
+
+    return mrequests.get(
+        urljoin(current_app.config["AUTH_SERVER_URL"], "auth/system/roles"),
+        headers=headers
+    ).then(
+        lambda system_roles: tuple(privilege["privilege_id"]
+                                   for role in system_roles
+                                   for privilege in role["privileges"])
+    ).then(
+        lambda privileges: Right(privileges) if can_edit(privileges) else Left(
+            "You do not have sufficient privileges to edit this metadata.")
+    ).then(
+        lambda privileges: mrequests.get(
+            urljoin(current_app.config["AUTH_SERVER_URL"], "auth/user/"),
+            headers=headers)
+    ).either(
+        __handle_error__,
+        __do_edit__
     )
-    match request.form.get("type"):
-        case "dcat:Dataset":
-            author = f"{payload.get('account-name')} <{payload.get('email')}>"
-            return save_metadata(
-                git_dir=gn_docs,
-                output=output,
-                author=author,
-                content=request.form.get("editor"),
-                msg=request.form.get("edit-summary")
-            ).either(
-                lambda error: ({"error": error}, 500),
-                lambda x: ("Edit successfull", 201)
-            )
 
 
 @metadata.route("/publications/<name>", methods=["GET"])
