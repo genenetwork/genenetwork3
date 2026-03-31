@@ -163,25 +163,19 @@ def run_lmdb_correlation(data: CorrelationInput, tmpdir: str = "/tmp") -> dict:
     Raises:
         LMDBCorrelationError: If computation fails
     """
-    # Get and validate paths
     lmdb_path = get_lmdb_path(data.dataset_name)
     validate_dataset(lmdb_path)
 
-    # Validate input
     validate_input(data)
 
-    # Get correlation command
     cmd = current_app.config.get("CORRELATION_COMMAND")
     if not cmd:
         raise LMDBCorrelationError("CORRELATION_COMMAND not configured")
 
-    # Create temp directory and config
     tmp_dir = f"{tmpdir}/correlation"
     create_output_directory(tmp_dir)
 
     output_file, json_file = create_json_config(tmp_dir, lmdb_path, data)
-
-    # Run correlation - same pattern as rust_correlation.py
 
     command_list = [cmd, json_file, tmpdir]
     try:
@@ -190,5 +184,4 @@ def run_lmdb_correlation(data: CorrelationInput, tmpdir: str = "/tmp") -> dict:
         raise LMDBCorrelationError(
             f"Correlation failed: {e.stderr.decode()}") from e
 
-    # Parse and return results
     return parse_results(output_file, data.top_n)
