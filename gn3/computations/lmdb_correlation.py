@@ -182,6 +182,7 @@ def run_lmdb_correlation(data: CorrelationInput, tmpdir: str = "/tmp") -> dict:
     output_file, json_file = create_json_config(tmp_dir, lmdb_path, data)
 
     # Run correlation - same pattern as rust_correlation.py
+
     command_list = [cmd, json_file, tmpdir]
     try:
         subprocess.run(command_list, check=True, capture_output=True)

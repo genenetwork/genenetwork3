@@ -16,13 +16,13 @@ lmdb_corr = Blueprint("lmdb_corr", __name__)
 @lmdb_corr.route("/lmdb_status/<string:dataset_name>", methods=["GET"])
 def check_lmdb_status(dataset_name: str):
     """Check if LMDB dataset exists and is available.
-    
+
     This endpoint allows GN2 (or other clients) to check if a dataset
     is available in LMDB format before attempting correlation.
-    
+
     Args:
         dataset_name: Name of dataset (e.g., "HC_M2_0606_P")
-    
+
     Returns:
         {
             "available": true,
@@ -37,34 +37,33 @@ def check_lmdb_status(dataset_name: str):
             dataset_name=dataset_name,
             error="LMDB_DATA_PATH not configured"
         ), 503
-    
+
     lmdb_path = os.path.join(lmdb_base, dataset_name)
-    
+
     # Check if LMDB files exist
     has_data = os.path.exists(os.path.join(lmdb_path, "data.mdb"))
     has_lock = os.path.exists(os.path.join(lmdb_path, "lock.mdb"))
-    
+
     if has_data and has_lock:
         return jsonify(
             available=True,
             dataset_name=dataset_name,
             lmdb_path=lmdb_path
         )
-    else:
-        return jsonify(
-            available=False,
-            dataset_name=dataset_name,
-            lmdb_path=lmdb_path if os.path.isdir(lmdb_path) else None
-        )
+    return jsonify(
+        available=False,
+        dataset_name=dataset_name,
+        lmdb_path=lmdb_path if os.path.isdir(lmdb_path) else None
+    ), 404
 
 
-@lmdb_corr.route("/lmdb_corr", methods=["POST"])
+@lmdb_corr.route("/compute", methods=["POST"])
 def compute_lmdb_corr():
     """Compute correlation using LMDB dataset.
-    
+
     This endpoint uses pre-computed LMDB files for fast correlation
     without CSV generation or database queries.
-    
+
     Request JSON:
         {
             "dataset_name": "HC_M2_0606_P",
@@ -74,7 +73,7 @@ def compute_lmdb_corr():
             "parallel": true,
             "top_n": 500
         }
-    
+
     Returns:
         {
             "status": "success",
@@ -83,17 +82,17 @@ def compute_lmdb_corr():
         }
     """
     start = time.time()
-    
+
     data = request.get_json()
     if not data:
         return jsonify(error="No request data"), 400
-    
+
     # Validate required fields
     required = ["dataset_name", "trait_vals", "strains"]
     missing = [f for f in required if f not in data]
     if missing:
         return jsonify(error=f"Missing fields: {missing}"), 400
-    
+
     # Build input object
     try:
         input_data = CorrelationInput(
@@ -106,11 +105,11 @@ def compute_lmdb_corr():
         )
     except (TypeError, ValueError) as e:
         return jsonify(error=f"Invalid input: {e}"), 400
-    
+
     # Run correlation
     try:
         results = run_lmdb_correlation(input_data)
-        
+
         return jsonify(
             status="success",
             results=results,
@@ -123,7 +122,7 @@ def compute_lmdb_corr():
                 "num_results": len(results)
             }
         )
-    
+
     except LMDBCorrelationError as e:
         current_app.logger.error("LMDB correlation failed: %s", e)
         return jsonify(error=str(e)), 400
