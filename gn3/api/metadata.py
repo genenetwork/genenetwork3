@@ -9,8 +9,8 @@ from urllib.parse import urljoin
 from pymonad.either import Left, Right
 from flask import request, Blueprint, current_app
 
+from gn_libs.privileges import resources
 from gn_libs import monadic_requests as mrequests
-from gn_libs.privileges.checks import can_edit
 
 
 from gn3.oauth2.errors import AuthorisationError
@@ -274,8 +274,12 @@ def edit_dataset():
                                    for role in system_roles
                                    for privilege in role["privileges"])
     ).then(
-        lambda privileges: Right(privileges) if can_edit(privileges) else Left(
-            "You do not have sufficient privileges to edit this metadata.")
+        lambda privileges: (
+            Right(privileges)
+            if resources.can_edit(privileges)
+            else
+            Left(
+                "You do not have sufficient privileges to edit this metadata."))
     ).then(
         lambda privileges: mrequests.get(
             urljoin(current_app.config["AUTH_SERVER_URL"], "auth/user/"),
