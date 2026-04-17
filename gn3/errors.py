@@ -1,4 +1,5 @@
 """Handle application level errors."""
+import logging
 import traceback
 
 from http.client import RemoteDisconnected
@@ -12,12 +13,15 @@ from SPARQLWrapper.SPARQLExceptions import (
     Unauthorized
 )
 from werkzeug.exceptions import NotFound
+from flask import Flask, jsonify, Response
 from authlib.oauth2.rfc6749.errors import OAuth2Error
-from flask import Flask, jsonify, Response, current_app
 
 from gn3.oauth2 import errors as oautherrors
 from gn3.oauth2.errors import AuthorisationError
 from  gn3.llms.errors import LLMError
+
+logger = logging.getLogger(__name__)
+
 
 def add_trace(exc: Exception, jsonmsg: dict) -> dict:
     """Add the traceback to the error handling object."""
@@ -29,7 +33,7 @@ def add_trace(exc: Exception, jsonmsg: dict) -> dict:
 
 def page_not_found(pnf):
     """Generic 404 handler."""
-    current_app.logger.error("Handling 404 errors", exc_info=True)
+    logger.error("Handling 404 errors", exc_info=True)
     return jsonify(add_trace(pnf, {
         "error": pnf.name,
         "error_description": pnf.description
@@ -38,7 +42,7 @@ def page_not_found(pnf):
 
 def internal_server_error(pnf):
     """Generic 404 handler."""
-    current_app.logger.error("Handling internal server errors", exc_info=True)
+    logger.error("Handling internal server errors", exc_info=True)
     return jsonify(add_trace(pnf, {
         "error": pnf.name,
         "error_description": pnf.description
@@ -47,7 +51,7 @@ def internal_server_error(pnf):
 
 def url_server_error(pnf):
     """Handler for an exception with a url connection."""
-    current_app.logger.error("Handling url server errors", exc_info=True)
+    logger.error("Handling url server errors", exc_info=True)
     return jsonify(add_trace(pnf, {
         "error": f"URLLib Error no: {pnf.reason.errno}",
         "error_description": pnf.reason.strerror,
@@ -56,7 +60,7 @@ def url_server_error(pnf):
 
 def handle_authorisation_error(exc: AuthorisationError):
     """Handle AuthorisationError if not handled anywhere else."""
-    current_app.logger.error("Handling external auth errors", exc_info=True)
+    logger.error("Handling external auth errors", exc_info=True)
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
         "error_description": " :: ".join(exc.args)
@@ -65,7 +69,7 @@ def handle_authorisation_error(exc: AuthorisationError):
 
 def handle_oauth2_errors(exc: OAuth2Error):
     """Handle OAuth2Error if not handled anywhere else."""
-    current_app.logger.error("Handling external oauth2 errors", exc_info=True)
+    logger.error("Handling external oauth2 errors", exc_info=True)
     return jsonify(add_trace(exc, {
         "error": exc.error,
         "error_description": exc.description,
@@ -74,7 +78,7 @@ def handle_oauth2_errors(exc: OAuth2Error):
 
 def handle_sqlite3_errors(exc: OperationalError):
     """Handle sqlite3 errors if not handled anywhere else."""
-    current_app.logger.error("Handling sqlite3 errors", exc_info=True)
+    logger.error("Handling sqlite3 errors", exc_info=True)
     return jsonify({
         "error": "DatabaseError",
         "error_description": exc.args[0],
@@ -83,7 +87,7 @@ def handle_sqlite3_errors(exc: OperationalError):
 
 def handle_sparql_errors(exc):
     """Handle sparql/virtuoso errors if not handled anywhere else."""
-    current_app.logger.error("Handling sparql errors", exc_info=True)
+    logger.error("Handling sparql errors", exc_info=True)
     code = {
         "EndPointInternalError": 500,
         "EndPointNotFound": 404,
@@ -98,7 +102,7 @@ def handle_sparql_errors(exc):
 
 def handle_generic(exc: Exception) -> Response:
     """Handle generic exception."""
-    current_app.logger.error("Handling generic errors", exc_info=True)
+    logger.error("Handling generic errors", exc_info=True)
     resp = jsonify({
         "error": type(exc).__name__,
         "error_description": (
@@ -111,7 +115,7 @@ def handle_generic(exc: Exception) -> Response:
 
 def handle_local_authorisation_errors(exc: oautherrors.AuthorisationError):
     """Handle errors relating to authorisation that are raised locally."""
-    current_app.logger.error("Handling local auth errors", exc_info=True)
+    logger.error("Handling local auth errors", exc_info=True)
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
         "error_description": " ".join(exc.args)
@@ -120,7 +124,7 @@ def handle_local_authorisation_errors(exc: oautherrors.AuthorisationError):
 
 def handle_llm_error(exc: Exception) -> Response:
     """ Handle llm erros if not handled  anywhere else. """
-    current_app.logger.error(exc)
+    logger.error(exc)
     resp = jsonify({
         "query": exc.args[1],
         "error_type": type(exc).__name__,
