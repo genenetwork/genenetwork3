@@ -31,6 +31,7 @@ from gn3.api.rqtl2 import rqtl2
 from gn3.api.streaming import streaming
 from gn3.api.case_attributes import caseattr
 from gn3.api.lmdb_traits import lmdb_traits
+from gn3.api.lmdb_correlation import lmdb_corr
 
 
 class ConfigurationError(Exception):
@@ -117,6 +118,7 @@ def create_app(config: Union[Dict, str, None] = None) -> Flask:
     app.register_blueprint(rqtl2, url_prefix="/api/rqtl2")
     app.register_blueprint(streaming, url_prefix="/api/stream")
     app.register_blueprint(lmdb_traits, url_prefix="/api/lmdb/v1/data")
+    app.register_blueprint(lmdb_corr, url_prefix="/api/lmdb_corr")
 
     register_error_handlers(app)
     return app
