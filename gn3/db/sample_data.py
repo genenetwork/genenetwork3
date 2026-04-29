@@ -607,6 +607,10 @@ def insert_sample_data(
     except Exception as _e:
         raise MySQLdb.Error(_e) from _e
 
+def _is_n_cases_missing(value):
+    """Check if N value represents missing data (treat 0 as missing)."""
+    return value in ('x', '0', 0)
+
 def batch_update_sample_data(
     conn: Any, diff_data: Dict
 ):
@@ -641,11 +645,14 @@ def batch_update_sample_data(
             cursor.execute(
                 "SELECT Id FROM Strain WHERE Name = %s", (strain_name,)
             )
-            return cursor.fetchone()[0]
+            result = cursor.fetchone()
+            if result is None:
+                raise ValueError(f"Strain '{strain_name}' not found in the database. Please verify the strain name exists.")
+            return result[0]
 
     def __update_query(conn, db_type, data_id, strain_id, diffs):
         with conn.cursor() as cursor:
-            if 'value' in diffs:
+            if 'value' in diffs and diffs['value']['Current'] != 'x':
                 cursor.execute(
                     (
                         f"UPDATE {db_type}Data "
@@ -653,46 +660,52 @@ def batch_update_sample_data(
                         "WHERE Id = %s AND StrainId = %s"
                     ), (diffs['value']['Current'], data_id, strain_id)
                 )
-            if 'error' in diffs:
+            if 'error' in diffs and diffs['error']['Current'] != 'x':
+                # Use INSERT ... ON DUPLICATE KEY UPDATE for atomic upsert
                 cursor.execute(
                     (
-                        f"UPDATE {db_type}SE "
-                        "SET error = %s "
-                        "WHERE DataId = %s AND StrainId = %s"
-                    ), (diffs['error']['Current'], data_id, strain_id)
+                        f"INSERT INTO {db_type}SE (DataId, StrainId, error) "
+                        "VALUES (%s, %s, %s) "
+                        "ON DUPLICATE KEY UPDATE error = VALUES(error)"
+                    ), (data_id, strain_id, diffs['error']['Current'])
                 )
-            if 'n_cases' in diffs:
+            if 'n_cases' in diffs and not _is_n_cases_missing(diffs['n_cases']['Current']):
+                # Insert/update N value using upsert pattern
                 cursor.execute(
                     (
-                        "UPDATE NStrain "
-                        "SET count = %s "
-                        "WHERE DataId = %s AND StrainId = %s"
-                    ), (diffs['n_cases']['Current'], data_id, strain_id)
+                        "INSERT INTO NStrain (DataId, StrainId, count) "
+                        "VALUES (%s, %s, %s) "
+                        "ON DUPLICATE KEY UPDATE count = VALUES(count)"
+                    ), (data_id, strain_id, diffs['n_cases']['Current'])
                 )
 
         conn.commit()
 
     def __insert_query(conn, db_type, data_id, strain_id, diffs):
         with conn.cursor() as cursor:
-            if 'value' in diffs:
+            if 'value' in diffs and diffs['value'] != 'x':
                 cursor.execute(
                     (
                         f"INSERT INTO {db_type}Data (Id, StrainId, value)"
                         "VALUES (%s, %s, %s)"
                     ), (data_id, strain_id, diffs['value'])
                 )
-            if 'error' in diffs:
+            if 'error' in diffs and diffs['error'] != 'x':
+                # Use INSERT ... ON DUPLICATE KEY UPDATE for atomic upsert
                 cursor.execute(
                     (
-                        f"INSERT INTO {db_type}SE (DataId, StrainId, error)"
-                        "VALUES (%s, %s, %s)"
+                        f"INSERT INTO {db_type}SE (DataId, StrainId, error) "
+                        "VALUES (%s, %s, %s) "
+                        "ON DUPLICATE KEY UPDATE error = VALUES(error)"
                     ), (data_id, strain_id, diffs['error'])
                 )
-            if 'n_cases' in diffs:
+            if 'n_cases' in diffs and not _is_n_cases_missing(diffs['n_cases']):
+                # Insert/update N value using upsert pattern
                 cursor.execute(
                     (
-                        "INSERT INTO NStrain (DataId, StrainId, count)"
-                        "VALUES (%s, %s, %s)"
+                        "INSERT INTO NStrain (DataId, StrainId, count) "
+                        "VALUES (%s, %s, %s) "
+                        "ON DUPLICATE KEY UPDATE count = VALUES(count)"
                     ), (data_id, strain_id, diffs['n_cases'])
                 )
 
