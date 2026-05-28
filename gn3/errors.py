@@ -72,7 +72,7 @@ def handle_authorisation_error(exc: AuthorisationError):
     logger.error("Handling external auth errors - %s", request.url)
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
-        "error_description": " :: ".join(exc.args)
+        "error_description": str(exc)
     })), 401
 
 
@@ -130,7 +130,7 @@ def handle_local_authorisation_errors(exc: oautherrors.AuthorisationError):
     logger.error("Handling local auth errors - %s", request.url)
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
-        "error_description": " ".join(exc.args)
+        "error_description": str(exc)
     })), 401
 
 
