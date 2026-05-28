@@ -611,9 +611,8 @@ def _is_n_cases_missing(value):
     """Check if N value represents missing data (treat 0 as missing)."""
     return value in ('x', '0', 0)
 
-def batch_update_sample_data(
-    conn: Any, diff_data: Dict
-):
+
+def batch_update_sample_data(conn: Any, diff_data: Dict):# pylint: disable=[too-many-statements]
     """Given sample data diffs, execute all relevant update/insert/delete queries"""
     def __fetch_data_id(conn, db_type, trait_id, dataset_name):
         with conn.cursor() as cursor:
@@ -647,7 +646,9 @@ def batch_update_sample_data(
             )
             result = cursor.fetchone()
             if result is None:
-                raise ValueError(f"Strain '{strain_name}' not found in the database. Please verify the strain name exists.")
+                raise ValueError(
+                    f"Strain '{strain_name}' not found in the database. "
+                    "Please verify the strain name exists.")
             return result[0]
 
     def __update_query(conn, db_type, data_id, strain_id, diffs):
