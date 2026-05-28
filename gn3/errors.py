@@ -73,7 +73,7 @@ def handle_authorisation_error(exc: AuthorisationError):
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
         "error_description": " :: ".join(exc.args)
-    })), 500
+    })), 401
 
 
 def handle_oauth2_errors(exc: OAuth2Error):
@@ -131,7 +131,7 @@ def handle_local_authorisation_errors(exc: oautherrors.AuthorisationError):
     return jsonify(add_trace(exc, {
         "error": type(exc).__name__,
         "error_description": " ".join(exc.args)
-    })), 400
+    })), 401
 
 
 def handle_llm_error(exc: Exception) -> Response:
