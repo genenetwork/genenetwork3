@@ -276,7 +276,7 @@ def edit_dataset():
     ).then(
         lambda privileges: (
             Right(privileges)
-            if resources.can_edit(privileges)
+            if resources.can_edit(tuple(), privileges)
             else
             Left(
                 "You do not have sufficient privileges to edit this metadata."))
