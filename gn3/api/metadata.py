@@ -640,13 +640,13 @@ CONSTRUCT {
             "skos": "http://www.w3.org/2004/02/skos/core#",
             "gnt": "http://genenetwork.org/term/",
             "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-            "name": "rdfs:label",
+            "name": "skos:prefLabel",
             "family": "gnt:family",
             "shortName": "gnt:shortName",
             "code": "gnt:code",
             "mappingMethod": "gnt:mappingMethod",
             "geneticType": "gnt:geneticType",
-            "fullName": "skos:prefLabel",
+            "fullName": "rdfs:label",
         },
     }
     return query_and_compact(
