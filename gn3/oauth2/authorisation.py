@@ -15,7 +15,11 @@ def require_token(func):
             bearer = request.headers.get("Authorization", "")
             if bearer.startswith("Bearer"):
                 # validate token and return it
-                _extra, token = [item.strip() for item in bearer.split(" ")]
+                bearer_parts = bearer.split(" ")
+                if len(bearer_parts) != 2:
+                    raise TokenValidationError(
+                        "Authorisation header specified but no bearer token provided!")
+                _extra, token = [item.strip() for item in bearer_parts]
                 _jwt = jwks.validate_token(
                     token,
                     jwks.fetch_jwks(app.config["AUTH_SERVER_URL"],
@@ -24,7 +28,7 @@ def require_token(func):
             error_message = "We expected a bearer token but did not get one."
         except TokenValidationError as _tve:
             app.logger.debug("Token validation failed.", exc_info=True)
-            error_message = "The token was found to be invalid."
+            error_message = "The provided token is invalid."
 
         return jsonify({
             "error": "TokenValidationError",
