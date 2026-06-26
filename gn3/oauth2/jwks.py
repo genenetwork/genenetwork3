@@ -3,8 +3,8 @@ from urllib.parse import urljoin
 
 import requests
 from flask import current_app as app
-from authlib.jose.errors import BadSignatureError
 from authlib.jose import KeySet, JsonWebKey, JsonWebToken
+from authlib.jose.errors import BadSignatureError, DecodeError
 
 from gn3.oauth2.errors import TokenValidationError
 
@@ -32,5 +32,7 @@ def validate_token(token: str, keys: KeySet) -> dict:
             return JsonWebToken(["RS256"]).decode(token, key=key)
         except BadSignatureError as _bse:
             pass
+        except DecodeError as _de:
+            raise TokenValidationError("The token was malformed") from _de
 
     raise TokenValidationError("No key was found for validation.")
