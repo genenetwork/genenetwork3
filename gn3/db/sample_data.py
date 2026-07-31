@@ -115,7 +115,10 @@ FROM ProbeSetFreeze psf
 WHERE ps.Id = %s AND psf.Name= %s""", (probeset_id, dataset_name))
 
         if not (data := cursor.fetchall()):
-            return "No Sample Data Found"
+            trait_csv = ["Strain Name,Value,SE,Count"]
+            for sample in sample_list:
+                trait_csv.append(f"{sample},x,x,x")
+            return "\n".join(trait_csv)
 
         # Get list of samples with data in the DB
         existing_samples = [el[0] for el in data]
@@ -179,7 +182,10 @@ FROM PublishFreeze pf JOIN PublishXRef px ON px.InbredSetId = pf.InbredSetId
 WHERE px.Id = %s AND px.InbredSetId = %s ORDER BY st.Name""",
                        (trait_name, group_id))
         if not (data := cursor.fetchall()):
-            return "No Sample Data Found"
+            trait_csv = ["Strain Name,Value,SE,Count"]
+            for sample in sample_list:
+                trait_csv.append(f"{sample},x,x,x")
+            return "\n".join(trait_csv)
 
         # Get list of samples with data in the DB
         existing_samples = [el[0] for el in data]
