@@ -13,7 +13,8 @@ def extract_strain_name(csv_header, data, seek="Strain Name") -> str:
     """Extract a strain's name given a csv header"""
     for column, value in zip(csv_header.split(","), data.split(",")):
         if seek in column:
-            return value
+            # Handle mixed delimiters (e.g. tab-separated data in comma-separated header)
+            return value.split("\t")[0].strip()
     return ""
 
 
@@ -111,6 +112,9 @@ def clean_csv_text(csv_text: str) -> str:
     """Remove extra white space elements in all elements of the CSV file"""
     _csv_text = []
     for line in csv_text.strip().split("\n"):
+        # Normalize tab-delimited lines to comma-delimited
+        if "\t" in line and "," not in line:
+            line = line.replace("\t", ",")
         _csv_text.append(",".join([el.strip() for el in line.split(",")]))
     return "\n".join(_csv_text)
 
