@@ -15,6 +15,11 @@ from gn3.computations.qtlreaper import create_output_directory
 from gn3.chancy import random_string
 
 
+class CorrelationError(Exception):
+    """Custom exception for correlation computation errors."""
+    pass
+
+
 def generate_input_files(
         dataset: list[str], output_dir: str) -> tuple[str, str]:
     """function generates outputfiles and inputfiles"""
