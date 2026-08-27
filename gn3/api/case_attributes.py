@@ -10,7 +10,9 @@ from MySQLdb.cursors import DictCursor
 from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
     jsonify,
+    make_response,
     request,
+    url_for,
     Response,
     Blueprint,
     current_app)
@@ -24,10 +26,13 @@ from gn3.db.case_attributes import (
 
 from gn3.db_utils import Connection, database_connection
 
+from gn_libs.privileges import resources
+
 from gn3.oauth2.authorisation import require_token
 from gn3.oauth2.errors import AuthorisationError
 
 caseattr = Blueprint("case-attribute", __name__)
+caseattrsbp = Blueprint("case-attributes", __name__)
 
 
 def required_access(
@@ -293,4 +298,193 @@ def reject_case_attributes_diff(
     except AuthorisationError as __auth_err:
         return jsonify({
             "message": ("You don't have the right privileges to edit this resource.")
+        }), 401
+
+
+# ---------------------------------------------------------------------------
+# v1 blueprint routes  (mounted at /api/v1/species/<s>/populations/<p>/case-attributes)
+# Flask's blueprint nesting threads species_id and pop_id through to every
+# child view function.
+# ---------------------------------------------------------------------------
+
+def __population_privileges__(
+        auth_token: dict, species_id: int, pop_id: int
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return (resource_privs, system_privs) for the given population.
+
+    species_id is taken from the URL — no DB lookup needed.
+    Returns empty tuples for either set when the auth server reports an error,
+    so privilege checks fail closed rather than open.
+    """
+    bearer = f"Bearer {auth_token['access_token']}"
+    auth_url = current_app.config["AUTH_SERVER_URL"]
+
+    resource_privs: tuple[str, ...] = tuple()
+    res_id_resp = requests.get(
+        urljoin(auth_url,
+                f"auth/resource/populations/resource-id/{species_id}/{pop_id}"),
+        timeout=300)
+    if res_id_resp.status_code == 200:
+        resource_id = res_id_resp.json()["resource-id"]
+        roles_resp = requests.get(
+            urljoin(auth_url, f"auth/resource/{resource_id}/roles"),
+            timeout=300)
+        if roles_resp.status_code == 200:
+            resource_privs = tuple(
+                priv["privilege_id"]
+                for role in roles_resp.json()
+                for priv in role.get("privileges", []))
+
+    system_privs: tuple[str, ...] = tuple()
+    sys_resp = requests.get(
+        urljoin(auth_url, "auth/system/roles"),
+        headers={"Authorization": bearer},
+        timeout=300)
+    if sys_resp.status_code == 200:
+        system_privs = tuple(
+            priv["privilege_id"]
+            for role in sys_resp.json()
+            for priv in role.get("privileges", []))
+
+    return resource_privs, system_privs
+
+@caseattrsbp.route("/", methods=["GET"])
+def v1_list_case_attributes(species_id: int, pop_id: int) -> Response:
+    """List all case-attribute names for the given population."""
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        data = __case_attribute_labels_by_inbred_set__(conn, pop_id)
+    return jsonify({
+        "data": data,
+        "links": {
+            "self": url_for(
+                "v1.species.populations.case-attributes.v1_list_case_attributes",
+                species_id=species_id, pop_id=pop_id),
+            "edit": url_for(
+                "v1.species.populations.case-attributes.v1_edit_case_attributes",
+                species_id=species_id, pop_id=pop_id),
+            "diffs": url_for(
+                "v1.species.populations.case-attributes.v1_list_diffs",
+                species_id=species_id, pop_id=pop_id, change_type="review"),
+            "population": url_for(
+                "v1.species.populations.population_details",
+                species_id=species_id, pop_id=pop_id),
+        }
+    })
+
+
+@caseattrsbp.route("/<int:ca_id>", methods=["GET"])
+def v1_case_attribute_details(species_id: int, pop_id: int, ca_id: int) -> Response:
+    return make_response(jsonify({
+        "status": "not implemented",
+        "message": "Single case-attribute details are not yet available."
+    }), 501)
+
+
+@caseattrsbp.route("/edit", methods=["POST"])
+@require_token
+def v1_edit_case_attributes(
+        species_id: int, pop_id: int, auth_token=None) -> tuple[Response, int]:
+    """Queue an edit to the case attributes for the given population."""
+    with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
+        data = request.json["edit-data"]  # type: ignore
+        edit = CaseAttributeEdit(
+            inbredset_id=pop_id,
+            status=EditStatus.review,
+            user_id=auth_token["jwt"]["sub"],
+            changes=data
+        )
+        directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                     "case-attributes" / str(pop_id))
+        queue_edit(cursor=cursor, directory=directory, edit=edit)
+        return jsonify({
+            "diff-status": "queued",
+            "message": ("The changes to the case-attributes have been "
+                        "queued for approval."),
+        }), 201
+
+
+@caseattrsbp.route("/diffs/<string:change_type>/list", methods=["GET"])
+def v1_list_diffs(
+        species_id: int, pop_id: int, change_type: str) -> tuple[Response, int]:
+    """List pending diffs for the given population by change type."""
+    with (database_connection(current_app.config["SQL_URI"]) as conn,
+          conn.cursor(cursorclass=DictCursor) as cursor):
+        directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                     "case-attributes" / str(pop_id))
+        return jsonify(
+            get_changes(
+                cursor=cursor,
+                change_type=EditStatus[change_type],
+                directory=directory
+            )
+        ), 200
+
+
+@caseattrsbp.route("/diffs/<int:change_id>/approve", methods=["POST"])
+@require_token
+def v1_approve_case_attributes_diff(
+        species_id: int, pop_id: int, change_id: int, auth_token=None
+) -> tuple[Response, int]:
+    """Approve a queued case-attribute diff."""
+    try:
+        resource_privs, system_privs = __population_privileges__(
+            auth_token, species_id, pop_id)
+        if not resources.can_apply_or_reject_edit(resource_privs, system_privs):
+            raise AuthorisationError(
+                "You don't have the right privileges to approve this edit.")
+        with (database_connection(current_app.config["SQL_URI"]) as conn,
+              conn.cursor() as cursor):
+            directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                         "case-attributes" / str(pop_id))
+            match apply_change(cursor, change_type=EditStatus.approved,
+                               change_id=change_id, directory=directory):
+                case True:
+                    return jsonify({
+                        "diff-status": "approved",
+                        "message": f"Successfully approved # {change_id}"
+                    }), 201
+                case _:
+                    return jsonify({
+                        "diff-status": "queued",
+                        "message": f"Was not able to successfully approve # {change_id}"
+                    }), 200
+    except AuthorisationError as __auth_err:
+        return jsonify({
+            "diff-status": "queued",
+            "message": "You don't have the right privileges to edit this resource."
+        }), 401
+
+
+@caseattrsbp.route("/diffs/<int:change_id>/reject", methods=["POST"])
+@require_token
+def v1_reject_case_attributes_diff(
+        species_id: int, pop_id: int, change_id: int, auth_token=None
+) -> tuple[Response, int]:
+    """Reject a queued case-attribute diff."""
+    try:
+        resource_privs, system_privs = __population_privileges__(
+            auth_token, species_id, pop_id)
+        if not resources.can_apply_or_reject_edit(resource_privs, system_privs):
+            raise AuthorisationError(
+                "You don't have the right privileges to reject this edit.")
+        with database_connection(current_app.config["SQL_URI"]) as conn, \
+                conn.cursor() as cursor:
+            directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
+                         "case-attributes" / str(pop_id))
+            match apply_change(cursor, change_type=EditStatus.rejected,
+                               change_id=change_id, directory=directory):
+                case True:
+                    return jsonify({
+                        "diff-status": "rejected",
+                        "message": ("The changes to the case-attributes have been "
+                                    "rejected.")
+                    }), 201
+                case _:
+                    return jsonify({
+                        "diff-status": "queued",
+                        "message": "Failed to reject changes"
+                    }), 200
+    except AuthorisationError as __auth_err:
+        return jsonify({
+            "message": "You don't have the right privileges to edit this resource."
         }), 401
