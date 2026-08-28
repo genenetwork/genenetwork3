@@ -35,6 +35,13 @@ caseattr = Blueprint("case-attribute", __name__)
 caseattrsbp = Blueprint("case-attributes", __name__)
 
 
+@caseattr.after_request
+def add_deprecation_headers(response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Link"] = '</api/v1/>; rel="successor-version"'
+    return response
+
+
 def required_access(
         token: dict,
         inbredset_id: int,
