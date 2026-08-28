@@ -250,9 +250,17 @@ def approve_case_attributes_diff(
 ) -> tuple[Response, int]:
     """Approve the changes to the case attributes in the diff."""
     try:
-        required_access(auth_token,
-                        inbredset_id,
-                        ("system:inbredset:edit-case-attribute",))
+        with database_connection(current_app.config["SQL_URI"]) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT SpeciesId FROM InbredSet WHERE InbredSetId=%s",
+                    (inbredset_id,))
+                species_id = cursor.fetchone()[0]
+        resource_privs, system_privs = __population_privileges__(
+            auth_token, species_id, inbredset_id)
+        if not resources.can_apply_or_reject_edit(resource_privs, system_privs):
+            raise AuthorisationError(
+                "You don't have the right privileges to approve this edit.")
         with (database_connection(current_app.config["SQL_URI"]) as conn,
               conn.cursor() as cursor):
             directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
@@ -273,7 +281,7 @@ def approve_case_attributes_diff(
     except AuthorisationError as __auth_err:
         return jsonify({
             "diff-status": "queued",
-            "message": ("You don't have the right privileges to edit this resource.")
+            "message": "You don't have the right privileges to edit this resource."
         }), 401
 
 
@@ -284,10 +292,17 @@ def reject_case_attributes_diff(
 ) -> tuple[Response, int]:
     """Reject the changes to the case attributes in the diff."""
     try:
-        required_access(auth_token,
-                        inbredset_id,
-                        ("system:inbredset:edit-case-attribute",
-                         "system:inbredset:apply-case-attribute-edit"))
+        with database_connection(current_app.config["SQL_URI"]) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT SpeciesId FROM InbredSet WHERE InbredSetId=%s",
+                    (inbredset_id,))
+                species_id = cursor.fetchone()[0]
+        resource_privs, system_privs = __population_privileges__(
+            auth_token, species_id, inbredset_id)
+        if not resources.can_apply_or_reject_edit(resource_privs, system_privs):
+            raise AuthorisationError(
+                "You don't have the right privileges to reject this edit.")
         with database_connection(current_app.config["SQL_URI"]) as conn, \
                 conn.cursor() as cursor:
             directory = (Path(current_app.config["LMDB_DATA_PATH"]) /
