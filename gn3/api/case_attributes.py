@@ -195,6 +195,17 @@ def edit_case_attributes(inbredset_id: int, auth_token=None) -> tuple[Response, 
     :inbredset_id: Identifier for the population that the case attribute belongs
     :auth_token: A validated JWT from the auth server
     """
+    with database_connection(current_app.config["SQL_URI"]) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT SpeciesId FROM InbredSet WHERE InbredSetId=%s",
+                (inbredset_id,))
+            species_id = cursor.fetchone()[0]
+        resource_privs, system_privs = __population_privileges__(
+            auth_token, species_id, inbredset_id)
+        if not resources.can_edit(resource_privs, system_privs):
+            raise AuthorisationError(
+                "You don't have the right privileges to edit this resource.")
     with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
         data = request.json["edit-data"]  # type: ignore
         edit = CaseAttributeEdit(
@@ -385,6 +396,11 @@ def v1_case_attribute_details(species_id: int, pop_id: int, ca_id: int) -> Respo
 def v1_edit_case_attributes(
         species_id: int, pop_id: int, auth_token=None) -> tuple[Response, int]:
     """Queue an edit to the case attributes for the given population."""
+    resource_privs, system_privs = __population_privileges__(
+        auth_token, species_id, pop_id)
+    if not resources.can_edit(resource_privs, system_privs):
+        raise AuthorisationError(
+            "You don't have the right privileges to edit this resource.")
     with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
         data = request.json["edit-data"]  # type: ignore
         edit = CaseAttributeEdit(
