@@ -1,5 +1,4 @@
 """Implement case-attribute manipulations."""
-from typing import Union
 from pathlib import Path
 
 from functools import reduce
@@ -7,7 +6,6 @@ from urllib.parse import urljoin
 
 import requests
 from MySQLdb.cursors import DictCursor
-from authlib.integrations.flask_oauth2.errors import _HTTPException
 from flask import (
     jsonify,
     make_response,
@@ -41,49 +39,6 @@ def add_deprecation_headers(response):
     response.headers["Link"] = '</api/v1/>; rel="successor-version"'
     return response
 
-
-def required_access(
-        token: dict,
-        inbredset_id: int,
-        access_levels: tuple[str, ...]
-) -> Union[bool, tuple[str, ...]]:
-    """Check whether the user has the appropriate access"""
-    def __species_id__(conn):
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT SpeciesId FROM InbredSet WHERE InbredSetId=%s",
-                (inbredset_id,))
-            return cursor.fetchone()[0]
-    try:
-        with database_connection(current_app.config["SQL_URI"]) as conn:
-            result = requests.get(
-                # this section fetches the resource ID from the auth server
-                urljoin(current_app.config["AUTH_SERVER_URL"],
-                        "auth/resource/populations/resource-id"
-                        f"/{__species_id__(conn)}/{inbredset_id}"),
-                timeout=300)
-            if result.status_code == 200:
-                resource_id = result.json()["resource-id"]
-                auth = requests.post(
-                    # this section fetches the authorisations/privileges that
-                    # the current user has on the resource we got above
-                    urljoin(current_app.config["AUTH_SERVER_URL"],
-                            "auth/resource/authorisation"),
-                    json={"resource-ids": [resource_id]},
-                    headers={
-                        "Authorization": f"Bearer {token['access_token']}"},
-                    timeout=300)
-                if auth.status_code == 200:
-                    privs = tuple(priv["privilege_id"]
-                                  for role in auth.json()[resource_id]["roles"]
-                                  for priv in role["privileges"])
-                    if all(lvl in privs for lvl in access_levels):
-                        return privs
-    except _HTTPException as httpe:
-        raise AuthorisationError("You need to be logged in.") from httpe
-
-    raise AuthorisationError(
-        f"User does not have the privileges {access_levels}")
 
 
 def __inbredset_group__(conn, inbredset_id):
