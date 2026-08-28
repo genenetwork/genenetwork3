@@ -316,6 +316,7 @@ def __population_privileges__(
         resource_id = res_id_resp.json()["resource-id"]
         roles_resp = requests.get(
             urljoin(auth_url, f"auth/resource/{resource_id}/roles"),
+            headers={"Authorization": bearer},
             timeout=300)
         if roles_resp.status_code == 200:
             resource_privs = tuple(
