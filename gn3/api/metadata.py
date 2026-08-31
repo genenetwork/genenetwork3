@@ -211,7 +211,7 @@ def edit_dataset():
     # ===      - use the `/auth/resource/<RESOURCE-ID>/roles` endpoint
     # ===   b) The Genenetwork system
     # ===      - This is always checked regardless of results in step 1 above
-    # ===      - use the `/auth/system/roles` endpoint.
+    # ===      - use the `/auth/resource/system/roles` endpoint.
     # === 3) Retrieve privileges from the results of step 2 above
     # === 4) Check for appropriate privileges
     # ===
@@ -267,7 +267,7 @@ def edit_dataset():
     }
 
     return mrequests.get(
-        urljoin(current_app.config["AUTH_SERVER_URL"], "auth/system/roles"),
+        urljoin(current_app.config["AUTH_SERVER_URL"], "auth/resource/system/roles"),
         headers=headers
     ).then(
         lambda system_roles: tuple(privilege["privilege_id"]

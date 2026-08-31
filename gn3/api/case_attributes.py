@@ -326,7 +326,7 @@ def __population_privileges__(
 
     system_privs: tuple[str, ...] = tuple()
     sys_resp = requests.get(
-        urljoin(auth_url, "auth/system/roles"),
+        urljoin(auth_url, "auth/resource/system/roles"),
         headers={"Authorization": bearer},
         timeout=300)
     if sys_resp.status_code == 200:
