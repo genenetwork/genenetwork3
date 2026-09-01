@@ -1,21 +1,40 @@
 """General API endpoints.  Put endpoints that can't be grouped together nicely
 here."""
 import os
-from flask import Blueprint
-from flask import current_app
-from flask import jsonify
-from flask import request
+from flask import (url_for,
+                   request,
+                   jsonify,
+                   Blueprint,
+                   current_app,
+                   make_response)
 
 from gn3.fs_helpers import extract_uploaded_file
 from gn3.commands import run_cmd
 
 
 general = Blueprint("general", __name__)
+_WELCOME_MESSAGE = """Welcome to the GeneNetwork API service.
+
+The 'v1' endpoints provide a hierarchical view into the data present in the
+GeneNetwork system. Follow the v1 link for available resources."""
+
+
+@general.route("/")
+def index():
+    """Entry-point to the API. Give basic information on available routes."""
+    return make_response(jsonify({
+        "message": _WELCOME_MESSAGE,
+        "links": {
+            "self": url_for("general.index"),
+            "v1": url_for("v1.index")
+        }}), 200)
+
 
 @general.route("/version")
 def version():
     """Get API version."""
     return jsonify("1.0")
+
 
 @general.route("/metadata/upload/", methods=["POST"],
                strict_slashes=False)
