@@ -4,9 +4,6 @@
 from typing import Any
 from scipy import stats
 
-from sklearn.decomposition import PCA
-from sklearn import preprocessing
-
 import numpy as np
 import redis
 
@@ -16,32 +13,68 @@ from typing_extensions import TypeAlias
 fArray: TypeAlias = list[float] # pylint: disable=[invalid-name]
 
 
-def compute_pca(array: list[fArray]) -> dict[str, Any]:
+def correlation_matrix_eigendecomposition(
+        corr_matrix: list[fArray]) -> tuple[np.ndarray, np.ndarray]:
     """
-    computes the principal component analysis
+    decomposes a correlation matrix into eigen values and eigen vectors
+
+    The principal components of a set of traits are the eigen vectors of
+    their correlation matrix, so this is the decomposition that both the
+    displayed loadings and the component scores must be built from.
 
     Parameters:
 
-          array(list[list]):a list of lists contains data to perform  pca
+          corr_matrix(list[list]):a symmetric correlation matrix
 
 
     Returns:
-           pca_dict(dict):dict contains the pca_object,pca components,pca scores
+
+          (eigen_values, eigen_vectors):sorted by descending eigen value,\
+          with the eigen vectors held as columns
 
 
     """
 
-    corr_matrix = np.array(array)
+    (eigen_values, eigen_vectors) = np.linalg.eigh(
+        np.asarray(corr_matrix, dtype=float))
 
-    pca_obj = PCA()
-    scaled_data = preprocessing.scale(corr_matrix)
+    idx = eigen_values.argsort()[::-1]
+    eigen_values = eigen_values[idx]
+    eigen_vectors = eigen_vectors[:, idx]
 
-    pca_obj.fit(scaled_data)
+    # The sign of an eigen vector is arbitrary. Anchor each one on its
+    # largest loading so that the loadings and the mapped traits keep a
+    # conventional orientation, and so results do not flip between LAPACK
+    # builds.
+    signs = np.sign(eigen_vectors[
+        np.argmax(np.abs(eigen_vectors), axis=0),
+        np.arange(eigen_vectors.shape[1])])
+    signs[signs == 0] = 1
+
+    return (eigen_values, eigen_vectors * signs)
+
+
+def compute_pca(array: list[fArray]) -> dict[str, Any]:
+    """
+    computes the principal component analysis of a correlation matrix
+
+    Parameters:
+
+          array(list[list]):a correlation matrix to perform pca on
+
+
+    Returns:
+           pca_dict(dict):dict contains the pca components and the explained\
+           variance ratios
+
+
+    """
+
+    (eigen_values, eigen_vectors) = correlation_matrix_eigendecomposition(array)
 
     return {
-        "pca": pca_obj,
-        "components": pca_obj.components_,
-        "scores": pca_obj.transform(scaled_data)
+        "components": eigen_vectors.T,
+        "explained_variance_ratio": eigen_values / eigen_values.sum()
     }
 
 
@@ -68,32 +101,34 @@ def generate_scree_plot_data(variance_ratio: fArray) -> tuple[list, fArray]:
 
 
 def generate_pca_traits_vals(trait_data_array: list[fArray],
-                             corr_array: list[fArray]) -> list[list[Any]]:
+                             corr_array: list[fArray]) -> np.ndarray:
     """
-    generates datasets from zscores of the traits and eigen_vectors\
+    generates pca traits values from zscores of the traits and eigen_vectors\
     of correlation matrix
 
     Parameters:
 
-            trait_data_array(list[floats]):an list of the traits
+            trait_data_array(list[floats]):a list of the traits
             corr_array(list[list]): list of arrays for computing eigen_vectors
 
     Returns:
 
-            pca_vals[list[list]]:
+            pca_vals(numpy.ndarray):a row per principal component and a\
+            column per sample
 
 
     """
 
-    trait_zscores = stats.zscore(trait_data_array)
+    # Standardise each trait (a row) across the samples (the columns)
+    trait_zscores = stats.zscore(trait_data_array, axis=1, ddof=1)
 
     if len(trait_data_array[0]) < 10:
         trait_zscores = trait_data_array
 
-    (eigen_values, corr_eigen_vectors) = np.linalg.eig(np.array(corr_array))
-    idx = eigen_values.argsort()[::-1]
+    (_eigen_values, corr_eigen_vectors) = correlation_matrix_eigendecomposition(
+        corr_array)
 
-    return np.dot(corr_eigen_vectors[:, idx], trait_zscores)
+    return np.dot(corr_eigen_vectors.T, trait_zscores)
 
 
 def process_factor_loadings_tdata(factor_loadings, traits_num: int):
