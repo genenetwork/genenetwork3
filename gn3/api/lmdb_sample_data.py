@@ -5,6 +5,8 @@ from pathlib import Path
 import lmdb
 from flask import Blueprint, current_app, jsonify
 
+from gn3.db_utils import database_connection, dataset_is_public
+
 lmdb_sample_data = Blueprint("lmdb_sample_data", __name__)
 
 
@@ -19,6 +21,9 @@ def get_sample_data(dataset: str, trait_id: int):
     Returns:
         JSON object mapping sample IDs to their values
     """
+    with database_connection(current_app.config["SQL_URI"]) as conn, conn.cursor() as cursor:
+        if not dataset_is_public(cursor, dataset):
+            return jsonify(error="Dataset not found or not public"), 404
     checksum = hashlib.md5(
         f"{dataset}-{trait_id}".encode()
     ).hexdigest()

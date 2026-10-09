@@ -73,6 +73,25 @@ def parse_db_url(sql_uri: str) -> dict:
     }
 
 
+def dataset_is_public(cursor, dataset_name: str) -> bool:
+    """Check whether a dataset is public and not confidential.
+
+    `dataset_name` is looked up against every Freeze table (ProbeSetFreeze,
+    PublishFreeze, GenoFreeze) since callers may not know which kind of
+    dataset they were given. An unrecognised name returns False, so callers
+    fail closed rather than serving data for a dataset this check could not
+    find."""
+    cursor.execute(
+        "SELECT 1 FROM ProbeSetFreeze "
+        "WHERE Name = %s AND public > 0 AND confidentiality < 1 "
+        "UNION SELECT 1 FROM PublishFreeze "
+        "WHERE Name = %s AND public > 0 AND confidentiality < 1 "
+        "UNION SELECT 1 FROM GenoFreeze "
+        "WHERE Name = %s AND public > 0 AND confidentiality < 1",
+        (dataset_name, dataset_name, dataset_name))
+    return cursor.fetchone() is not None
+
+
 @contextlib.contextmanager
 def xapian_database(path):
     """Open xapian database read-only."""
